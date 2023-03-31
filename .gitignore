@@ -1,0 +1,4 @@
+/target
+/*.ignore*
+/*.data*
+/.vscode

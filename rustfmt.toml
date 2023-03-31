@@ -1,0 +1,10 @@
+# These are just my preferences, feel free to change them to your liking.
+max_width = 125
+use_small_heuristics = "Max"
+fn_single_line = true
+empty_item_single_line = true
+struct_lit_single_line = true
+tab_spaces = 4
+imports_granularity = "Crate"
+group_imports = "StdExternalCrate"
+reorder_impl_items = false
