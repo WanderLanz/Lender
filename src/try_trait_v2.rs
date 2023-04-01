@@ -1,4 +1,7 @@
 use core::{convert::Infallible, ops::ControlFlow, task::Poll};
+
+pub(crate) type ChangeOutputType<T, V> = <<T as Try>::Residual as Residual<V>>::TryType;
+
 pub trait Try: FromResidual {
     type Output;
     type Residual;

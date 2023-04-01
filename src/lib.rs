@@ -5,6 +5,9 @@ use core::{cmp::Ordering, ops::ControlFlow};
 mod adapters;
 /// Avoiding reliance on nightly feature `try_trait_v2` to implement `Try`.
 pub mod try_trait_v2;
+extern crate alloc;
+use alloc::borrow::ToOwned;
+
 use adapters::*;
 use try_trait_v2::*;
 pub mod hkts;
@@ -31,7 +34,7 @@ use sealed::*;
 /// Please see [Sabrina Jewson's Blog][1] for more information on the problem and how a trait like this can be used to solve it.
 ///
 /// [1]: (https://sabrinajewson.org/blog/the-better-alternative-to-lifetime-gats)
-pub trait Lending<'lend, Lended: Sealed = Seal<&'lend Self>> {
+pub trait Lending<'lend, __Seal: Sealed = Seal<&'lend Self>> {
     type Lend: 'lend;
 }
 
@@ -243,21 +246,21 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
         self
     }
     #[inline]
-    fn collect<B>(self) -> B
+    fn collect<T, B>(self) -> B
     where
-        Self: Sized + for<'all> Lending<'all, Lend = <B as FromLender>::Lend<'all>>,
-        B: FromLender,
+        Self: Sized,
+        T: for<'all> Lending<'all, Lend = <Self as Lending<'all>>::Lend>,
+        B: FromLender<T>,
     {
-        FromLender::from_lender(self)
+        <B as FromLender<T>>::from_lender(self)
     }
-    // // Alot of work to do here to just reimplement std internals
     // #[inline]
     // fn try_collect<B>(&mut self) -> <<<Self as Lending<'_>>::Lend as Try>::Residual as Residual<B>>::TryType
     // where
     //     Self: Sized,
     //     for<'all> <Self as Lending<'all>>::Lend: Try,
     //     for<'all> <<Self as Lending<'all>>::Lend as Try>::Residual: Residual<B>,
-    //     for<'all> B: FromLender<Lend<'all> = <<Self as Lending<'all>>::Lend as Try>::Output>,
+    //     B: FromLender + for<'all> Lending<'all, Lend = <<Self as Lending<'all>>::Lend as Try>::Output>,
     // {
     //     todo!()
     // }
@@ -377,6 +380,42 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
         }
         None
     }
+    #[inline]
+    fn try_find<'call, F, R>(&'call mut self, mut f: F) -> ChangeOutputType<R, Option<<Self as Lending<'call>>::Lend>>
+    where
+        Self: Sized,
+        F: FnMut(&<Self as Lending<'_>>::Lend) -> R,
+        R: Try<Output = bool>,
+        for<'all> R::Residual: Residual<Option<<Self as Lending<'all>>::Lend>>,
+    {
+        while let Some(x) = self.next() {
+            match f(&x).branch() {
+                ControlFlow::Break(x) => return <ChangeOutputType<R, Option<<Self as Lending<'call>>::Lend>> as FromResidual>::from_residual(x),
+                ControlFlow::Continue(cond) => {
+                    if cond {
+                        // SAFETY: #Polonius
+                        return <ChangeOutputType<R, Option<<Self as Lending<'call>>::Lend>> as Try>::from_output(Some(unsafe { core::mem::transmute::<<Self as Lending<'_>>::Lend, <Self as Lending<'call>>::Lend>(x) }));
+                    }
+                }
+            }
+        }
+        <ChangeOutputType<R, Option<<Self as Lending<'call>>::Lend>> as Try>::from_output(None)
+    }
+    #[inline]
+    fn position<P>(&mut self, mut predicate: P) -> Option<usize>
+    where
+        Self: Sized,
+        P: FnMut(<Self as Lending<'_>>::Lend) -> bool,
+    {
+        let mut i = 0;
+        while let Some(x) = self.next() {
+            if predicate(x) {
+                return Some(i);
+            }
+            i += 1;
+        }
+        None
+    }
 
 
     // TODO: ... bookmark here
@@ -404,6 +443,14 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
         Cloned::new(self)
     }
     #[inline]
+    fn owned(self) -> Owned<Self>
+    where
+        Self: Sized,
+        for<'all> <Self as Lending<'all>>::Lend: ToOwned
+    {
+        Owned::new(self)
+    }
+    #[inline]
     fn cycle(self) -> Cycle<Self>
     where
         Self: Sized + Clone,
@@ -414,14 +461,16 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
 pub trait DoubleEndedLender: Lender {
     fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend>;
 }
-pub trait FromLender: Sized {
-    type Lend<'lend>: 'lend;
-    fn from_lender<T>(lender: T) -> Self
+pub trait FromLender<T>
+where
+    T: for<'lend> Lending<'lend>,
+{
+    fn from_lender<L>(lender: L) -> Self
     where
-        T: Lender + for<'lend> Lending<'lend, Lend = Self::Lend<'lend>>;
+        L: Lender + for<'lend> Lending<'lend, Lend = <T as Lending<'lend>>::Lend>;
 }
-pub trait IntoLender: for<'all> Lending<'all> {
-    type Lender: Lender + for<'all> Lending<'all, Lend = <Self as Lending<'all>>::Lend>;
+pub trait IntoLender: for<'lend /* where Self: 'lend */> Lending<'lend> {
+    type Lender: Lender + for<'lend> Lending<'lend, Lend = <Self as Lending<'lend>>::Lend>;
     fn into_lender(self) -> <Self as IntoLender>::Lender;
 }
 impl<P: Lender> IntoLender for P {
@@ -436,7 +485,7 @@ pub(crate) fn lender_compare<A, B, F, T>(mut a: A, mut b: B, mut f: F) -> Contro
 where
     A: Lender,
     B: Lender,
-    for<'all> F: 'all + FnMut(<A as Lending<'all>>::Lend, <B as Lending<'all>>::Lend) -> ControlFlow<T>,
+    for<'lend> F: FnMut(<A as Lending<'lend>>::Lend, <B as Lending<'lend>>::Lend) -> ControlFlow<T>,
 {
     let mut ctl = ControlFlow::Continue(());
     while let Some(x) = a.next() {
@@ -464,9 +513,16 @@ where
     }
 }
 
+impl<'lend, L: Lender> Lending<'lend> for &mut L {
+    type Lend = <L as Lending<'lend>>::Lend;
+}
+impl<L: Lender> Lender for &mut L {
+    #[inline]
+    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> { (*self).next() }
+}
+
 #[cfg(test)]
 mod test {
-    extern crate alloc;
     use alloc::vec::Vec;
 
     use super::*;
@@ -480,19 +536,37 @@ mod test {
         fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> { Some(&mut self.0) }
     }
 
-    impl FromLender for Vec<u8> {
-        type Lend<'lend> = &'lend u8;
-        fn from_lender<T>(lender: T) -> Self
+    impl<T, V> FromLender<T> for Vec<V>
+    where
+        T: for<'all> Lending<'all>,
+        for<'all> <T as Lending<'all>>::Lend: ToOwned<Owned = V>,
+    {
+        fn from_lender<L>(lender: L) -> Self
         where
-            T: Lender + for<'lend> Lending<'lend, Lend = Self::Lend<'lend>>,
+            L: Lender + for<'lend> Lending<'lend, Lend = <T as Lending<'lend>>::Lend>,
         {
             let mut vec = Vec::new();
-            lender.for_each(|x| {
-                vec.push(*x);
-            });
+            lender.for_each(|x| vec.push(x.to_owned()));
             vec
         }
     }
+    struct WindowsMut<'a, T> {
+        inner: &'a mut [T],
+        begin: usize,
+        len: usize,
+    }
+    impl<'lend, 'a, T> Lending<'lend> for WindowsMut<'a, T> {
+        type Lend = &'lend mut [T];
+    }
+    impl<'a, T> Lender for WindowsMut<'a, T> {
+        fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+            let begin = self.begin;
+            self.begin.saturating_add(1);
+            self.inner.get_mut(begin..begin + self.len)
+        }
+    }
+
+    fn windows_mut<'a, T>(slice: &'a mut [T], len: usize) -> WindowsMut<'a, T> { WindowsMut { inner: slice, begin: 0, len } }
 
     fn _next<'x>(x: &'x mut u32) {
         let mut bar: MyLender<'x, u32> = MyLender(x);

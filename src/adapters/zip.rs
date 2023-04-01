@@ -1,4 +1,13 @@
-use crate::{Lender, Lending};
+use crate::{IntoLender, Lender, Lending};
+
+pub fn zip<A, B>(a: A, b: B) -> Zip<A::Lender, B::Lender>
+where
+    A: IntoLender,
+    B: IntoLender,
+{
+    Zip::new(a.into_lender(), b.into_lender())
+}
+
 pub struct Zip<A, B> {
     a: A,
     b: B,
@@ -8,7 +17,6 @@ impl<A, B> Zip<A, B> {
 }
 impl<'lend, A, B> Lending<'lend> for Zip<A, B>
 where
-    for<'all> B: Lending<'all, Lend = <A as Lending<'all>>::Lend>,
     A: Lender,
     B: Lender,
 {
@@ -16,7 +24,6 @@ where
 }
 impl<A, B> Lender for Zip<A, B>
 where
-    for<'all> B: Lending<'all, Lend = <A as Lending<'all>>::Lend>,
     A: Lender,
     B: Lender,
 {

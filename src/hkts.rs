@@ -2,6 +2,8 @@
 
 // # Higher-Kinded Type (HKT)
 
+use crate::sealed::{Seal, Sealed};
+
 /// Enforce `T` to be with lifetime `'a` with function signature
 #[inline(always)]
 pub fn hkt<'a, T>(hkt: T) -> <T as WithLifetime<'a>>::T
@@ -10,23 +12,16 @@ where
 {
     hkt
 }
-
-pub trait WithLifetime<'lt> {
+pub trait WithLifetime<'lt, Bind: Sealed = Seal<&'lt Self>> {
     type T: 'lt;
 }
-impl<'a, T> WithLifetime<'a> for T
-where
-    T: 'a,
-{
+impl<'a, T> WithLifetime<'a> for T {
     type T = T;
 }
 
 /// Higher-Kinded Type, type `T` with lifetime `'a`.
 /// Not actually working as intended, but it might be used later.
-pub trait HKT
-where
-    Self: for<'any> WithLifetime<'any, T = Self>,
-{
+pub trait HKT: for<'any> WithLifetime<'any, T = Self> {
     /// Enforce `Self` to be with lifetime `'a` with function signature
     #[inline(always)]
     fn hkt<'a>(self) -> <Self as WithLifetime<'a>>::T
@@ -81,7 +76,7 @@ where
 {
 }
 
-// # HKFns where Output is an Option
+// ## HKFns where Output is an Option
 
 /// Higher-Kinded FnOnce, where Output is an Option with lifetime `'ret`.
 pub trait HKFnOnceOpt<'ret, Arg>
@@ -121,3 +116,5 @@ where
     B: 'ret,
 {
 }
+
+// TODO # Higher-Kinded Try (HKTry) where Output and Residual have lifetime `'a`
