@@ -1,4 +1,6 @@
-use crate::{hkts::HKFnMutOpt, Lender, Lending};
+use crate::{hkts::HKAFnMutOpt, Lender, Lending};
+#[derive(Clone)]
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct FilterMap<L, F> {
     lender: L,
     f: F,
@@ -16,7 +18,7 @@ where
 }
 impl<L, F> Lender for FilterMap<L, F>
 where
-    for<'all> F: HKFnMutOpt<'all, <L as Lending<'all>>::Lend>,
+    for<'all> F: HKAFnMutOpt<'all, <L as Lending<'all>>::Lend>,
     L: Lender,
 {
     fn next<'next>(&'next mut self) -> Option<<Self as Lending<'next>>::Lend> {

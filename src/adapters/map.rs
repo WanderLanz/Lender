@@ -1,4 +1,6 @@
-use crate::{hkts::HKFnMut, Lender, Lending};
+use crate::{hkts::HKAFnMut, Lender, Lending};
+#[derive(Clone)]
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Map<L, F> {
     pub(crate) lender: L,
     f: F,
@@ -16,7 +18,7 @@ where
 }
 impl<L, F> Lender for Map<L, F>
 where
-    F: for<'all> HKFnMut<'all, <L as Lending<'all>>::Lend>,
+    F: for<'all> HKAFnMut<'all, <L as Lending<'all>>::Lend>,
     L: Lender,
 {
     #[inline]

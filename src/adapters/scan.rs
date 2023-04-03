@@ -1,4 +1,6 @@
-use crate::{hkts::HKFnMutOpt, Lender, Lending};
+use crate::{hkts::HKAFnMutOpt, Lender, Lending};
+#[derive(Clone)]
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Scan<L, St, F> {
     lender: L,
     f: F,
@@ -17,7 +19,7 @@ where
 }
 impl<L, St, F> Lender for Scan<L, St, F>
 where
-    for<'all> F: HKFnMutOpt<'all, (&'all mut St, <L as Lending<'all>>::Lend)>,
+    for<'all> F: HKAFnMutOpt<'all, (&'all mut St, <L as Lending<'all>>::Lend)>,
     L: Lender,
 {
     #[inline]

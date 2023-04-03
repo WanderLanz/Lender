@@ -1,3 +1,4 @@
+//! Avoiding reliance on nightly feature `try_trait_v2` to implement stdlib's `Try`.
 use core::{convert::Infallible, ops::ControlFlow, task::Poll};
 
 pub(crate) type ChangeOutputType<T, V> = <<T as Try>::Residual as Residual<V>>::TryType;
@@ -32,6 +33,7 @@ impl<B, C> FromResidual for ControlFlow<B, C> {
     fn from_residual(residual: ControlFlow<B, Infallible>) -> Self {
         match residual {
             ControlFlow::Break(b) => ControlFlow::Break(b),
+            // *should* be compiled out
             _ => unreachable!(),
         }
     }
@@ -51,12 +53,7 @@ impl<T> Try for Option<T> {
 }
 impl<T> FromResidual for Option<T> {
     #[inline]
-    fn from_residual(residual: Option<Infallible>) -> Self {
-        match residual {
-            None => None,
-            _ => unreachable!(),
-        }
-    }
+    fn from_residual(_residual: Option<Infallible>) -> Self { None }
 }
 impl<T, E> Try for Result<T, E> {
     type Output = T;
@@ -77,6 +74,7 @@ impl<T, E, F: From<E>> FromResidual<Result<Infallible, E>> for Result<T, F> {
     fn from_residual(residual: Result<Infallible, E>) -> Self {
         match residual {
             Err(e) => Err(From::from(e)),
+            // *should* be compiled out
             _ => unreachable!(),
         }
     }
@@ -101,6 +99,7 @@ impl<T, E, F: From<E>> FromResidual<Result<Infallible, E>> for Poll<Result<T, F>
     fn from_residual(x: Result<Infallible, E>) -> Self {
         match x {
             Err(e) => Poll::Ready(Err(From::from(e))),
+            // *should* be compiled out
             _ => unreachable!(),
         }
     }
@@ -127,6 +126,7 @@ impl<T, E, F: From<E>> FromResidual<Result<Infallible, E>> for Poll<Option<Resul
     fn from_residual(x: Result<Infallible, E>) -> Self {
         match x {
             Err(e) => Poll::Ready(Some(Err(From::from(e)))),
+            // *should* be compiled out
             _ => unreachable!(),
         }
     }

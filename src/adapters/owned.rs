@@ -1,6 +1,8 @@
 use alloc::borrow::ToOwned;
 
 use crate::{Lender, Lending};
+#[derive(Clone, Debug)]
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Owned<L> {
     lender: L,
 }

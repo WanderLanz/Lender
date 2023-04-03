@@ -1,120 +1,113 @@
-//! Higher-Kinded Types (HKT), Higher-Kinded Functions (HKFn)
+//! These allow some lifetime elision in signatures using a HRTB and more flexible lifetime binding.
+//!
+//! ## Higher-Kinded Types (HKT),
+//!
+//! type `K` with lifetime `'a` where `K: 'a`
+//! ```ignore
+//! K: for<'all where K: 'all> WithLifetime<'all, T = K>
+//! ```
+//!
+//! ## Higher-Kinded Associated Output Functions (HKAFn),
+//!
+//! Fn traits with associated output type `B` with lifetime `'b`
+//! ```ignore
+//! impl<'b, A, B: 'b, F: FnOnce(A) -> B> HKAFnOnce<'b, A> for F {
+//!     type B = B;
+//! }
+//! ```
+//! Using an associated type also allows omission of `Output` types in adapter generics, e.g. Map<L, F> vs Map<NewItemType, L, F>
+//!
+//! ## Higher-Kinded Generic Output Functions (HKGFn)
+//!
+//! Fn traits with generic output type `B` with lifetime `'b`
+//! ```ignore
+//! impl<'b, A, B: 'b, F: FnOnce(A) -> B> HKGFnOnce<'b, A, B> for F {}
+//! ```
+//! Using a generic lets the compiler infer the input and output types where it might not be able to infer the associated type of an HKAFn.
 
-// # Higher-Kinded Type (HKT)
+use crate::{Seal, Sealed};
 
-use crate::sealed::{Seal, Sealed};
-
-/// Enforce `T` to be with lifetime `'a` with function signature
+/// Enforce an HKT to be with lifetime `'a` with function signature
 #[inline(always)]
-pub fn hkt<'a, T>(hkt: T) -> <T as WithLifetime<'a>>::T
+pub fn with_lifetime<'a, T>(hkt: T) -> <T as WithLifetime<'a>>::T
 where
     T: HKT,
 {
     hkt
 }
-pub trait WithLifetime<'lt, Bind: Sealed = Seal<&'lt Self>> {
+/// Trait underlying HKT
+pub trait WithLifetime<'lt, __Seal: Sealed = Seal<&'lt Self>> {
     type T: 'lt;
 }
-impl<'a, T> WithLifetime<'a> for T {
+impl<'lt, T> WithLifetime<'lt> for T {
     type T = T;
 }
 
 /// Higher-Kinded Type, type `T` with lifetime `'a`.
-/// Not actually working as intended, but it might be used later.
-pub trait HKT: for<'any> WithLifetime<'any, T = Self> {
+pub trait HKT: for<'all> WithLifetime<'all, T = Self> {
     /// Enforce `Self` to be with lifetime `'a` with function signature
     #[inline(always)]
-    fn hkt<'a>(self) -> <Self as WithLifetime<'a>>::T
+    fn with_lifetime<'a>(self) -> <Self as WithLifetime<'a>>::T
     where
         Self: Sized,
     {
         self
     }
 }
-impl<T: ?Sized> HKT for T where for<'any> Self: 'any + WithLifetime<'any, T = Self> {}
+impl<T: ?Sized> HKT for T where for<'all> Self: WithLifetime<'all, T = Self> {}
 
-// # Higher-Kinded Function (HKFn)
-
-/// Higher-Kinded FnOnce, where Output is with lifetime `'ret`.
-pub trait HKFnOnce<'ret, Arg>
-where
-    Self: FnOnce(Arg) -> <Self as HKFnOnce<'ret, Arg>>::HKOutput,
-{
-    type HKOutput: 'ret;
+/// Higher-Kinded Associated Output `FnOnce`, where `Output` (B) is with lifetime `'b`.
+pub trait HKAFnOnce<'b, A>: FnOnce(A) -> <Self as HKAFnOnce<'b, A>>::B {
+    type B: 'b;
 }
-impl<'ret, A, B, F> HKFnOnce<'ret, A> for F
-where
-    F: FnOnce(A) -> B,
-    B: 'ret,
-{
-    type HKOutput = B;
+impl<'b, A, B: 'b, F: FnOnce(A) -> B> HKAFnOnce<'b, A> for F {
+    type B = B;
 }
-
-/// Higher-Kinded FnMut, where Output is with lifetime `'ret`.
-pub trait HKFnMut<'ret, Arg>
-where
-    Self: HKFnOnce<'ret, Arg> + FnMut(Arg) -> <Self as HKFnOnce<'ret, Arg>>::HKOutput,
-{
+/// Higher-Kinded Associated Output `FnMut`, where `Output` (B) is with lifetime `'b`.
+pub trait HKAFnMut<'b, A>: FnMut(A) -> <Self as HKAFnMut<'b, A>>::B {
+    type B: 'b;
 }
-impl<'ret, A, B, F> HKFnMut<'ret, A> for F
-where
-    F: FnMut(A) -> B,
-    B: 'ret,
-{
+impl<'b, A, B: 'b, F: FnMut(A) -> B> HKAFnMut<'b, A> for F {
+    type B = B;
+}
+/// Higher-Kinded Associated Output `Fn`, where `Output` (B) is with lifetime `'b`.
+pub trait HKAFn<'b, A>: Fn(A) -> <Self as HKAFn<'b, A>>::B {
+    type B: 'b;
+}
+impl<'b, A, B: 'b, F: Fn(A) -> B> HKAFn<'b, A> for F {
+    type B = B;
 }
 
-/// Higher-Kinded Fn, where Output is with lifetime `'ret`.
-pub trait HKFn<'ret, Arg>
-where
-    Self: HKFnMut<'ret, Arg> + Fn(Arg) -> <Self as HKFnOnce<'ret, Arg>>::HKOutput,
-{
+/// Higher-Kinded Associated Output `FnOnce`, where `Output` (Option<B>) is with lifetime `'b`.
+pub trait HKAFnOnceOpt<'b, A>: FnOnce(A) -> Option<<Self as HKAFnOnceOpt<'b, A>>::B> {
+    type B: 'b;
 }
-impl<'ret, A, B, F> HKFn<'ret, A> for F
-where
-    F: Fn(A) -> B,
-    B: 'ret,
-{
+impl<'b, A, B: 'b, F: FnOnce(A) -> Option<B>> HKAFnOnceOpt<'b, A> for F {
+    type B = B;
+}
+/// Higher-Kinded Associated Output `FnMut`, where `Output` (Option<B>) is with lifetime `'b`.
+pub trait HKAFnMutOpt<'b, A>: FnMut(A) -> Option<<Self as HKAFnMutOpt<'b, A>>::B> {
+    type B: 'b;
+}
+impl<'b, A, B: 'b, F: FnMut(A) -> Option<B>> HKAFnMutOpt<'b, A> for F {
+    type B = B;
+}
+/// Higher-Kinded Associated Output `Fn`, where `Output` (Option<B>) is with lifetime `'b`.
+pub trait HKAFnOpt<'b, A>: Fn(A) -> Option<<Self as HKAFnOpt<'b, A>>::B> {
+    type B: 'b;
+}
+impl<'b, A, B: 'b, F: Fn(A) -> Option<B>> HKAFnOpt<'b, A> for F {
+    type B = B;
 }
 
-// ## HKFns where Output is an Option
-
-/// Higher-Kinded FnOnce, where Output is an Option with lifetime `'ret`.
-pub trait HKFnOnceOpt<'ret, Arg>
-where
-    Self: FnOnce(Arg) -> Option<<Self as HKFnOnceOpt<'ret, Arg>>::HKOutput>,
-{
-    type HKOutput: 'ret;
-}
-impl<'ret, A, B, F> HKFnOnceOpt<'ret, A> for F
-where
-    F: FnOnce(A) -> Option<B>,
-    B: 'ret,
-{
-    type HKOutput = B;
-}
-/// Higher-Kinded FnMut, where Output is an Option with lifetime `'ret`.
-pub trait HKFnMutOpt<'ret, Arg>
-where
-    Self: HKFnOnceOpt<'ret, Arg> + FnMut(Arg) -> Option<<Self as HKFnOnceOpt<'ret, Arg>>::HKOutput>,
-{
-}
-impl<'ret, A, B, F> HKFnMutOpt<'ret, A> for F
-where
-    F: FnMut(A) -> Option<B>,
-    B: 'ret,
-{
-}
-/// Higher-Kinded Fn, where Output is an Option with lifetime `'ret`.
-pub trait HKFnOpt<'ret, Arg>
-where
-    Self: HKFnMutOpt<'ret, Arg> + Fn(Arg) -> Option<<Self as HKFnOnceOpt<'ret, Arg>>::HKOutput>,
-{
-}
-impl<'ret, A, B, F> HKFnOpt<'ret, A> for F
-where
-    F: Fn(A) -> Option<B>,
-    B: 'ret,
-{
-}
+/// Higher-Kinded Generic Output `FnOnce`, where `Output` (B) is with lifetime `'b`.
+pub trait HKGFnOnce<'b, A, B: 'b>: FnOnce(A) -> B {}
+impl<'b, A, B: 'b, F: FnOnce(A) -> B> HKGFnOnce<'b, A, B> for F {}
+/// Higher-Kinded Generic Output `FnMut`, where `Output` (B) is with lifetime `'b`.
+pub trait HKGFnMut<'b, A, B: 'b>: FnMut(A) -> B {}
+impl<'b, A, B: 'b, F: FnMut(A) -> B> HKGFnMut<'b, A, B> for F {}
+/// Higher-Kinded Generic Output `Fn`, where `Output` (B) is with lifetime `'b`.
+pub trait HKGFn<'b, A, B: 'b>: Fn(A) -> B {}
+impl<'b, A, B: 'b, F: Fn(A) -> B> HKGFn<'b, A, B> for F {}
 
 // TODO # Higher-Kinded Try (HKTry) where Output and Residual have lifetime `'a`

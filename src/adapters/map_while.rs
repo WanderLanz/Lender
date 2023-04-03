@@ -1,4 +1,6 @@
-use crate::{hkts::HKFnMutOpt, Lender, Lending};
+use crate::{hkts::HKAFnMutOpt, Lender, Lending};
+#[derive(Clone)]
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct MapWhile<L, P> {
     lender: L,
     predicate: P,
@@ -16,7 +18,7 @@ where
 }
 impl<L, P> Lender for MapWhile<L, P>
 where
-    P: for<'all> HKFnMutOpt<'all, <L as Lending<'all>>::Lend>,
+    P: for<'all> HKAFnMutOpt<'all, <L as Lending<'all>>::Lend>,
     L: Lender,
 {
     #[inline]

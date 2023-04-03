@@ -1,4 +1,6 @@
 use crate::{Lender, Lending};
+#[derive(Clone)]
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct SkipWhile<L, P> {
     lender: L,
     flag: bool,

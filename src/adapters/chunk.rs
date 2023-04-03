@@ -1,5 +1,7 @@
-use crate::{Lender, Lending};
+use crate::{FusedLender, Lender, Lending};
 
+#[derive(Debug)]
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Chunk<'s, T> {
     lender: &'s mut T,
     len: usize,
@@ -25,4 +27,9 @@ where
             self.lender.next()
         }
     }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let (lower, upper) = self.lender.size_hint();
+        (lower.min(self.len), upper.map(|x| x.min(self.len)))
+    }
 }
+impl<'a, L> FusedLender for Chunk<'a, L> where L: FusedLender {}

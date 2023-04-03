@@ -1,11 +1,11 @@
-# Lender (DO NOT USE, THIS IS NOT MEANT TO BE A REAL CRATE)
+# Lender (DO NOT USE, THIS IS JUST FOR PRACTICE)
 
 Please see [`lending-iterator`] for an actual implementation of lending iterators.
 
 This is primarily just my own personal practice for learning more about the Rust borrow checker and Higher-Ranked Trait Bounds,
 and what better way than a problem I'm way out of my depth with?
 
-An iterator that yields items bound by the lifetime of each iteration.
+An iterator that yields items bound by the lifetime of each iteration (no `dyn Lender`).
 
 Check out the [`lending-iterator`] crate for a more complete and ergonomic implementation of lending iterators,
 it's written by the great [Daniel Henry-Mantilla][1], who knows much more about this than I do. The [`streaming-iterator`] crate is also a great crate if you only need to iterate over a reference to an item.

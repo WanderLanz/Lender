@@ -1,5 +1,12 @@
-use crate::{Lender, Lending};
+use core::{num::NonZeroUsize, ops::ControlFlow};
 
+use crate::{
+    try_trait_v2::{FromResidual, Try},
+    FusedLender, Lender, Lending,
+};
+
+#[derive(Clone, Debug)]
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Cycle<L> {
     orig: L,
     lender: L,
@@ -37,4 +44,59 @@ where
             _ => (usize::MAX, None),
         }
     }
+    #[inline]
+    fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> R
+    where
+        Self: Sized,
+        F: FnMut(B, <Self as Lending<'_>>::Lend) -> R,
+        R: Try<Output = B>,
+    {
+        let mut acc = init;
+        acc = match self.lender.try_fold(acc, &mut f).branch() {
+            ControlFlow::Break(x) => return FromResidual::from_residual(x),
+            ControlFlow::Continue(x) => x,
+        };
+        self.lender = self.orig.clone();
+        let mut empty = true;
+        acc = match self
+            .orig
+            .try_fold(acc, |acc, x| {
+                empty = false;
+                f(acc, x)
+            })
+            .branch()
+        {
+            ControlFlow::Break(x) => return FromResidual::from_residual(x),
+            ControlFlow::Continue(x) => x,
+        };
+        if empty {
+            return Try::from_output(acc);
+        }
+        loop {
+            self.lender = self.orig.clone();
+            acc = match self.orig.try_fold(acc, &mut f).branch() {
+                ControlFlow::Break(x) => return FromResidual::from_residual(x),
+                ControlFlow::Continue(x) => x,
+            };
+        }
+    }
+    #[inline]
+    fn advance_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {
+        let mut n = match self.lender.advance_by(n) {
+            Ok(()) => return Ok(()),
+            Err(rem) => rem.get(),
+        };
+
+        while n > 0 {
+            self.lender = self.orig.clone();
+            n = match self.lender.advance_by(n) {
+                Ok(()) => return Ok(()),
+                e @ Err(rem) if rem.get() == n => return e,
+                Err(rem) => rem.get(),
+            };
+        }
+
+        NonZeroUsize::new(n).map_or(Ok(()), Err)
+    }
 }
+impl<L> FusedLender for Cycle<L> where L: Clone + FusedLender {}

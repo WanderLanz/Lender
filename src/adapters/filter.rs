@@ -1,4 +1,6 @@
 use crate::{Lender, Lending};
+#[derive(Clone)]
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Filter<L, P> {
     pub(crate) lender: L,
     predicate: P,

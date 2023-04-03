@@ -3,31 +3,36 @@
 WIP, mostly for my own reference.
 
 ✅ = Implemented
-⚠️ = Partially implemented
+⚠️ = Implemented, but may not be stable or fully functional
 ❌ = Not implemented
 
-❤️ = Not implemented, and will either require a lot of work or require a significant change in the expected behavior of the API.
+❤️ = Requires a lot of work.
 
-💀 = Not implemented, and represents an anti-pattern for lending. May be implemented in the future, but not by me (a.k.a I'm not smart enough to make them work well).
+💀 = Represents at least **somewhat** of an anti-pattern for lending iterators.
 
 ## Are We Iter Yet?
 
-- ⚠️ Scaffold main traits and APIs
-  - ⚠️ `Iterator`: [`Lender`](/##Lender)
-  - ⚠️ `DoubleEndedIterator`: `DoubleEndedLender`
-  - ❌ `ExactSizeIterator`: `ExactSizeLender`
-  - ⚠️ `FusedIterator`: `FusedLender`
+- ✅ Scaffold main traits and APIs
+  - ✅ `Iterator`: [`Lender`](/##Lender)
+  - ✅ `DoubleEndedIterator`: `DoubleEndedLender`
+  - ✅ `ExactSizeIterator`: `ExactSizeLender`
+  - ✅ `FusedIterator`: `FusedLender`
   - ✅ `IntoIterator`: `IntoLender`
-  - ✅ `FromIterator`: `FromLender`
-  - ❌ `Extend`: `ExtendLender`
+  - ⚠️ `FromIterator`: `FromLender`
+  - ⚠️ `Extend`: `ExtendLender`
 - ❌ Make adapters functional
+- ❌ Unit tests to see if it is usable.
 - ❌ Implement traits for common types (i.e. `IntoLender`, `FromLender`)
 - ❌ Attempt from_fn and similar APIs
-- ❌ Documentation, if it seems necessary...
+- ❌ Documentation...
 
 ## Lender
 
-Methods which require two `Lend`s to be compared from the same `Lender` thus cannot be implemented for `Lender` without some significant shortcomings, and are better off used via `Copy`, `Clone`, or `Owned` turning the `Lender` into a `Iterator`.
+Methods which require two `Lend`s to be compared from the same `Lender` cannot be implemented for `Lender` without some significant shortcomings.
+
+These methods are better off used via `copied`, `cloned`, or `owned` directly turning the `Lender` into a `Iterator`.
+
+You may also use `into_iterator` if the `Lender` already lends owned data.
 
 ### (Lender) Are We Iter Yet?
 
@@ -43,18 +48,18 @@ Methods which require two `Lend`s to be compared from the same `Lender` thus can
 |✅`skip`              |✅`take`              |✅`scan`              |
 |❤️`flat_map`          |❤️`flatten`           |✅`fuse`              |
 |✅`inspect`           |✅`by_ref`            |✅`collect`           |
-|❤️`try_collect`       |❌`collect_into`      |❌`partition`         |
-|❌`partition_in_place`|✅`is_partitioned`    |✅`try_fold`          |
-|✅`try_for_each`      |✅`fold`              |❌`reduce`            |
-|❌`try_reduce`        |✅`all`               |✅`any`               |
+|❤️`try_collect`       |✅`collect_into`      |✅`partition`         |
+|💀`partition_in_place`|✅`is_partitioned`    |✅`try_fold`          |
+|✅`try_for_each`      |✅`fold`              |💀`reduce`            |
+|💀`try_reduce`        |✅`all`               |✅`any`               |
 |✅`find`              |✅`find_map`          |✅`try_find`          |
-|✅`position`          |❌`rposition`         |💀`max`               |
+|✅`position`          |✅`rposition`         |💀`max`               |
 |💀`min`               |💀`max_by_key`        |💀`max_by`            |
 |💀`min_by_key`        |💀`min_by`            |✅`rev`               |
-|❌`unzip`             |✅`copied`            |✅`cloned`            |
-|✅`cycle`             |❤️`array_chunks`      |💀`sum`               |
-|💀`product`           |❌`cmp`               |❌`cmp_by`            |
-|❌`partial_cmp`       |❌`partial_cmp_by`    |❌`eq`                |
-|❌`eq_by`             |❌`ne`                |❌`lt`                |
-|❌`le`                |❌`gt`                |❌`ge`                |
-|💀`is_sorted`         |💀`is_sorted_by`      |❌`is_sorted_by_key`  |
+|✅`unzip`             |✅`copied`            |✅`cloned`            |
+|✅`cycle`             |💀`array_chunks`      |💀`sum`               |
+|💀`product`           |✅`cmp`               |✅`cmp_by`            |
+|✅`partial_cmp`       |✅`partial_cmp_by`    |✅`eq`                |
+|✅`eq_by`             |✅`ne`                |✅`lt`                |
+|✅`le`                |✅`gt`                |✅`ge`                |
+|💀`is_sorted`         |💀`is_sorted_by`      |✅`is_sorted_by_key`  |

@@ -1,4 +1,6 @@
 use crate::{Lender, Lending, Peekable};
+
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Intersperse<'this, L>
 where
     for<'all> <L as Lending<'all>>::Lend: Clone,
