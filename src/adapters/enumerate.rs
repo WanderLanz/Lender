@@ -1,11 +1,8 @@
-use core::ops::ControlFlow;
+use core::num::NonZeroUsize;
 
-use crate::{
-    try_trait_v2::{FromResidual, Try},
-    Lender, Lending,
-};
+use crate::{try_trait_v2::Try, DoubleEndedLender, ExactSizeLender, FusedLender, Lender, Lending};
 #[derive(Clone, Debug)]
-#[must_use = "iterators are lazy and do nothing unless consumed"]
+#[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Enumerate<L> {
     lender: L,
     count: usize,
@@ -70,7 +67,7 @@ where
         })
     }
     #[inline]
-    fn advance_by(&mut self, n: usize) -> Result<(), core::num::NonZeroUsize> {
+    fn advance_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {
         let remaining = self.lender.advance_by(n);
         let advanced = match remaining {
             Ok(()) => n,
@@ -80,5 +77,58 @@ where
         remaining
     }
 }
-
-// TODO DoubleEndedLender Impl
+impl<L> DoubleEndedLender for Enumerate<L>
+where
+    L: ExactSizeLender + DoubleEndedLender,
+{
+    #[inline]
+    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+        let len = self.lender.len();
+        let x = self.lender.next_back()?;
+        Some((self.count + len - 1, x))
+    }
+    #[inline]
+    fn nth_back(&mut self, n: usize) -> Option<<Self as Lending<'_>>::Lend> {
+        let len = self.lender.len();
+        let x = self.lender.nth_back(n)?;
+        Some((self.count + len - n - 1, x))
+    }
+    #[inline]
+    fn try_rfold<B, F, R>(&mut self, init: B, mut f: F) -> R
+    where
+        Self: Sized,
+        F: FnMut(B, <Self as Lending<'_>>::Lend) -> R,
+        R: Try<Output = B>,
+    {
+        let mut count = self.count + self.lender.len();
+        self.lender.try_rfold(init, move |acc, x| {
+            count -= 1;
+            f(acc, (count, x))
+        })
+    }
+    #[inline]
+    fn rfold<B, F>(self, init: B, mut f: F) -> B
+    where
+        Self: Sized,
+        F: FnMut(B, <Self as Lending<'_>>::Lend) -> B,
+    {
+        let mut count = self.count + self.lender.len();
+        self.lender.rfold(init, move |acc, x| {
+            count -= 1;
+            f(acc, (count, x))
+        })
+    }
+    #[inline]
+    fn advance_back_by(&mut self, n: usize) -> Result<(), NonZeroUsize> { self.lender.advance_back_by(n) }
+}
+impl<L> ExactSizeLender for Enumerate<L>
+where
+    L: ExactSizeLender,
+{
+    fn len(&self) -> usize { self.lender.len() }
+    fn is_empty(&self) -> bool { self.lender.is_empty() }
+}
+impl<L> FusedLender for Enumerate<L> where L: FusedLender {}
+impl<L: Default> Default for Enumerate<L> {
+    fn default() -> Self { Enumerate::new(Default::default()) }
+}

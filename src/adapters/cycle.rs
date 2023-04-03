@@ -6,7 +6,7 @@ use crate::{
 };
 
 #[derive(Clone, Debug)]
-#[must_use = "iterators are lazy and do nothing unless consumed"]
+#[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Cycle<L> {
     orig: L,
     lender: L,

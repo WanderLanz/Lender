@@ -1,7 +1,7 @@
 use crate::{FusedLender, Lender, Lending};
 
 #[derive(Debug)]
-#[must_use = "iterators are lazy and do nothing unless consumed"]
+#[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Chunk<'s, T> {
     lender: &'s mut T,
     len: usize,

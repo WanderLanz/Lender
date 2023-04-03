@@ -1,4 +1,7 @@
-use crate::*;
+use crate::{
+    hkts::{WithLifetime, HKT},
+    Lender, Lending,
+};
 /// not stable
 ///
 /// It is still not decided whether this implementation is correct,

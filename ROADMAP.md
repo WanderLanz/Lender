@@ -13,14 +13,14 @@ WIP, mostly for my own reference.
 ## Are We Iter Yet?
 
 - ✅ Scaffold main traits and APIs
-  - ✅ `Iterator`: [`Lender`](/##Lender)
+  - ✅ `Iterator`: `Lender`
   - ✅ `DoubleEndedIterator`: `DoubleEndedLender`
   - ✅ `ExactSizeIterator`: `ExactSizeLender`
   - ✅ `FusedIterator`: `FusedLender`
   - ✅ `IntoIterator`: `IntoLender`
   - ⚠️ `FromIterator`: `FromLender`
   - ⚠️ `Extend`: `ExtendLender`
-- ❌ Make adapters functional
+- ⚠️ Make adapters functional
 - ❌ Unit tests to see if it is usable.
 - ❌ Implement traits for common types (i.e. `IntoLender`, `FromLender`)
 - ❌ Attempt from_fn and similar APIs
@@ -34,7 +34,13 @@ These methods are better off used via `copied`, `cloned`, or `owned` directly tu
 
 You may also use `into_iterator` if the `Lender` already lends owned data.
 
-### (Lender) Are We Iter Yet?
+### Lender Methods
+
+|Method|Method|
+|---   |---   |
+|✅`owned`             |✅`into_iterator`        |
+
+### Iterator Methods
 
 |Method|Method|Method|
 |---   |---   |---   |
@@ -63,3 +69,32 @@ You may also use `into_iterator` if the `Lender` already lends owned data.
 |✅`eq_by`             |✅`ne`                |✅`lt`                |
 |✅`le`                |✅`gt`                |✅`ge`                |
 |💀`is_sorted`         |💀`is_sorted_by`      |✅`is_sorted_by_key`  |
+
+## Adapter Factor
+
+- ✅ `Chain`
+- ✅ `Chunk`
+- ✅ `Cloned`
+- ✅ `Copied`
+- ✅ `Cycle`
+- ✅ `Enumerate`
+- ✅ `FilterMap`
+- ✅ `Filter`
+- ❤️ `FlatMap`
+- ❤️ `Flatten`
+- ✅ `Fuse`
+- ✅ `Inspect`
+- ⚠️ `Intersperse`
+- ⚠️ `Iter`
+- ⚠️ `MapWhile`
+- ⚠️ `Map`
+- ⚠️ `Mutate`
+- ⚠️ `Owned`
+- ⚠️ `Peekable`
+- ⚠️ `Rev`
+- ⚠️ `SkipWhile`
+- ⚠️ `Skip`
+- ⚠️ `StepBy`
+- ⚠️ `TakeWhile`
+- ⚠️ `Take`
+- ⚠️ `Zip`

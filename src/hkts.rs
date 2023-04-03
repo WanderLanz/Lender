@@ -78,21 +78,21 @@ impl<'b, A, B: 'b, F: Fn(A) -> B> HKAFn<'b, A> for F {
     type B = B;
 }
 
-/// Higher-Kinded Associated Output `FnOnce`, where `Output` (Option<B>) is with lifetime `'b`.
+/// Higher-Kinded Associated Output `FnOnce`, where `Output` (`Option<B>`) is with lifetime `'b`.
 pub trait HKAFnOnceOpt<'b, A>: FnOnce(A) -> Option<<Self as HKAFnOnceOpt<'b, A>>::B> {
     type B: 'b;
 }
 impl<'b, A, B: 'b, F: FnOnce(A) -> Option<B>> HKAFnOnceOpt<'b, A> for F {
     type B = B;
 }
-/// Higher-Kinded Associated Output `FnMut`, where `Output` (Option<B>) is with lifetime `'b`.
+/// Higher-Kinded Associated Output `FnMut`, where `Output` (`Option<B>`) is with lifetime `'b`.
 pub trait HKAFnMutOpt<'b, A>: FnMut(A) -> Option<<Self as HKAFnMutOpt<'b, A>>::B> {
     type B: 'b;
 }
 impl<'b, A, B: 'b, F: FnMut(A) -> Option<B>> HKAFnMutOpt<'b, A> for F {
     type B = B;
 }
-/// Higher-Kinded Associated Output `Fn`, where `Output` (Option<B>) is with lifetime `'b`.
+/// Higher-Kinded Associated Output `Fn`, where `Output` (`Option<B>`) is with lifetime `'b`.
 pub trait HKAFnOpt<'b, A>: Fn(A) -> Option<<Self as HKAFnOpt<'b, A>>::B> {
     type B: 'b;
 }

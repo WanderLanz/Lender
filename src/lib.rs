@@ -10,10 +10,8 @@ mod adapters;
 pub use adapters::*;
 mod traits;
 pub use traits::*;
-pub mod try_trait_v2;
-pub(crate) use try_trait_v2::*;
 pub mod hkts;
-pub(crate) use hkts::*;
+pub mod try_trait_v2;
 
 mod sealed {
     pub trait Sealed {}
@@ -29,6 +27,7 @@ mod test {
     use super::*;
 
     /// Minimal example of a lender
+    #[derive(Debug)]
     struct MyLender<'a, T: 'a>(&'a mut T);
     impl<'lend, 'a, T: 'a> Lending<'lend> for MyLender<'a, T> {
         type Lend = &'lend mut T;
@@ -64,20 +63,32 @@ mod test {
     //     }
     // }
 
+    // WORKING BUT BAD EXAMPLE
+    // impl<'a> FromLender<&'a mut [u8]> for Vec<u8> {
+    //     fn from_lender<L>(lender: L) -> Self
+    //     where
+    //         L: Lender + for<'lend> Lending<'lend, Lend = &'a mut [u8]>,
+    //     {
+    //         let mut vec = Vec::new();
+    //         lender.for_each(|x| vec.extend_from_slice(x));
+    //         vec
+    //     }
+    // }
+
     // GOOD EXAMPLE
-    impl<T, V> FromLender<T> for Vec<V>
-    where
-        T: HKT + ToOwned<Owned = V>,
-    {
-        fn from_lender<L>(lender: L) -> Self
-        where
-            L: Lender + for<'lend> Lending<'lend, Lend = T>,
-        {
-            let mut vec = Vec::new();
-            lender.for_each(|x| vec.push(x.to_owned()));
-            vec
-        }
-    }
+    // impl<T, V> FromLender<T> for Vec<V>
+    // where
+    //     T: HKT + ToOwned<Owned = V>,
+    // {
+    //     fn from_lender<L>(lender: L) -> Self
+    //     where
+    //         L: Lender + for<'lend> Lending<'lend, Lend = T>,
+    //     {
+    //         let mut vec = Vec::new();
+    //         lender.for_each(|x| vec.push(x.to_owned()));
+    //         vec
+    //     }
+    // }
 
     struct WindowsMut<'a, T> {
         inner: &'a mut [T],

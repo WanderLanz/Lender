@@ -1,6 +1,6 @@
 use crate::{Lender, Lending};
 #[derive(Clone, Debug)]
-#[must_use = "iterators are lazy and do nothing unless consumed"]
+#[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Skip<L> {
     lender: L,
     n: usize,

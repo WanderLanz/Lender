@@ -1,6 +1,11 @@
-use crate::*;
+use core::ops::ControlFlow;
+
+use crate::{
+    try_trait_v2::{FromResidual, Try},
+    DoubleEndedLender, ExactSizeLender, FusedLender, Lender, Lending,
+};
 #[derive(Clone, Debug)]
-#[must_use = "iterators are lazy and do nothing unless consumed"]
+#[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Fuse<L> {
     lender: L,
     flag: bool,

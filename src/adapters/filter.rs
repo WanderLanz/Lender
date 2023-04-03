@@ -1,12 +1,19 @@
-use crate::{Lender, Lending};
+use core::fmt;
+
+use crate::{DoubleEndedLender, FusedLender, Lender, Lending};
 #[derive(Clone)]
-#[must_use = "iterators are lazy and do nothing unless consumed"]
+#[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Filter<L, P> {
     pub(crate) lender: L,
     predicate: P,
 }
 impl<L, P> Filter<L, P> {
     pub(crate) fn new(lender: L, predicate: P) -> Filter<L, P> { Filter { lender, predicate } }
+}
+impl<I: fmt::Debug, P> fmt::Debug for Filter<I, P> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Filter").field("lender", &self.lender).finish()
+    }
 }
 impl<'lend, L, P> Lending<'lend> for Filter<L, P>
 where
@@ -21,15 +28,31 @@ where
     L: Lender,
 {
     #[inline]
-    fn next<'next>(&'next mut self) -> Option<<Self as Lending<'next>>::Lend> {
-        while let Some(x) = self.lender.next() {
-            if (self.predicate)(&x) {
-                // REVIEW: SAFETY: `x` is a reference to a value in `self.lender`, which is valid for `'next`
-                return Some(unsafe {
-                    core::mem::transmute::<<Self as Lending<'_>>::Lend, <Self as Lending<'next>>::Lend>(x)
-                });
-            }
-        }
-        None
+    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> { self.lender.find(&mut self.predicate) }
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let (_, upper) = self.lender.size_hint();
+        (0, upper)
     }
+    #[inline]
+    fn count(mut self) -> usize
+    where
+        Self: Sized,
+    {
+        self.lender.map(move |x| (self.predicate)(&x) as usize).into_iterator().sum()
+    }
+}
+impl<L, P> DoubleEndedLender for Filter<L, P>
+where
+    P: FnMut(&<L as Lending<'_>>::Lend) -> bool,
+    L: DoubleEndedLender,
+{
+    #[inline]
+    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> { self.lender.rfind(&mut self.predicate) }
+}
+impl<L, P> FusedLender for Filter<L, P>
+where
+    P: FnMut(&<L as Lending<'_>>::Lend) -> bool,
+    L: FusedLender,
+{
 }

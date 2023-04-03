@@ -35,5 +35,8 @@ where
     I: 'static,
 {
     type Item = I;
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> { self.lender.next() }
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) { self.lender.size_hint() }
 }
