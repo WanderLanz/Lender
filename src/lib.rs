@@ -3,9 +3,6 @@
 
 extern crate alloc;
 
-#[macro_use]
-extern crate higher_order_closure;
-
 mod adapters;
 pub use adapters::*;
 mod traits;
