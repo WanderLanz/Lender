@@ -1,16 +1,17 @@
 #![doc = include_str!("../README.md")]
 #![no_std]
 
-use core::{cmp::Ordering, ops::ControlFlow};
-
 extern crate alloc;
-use alloc::borrow::ToOwned;
+
+#[macro_use]
+extern crate higher_order_closure;
 
 mod adapters;
 pub use adapters::*;
 mod traits;
 pub use traits::*;
 pub mod hkts;
+mod impls;
 pub mod try_trait_v2;
 
 mod sealed {
@@ -114,7 +115,13 @@ mod test {
         let mut bar: MyLender<'x, u32> = MyLender(x);
         let _ = bar.next();
         let _ = bar.next();
-        let mut bar = bar.into_lender().mutate(|y| **y += 1).map(|x| *x + 1).into_iterator();
-        let x = bar.find_map(|x| if x > 0 { Some(vec![1, 2, 3]) } else { None });
+        let mut bar = bar.into_lender().mutate(|y| **y += 1).map(|x: &mut u32| *x + 1).iter();
+        let _ = bar.find_map(|x| if x > 0 { Some(vec![1, 2, 3]) } else { None });
+        let mut w = vec![1u32, 2, 3, 4, 5];
+        let windows = _windows_mut(&mut w, 2);
+        windows
+            .filter(|x| x[0] > 0)
+            // .map(|x| &mut x[0]) // This is not possible because of the lifetime
+            .for_each(|x| x[0] += 1);
     }
 }

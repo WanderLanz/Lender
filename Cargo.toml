@@ -7,3 +7,4 @@ description = "Iterator which lend items"
 
 
 [dependencies]
+higher-order-closure = "0.0.5"

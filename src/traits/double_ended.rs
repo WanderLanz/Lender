@@ -1,4 +1,4 @@
-use core::num::NonZeroUsize;
+use core::{num::NonZeroUsize, ops::ControlFlow};
 
 use crate::{
     try_trait_v2::{FromResidual, Try},

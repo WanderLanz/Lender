@@ -3,5 +3,14 @@
 version = 3
 
 [[package]]
+name = "higher-order-closure"
+version = "0.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8c450d87a307c754cbd7718dfca84b8904e313157191fae5b249d37aab216c89"
+
+[[package]]
 name = "lender"
 version = "0.0.0"
+dependencies = [
+ "higher-order-closure",
+]

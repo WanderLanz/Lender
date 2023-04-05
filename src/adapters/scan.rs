@@ -1,3 +1,5 @@
+use core::fmt;
+
 use crate::{hkts::HKAFnMutOpt, Lender, Lending};
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -8,6 +10,11 @@ pub struct Scan<L, St, F> {
 }
 impl<L, St, F> Scan<L, St, F> {
     pub(crate) fn new(lender: L, state: St, f: F) -> Scan<L, St, F> { Scan { lender, state, f } }
+}
+impl<L: fmt::Debug, St: fmt::Debug, F> fmt::Debug for Scan<L, St, F> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Scan").field("lender", &self.lender).field("state", &self.state).finish()
+    }
 }
 impl<'lend, B, L, St, F> Lending<'lend> for Scan<L, St, F>
 where
@@ -24,4 +31,9 @@ where
 {
     #[inline]
     fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> { (self.f)((&mut self.state, self.lender.next()?)) }
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let (_, upper) = self.lender.size_hint();
+        (0, upper)
+    }
 }

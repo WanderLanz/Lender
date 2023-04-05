@@ -1,4 +1,6 @@
-use crate::{Lender, Lending};
+use core::{fmt, ops::ControlFlow};
+
+use crate::{try_trait_v2::Try, FusedLender, Lender, Lending};
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct SkipWhile<L, P> {
@@ -8,6 +10,11 @@ pub struct SkipWhile<L, P> {
 }
 impl<L, P> SkipWhile<L, P> {
     pub(crate) fn new(lender: L, predicate: P) -> SkipWhile<L, P> { SkipWhile { lender, flag: false, predicate } }
+}
+impl<L: fmt::Debug, P> fmt::Debug for SkipWhile<L, P> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("SkipWhile").field("lender", &self.lender).finish()
+    }
 }
 impl<'lend, L, P> Lending<'lend> for SkipWhile<L, P>
 where
@@ -22,20 +29,61 @@ where
     L: Lender,
 {
     #[inline]
-    fn next<'next>(&'next mut self) -> Option<<Self as Lending<'next>>::Lend> {
-        if self.flag {
-            self.lender.next()
-        } else {
-            while let Some(x) = self.lender.next() {
-                if !(self.predicate)(&x) {
-                    self.flag = true;
-                    // SAFETY: only lives until the next call to next
-                    return Some(unsafe {
-                        core::mem::transmute::<<Self as Lending<'_>>::Lend, <Self as Lending<'next>>::Lend>(x)
-                    });
-                }
+    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+        let flag = &mut self.flag;
+        let predicate = &mut self.predicate;
+        self.lender.find(move |x| {
+            if *flag || !(predicate)(x) {
+                *flag = true;
+                true
+            } else {
+                false
             }
-            None
-        }
+        })
     }
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let (_, upper) = self.lender.size_hint();
+        (0, upper)
+    }
+    #[inline]
+    fn try_fold<B, F, R>(&mut self, mut init: B, mut f: F) -> R
+    where
+        Self: Sized,
+        F: FnMut(B, <Self as Lending<'_>>::Lend) -> R,
+        R: Try<Output = B>,
+    {
+        if !self.flag {
+            match self.next() {
+                Some(x) => {
+                    init = match f(init, x).branch() {
+                        ControlFlow::Break(x) => return R::from_residual(x),
+                        ControlFlow::Continue(x) => x,
+                    }
+                }
+                None => return R::from_output(init),
+            }
+        }
+        self.lender.try_fold(init, f)
+    }
+    #[inline]
+    fn fold<B, F>(mut self, mut init: B, mut f: F) -> B
+    where
+        Self: Sized,
+        F: FnMut(B, <Self as Lending<'_>>::Lend) -> B,
+    {
+        if !self.flag {
+            match self.next() {
+                Some(x) => init = f(init, x),
+                None => return init,
+            }
+        }
+        self.lender.fold(init, f)
+    }
+}
+impl<L, P> FusedLender for SkipWhile<L, P>
+where
+    P: FnMut(&<L as Lending<'_>>::Lend) -> bool,
+    L: FusedLender,
+{
 }

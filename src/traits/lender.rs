@@ -1,4 +1,5 @@
-use core::{num::NonZeroUsize, ops::ControlFlow};
+use alloc::borrow::ToOwned;
+use core::{cmp::Ordering, num::NonZeroUsize, ops::ControlFlow};
 
 use crate::{
     hkts::{HKGFnMut, WithLifetime, HKT},
@@ -34,7 +35,7 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
     #[inline]
     fn last<'call>(mut self) -> Option<<Self as Lending<'call>>::Lend>
     where
-        Self: Sized + 'call,
+        Self: Sized,
     {
         let mut last = None;
         while let Some(x) = self.next() {
@@ -146,7 +147,7 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
     #[inline]
     fn peekable<'call>(self) -> Peekable<'call, Self>
     where
-        Self: Sized + 'call,
+        Self: Sized,
     {
         Peekable::new(self)
     }
@@ -325,8 +326,34 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
         }
         accum
     }
-    // UNIMPLEMENTABLE: reduce
-    // UNIMPLEMENTABLE: try_reduce
+    #[inline]
+    fn reduce<T, F>(mut self, f: F) -> Option<T>
+    where
+        Self: Sized,
+        for<'lend> <Self as Lending<'lend>>::Lend: ToOwned<Owned = T>,
+        F: FnMut(T, <Self as Lending<'_>>::Lend) -> T,
+    {
+        let first = self.next()?.to_owned();
+        Some(self.fold(first, f))
+    }
+    #[inline]
+    fn try_reduce<T, F, R>(mut self, f: F) -> ChangeOutputType<R, Option<T>>
+    where
+        Self: Sized,
+        for<'lend> <Self as Lending<'lend>>::Lend: ToOwned<Owned = T>,
+        F: FnMut(T, <Self as Lending<'_>>::Lend) -> R,
+        R: Try<Output = T>,
+        R::Residual: Residual<Option<T>>,
+    {
+        let first = match self.next() {
+            Some(x) => x.to_owned(),
+            None => return Try::from_output(None),
+        };
+        match self.try_fold(first, f).branch() {
+            ControlFlow::Break(x) => FromResidual::from_residual(x),
+            ControlFlow::Continue(x) => Try::from_output(Some(x)),
+        }
+    }
     #[inline]
     fn all<F>(&mut self, mut f: F) -> bool
     where
@@ -354,7 +381,7 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
         false
     }
     #[inline]
-    fn find<'call, P>(&'call mut self, mut predicate: P) -> Option<<Self as Lending<'call>>::Lend>
+    fn find<P>(&mut self, mut predicate: P) -> Option<<Self as Lending<'_>>::Lend>
     where
         Self: Sized,
         P: FnMut(&<Self as Lending<'_>>::Lend) -> bool,
@@ -365,7 +392,7 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
                 return Some(unsafe {
                     core::mem::transmute::<
                         <Self as Lending<'_>>::Lend,
-                        <Self as Lending<'call>>::Lend
+                        <Self as Lending<'_>>::Lend
                     >(x)
                 });
             }
@@ -373,21 +400,20 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
         None
     }
     #[inline]
-    fn find_map<'call, B, F>(&'call mut self, mut f: F) -> Option<B>
+    fn find_map<B, F>(&mut self, mut f: F) -> Option<B>
     where
         Self: Sized,
         F: for<'lend> HKGFnMut<'lend, <Self as Lending<'lend>>::Lend, Option<B>>,
     {
         while let Some(x) = self.next() {
             if let Some(y) = f(x) {
-                // SAFETY: #Polonius
                 return Some(y);
             }
         }
         None
     }
     #[inline]
-    fn try_find<'call, F, R>(&'call mut self, mut f: F) -> ChangeOutputType<R, Option<<Self as Lending<'call>>::Lend>>
+    fn try_find<F, R>(&mut self, mut f: F) -> ChangeOutputType<R, Option<<Self as Lending<'_>>::Lend>>
     where
         Self: Sized,
         F: FnMut(&<Self as Lending<'_>>::Lend) -> R,
@@ -396,15 +422,15 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
     {
         while let Some(x) = self.next() {
             match f(&x).branch() {
-                ControlFlow::Break(x) => return <ChangeOutputType<R, Option<<Self as Lending<'call>>::Lend>> as FromResidual>::from_residual(x),
+                ControlFlow::Break(x) => return <ChangeOutputType<R, Option<<Self as Lending<'_>>::Lend>>>::from_residual(x),
                 ControlFlow::Continue(cond) => {
                     if cond {
                         // SAFETY: polonius
-                        return <ChangeOutputType<R, Option<<Self as Lending<'call>>::Lend>> as Try>::from_output(
+                        return <ChangeOutputType<R, Option<<Self as Lending<'_>>::Lend>>>::from_output(
                             Some(unsafe {
                                 core::mem::transmute::<
                                     <Self as Lending<'_>>::Lend,
-                                    <Self as Lending<'call>>::Lend
+                                    <Self as Lending<'_>>::Lend
                                 >(x)
                             })
                         );
@@ -412,7 +438,7 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
                 }
             }
         }
-        <ChangeOutputType<R, Option<<Self as Lending<'call>>::Lend>> as Try>::from_output(None)
+        <ChangeOutputType<R, Option<<Self as Lending<'_>>::Lend>>>::from_output(None)
     }
     #[inline]
     fn position<P>(&mut self, mut predicate: P) -> Option<usize>
@@ -442,6 +468,52 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
             ControlFlow::Continue(_) => None,
             ControlFlow::Break(x) => Some(x),
         }
+    }
+    #[inline]
+    fn max<T>(self) -> Option<T>
+    where
+        Self: Sized,
+        T: for<'lend> PartialOrd<<Self as Lending<'lend>>::Lend>,
+        for<'lend> <Self as Lending<'lend>>::Lend: ToOwned<Owned = T>,
+    {
+        self.max_by(|x, y| x.partial_cmp(y).unwrap_or(Ordering::Equal))
+    }
+    #[inline]
+    fn min<T>(self) -> Option<T>
+    where
+        Self: Sized,
+        T: for<'lend> PartialOrd<<Self as Lending<'lend>>::Lend>,
+        for<'lend> <Self as Lending<'lend>>::Lend: ToOwned<Owned = T>,
+    {
+        self.min_by(|x, y| x.partial_cmp(y).unwrap_or(Ordering::Equal))
+    }
+    #[inline]
+    fn max_by<T, F>(self, mut compare: F) -> Option<T>
+    where
+        Self: Sized,
+        for<'lend> <Self as Lending<'lend>>::Lend: ToOwned<Owned = T>,
+        F: for<'lend> FnMut(&T, &<Self as Lending<'lend>>::Lend) -> Ordering,
+    {
+        self.reduce(move |x, y| {
+            match compare(&x, &y) {
+                Ordering::Greater => x,
+                _ => y.to_owned(),
+            }
+        })
+    }
+    #[inline]
+    fn min_by<T, F>(self, mut compare: F) -> Option<T>
+    where
+        Self: Sized,
+        for<'lend> <Self as Lending<'lend>>::Lend: ToOwned<Owned = T>,
+        F: for<'lend> FnMut(&T, &<Self as Lending<'lend>>::Lend) -> Ordering,
+    {
+        self.reduce(move |x, y| {
+            match compare(&x, &y) {
+                Ordering::Greater => y.to_owned(),
+                _ => x,
+            }
+        })
     }
     #[inline]
     fn rev(self) -> Rev<Self>
@@ -617,10 +689,11 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
         true
     }
     // not std::iter
-    fn into_iterator(self) -> Iter<Self>
+    /// Iterators method names already have unique meanings in stdlib, so why not use the ergonomic `iter` method name over `into_iterator`?
+    fn iter<'this>(self) -> Iter<'this, Self>
     where
-        Self: Sized,
-        for<'all> <Self as Lending<'all>>::Lend: 'static,
+        Self: Sized + 'this,
+        for<'lend> <Self as Lending<'lend>>::Lend: 'static,
     {
         Iter::new(self)
     }
@@ -659,10 +732,16 @@ where
     }
 }
 
-impl<'lend, L: Lender> Lending<'lend> for &mut L {
+impl<'lend, L> Lending<'lend> for &mut L
+where
+    L: Lender,
+{
     type Lend = <L as Lending<'lend>>::Lend;
 }
-impl<L: Lender> Lender for &mut L {
+impl<L> Lender for &mut L
+where
+    L: Lender,
+{
     #[inline]
     fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> { (*self).next() }
 }

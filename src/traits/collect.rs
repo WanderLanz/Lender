@@ -23,18 +23,6 @@ impl<P: Lender> IntoLender for P {
     #[inline]
     fn into_lender(self) -> P { self }
 }
-impl<'lend, T> Lending<'lend> for Option<T> {
-    type Lend = T;
-}
-impl<T> Lender for Option<T> {
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> { self.take() }
-}
-impl<'lend, T> Lending<'lend> for &Option<T> {
-    type Lend = &'lend T;
-}
-impl<'a, T> Lender for &'a Option<T> {
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> { self.as_ref() }
-}
 pub trait ExtendLender<A>
 where
     A: HKT,

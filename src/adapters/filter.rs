@@ -39,7 +39,8 @@ where
     where
         Self: Sized,
     {
-        self.lender.map(move |x| (self.predicate)(&x) as usize).into_iterator().sum()
+        let p = &mut self.predicate;
+        self.lender.map(move |x| (p)(&x) as usize).iter().sum()
     }
 }
 impl<L, P> DoubleEndedLender for Filter<L, P>
