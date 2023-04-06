@@ -1,4 +1,4 @@
-# Lender (DO NOT USE, THIS IS JUST PRACTICE)
+# Lender
 
 Please see [`lending-iterator`] for an actual implementation of lending iterators.
 
