@@ -1,4 +1,102 @@
-#![doc = include_str!("../README.md")]
+//! # Lender
+//!
+//! A standard `Iterator` cannot iterate over items that can only be borrowed for the lifetime of the call to `next()`.
+//! This is because the `Iterator` trait does not define `next()` to have a lifetime parameter that can be used to specify the
+//! lifetime of the returned item to be bound to the lifetime of the call to `next()`.
+//!
+//! For example, if you try to implement a `WindowsMut` iterator over a slice, you will soon find that the borrow checker is smart enough to know that
+//! you are attempting to mutably borrow some region of a slice for a lifetime larger than you can return, and will not allow it.
+//!
+//! ```rust,compile_fail
+//! struct WindowsMut<'a, T> {
+//!     inner: &'a mut [T],
+//!     begin: usize,
+//!     len: usize,
+//! }
+//! impl<'a, T> Iterator for WindowsMut<'a, T> {
+//!     type Item = &'a mut [T];
+//!
+//!     // imagine the { &mut self } here has lifetime { '1 }
+//!     fn next(&mut self) -> Option<Self::Item> {
+//!         let begin = self.begin;
+//!         self.begin = self.begin.saturating_add(1);
+//!         // cannot return { &'1 mut [T] } because { '1 } does not live long enough to fulfill the lifetime { 'a }
+//!         self.inner.get_mut(begin..begin + self.len)
+//!     }
+//! }
+//! ```
+//!
+//! `lender` allows you to use many of the methods and convenient APIs of `Iterator` on types that can only be borrowed for the lifetime of the call to `next()`.
+//!
+//! ## Example
+//!
+//! ```rust
+//! use lender::{Lending, Lender};
+//!
+//! struct WindowsMut<'a, T> {
+//!     inner: &'a mut [T],
+//!     begin: usize,
+//!     len: usize,
+//! }
+//!
+//! // first, we need to implement the `Lending` and `Lender` traits for our `WindowsMut` type:
+//!
+//! impl<'lend, 'a, T> Lending<'lend> for WindowsMut<'a, T> {
+//!     type Lend = &'lend mut [T];
+//! }
+//! impl<'a, T> Lender for WindowsMut<'a, T> {
+//!     fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+//!         let begin = self.begin;
+//!         self.begin = self.begin.saturating_add(1);
+//!         self.inner.get_mut(begin..begin + self.len)
+//!     }
+//! }
+//!
+//! // Now we can use many of the methods and convenient APIs of `Iterator` on our `WindowsMut` type:
+//!
+//! fn main() {
+//!     // we can manually iterate over our `WindowsMut`:
+//!     {
+//!         let mut vec = vec![1u32, 2, 3, 4, 5];
+//!         let mut windows = WindowsMut { inner: &mut vec, begin: 0, len: 3 };
+//!
+//!         assert_eq!(windows.next(), Some(&mut [1, 2, 3][..]));
+//!         assert_eq!(windows.next(), Some(&mut [2, 3, 4][..]));
+//!         assert_eq!(windows.next(), Some(&mut [3, 4, 5][..]));
+//!         assert_eq!(windows.next(), None);
+//!     }
+//!     // we can use `for_each` or a while loop to iterate over our `WindowsMut`:
+//!     {
+//!         let mut vec = vec![1u32, 2, 3, 4, 5];
+//!         let mut vec2 = vec![1u32, 2, 3, 4, 5];
+//!         let mut windows = WindowsMut { inner: &mut vec, begin: 0, len: 3 };
+//!         let mut windows2 = WindowsMut { inner: &mut vec2, begin: 0, len: 3 };
+//!
+//!         windows.for_each(|x| x[2] = x[0]);
+//!         // or
+//!         while let Some(x) = windows2.next() {
+//!             x[2] = x[0];
+//!         }
+//!         assert_eq!(vec, vec2);
+//!     }
+//!     // we can use familiar methods like `filter` and `map`:
+//!     {
+//!         let mut vec = vec![1u32, 2, 3, 4, 5];
+//!         let mut windows = WindowsMut { inner: &mut vec, begin: 0, len: 3 };
+//!
+//!         windows.filter(|x| (x[0] % 2) != 0).for_each(|x| x[0] = 0);
+//!         assert_eq!(vec, vec![0, 2, 0, 4, 5]);
+//!     }
+//!     // we can even turn our `WindowsMut` into an `Iterator` that yields `u32`:
+//!     {
+//!         let mut vec = vec![1u32, 2, 3, 4, 5];
+//!         let mut windows = WindowsMut { inner: &mut vec, begin: 0, len: 3 };
+//!
+//!         let mut iter = windows.map(|x| x[0]).iter();
+//!         assert_eq!(iter.next(), Some(1u32));
+//!     }
+//! }
+//! ```
 #![no_std]
 
 extern crate alloc;

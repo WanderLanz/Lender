@@ -20,7 +20,7 @@ WIP, mostly for my own reference.
   - ✅ `IntoIterator`: `IntoLender`
   - ⚠️ `FromIterator`: `FromLender` [^1]
   - ⚠️ `Extend`: `ExtendLender` [^1]
-- ⚠️ Make adapters functional
+- ✅ Make adapters functional
 - ❌ Unit tests to see if it is usable.
 - ❌ Implement traits for common types (i.e. `IntoLender`, `FromLender`)
 - ❌ Attempt from_fn and similar APIs
