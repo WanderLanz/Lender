@@ -62,10 +62,8 @@ where
         }
         loop {
             let mul = n.checked_mul(step);
-            {
-                if mul.is_some() {
-                    return self.lender.nth(mul.unwrap() - 1);
-                }
+            if let Some(mul) = mul {
+                return self.lender.nth(mul - 1);
             }
             let div_n = usize::MAX / n;
             let div_step = usize::MAX / step;

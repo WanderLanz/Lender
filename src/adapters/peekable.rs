@@ -189,13 +189,11 @@ where
 }
 impl<'this, L: DoubleEndedLender> DoubleEndedLender for Peekable<'this, L> {
     #[inline]
-    fn next_back<'next>(&'next mut self) -> Option<<Self as Lending<'next>>::Lend> {
+    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
         match self.peeked.as_mut() {
             // SAFETY: 'this: 'next
             Some(v @ Some(_)) => self.lender.next_back().or_else(|| unsafe {
-                core::mem::transmute::<Option<<Self as Lending<'this>>::Lend>, Option<<Self as Lending<'next>>::Lend>>(
-                    v.take(),
-                )
+                core::mem::transmute::<Option<<Self as Lending<'this>>::Lend>, Option<<Self as Lending<'_>>::Lend>>(v.take())
             }),
             Some(None) => None,
             None => self.lender.next_back(),

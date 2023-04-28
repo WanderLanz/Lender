@@ -105,7 +105,7 @@ where
 impl<'this, L: fmt::Debug, G: fmt::Debug> fmt::Debug for IntersperseWith<'this, L, G>
 where
     L: Lender,
-    for<'lend> <L as Lending<'lend>>::Lend: fmt::Debug,
+    for<'all> <L as Lending<'all>>::Lend: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("IntersperseWith")

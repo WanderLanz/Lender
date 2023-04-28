@@ -6,11 +6,7 @@ WIP, mostly for my own reference.
 ⚠️ = Implemented, but may not be stable or fully functional
 ❌ = Not implemented
 
-❤️ = Requires a lot of work.
-
-💀 = Represents at least **somewhat** of an anti-pattern for lending iterators.
-
-## Are We Iter Yet?
+💀 = Represents enough of an anti-pattern that I don't plan to implement it.
 
 - ✅ Scaffold main traits and APIs
   - ✅ `Iterator`: `Lender`
@@ -18,15 +14,13 @@ WIP, mostly for my own reference.
   - ✅ `ExactSizeIterator`: `ExactSizeLender`
   - ✅ `FusedIterator`: `FusedLender`
   - ✅ `IntoIterator`: `IntoLender`
-  - ⚠️ `FromIterator`: `FromLender` [^1]
-  - ⚠️ `Extend`: `ExtendLender` [^1]
+  - ⚠️ `FromIterator`: `FromLender`
+  - ⚠️ `Extend`: `ExtendLender`
 - ✅ Make adapters functional
-- ❌ Unit tests to see if it is usable.
+- ❌ Unit tests
 - ❌ Implement traits for common types (i.e. `IntoLender`, `FromLender`)
 - ❌ Attempt from_fn and similar APIs
 - ❌ Documentation...
-
-[^1]: These traits are unstable because they use a Higher-Kinded Type trait bound for generics, making them not even remotely as ergonomic as I wish they could be.
 
 ## Lender
 
@@ -40,7 +34,7 @@ You may also use `.iter()` if the `Lender` already lends owned data (`'static`).
 
 |Method|Method|
 |---   |---   |
-|✅`owned`             |✅`iter`        |
+|✅`owned`             |✅`iter`              |
 
 ### Iterator Methods
 
@@ -54,25 +48,23 @@ You may also use `.iter()` if the `Lender` already lends owned data (`'static`).
 |✅`filter_map`        |✅`enumerate`         |✅`peekable`          |
 |✅`skip_while`        |✅`take_while`        |✅`map_while`         |
 |✅`skip`              |✅`take`              |✅`scan`              |
-|❤️`flat_map` [^2]     |❤️`flatten` [^2]      |✅`fuse`              |
+|⚠️`flat_map`          |⚠️`flatten`           |✅`fuse`              |
 |✅`inspect`           |✅`by_ref`            |✅`collect`           |
-|❤️`try_collect` [^3]  |✅`collect_into`      |✅`partition`         |
+|✅`try_collect`       |✅`collect_into`      |✅`partition`         |
 |💀`partition_in_place`|✅`is_partitioned`    |✅`try_fold`          |
 |✅`try_for_each`      |✅`fold`              |✅`reduce`            |
 |✅`try_reduce`        |✅`all`               |✅`any`               |
 |✅`find`              |✅`find_map`          |✅`try_find`          |
-|✅`position`          |✅`rposition`         |⚠️`max`               |
-|⚠️`min`               |💀`max_by_key`        |✅`max_by`            |
+|✅`position`          |✅`rposition`         |✅`max`               |
+|✅`min`               |💀`max_by_key`        |✅`max_by`            |
 |💀`min_by_key`        |✅`min_by`            |✅`rev`               |
-|✅`unzip`             |✅`copied`            |✅`cloned`            |
+|💀`unzip`             |✅`copied`            |✅`cloned`            |
 |✅`cycle`             |💀`array_chunks`      |💀`sum`               |
 |💀`product`           |✅`cmp`               |✅`cmp_by`            |
 |✅`partial_cmp`       |✅`partial_cmp_by`    |✅`eq`                |
 |✅`eq_by`             |✅`ne`                |✅`lt`                |
 |✅`le`                |✅`gt`                |✅`ge`                |
-|💀`is_sorted`         |💀`is_sorted_by`      |✅`is_sorted_by_key`  |
-
-[^3]: There be HRTB dragons, rustc is not happy with this.
+|✅`is_sorted`         |✅`is_sorted_by`      |✅`is_sorted_by_key`  |
 
 ## Adapter Factor
 
@@ -84,8 +76,8 @@ You may also use `.iter()` if the `Lender` already lends owned data (`'static`).
 - ✅ `Enumerate`
 - ✅ `FilterMap`
 - ✅ `Filter`
-- ❤️ `FlatMap` [^2]
-- ❤️ `Flatten` [^2]
+- ⚠️ `FlatMap`
+- ⚠️ `Flatten`
 - ✅ `Fuse`
 - ✅ `Inspect`
 - ✅ `Intersperse`
@@ -103,5 +95,3 @@ You may also use `.iter()` if the `Lender` already lends owned data (`'static`).
 - ✅ `TakeWhile`
 - ✅ `Take`
 - ✅ `Zip`
-
-[^2]: Flattening a lender via an adapter requires a large amount of unsafe transmutes, which is not ideal, so I am waiting for other roadmap items to be completed before I attempt to implement this.

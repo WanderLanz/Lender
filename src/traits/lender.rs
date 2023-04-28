@@ -2,10 +2,25 @@ use alloc::borrow::ToOwned;
 use core::{cmp::Ordering, num::NonZeroUsize, ops::ControlFlow};
 
 use crate::{
-    hkts::{HKGFnMut, WithLifetime, HKT},
+    hkts::{HKAFnMut, HKGFnMut},
     try_trait_v2::{ChangeOutputType, FromResidual, Residual, Try},
     *,
 };
+
+/// A trait necessary for implementing `Lender`.
+///
+/// This is a result of Higher-Ranked Trait Bounds (HRTBs) not having a way to express qualifiers (```for<'any where Self: 'any> Self: Trait```)
+/// and effectively making HRTBs only useful when you want to express a trait constraint on ALL lifetimes, including 'static (```for<'all> Self: trait```)
+///
+/// Although the common example of implementing your own LendingIterator uses a (```type Item<'a> where Self: 'a;```) GAT,
+/// that generally only works withing a small subset of the features that a LendingIterator needs to provide to be useful.
+///
+/// Please see [Sabrina Jewson's Blog][1] for more information on the problem and how a trait like this can be used to solve it.
+///
+/// [1]: (https://sabrinajewson.org/blog/the-better-alternative-to-lifetime-gats)
+pub trait Lending<'lend, __Seal: Sealed = Seal<&'lend Self>> {
+    type Lend: 'lend;
+}
 
 /// An iterator that yields items bound by the lifetime of each iteration.
 ///
@@ -14,7 +29,7 @@ use crate::{
 /// This crate is meant to be a blanket implementation of the standard library's `iter` module for types that run into the lending iterator problem.
 ///
 /// [`lending-iterator`]: https://crates.io/crate/lending-iterator
-pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
+pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend>;
     #[inline]
     fn next_chunk(&mut self, len: usize) -> Chunk<'_, Self>
@@ -75,7 +90,7 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
     fn chain<U: IntoLender>(self, other: U) -> Chain<Self, <U as IntoLender>::Lender>
     where
         Self: Sized,
-        for<'lend> U: Lending<'lend, Lend = <Self as Lending<'lend>>::Lend>,
+        for<'all> U: Lending<'all, Lend = <Self as Lending<'all>>::Lend>,
     {
         Chain::new(self, other.into_lender())
     }
@@ -83,7 +98,7 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
     fn zip<U: IntoLender>(self, other: U) -> Zip<Self, <U as IntoLender>::Lender>
     where
         Self: Sized,
-        for<'lend> U: Lending<'lend, Lend = <Self as Lending<'lend>>::Lend>,
+        for<'all> U: Lending<'all, Lend = <Self as Lending<'all>>::Lend>,
     {
         Zip::new(self, other.into_lender())
     }
@@ -91,7 +106,7 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
     fn intersperse<'call>(self, separator: <Self as Lending<'call>>::Lend) -> Intersperse<'call, Self>
     where
         Self: Sized,
-        for<'lend> <Self as Lending<'lend>>::Lend: Clone,
+        for<'all> <Self as Lending<'all>>::Lend: Clone,
     {
         Intersperse::new(self, separator)
     }
@@ -107,7 +122,7 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
     fn map<B, F>(self, f: F) -> Map<Self, F>
     where
         Self: Sized,
-        F: for<'lend> HKGFnMut<'lend, <Self as Lending<'lend>>::Lend, B>,
+        F: for<'all> HKGFnMut<'all, <Self as Lending<'all>>::Lend, B>,
     {
         Map::new(self, f)
     }
@@ -133,7 +148,7 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
     fn filter_map<B, F>(self, f: F) -> FilterMap<Self, F>
     where
         Self: Sized,
-        F: for<'lend> HKGFnMut<'lend, <Self as Lending<'lend>>::Lend, Option<B>>,
+        F: for<'all> HKGFnMut<'all, <Self as Lending<'all>>::Lend, Option<B>>,
     {
         FilterMap::new(self, f)
     }
@@ -171,7 +186,7 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
     fn map_while<B, P>(self, predicate: P) -> MapWhile<Self, P>
     where
         Self: Sized,
-        P: for<'lend> HKGFnMut<'lend, <Self as Lending<'lend>>::Lend, Option<B>>,
+        P: for<'all> HKGFnMut<'all, <Self as Lending<'all>>::Lend, Option<B>>,
     {
         MapWhile::new(self, predicate)
     }
@@ -193,14 +208,27 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
     fn scan<St, B, F>(self, initial_state: St, f: F) -> Scan<Self, St, F>
     where
         Self: Sized,
-        F: for<'lend> HKGFnMut<'lend, (&'lend mut St, <Self as Lending<'lend>>::Lend), Option<B>>,
+        F: for<'all> HKGFnMut<'all, (&'all mut St, <Self as Lending<'all>>::Lend), Option<B>>,
     {
         Scan::new(self, initial_state, f)
     }
-
-    // HELP: flat_map
-    // HELP: flatten
-
+    #[inline]
+    fn flat_map<'call, F>(self, f: F) -> FlatMap<'call, Self, F>
+    where
+        Self: Sized,
+        F: for<'all> HKAFnMut<'all, <Self as Lending<'all>>::Lend>,
+        for<'all> <F as HKAFnMut<'all, <Self as Lending<'all>>::Lend>>::B: IntoLender,
+    {
+        FlatMap::new(self, f)
+    }
+    #[inline]
+    fn flatten<'call>(self) -> Flatten<'call, Self>
+    where
+        Self: Sized,
+        for<'all> <Self as Lending<'all>>::Lend: IntoLender,
+    {
+        Flatten::new(self)
+    }
     #[inline]
     fn fuse(self) -> Fuse<Self>
     where
@@ -232,36 +260,44 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
         self
     }
     #[inline]
-    fn collect<T, B>(self) -> B
+    fn collect<B>(self) -> B
     where
-        Self: Sized + for<'lend> Lending<'lend, Lend = <T as WithLifetime<'lend>>::T>,
-        T: HKT,
-        B: FromLender<T>,
+        Self: Sized,
+        B: FromLender<Self>,
     {
-        <B as FromLender<T>>::from_lender(self)
+        FromLender::from_lender(self)
     }
-    // #[inline]
-    // fn try_collect<'call, A: HKT, B: 'call>(&'call mut self) -> <<<Self as Lending<'call>>::Lend as Try>::Residual as Residual<B>>::TryType
-    // where
-    //     Self: Sized,
-    //     for<'all> <Self as Lending<'all>>::Lend: Try<Output = A>,
-    //     for<'all> <<Self as Lending<'all>>::Lend as Try>::Residual: Residual<B>,
-    //     B: FromLender<A>,
-    // {
-    //     try_process(self, |i| FromLender::<A>::from_lender(i))
-    // }
     #[inline]
-    fn collect_into<A: HKT, E: ExtendLender<A>>(self, collection: &mut E) -> &mut E
+    fn try_collect<'a, B>(&'a mut self) -> ChangeOutputType<<Self as Lending<'a>>::Lend, B>
     where
-        Self: Sized + for<'lend> Lending<'lend, Lend = <A as WithLifetime<'lend>>::T>,
+        Self: Sized,
+        for<'all> <Self as Lending<'all>>::Lend: Try,
+        for<'all> <<Self as Lending<'all>>::Lend as Try>::Residual: Residual<B>,
+        B: FromLender<TryShunt<'a, &'a mut Self>>,
+    {
+        let mut residual = None;
+        // SAFETY: we ensure that `B` does not have access to `residual`.
+        let reborrow = unsafe { &mut *(&mut residual as *mut _) };
+        let shunt = TryShunt::<&'a mut Self>::new(self, reborrow);
+        let value = FromLender::from_lender(shunt);
+        match residual {
+            Some(r) => FromResidual::from_residual(r),
+            None => Try::from_output(value),
+        }
+    }
+    #[inline]
+    fn collect_into<E>(self, collection: &mut E) -> &mut E
+    where
+        Self: Sized,
+        E: ExtendLender<Self>,
     {
         collection.extend_lender(self);
         collection
     }
-    fn partition<A: HKT, E, F>(mut self, mut f: F) -> (E, E)
+    fn partition<A, E, F>(mut self, mut f: F) -> (E, E)
     where
-        Self: Sized + for<'lend> Lending<'lend, Lend = <A as WithLifetime<'lend>>::T>,
-        E: Default + ExtendLender<A>,
+        Self: Sized,
+        E: Default + ExtendLender<Self>,
         F: FnMut(&<Self as Lending<'_>>::Lend) -> bool,
     {
         let mut left = E::default();
@@ -330,7 +366,7 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
     fn reduce<T, F>(mut self, f: F) -> Option<T>
     where
         Self: Sized,
-        for<'lend> <Self as Lending<'lend>>::Lend: ToOwned<Owned = T>,
+        for<'all> <Self as Lending<'all>>::Lend: ToOwned<Owned = T>,
         F: FnMut(T, <Self as Lending<'_>>::Lend) -> T,
     {
         let first = self.next()?.to_owned();
@@ -340,13 +376,13 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
     fn try_reduce<T, F, R>(mut self, f: F) -> ChangeOutputType<R, Option<T>>
     where
         Self: Sized,
-        for<'lend> <Self as Lending<'lend>>::Lend: ToOwned<Owned = T>,
+        for<'all> <Self as Lending<'all>>::Lend: ToOwned<Owned = T>,
         F: FnMut(T, <Self as Lending<'_>>::Lend) -> R,
         R: Try<Output = T>,
         R::Residual: Residual<Option<T>>,
     {
         let first = match self.next() {
-            Some(x) => x.to_owned(),
+            Some(ref x) => x.to_owned(),
             None => return Try::from_output(None),
         };
         match self.try_fold(first, f).branch() {
@@ -403,7 +439,7 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
     fn find_map<B, F>(&mut self, mut f: F) -> Option<B>
     where
         Self: Sized,
-        F: for<'lend> HKGFnMut<'lend, <Self as Lending<'lend>>::Lend, Option<B>>,
+        F: for<'all> HKGFnMut<'all, <Self as Lending<'all>>::Lend, Option<B>>,
     {
         while let Some(x) = self.next() {
             if let Some(y) = f(x) {
@@ -418,7 +454,7 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
         Self: Sized,
         F: FnMut(&<Self as Lending<'_>>::Lend) -> R,
         R: Try<Output = bool>,
-        for<'lend> R::Residual: Residual<Option<<Self as Lending<'lend>>::Lend>>,
+        for<'all> R::Residual: Residual<Option<<Self as Lending<'all>>::Lend>>,
     {
         while let Some(x) = self.next() {
             match f(&x).branch() {
@@ -473,8 +509,8 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
     fn max<T>(self) -> Option<T>
     where
         Self: Sized,
-        T: for<'lend> PartialOrd<<Self as Lending<'lend>>::Lend>,
-        for<'lend> <Self as Lending<'lend>>::Lend: ToOwned<Owned = T>,
+        T: for<'all> PartialOrd<<Self as Lending<'all>>::Lend>,
+        for<'all> <Self as Lending<'all>>::Lend: ToOwned<Owned = T>,
     {
         self.max_by(|x, y| x.partial_cmp(y).unwrap_or(Ordering::Equal))
     }
@@ -482,8 +518,8 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
     fn min<T>(self) -> Option<T>
     where
         Self: Sized,
-        T: for<'lend> PartialOrd<<Self as Lending<'lend>>::Lend>,
-        for<'lend> <Self as Lending<'lend>>::Lend: ToOwned<Owned = T>,
+        T: for<'all> PartialOrd<<Self as Lending<'all>>::Lend>,
+        for<'all> <Self as Lending<'all>>::Lend: ToOwned<Owned = T>,
     {
         self.min_by(|x, y| x.partial_cmp(y).unwrap_or(Ordering::Equal))
     }
@@ -491,13 +527,13 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
     fn max_by<T, F>(self, mut compare: F) -> Option<T>
     where
         Self: Sized,
-        for<'lend> <Self as Lending<'lend>>::Lend: ToOwned<Owned = T>,
-        F: for<'lend> FnMut(&T, &<Self as Lending<'lend>>::Lend) -> Ordering,
+        for<'all> <Self as Lending<'all>>::Lend: ToOwned<Owned = T>,
+        F: for<'all> FnMut(&T, &<Self as Lending<'all>>::Lend) -> Ordering,
     {
         self.reduce(move |x, y| {
             match compare(&x, &y) {
-                Ordering::Greater => x,
-                _ => y.to_owned(),
+                Ordering::Less => y.to_owned(),
+                _ => x,
             }
         })
     }
@@ -505,8 +541,8 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
     fn min_by<T, F>(self, mut compare: F) -> Option<T>
     where
         Self: Sized,
-        for<'lend> <Self as Lending<'lend>>::Lend: ToOwned<Owned = T>,
-        F: for<'lend> FnMut(&T, &<Self as Lending<'lend>>::Lend) -> Ordering,
+        for<'all> <Self as Lending<'all>>::Lend: ToOwned<Owned = T>,
+        F: for<'all> FnMut(&T, &<Self as Lending<'all>>::Lend) -> Ordering,
     {
         self.reduce(move |x, y| {
             match compare(&x, &y) {
@@ -522,26 +558,16 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
     {
         Rev::new(self)
     }
-    fn unzip<A: HKT, B: HKT, FromA, FromB>(self) -> (FromA, FromB)
-    where
-        Self: Sized + for<'lend> Lending<'lend, Lend = (<A as WithLifetime<'lend>>::T, <B as WithLifetime<'lend>>::T)>,
-        FromA: Default + ExtendLender<A>,
-        FromB: Default + ExtendLender<B>,
-    {
-        let mut unzipped: (FromA, FromB) = Default::default();
-        unzipped.extend_lender(self);
-        unzipped
-    }
     fn copied<T>(self) -> Copied<Self>
     where
-        Self: Sized + for<'lend> Lending<'lend, Lend = &'lend T>,
+        Self: Sized + for<'all> Lending<'all, Lend = &'all T>,
         T: Copy,
     {
         Copied::new(self)
     }
     fn cloned<T>(self) -> Cloned<Self>
     where
-        Self: Sized + for<'lend> Lending<'lend, Lend = &'lend T>,
+        Self: Sized + for<'all> Lending<'all, Lend = &'all T>,
         T: Clone,
     {
         Cloned::new(self)
@@ -551,7 +577,7 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
     fn owned(self) -> Owned<Self>
     where
         Self: Sized,
-        for<'lend> <Self as Lending<'lend>>::Lend: ToOwned
+        for<'all> <Self as Lending<'all>>::Lend: ToOwned
     {
         Owned::new(self)
     }
@@ -564,8 +590,8 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
     }
     fn cmp<L>(self, other: L) -> Ordering
     where
-        L: IntoLender + for<'lend> Lending<'lend, Lend = <Self as Lending<'lend>>::Lend>,
-        for <'lend> <Self as Lending<'lend>>::Lend: Ord,
+        L: IntoLender + for<'all> Lending<'all, Lend = <Self as Lending<'all>>::Lend>,
+        for <'all> <Self as Lending<'all>>::Lend: Ord,
         Self: Sized,
     {
         self.cmp_by(other, |x, y| x.cmp(&y))
@@ -574,7 +600,7 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
     where
         Self: Sized,
         L: IntoLender,
-        F: for<'lend> FnMut(<Self as Lending<'lend>>::Lend, <L as Lending<'lend>>::Lend) -> Ordering,
+        F: for<'all> FnMut(<Self as Lending<'all>>::Lend, <L as Lending<'all>>::Lend) -> Ordering,
     {
         match lender_compare(self, other.into_lender(), move |x, y| match cmp(x, y) {
             Ordering::Equal => ControlFlow::Continue(()),
@@ -587,7 +613,7 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
     fn partial_cmp<L>(self, other: L) -> Option<Ordering>
     where
         L: IntoLender,
-        for<'lend> <Self as Lending<'lend>>::Lend: PartialOrd<<L as Lending<'lend>>::Lend>,
+        for<'all> <Self as Lending<'all>>::Lend: PartialOrd<<L as Lending<'all>>::Lend>,
         Self: Sized,
     {
         self.partial_cmp_by(other, |x, y| x.partial_cmp(&y))
@@ -596,7 +622,7 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
     where
         Self: Sized,
         L: IntoLender,
-        F: for<'lend> FnMut(<Self as Lending<'lend>>::Lend, <L as Lending<'lend>>::Lend) -> Option<Ordering>,
+        F: for<'all> FnMut(<Self as Lending<'all>>::Lend, <L as Lending<'all>>::Lend) -> Option<Ordering>,
     {
         match lender_compare(self, other.into_lender(), move |x, y| match partial_cmp(x, y) {
             Some(Ordering::Equal) => ControlFlow::Continue(()),
@@ -609,7 +635,7 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
     fn eq<L>(self, other: L) -> bool
     where
         L: IntoLender,
-        for<'lend> <Self as Lending<'lend>>::Lend: PartialEq<<L as Lending<'lend>>::Lend>,
+        for<'all> <Self as Lending<'all>>::Lend: PartialEq<<L as Lending<'all>>::Lend>,
         Self: Sized,
     {
         self.eq_by(other, |x, y| x == y)
@@ -618,7 +644,7 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
     where
         Self: Sized,
         L: IntoLender,
-        F: for<'lend> FnMut(<Self as Lending<'lend>>::Lend, <L as Lending<'lend>>::Lend) -> bool,
+        F: for<'all> FnMut(<Self as Lending<'all>>::Lend, <L as Lending<'all>>::Lend) -> bool,
     {
         match lender_compare(self, other.into_lender(), move |x, y| {
             if eq(x, y) { ControlFlow::Continue(()) } else { ControlFlow::Break(()) }
@@ -630,7 +656,7 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
     fn ne<L>(self, other: L) -> bool
     where
         L: IntoLender,
-        for<'lend> <Self as Lending<'lend>>::Lend: PartialEq<<L as Lending<'lend>>::Lend>,
+        for<'all> <Self as Lending<'all>>::Lend: PartialEq<<L as Lending<'all>>::Lend>,
         Self: Sized,
     {
         !self.eq(other)
@@ -638,7 +664,7 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
     fn lt<L>(self, other: L) -> bool
     where
         L: IntoLender,
-        for<'lend> <Self as Lending<'lend>>::Lend: PartialOrd<<L as Lending<'lend>>::Lend>,
+        for<'all> <Self as Lending<'all>>::Lend: PartialOrd<<L as Lending<'all>>::Lend>,
         Self: Sized,
     {
         self.partial_cmp(other) == Some(Ordering::Less)
@@ -646,7 +672,7 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
     fn le<L>(self, other: L) -> bool
     where
         L: IntoLender,
-        for<'lend> <Self as Lending<'lend>>::Lend: PartialOrd<<L as Lending<'lend>>::Lend>,
+        for<'all> <Self as Lending<'all>>::Lend: PartialOrd<<L as Lending<'all>>::Lend>,
         Self: Sized,
     {
         matches!(self.partial_cmp(other), Some(Ordering::Less | Ordering::Equal))
@@ -654,7 +680,7 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
     fn gt<L>(self, other: L) -> bool
     where
         L: IntoLender,
-        for<'lend> <Self as Lending<'lend>>::Lend: PartialOrd<<L as Lending<'lend>>::Lend>,
+        for<'all> <Self as Lending<'all>>::Lend: PartialOrd<<L as Lending<'all>>::Lend>,
         Self: Sized,
     {
         self.partial_cmp(other) == Some(Ordering::Greater)
@@ -662,10 +688,38 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
     fn ge<L>(self, other: L) -> bool
     where
         L: IntoLender,
-        for<'lend> <Self as Lending<'lend>>::Lend: PartialOrd<<L as Lending<'lend>>::Lend>,
+        for<'all> <Self as Lending<'all>>::Lend: PartialOrd<<L as Lending<'all>>::Lend>,
         Self: Sized,
     {
         matches!(self.partial_cmp(other), Some(Ordering::Greater | Ordering::Equal))
+    }
+    #[inline]
+    fn is_sorted<T>(self) -> bool
+    where
+        Self: Sized,
+        for<'all> <Self as Lending<'all>>::Lend: ToOwned<Owned = T>,
+        T: PartialOrd,
+    {
+        self.is_sorted_by(PartialOrd::partial_cmp)
+    }
+    #[inline]
+    fn is_sorted_by<T, F>(self, mut compare: F) -> bool
+    where
+        Self: Sized,
+        for<'all> <Self as Lending<'all>>::Lend: ToOwned<Owned = T>,
+        F: FnMut(&T, &T) -> Option<Ordering>,
+    {
+        let mut this = self.owned();
+        let Some(mut last) = this.next() else {
+            return true;
+        };
+        this.all(move |curr| {
+            if let Some(Ordering::Greater) | None = compare(&last, &curr) {
+                return false;
+            }
+            last = curr;
+            true
+        })
     }
     #[inline]
     fn is_sorted_by_key<F, K>(mut self, mut f: F) -> bool
@@ -679,12 +733,11 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
             Some(x) => f(x),
         };
         while let Some(x) = self.next() {
-            let k = f(x);
-            if k < last {
+            let curr = f(x);
+            if let Some(Ordering::Greater) | None = last.partial_cmp(&curr) {
                 return false;
-            } else {
-                last = k;
             }
+            last = curr;
         }
         true
     }
@@ -693,7 +746,7 @@ pub trait Lender: for<'lend /* where Self: 'lend */> Lending<'lend> {
     fn iter<'this>(self) -> Iter<'this, Self>
     where
         Self: Sized + 'this,
-        for<'lend> <Self as Lending<'lend>>::Lend: 'static,
+        for<'all> <Self as Lending<'all>>::Lend: 'static,
     {
         Iter::new(self)
     }
@@ -704,7 +757,7 @@ pub(crate) fn lender_compare<A, B, F, T>(mut a: A, mut b: B, mut f: F) -> Contro
 where
     A: Lender,
     B: Lender,
-    for<'lend> F: FnMut(<A as Lending<'lend>>::Lend, <B as Lending<'lend>>::Lend) -> ControlFlow<T>,
+    for<'all> F: FnMut(<A as Lending<'all>>::Lend, <B as Lending<'all>>::Lend) -> ControlFlow<T>,
 {
     let mut ctl = ControlFlow::Continue(());
     while let Some(x) = a.next() {

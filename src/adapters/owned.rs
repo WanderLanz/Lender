@@ -17,7 +17,7 @@ where
 {
     type Item = T;
     #[inline]
-    fn next(&mut self) -> Option<Self::Item> { self.lender.next().map(|x| x.to_owned()) }
+    fn next(&mut self) -> Option<Self::Item> { self.lender.next().map(|ref x| x.to_owned()) }
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) { self.lender.size_hint() }
 }
@@ -27,7 +27,7 @@ where
     for<'all> <L as Lending<'all>>::Lend: ToOwned<Owned = T>,
 {
     #[inline]
-    fn next_back(&mut self) -> Option<Self::Item> { self.lender.next_back().map(|x| x.to_owned()) }
+    fn next_back(&mut self) -> Option<Self::Item> { self.lender.next_back().map(|ref x| x.to_owned()) }
 }
 impl<T, L> ExactSizeIterator for Owned<L>
 where

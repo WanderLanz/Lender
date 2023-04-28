@@ -103,7 +103,7 @@ where
         acc
     }
     #[inline]
-    fn find<'call, P>(&'call mut self, mut predicate: P) -> Option<<Self as Lending<'call>>::Lend>
+    fn find<P>(&mut self, mut predicate: P) -> Option<<Self as Lending<'_>>::Lend>
     where
         Self: Sized,
         P: FnMut(&<Self as Lending<'_>>::Lend) -> bool,
@@ -171,7 +171,7 @@ where
         acc
     }
     #[inline]
-    fn rfind<'call, P>(&'call mut self, mut predicate: P) -> Option<<Self as Lending<'call>>::Lend>
+    fn rfind<P>(&mut self, mut predicate: P) -> Option<<Self as Lending<'_>>::Lend>
     where
         Self: Sized,
         P: FnMut(&<Self as Lending<'_>>::Lend) -> bool,

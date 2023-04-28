@@ -41,7 +41,7 @@ where
         self.lender.rfold(init, f)
     }
     #[inline]
-    fn find<'call, P>(&'call mut self, predicate: P) -> Option<<Self as Lending<'call>>::Lend>
+    fn find<P>(&mut self, predicate: P) -> Option<<Self as Lending<'_>>::Lend>
     where
         Self: Sized,
         P: FnMut(&<Self as Lending<'_>>::Lend) -> bool,
@@ -74,7 +74,7 @@ where
     {
         self.lender.fold(init, f)
     }
-    fn rfind<'call, P>(&'call mut self, predicate: P) -> Option<<Self as Lending<'call>>::Lend>
+    fn rfind<P>(&mut self, predicate: P) -> Option<<Self as Lending<'_>>::Lend>
     where
         Self: Sized,
         P: FnMut(&<Self as Lending<'_>>::Lend) -> bool,

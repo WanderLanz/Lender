@@ -46,10 +46,8 @@ where
     }
     #[inline]
     fn count(mut self) -> usize {
-        if self.n > 0 {
-            if self.lender.nth(self.n - 1).is_none() {
-                return 0;
-            }
+        if self.n > 0 && self.lender.nth(self.n - 1).is_none() {
+            return 0;
         }
         self.lender.count()
     }
@@ -68,10 +66,7 @@ where
         let (lower, upper) = self.lender.size_hint();
 
         let lower = lower.saturating_sub(self.n);
-        let upper = match upper {
-            Some(x) => Some(x.saturating_sub(self.n)),
-            None => None,
-        };
+        let upper = upper.map(|x| x.saturating_sub(self.n));
 
         (lower, upper)
     }
@@ -84,10 +79,8 @@ where
     {
         let n = self.n;
         self.n = 0;
-        if n > 0 {
-            if self.lender.nth(n - 1).is_none() {
-                return R::from_output(init);
-            }
+        if n > 0 && self.lender.nth(n - 1).is_none() {
+            return R::from_output(init);
         }
         self.lender.try_fold(init, f)
     }
@@ -97,10 +90,8 @@ where
         Self: Sized,
         F: FnMut(B, <Self as Lending<'_>>::Lend) -> B,
     {
-        if self.n > 0 {
-            if self.lender.nth(self.n - 1).is_none() {
-                return init;
-            }
+        if self.n > 0 && self.lender.nth(self.n - 1).is_none() {
+            return init;
         }
         self.lender.fold(init, f)
     }

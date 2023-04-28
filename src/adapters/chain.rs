@@ -103,7 +103,7 @@ where
 impl<A, B> DoubleEndedLender for Chain<A, B>
 where
     A: DoubleEndedLender,
-    B: DoubleEndedLender + for<'lend> Lending<'lend, Lend = <A as Lending<'lend>>::Lend>,
+    B: DoubleEndedLender + for<'all> Lending<'all, Lend = <A as Lending<'all>>::Lend>,
 {
     #[inline]
     fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> { self.b.next_back().or_else(|| self.a.next_back()) }
@@ -128,7 +128,7 @@ where
     }
 
     #[inline]
-    fn rfind<'call, P>(&'call mut self, mut predicate: P) -> Option<<Self as Lending<'call>>::Lend>
+    fn rfind<P>(&mut self, mut predicate: P) -> Option<<Self as Lending<'_>>::Lend>
     where
         Self: Sized,
         P: FnMut(&<Self as Lending<'_>>::Lend) -> bool,
@@ -166,7 +166,7 @@ where
 impl<A, B> FusedLender for Chain<A, B>
 where
     A: FusedLender,
-    B: FusedLender + for<'lend> Lending<'lend, Lend = <A as Lending<'lend>>::Lend>,
+    B: FusedLender + for<'all> Lending<'all, Lend = <A as Lending<'all>>::Lend>,
 {
 }
 impl<A: Default, B: Default> Default for Chain<A, B> {

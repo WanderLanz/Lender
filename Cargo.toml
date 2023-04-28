@@ -5,6 +5,9 @@ edition = "2021"
 authors = ["Lance Warden <wanderlanz@proton.me>"]
 license = "MIT OR Apache-2.0"
 description = "Lenders lending lends as an iterator"
+repository = "https://github.com/WanderLanz/Lender"
 
+[badges]
+maintenance = { status = "experimental" }
 
 [dependencies]

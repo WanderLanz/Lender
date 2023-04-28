@@ -25,37 +25,6 @@
 //! ```
 //! Using a generic lets the compiler infer the input and output types where it might not be able to infer the associated type of an HKAFn.
 
-use crate::{Seal, Sealed};
-
-/// Enforce an HKT to be with lifetime `'a` with function signature
-#[inline(always)]
-pub fn with_lifetime<'a, T>(hkt: T) -> <T as WithLifetime<'a>>::T
-where
-    T: HKT,
-{
-    hkt
-}
-/// Trait underlying HKT
-pub trait WithLifetime<'lt, __Seal: Sealed = Seal<&'lt Self>> {
-    type T: 'lt;
-}
-impl<'lt, T> WithLifetime<'lt> for T {
-    type T = T;
-}
-
-/// Higher-Kinded Type, type `T` with lifetime `'a`.
-pub trait HKT: for<'all> WithLifetime<'all, T = Self> {
-    /// Enforce `Self` to be with lifetime `'a` with function signature
-    #[inline(always)]
-    fn with_lifetime<'a>(self) -> <Self as WithLifetime<'a>>::T
-    where
-        Self: Sized,
-    {
-        self
-    }
-}
-impl<T: ?Sized> HKT for T where for<'all> Self: WithLifetime<'all, T = Self> {}
-
 /// Higher-Kinded Associated Output `FnOnce`, where `Output` (B) is with lifetime `'b`.
 pub trait HKAFnOnce<'b, A>: FnOnce(A) -> <Self as HKAFnOnce<'b, A>>::B {
     type B: 'b;

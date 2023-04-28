@@ -35,7 +35,7 @@ impl<'l, L: 'l> Iter<'l, L> {
 impl<'l, L: 'l> Iterator for Iter<'l, L>
 where
     L: Lender,
-    for<'lend> <L as Lending<'lend>>::Lend: 'static,
+    for<'all> <L as Lending<'all>>::Lend: 'static,
 {
     type Item = <L as Lending<'l>>::Lend;
     #[inline]
@@ -46,7 +46,7 @@ where
 impl<'l, L: 'l> DoubleEndedIterator for Iter<'l, L>
 where
     L: DoubleEndedLender,
-    for<'lend> <L as Lending<'lend>>::Lend: 'static,
+    for<'all> <L as Lending<'all>>::Lend: 'static,
 {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> { unsafe { core::mem::transmute(self.lender.next_back()) } }
@@ -54,7 +54,7 @@ where
 impl<'l, L: 'l> ExactSizeIterator for Iter<'l, L>
 where
     L: ExactSizeLender,
-    for<'lend> <L as Lending<'lend>>::Lend: 'static,
+    for<'all> <L as Lending<'all>>::Lend: 'static,
 {
     #[inline]
     fn len(&self) -> usize { self.lender.len() }
@@ -62,6 +62,6 @@ where
 impl<'l, L: 'l> FusedIterator for Iter<'l, L>
 where
     L: FusedLender,
-    for<'lend> <L as Lending<'lend>>::Lend: 'static,
+    for<'all> <L as Lending<'all>>::Lend: 'static,
 {
 }

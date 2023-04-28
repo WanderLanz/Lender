@@ -54,7 +54,7 @@
 //!
 //! // Now we can use many of the methods and convenient APIs of `Iterator` on our `WindowsMut` type:
 //!
-//! fn main() {
+//! fn test() {
 //!     // we can manually iterate over our `WindowsMut`:
 //!     {
 //!         let mut vec = vec![1u32, 2, 3, 4, 5];
@@ -116,11 +116,12 @@ mod sealed {
 }
 pub(crate) use sealed::{Seal, Sealed};
 
-#[cfg(test)]
+// #[cfg(test)]
 mod test {
-    use alloc::{vec, vec::Vec};
+    use alloc::{borrow::ToOwned, vec, vec::Vec};
+    use core::borrow::Borrow;
 
-    use super::*;
+    use crate::*;
 
     /// Minimal example of a lender
     #[derive(Debug)]
@@ -171,20 +172,31 @@ mod test {
     //     }
     // }
 
-    // GOOD EXAMPLE
-    // impl<T, V> FromLender<T> for Vec<V>
-    // where
-    //     T: HKT + ToOwned<Owned = V>,
-    // {
-    //     fn from_lender<L>(lender: L) -> Self
-    //     where
-    //         L: Lender + for<'lend> Lending<'lend, Lend = T>,
-    //     {
-    //         let mut vec = Vec::new();
-    //         lender.for_each(|x| vec.push(x.to_owned()));
-    //         vec
-    //     }
-    // }
+    // WORKING EXAMPLE
+    impl<T, L: Lender> FromLender<L> for Vec<T>
+    where
+        for<'all> <L as Lending<'all>>::Lend: ToOwned<Owned = T>,
+    {
+        fn from_lender(lender: L) -> Self {
+            let mut vec = Vec::new();
+            lender.for_each(|x| vec.push(x.to_owned()));
+            vec
+        }
+    }
+
+    struct Bar;
+    impl<'a> Borrow<Foo<'a>> for Bar {
+        fn borrow(&self) -> &Foo<'a> { &Foo(core::marker::PhantomData) }
+    }
+    struct Foo<'a>(core::marker::PhantomData<&'a ()>);
+    impl<'a> ToOwned for Foo<'a> {
+        type Owned = Bar;
+        fn to_owned(&self) -> Self::Owned { Bar }
+    }
+
+    fn _vec_from_lender<L: Lender + for<'all> Lending<'all, Lend = Foo<'all>>>(lender: L) -> Vec<Bar> {
+        lender.collect::<Vec<_>>()
+    }
 
     struct WindowsMut<'a, T> {
         inner: &'a mut [T],
