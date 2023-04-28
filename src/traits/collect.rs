@@ -9,7 +9,7 @@ use crate::{Lender, Lending};
 ///     L: for<'all> Lending<'all, Lend = &'all mut [u32]>,
 /// {
 ///     fn from_lender(lender: L) -> Self {
-///         lender.for_each(drop);
+///         lender.for_each(|lend| drop(lend));
 ///         Self
 ///     }
 /// }

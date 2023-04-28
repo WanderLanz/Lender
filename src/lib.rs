@@ -116,7 +116,7 @@ mod sealed {
 }
 pub(crate) use sealed::{Seal, Sealed};
 
-// #[cfg(test)]
+#[cfg(test)]
 mod test {
     use alloc::{borrow::ToOwned, vec, vec::Vec};
     use core::borrow::Borrow;
@@ -133,46 +133,6 @@ mod test {
         fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> { Some(&mut self.0) }
     }
 
-    // BAD EXAMPLE
-    // impl<'a> FromLender<&'a u8> for Vec<u8> {
-    //     fn from_lender<L>(lender: L) -> Self
-    //     where
-    //         L: Lender + for<'lend> Lending<'lend, Lend = &'lend u8>,
-    //     {
-    //         let mut vec = Vec::new();
-    //         lender.for_each(|x| vec.push(*x));
-    //         vec
-    //     }
-    // }
-
-    // GOOD EXAMPLE
-    // impl<T> FromLender<T> for Vec<u8>
-    // where
-    //     T: HKT + ToOwned<Owned = u8>,
-    // {
-    //     fn from_lender<L>(lender: L) -> Self
-    //     where
-    //         L: Lender + for<'lend> Lending<'lend, Lend = T>,
-    //     {
-    //         let mut vec = Vec::new();
-    //         lender.for_each(|x| vec.push(x.to_owned()));
-    //         vec
-    //     }
-    // }
-
-    // WORKING BUT BAD EXAMPLE
-    // impl<'a> FromLender<&'a mut [u8]> for Vec<u8> {
-    //     fn from_lender<L>(lender: L) -> Self
-    //     where
-    //         L: Lender + for<'lend> Lending<'lend, Lend = &'a mut [u8]>,
-    //     {
-    //         let mut vec = Vec::new();
-    //         lender.for_each(|x| vec.extend_from_slice(x));
-    //         vec
-    //     }
-    // }
-
-    // WORKING EXAMPLE
     impl<T, L: Lender> FromLender<L> for Vec<T>
     where
         for<'all> <L as Lending<'all>>::Lend: ToOwned<Owned = T>,
