@@ -6,7 +6,7 @@ mod lender;
 mod marker;
 
 pub use self::{
-    accum::SumLender,
+    accum::{ProductLender, SumLender},
     collect::{ExtendLender, FromLender, IntoLender},
     double_ended::DoubleEndedLender,
     exact_size::ExactSizeLender,

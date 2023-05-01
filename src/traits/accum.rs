@@ -1,24 +1,31 @@
-use crate::{Lender, Lending};
+use crate::Lender;
+/// Sums lends of a [`Lender`] into a single Self.
+///
+/// This trait is similar to [`core::iter::Sum`], but for [`Lender`]s.
+///
 /// # Example
 /// ```rust
-/// use lender::*;
+/// use std::borrow::ToOwned;
+/// use lender::{prelude::*, SumLender};
 /// struct U32Sum(pub u32);
-/// impl<'sum> SumLender<&'sum u32> for U32Sum {
-///     type Lend<'lend> = &'lend u32;
-///     fn sum_lender<L>(lender: L) -> Self
-///     where
-///         L: Lender + for<'all> Lending<'all, Lend = Self::Lend<'all>>,
-///     {
+/// impl<'lend> Lending<'lend> for U32Sum {
+///    type Lend = &'lend u32;
+/// }
+/// impl<L: Lender> SumLender<L> for U32Sum
+/// where
+///     for<'all> L: Lending<'all, Lend = &'all u32>,
+/// {
+///     fn sum_lender(lender: L) -> Self {
 ///         U32Sum(lender.fold(0, |acc, x| acc + *x))
 ///     }
 /// }
-/// fn f(mut l: impl Lender + for<'all> Lending<'all, Lend = &'all u32>) -> u32 {
-///     <U32Sum as SumLender<&u32>>::sum_lender(&mut l).0
-/// }
+/// let e = lender::empty::<U32Sum>();
+/// assert_eq!(U32Sum::sum_lender(e).0, 0u32);
 /// ```
-pub trait SumLender<A>: Sized {
-    type Lend<'lend>;
-    fn sum_lender<L>(lender: L) -> Self
-    where
-        L: Lender + for<'all> Lending<'all, Lend = Self::Lend<'all>>;
+pub trait SumLender<L: Lender>: Sized {
+    fn sum_lender(lender: L) -> Self;
+}
+
+pub trait ProductLender<L: Lender>: Sized {
+    fn product_lender(lender: L) -> Self;
 }

@@ -138,13 +138,16 @@ mod test {
         fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> { Some(&mut self.0) }
     }
 
-    impl<T, L: Lender> FromLender<L> for Vec<T>
+    impl<L: Lender, V> FromLender<L> for Vec<V>
     where
-        for<'all> <L as Lending<'all>>::Lend: ToOwned<Owned = T>,
+        for<'all> <L as Lending<'all>>::Lend: ToOwned<Owned = V>,
     {
         fn from_lender(lender: L) -> Self {
             let mut vec = Vec::new();
-            lender.for_each(|x| vec.push(x.to_owned()));
+            lender.for_each(|x| {
+                let x = ToOwned::to_owned(&x);
+                vec.push(x)
+            });
             vec
         }
     }

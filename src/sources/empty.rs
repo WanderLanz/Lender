@@ -2,52 +2,66 @@ use core::{fmt, marker};
 
 use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lender, Lending};
 
-/// Creates an lender that yields nothing.
+/// Creates a lender that yields nothing.
 ///
-/// lender equivalent to [`core::iter::empty()`].
+/// similar to [`core::iter::empty()`]
 ///
 /// # Examples
 /// ```rust
-/// use lender::{Lender, empty};
-/// let e = empty::<&mut i32>();
-/// e.for_each(|x| drop(x));
+/// use lender::prelude::*;
+/// fn foo<L: for<'all> Lending<'all, Lend = &'all mut u32>>() {
+///     let e = lender::empty::<L>();
+///     e.for_each(|x| drop(x));
+/// }
 /// ```
-pub const fn empty<T>() -> Empty<T> { Empty(marker::PhantomData) }
+pub const fn empty<L: for<'all> Lending<'all>>() -> Empty<L> { Empty(marker::PhantomData) }
 
-/// An lender that yields nothing.
+/// A lender that yields nothing.
 ///
 /// This `struct` is created by the [`empty()`] function. See its documentation for more.
 ///
-/// lender equivalent to [`core::iter::Empty`].
+/// similar to [`core::iter::Empty`].
 #[must_use = "lenders are lazy and do nothing unless consumed"]
-pub struct Empty<T>(marker::PhantomData<fn() -> T>);
+pub struct Empty<L>(marker::PhantomData<L>);
 
-impl<T> fmt::Debug for Empty<T> {
+impl<L> fmt::Debug for Empty<L> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.debug_struct("Empty").finish() }
 }
 
-impl<'lend, T> Lending<'lend> for Empty<T> {
-    type Lend = T;
+impl<'lend, L> Lending<'lend> for Empty<L>
+where
+    L: for<'all> Lending<'all>,
+{
+    type Lend = <L as Lending<'lend>>::Lend;
 }
-impl<T> Lender for Empty<T> {
+impl<L> Lender for Empty<L>
+where
+    L: for<'all> Lending<'all>,
+{
     fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> { None }
     fn size_hint(&self) -> (usize, Option<usize>) { (0, Some(0)) }
 }
 
-impl<T> DoubleEndedLender for Empty<T> {
-    fn next_back(&mut self) -> Option<T> { None }
+impl<L> DoubleEndedLender for Empty<L>
+where
+    L: for<'all> Lending<'all>,
+{
+    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> { None }
 }
 
-impl<T> ExactSizeLender for Empty<T> {
+impl<L> ExactSizeLender for Empty<L>
+where
+    L: for<'all> Lending<'all>,
+{
     fn len(&self) -> usize { 0 }
 }
 
-impl<T> FusedLender for Empty<T> {}
+impl<L> FusedLender for Empty<L> where L: for<'all> Lending<'all> {}
 
-impl<T> Clone for Empty<T> {
-    fn clone(&self) -> Empty<T> { Empty(marker::PhantomData) }
+impl<L> Clone for Empty<L> {
+    fn clone(&self) -> Empty<L> { Empty(marker::PhantomData) }
 }
 
-impl<T> Default for Empty<T> {
-    fn default() -> Empty<T> { Empty(marker::PhantomData) }
+impl<L> Default for Empty<L> {
+    fn default() -> Empty<L> { Empty(marker::PhantomData) }
 }

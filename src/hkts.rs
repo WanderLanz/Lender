@@ -1,29 +1,21 @@
 //! These allow some lifetime elision in signatures using a HRTB and more flexible lifetime binding.
 //!
-//! ## Higher-Kinded Types (HKT),
+//! [`WithLifetime`] binds `Self` where `Self: 'a` to a GAT `Self::Lt` where `Self::Lt: 'a`.
 //!
-//! type `K` with lifetime `'a` where `K: 'a`
-//! ```ignore
-//! K: for<'all where K: 'all> WithLifetime<'all, T = K>
-//! ```
-//!
-//! ## Higher-Kinded Associated Output Functions (HKAFn),
-//!
-//! Fn traits with associated output type `B` with lifetime `'b`
-//! ```ignore
-//! impl<'b, A, B: 'b, F: FnOnce(A) -> B> HKAFnOnce<'b, A> for F {
-//!     type B = B;
-//! }
-//! ```
-//! Using an associated type also allows omission of `Output` types in adapter generics, e.g. Map<L, F> vs Map<NewItemType, L, F>
-//!
-//! ## Higher-Kinded Generic Output Functions (HKGFn)
-//!
-//! Fn traits with generic output type `B` with lifetime `'b`
-//! ```ignore
-//! impl<'b, A, B: 'b, F: FnOnce(A) -> B> HKGFnOnce<'b, A, B> for F {}
-//! ```
-//! Using a generic lets the compiler infer the input and output types where it might not be able to infer the associated type of an HKAFn.
+//! - Higher-Kinded Functions (with argument) (HKA),
+//! - Higher-Kinded Functions (without argument) (HK),
+//! - Higher-Kinded Generic Functions (output is a generic) (HKG)
+pub trait WithLifetime<'a, _Seal = &'a Self>: 'a {
+    type Lt: 'a;
+    fn with_lifetime(self) -> Self::Lt;
+}
+impl<'a, T> WithLifetime<'a, &'a T> for T {
+    type Lt = T;
+    #[inline(always)]
+    fn with_lifetime(self) -> Self::Lt { self }
+}
+
+pub trait HKT: for<'all> WithLifetime<'all, &'all Self> {}
 
 mod hkfns {
     mod with_arg {

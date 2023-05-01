@@ -8,7 +8,7 @@ WIP, mostly for my own reference.
 
 💀 = Represents enough of an anti-pattern that I don't plan to implement it.
 
-- ✅ Scaffold main traits and APIs
+- ✅ Traits
   - ✅ `Iterator`: `Lender`
   - ✅ `DoubleEndedIterator`: `DoubleEndedLender`
   - ✅ `ExactSizeIterator`: `ExactSizeLender`
@@ -16,11 +16,13 @@ WIP, mostly for my own reference.
   - ✅ `IntoIterator`: `IntoLender`
   - ⚠️ `FromIterator`: `FromLender`
   - ⚠️ `Extend`: `ExtendLender`
-- ✅ Make adapters functional
+  - ⚠️ `Sum`: `SumLender`
+  - ⚠️ `Product`: `ProductLender`
+- ✅ Adapters
 - ❌ Unit tests
-- ❌ Implement traits for common types (i.e. `IntoLender`, `FromLender`)
-- ❌ Attempt from_fn and similar APIs
-- ❌ Documentation...
+- ❌ Implement traits for common types (e.g. `IntoLender`, `FromLender`)
+- ⚠️ Sources (`empty`, `once`, etc.)
+- ⚠️ Docs
 
 ## Lender
 
@@ -59,8 +61,8 @@ You may also use `.iter()` if the `Lender` already lends owned data (`'static`).
 |✅`min`               |💀`max_by_key`        |✅`max_by`            |
 |💀`min_by_key`        |✅`min_by`            |✅`rev`               |
 |💀`unzip`             |✅`copied`            |✅`cloned`            |
-|✅`cycle`             |💀`array_chunks`      |💀`sum`               |
-|💀`product`           |✅`cmp`               |✅`cmp_by`            |
+|✅`cycle`             |💀`array_chunks`      |✅`sum`               |
+|✅`product`           |✅`cmp`               |✅`cmp_by`            |
 |✅`partial_cmp`       |✅`partial_cmp_by`    |✅`eq`                |
 |✅`eq_by`             |✅`ne`                |✅`lt`                |
 |✅`le`                |✅`gt`                |✅`ge`                |

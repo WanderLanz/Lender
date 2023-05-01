@@ -27,7 +27,6 @@ mod take;
 mod take_while;
 mod zip;
 
-// pub use by_ref_sized::ByRefSized;
 pub use intersperse::{Intersperse, IntersperseWith};
 pub use zip::zip;
 
@@ -58,26 +57,21 @@ pub use self::{
     take_while::TakeWhile,
     zip::Zip,
 };
-use crate::{try_trait_v2::Try, Lender, Lending}; // Not from std::iter
+use crate::{
+    try_trait_v2::{ChangeOutputType, FromResidual, Residual, Try},
+    Lender, Lending,
+};
 
 // pub use zip::{TrustedRandomAccess, TrustedRandomAccessNoCoerce};
 
-/// Turns a `Lender`, where `Lend` implements `Try`, into a `Lender` of `<Lend as Try>::Output`.
+/// Private adapter to work with `Try` lenders. Turns a `Lender`, where `Lend` implements `Try`, into a `Lender` of `<Lend as Try>::Output`.
 pub struct TryShunt<'this, L: Lender>
 where
     for<'all> <L as Lending<'all>>::Lend: Try,
 {
-    pub(crate) lender: L,
+    lender: L,
     // needs to be an elevated lifetime, because the residual is returned from the closure in case of a break.
-    pub(crate) residual: &'this mut Option<<<L as Lending<'this>>::Lend as Try>::Residual>,
-}
-impl<'this, L: Lender> TryShunt<'this, L>
-where
-    for<'all> <L as Lending<'all>>::Lend: Try,
-{
-    pub(crate) fn new(lender: L, residual: &'this mut Option<<<L as Lending<'this>>::Lend as Try>::Residual>) -> Self {
-        Self { lender, residual }
-    }
+    residual: &'this mut Option<<<L as Lending<'this>>::Lend as Try>::Residual>,
 }
 impl<'lend, 'this, L: Lender> Lending<'lend> for TryShunt<'this, L>
 where
@@ -107,21 +101,20 @@ where
         None
     }
 }
-// /// Needs some work before it can be used as intended.
-// pub(crate) fn try_process<'call, L, F, U>(lender: L, mut f: F) -> ChangeOutputType<<L as Lending<'call>>::Lend, U>
-// where
-//     L: Lender,
-//     for<'all> <L as Lending<'all>>::Lend: Try,
-//     for<'all> <<L as Lending<'all>>::Lend as Try>::Residual: Residual<U>,
-//     for<'all> F: FnMut(TryShunt<'all, L>) -> U,
-// {
-//     let mut residual = None;
-//     // SAFETY: we ensure that `f` does not have access to `residual`.
-//     let reborrow = unsafe { &mut *(&mut residual as *mut _) };
-//     let shunt = TryShunt { lender, residual: reborrow };
-//     let value = f(shunt);
-//     match residual {
-//         Some(r) => FromResidual::from_residual(r),
-//         None => Try::from_output(value),
-//     }
-// }
+pub(crate) fn try_process<'a, L, F, U>(lender: L, mut f: F) -> ChangeOutputType<<L as Lending<'a>>::Lend, U>
+where
+    L: Lender + 'a,
+    for<'all> <L as Lending<'all>>::Lend: Try,
+    for<'all> <<L as Lending<'all>>::Lend as Try>::Residual: Residual<U>,
+    F: FnMut(TryShunt<'a, L>) -> U,
+{
+    let mut residual = None;
+    // SAFETY: we ensure that `f` does not have access to `residual`.
+    let reborrow = unsafe { &mut *(&mut residual as *mut _) };
+    let shunt = TryShunt { lender, residual: reborrow };
+    let value = f(shunt);
+    match residual {
+        Some(r) => FromResidual::from_residual(r),
+        None => Try::from_output(value),
+    }
+}

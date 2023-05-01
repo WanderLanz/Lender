@@ -12,7 +12,7 @@ use crate::{
 /// This is a result of Higher-Ranked Trait Bounds (HRTBs) not having a way to express qualifiers (```for<'any where Self: 'any> Self: Trait```)
 /// and effectively making HRTBs only useful when you want to express a trait constraint on ALL lifetimes, including 'static (```for<'all> Self: trait```)
 ///
-/// Although the common example of implementing your own LendingIterator uses a (```type Item<'a> where Self: 'a;```) GAT,
+/// Although the common example of implementing your own LendingIterator uses a (<code rust>type Item<'a> where Self: 'a;</code>) GAT,
 /// that generally only works withing a small subset of the features that a LendingIterator needs to provide to be useful.
 ///
 /// Please see [Sabrina Jewson's Blog][1] for more information on the problem and how a trait like this can be used to solve it.
@@ -21,6 +21,7 @@ use crate::{
 pub trait Lending<'lend, __Seal: Sealed = Seal<&'lend Self>> {
     type Lend: 'lend;
 }
+
 /// An iterator that yields items that can only be alive for as long as the iterator itself and only until the next item is yielded.
 ///
 /// A `Lender` cannot be used as a `dyn` trait object, because it is used `Self` as a type parameter to get around higher-ranked lifetime bounds.
@@ -298,7 +299,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         Self: Sized,
         B: FromLender<Self>,
     {
-        FromLender::from_lender(self)
+        B::from_lender(self)
     }
     #[inline]
     fn try_collect<'a, B>(&'a mut self) -> ChangeOutputType<<Self as Lending<'a>>::Lend, B>
@@ -308,15 +309,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         for<'all> <<Self as Lending<'all>>::Lend as Try>::Residual: Residual<B>,
         B: FromLender<TryShunt<'a, &'a mut Self>>,
     {
-        let mut residual = None;
-        // SAFETY: we ensure that `B` does not have access to `residual`.
-        let reborrow = unsafe { &mut *(&mut residual as *mut _) };
-        let shunt = TryShunt::<&'a mut Self>::new(self, reborrow);
-        let value = FromLender::from_lender(shunt);
-        match residual {
-            Some(r) => FromResidual::from_residual(r),
-            None => Try::from_output(value),
-        }
+        try_process::<&'a mut Self, _, B>(self.by_ref(),|shunt: TryShunt<'a, &'a mut Self>| B::from_lender(shunt))
     }
     #[inline]
     fn collect_into<E>(self, collection: &mut E) -> &mut E
@@ -620,6 +613,22 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         Self: Sized + Clone,
     {
         Cycle::new(self)
+    }
+    #[inline]
+    fn sum<S>(self) -> S
+    where
+        Self: Sized,
+        S: SumLender<Self>,
+    {
+        S::sum_lender(self)
+    }
+    #[inline]
+    fn product<P>(self) -> P
+    where
+        Self: Sized,
+        P: ProductLender<Self>,
+    {
+        P::product_lender(self)
     }
     fn cmp<L>(self, other: L) -> Ordering
     where
