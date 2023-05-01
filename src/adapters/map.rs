@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::{hkts::HKAFnMut, DoubleEndedLender, ExactSizeLender, FusedLender, Lender, Lending};
+use crate::{hkts::FnMutHKA, DoubleEndedLender, ExactSizeLender, FusedLender, Lender, Lending};
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Map<L, F> {
@@ -23,7 +23,7 @@ where
 }
 impl<L, F> Lender for Map<L, F>
 where
-    F: for<'all> HKAFnMut<'all, <L as Lending<'all>>::Lend>,
+    F: for<'all> FnMutHKA<'all, <L as Lending<'all>>::Lend>,
     L: Lender,
 {
     #[inline]
@@ -33,21 +33,21 @@ where
 }
 impl<L: DoubleEndedLender, F> DoubleEndedLender for Map<L, F>
 where
-    F: for<'all> HKAFnMut<'all, <L as Lending<'all>>::Lend>,
+    F: for<'all> FnMutHKA<'all, <L as Lending<'all>>::Lend>,
 {
     #[inline]
     fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> { self.lender.next_back().map(&mut self.f) }
 }
 impl<L: ExactSizeLender, F> ExactSizeLender for Map<L, F>
 where
-    F: for<'all> HKAFnMut<'all, <L as Lending<'all>>::Lend>,
+    F: for<'all> FnMutHKA<'all, <L as Lending<'all>>::Lend>,
 {
     #[inline]
     fn len(&self) -> usize { self.lender.len() }
     #[inline]
     fn is_empty(&self) -> bool { self.lender.is_empty() }
 }
-impl<L: FusedLender, F> FusedLender for Map<L, F> where F: for<'all> HKAFnMut<'all, <L as Lending<'all>>::Lend> {}
+impl<L: FusedLender, F> FusedLender for Map<L, F> where F: for<'all> FnMutHKA<'all, <L as Lending<'all>>::Lend> {}
 // impl<I, L, F> IntoIterator for Map<L, F>
 // where
 //     L: Lender,

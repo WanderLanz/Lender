@@ -2,7 +2,7 @@ use alloc::borrow::ToOwned;
 use core::{cmp::Ordering, num::NonZeroUsize, ops::ControlFlow};
 
 use crate::{
-    hkts::{HKAFnMut, HKGFnMut},
+    hkts::{FnMutHKA, FnMutHKG},
     try_trait_v2::{ChangeOutputType, FromResidual, Residual, Try},
     *,
 };
@@ -21,14 +21,47 @@ use crate::{
 pub trait Lending<'lend, __Seal: Sealed = Seal<&'lend Self>> {
     type Lend: 'lend;
 }
-
-/// An iterator that yields items bound by the lifetime of each iteration.
+/// An iterator that yields items that can only be alive for as long as the iterator itself and only until the next item is yielded.
 ///
-/// Please user [`lending-iterator`] for a more ergonomic way to implement lending iterators, or create your own if you only need a small subset of the features of iterators.
+/// A `Lender` cannot be used as a `dyn` trait object, because it is used `Self` as a type parameter to get around higher-ranked lifetime bounds.
 ///
-/// This crate is meant to be a blanket implementation of the standard library's `iter` module for types that run into the lending iterator problem.
+/// Lenders must promise two things:
+///     1. No lend outlives the lender itself.
+///     2. Every lend is valid at least until the next lend of the lender (`next()`).
 ///
-/// [`lending-iterator`]: https://crates.io/crate/lending-iterator
+/// This pattern introduces a lot of complexity with lifetimes and
+/// causes the compiler to generate a lot of errors that are difficult to understand
+/// by users who are not extremely familiar with lifetimes. There will eventually be an [FAQ] to help with this.
+///
+/// # Safety
+///
+/// - Because of the above promises, it is safe to lend out mutable references to the same data and use traditionally unsafe methods such as `windows_mut`.
+/// - However, these also introduce a hard restriction on keeping multiple lends alive at the same time, and will most likely introduce undefined behavior if violated.
+/// - Additionally, forcing a lend's lifetime to be longer via a `transmute` is not undefined behavior as long as the lender is alive and there are no other lends made.
+///
+/// # Examples
+///
+/// ```rust
+/// use lender::{Lender, Lending};
+/// struct WindowsMut<'a, T> {
+///    slice: &'a mut [T],
+///    cur: usize,
+///    window_size: usize,
+/// }
+/// impl<'lend, 'a, T> Lending<'lend> for WindowsMut<'a, T> {
+///    type Lend = &'lend mut [T];
+/// }
+/// impl<'a, T> Lender for WindowsMut<'a, T> {
+///   fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+///     if let elt @ Some(_) = self.slice.get_mut(self.cur..self.cur + self.window_size) {
+///       self.cur += 1;
+///       elt
+///     } else {
+///       None
+///     }
+///   }
+/// }
+/// ```
 pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend>;
     #[inline]
@@ -122,7 +155,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     fn map<B, F>(self, f: F) -> Map<Self, F>
     where
         Self: Sized,
-        F: for<'all> HKGFnMut<'all, <Self as Lending<'all>>::Lend, B>,
+        F: for<'all> FnMutHKG<'all, <Self as Lending<'all>>::Lend, B>,
     {
         Map::new(self, f)
     }
@@ -148,7 +181,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     fn filter_map<B, F>(self, f: F) -> FilterMap<Self, F>
     where
         Self: Sized,
-        F: for<'all> HKGFnMut<'all, <Self as Lending<'all>>::Lend, Option<B>>,
+        F: for<'all> FnMutHKG<'all, <Self as Lending<'all>>::Lend, Option<B>>,
     {
         FilterMap::new(self, f)
     }
@@ -186,7 +219,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     fn map_while<B, P>(self, predicate: P) -> MapWhile<Self, P>
     where
         Self: Sized,
-        P: for<'all> HKGFnMut<'all, <Self as Lending<'all>>::Lend, Option<B>>,
+        P: for<'all> FnMutHKG<'all, <Self as Lending<'all>>::Lend, Option<B>>,
     {
         MapWhile::new(self, predicate)
     }
@@ -208,7 +241,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     fn scan<St, B, F>(self, initial_state: St, f: F) -> Scan<Self, St, F>
     where
         Self: Sized,
-        F: for<'all> HKGFnMut<'all, (&'all mut St, <Self as Lending<'all>>::Lend), Option<B>>,
+        F: for<'all> FnMutHKG<'all, (&'all mut St, <Self as Lending<'all>>::Lend), Option<B>>,
     {
         Scan::new(self, initial_state, f)
     }
@@ -216,8 +249,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     fn flat_map<'call, F>(self, f: F) -> FlatMap<'call, Self, F>
     where
         Self: Sized,
-        F: for<'all> HKAFnMut<'all, <Self as Lending<'all>>::Lend>,
-        for<'all> <F as HKAFnMut<'all, <Self as Lending<'all>>::Lend>>::B: IntoLender,
+        F: for<'all> FnMutHKA<'all, <Self as Lending<'all>>::Lend>,
+        for<'all> <F as FnMutHKA<'all, <Self as Lending<'all>>::Lend>>::B: IntoLender,
     {
         FlatMap::new(self, f)
     }
@@ -439,7 +472,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     fn find_map<B, F>(&mut self, mut f: F) -> Option<B>
     where
         Self: Sized,
-        F: for<'all> HKGFnMut<'all, <Self as Lending<'all>>::Lend, Option<B>>,
+        F: for<'all> FnMutHKG<'all, <Self as Lending<'all>>::Lend, Option<B>>,
     {
         while let Some(x) = self.next() {
             if let Some(y) = f(x) {

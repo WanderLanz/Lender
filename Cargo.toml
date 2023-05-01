@@ -4,7 +4,7 @@ version = "0.0.0"
 edition = "2021"
 authors = ["Lance Warden <wanderlanz@proton.me>"]
 license = "MIT OR Apache-2.0"
-description = "Lenders lending lends as an iterator"
+description = "Lending iterator based on implicitly restricted higher ranked lifetimes"
 repository = "https://github.com/WanderLanz/Lender"
 
 [badges]

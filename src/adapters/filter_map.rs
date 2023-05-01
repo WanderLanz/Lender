@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::{hkts::HKAFnMutOpt, DoubleEndedLender, FusedLender, Lender, Lending};
+use crate::{hkts::FnMutHKAOpt, DoubleEndedLender, FusedLender, Lender, Lending};
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct FilterMap<L, F> {
@@ -26,7 +26,7 @@ where
 
 impl<L, F> Lender for FilterMap<L, F>
 where
-    for<'all> F: HKAFnMutOpt<'all, <L as Lending<'all>>::Lend>,
+    for<'all> F: FnMutHKAOpt<'all, <L as Lending<'all>>::Lend>,
     L: Lender,
 {
     fn next<'next>(&'next mut self) -> Option<<Self as Lending<'next>>::Lend> {
@@ -48,7 +48,7 @@ where
 }
 impl<L, F> DoubleEndedLender for FilterMap<L, F>
 where
-    for<'all> F: HKAFnMutOpt<'all, <L as Lending<'all>>::Lend>,
+    for<'all> F: FnMutHKAOpt<'all, <L as Lending<'all>>::Lend>,
     L: DoubleEndedLender,
 {
     fn next_back<'next>(&'next mut self) -> Option<<Self as Lending<'next>>::Lend> {
@@ -65,7 +65,7 @@ where
 }
 impl<L, F> FusedLender for FilterMap<L, F>
 where
-    for<'all> F: HKAFnMutOpt<'all, <L as Lending<'all>>::Lend>,
+    for<'all> F: FnMutHKAOpt<'all, <L as Lending<'all>>::Lend>,
     L: FusedLender,
 {
 }
