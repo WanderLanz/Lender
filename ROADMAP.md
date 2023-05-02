@@ -19,8 +19,7 @@ WIP, mostly for my own reference.
   - ⚠️ `Sum`: `SumLender`
   - ⚠️ `Product`: `ProductLender`
 - ✅ Adapters
-- ❌ Unit tests
-- ❌ Implement traits for common types (e.g. `IntoLender`, `FromLender`)
+- ⚠️ Better tests
 - ⚠️ Sources (`empty`, `once`, etc.)
 - ⚠️ Docs
 
@@ -50,7 +49,7 @@ You may also use `.iter()` if the `Lender` already lends owned data (`'static`).
 |✅`filter_map`        |✅`enumerate`         |✅`peekable`          |
 |✅`skip_while`        |✅`take_while`        |✅`map_while`         |
 |✅`skip`              |✅`take`              |✅`scan`              |
-|⚠️`flat_map`          |⚠️`flatten`           |✅`fuse`              |
+|✅`flat_map`          |✅`flatten`           |✅`fuse`              |
 |✅`inspect`           |✅`by_ref`            |✅`collect`           |
 |✅`try_collect`       |✅`collect_into`      |✅`partition`         |
 |💀`partition_in_place`|✅`is_partitioned`    |✅`try_fold`          |
@@ -78,8 +77,8 @@ You may also use `.iter()` if the `Lender` already lends owned data (`'static`).
 - ✅ `Enumerate`
 - ✅ `FilterMap`
 - ✅ `Filter`
-- ⚠️ `FlatMap`
-- ⚠️ `Flatten`
+- ✅ `FlatMap`
+- ✅ `Flatten`
 - ✅ `Fuse`
 - ✅ `Inspect`
 - ✅ `Intersperse`

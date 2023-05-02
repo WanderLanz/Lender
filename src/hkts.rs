@@ -1,21 +1,8 @@
 //! These allow some lifetime elision in signatures using a HRTB and more flexible lifetime binding.
 //!
-//! [`WithLifetime`] binds `Self` where `Self: 'a` to a GAT `Self::Lt` where `Self::Lt: 'a`.
-//!
 //! - Higher-Kinded Functions (with argument) (HKA),
 //! - Higher-Kinded Functions (without argument) (HK),
 //! - Higher-Kinded Generic Functions (output is a generic) (HKG)
-pub trait WithLifetime<'a, _Seal = &'a Self>: 'a {
-    type Lt: 'a;
-    fn with_lifetime(self) -> Self::Lt;
-}
-impl<'a, T> WithLifetime<'a, &'a T> for T {
-    type Lt = T;
-    #[inline(always)]
-    fn with_lifetime(self) -> Self::Lt { self }
-}
-
-pub trait HKT: for<'all> WithLifetime<'all, &'all Self> {}
 
 mod hkfns {
     mod with_arg {
@@ -110,6 +97,7 @@ mod hkfns {
     }
     pub use opt_narg::*;
 }
+
 pub use hkfns::*;
 
 /// Higher-Kinded Generic Output `FnOnce`, where `Output` (B) is with lifetime `'b`.

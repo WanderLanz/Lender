@@ -9,10 +9,12 @@ use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lender, Lending};
 /// # Examples
 /// ```rust
 /// use lender::prelude::*;
-/// fn foo<L: for<'all> Lending<'all, Lend = &'all mut u32>>() {
-///     let e = lender::empty::<L>();
-///     e.for_each(|x| drop(x));
+/// struct U32RefMut;
+/// impl<'lend> Lending<'lend> for U32RefMut {
+///    type Lend = &'lend mut u32;
 /// }
+/// let mut e = lender::empty::<U32RefMut>();
+/// assert_eq!(e.next(), None);
 /// ```
 pub const fn empty<L: for<'all> Lending<'all>>() -> Empty<L> { Empty(marker::PhantomData) }
 
