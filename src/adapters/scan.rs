@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::{hkts::FnMutHKAOpt, Lender, Lending};
+use crate::{higher_order::FnMutHKAOpt, Lender, Lending};
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Scan<L, St, F> {

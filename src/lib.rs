@@ -1,8 +1,16 @@
 //! # Lender
 //!
-//! A standard `Iterator` cannot iterate over items that can only be borrowed for the lifetime of the call to `next()` (one at a time).
+//! Commonly known as a `LendingIterator` (although formerly referred to as a `StreamingIterator`, which now referrs to async API instead),
+//! a [`Lender`] is an [`Iterator`] over items that live at least as long as the call to [`Iterator::next()`]
+//! or as long as the iterator itself. In other words, a lender is an iterator that lends an item one at a time.
 //!
-//! For example, if you try to implement a `WindowsMut` iterator over a slice, you will soon find that the borrow checker is smart enough to know that
+//! You might be wondering why you would want to use a `Lender` instead of an `Iterator`. The answer is never. If you can use an `Iterator`, you should.
+//!
+//! However, when you do find yourself in a situation where you want the ease of use of an `Iterator` but you can't use one, `Lender` is here to help.
+//!
+//! For example, consider the `WindowsMut` problem:
+//!
+//! If you try to implement a `WindowsMut` iterator over a slice, you will soon find that the borrow checker is smart enough to know that
 //! you are attempting to mutably borrow some region of a slice multiple times, and will not allow it.
 //!
 //! ```rust,compile_fail
@@ -24,7 +32,7 @@
 //! }
 //! ```
 //!
-//! `lender` allows you to use many of the methods and convenient APIs of `Iterator` on types that can only be borrowed for the lifetime of the call to `next()`.
+//! [`Lender`] allows you to use many of the methods and convenient APIs of [`Iterator`] without the same restrictions on lending.
 //!
 //! The caveat is that closures used on lenders and consumers of lenders have to meet stricter requirements.
 //! For example, when consuming a lender with an early return, you must use polonius-emulating unsafe code in order to convince the borrow checker that the early return is safe.
@@ -32,7 +40,7 @@
 //! ## Example
 //!
 //! ```rust
-//! use lender::{Lending, Lender};
+//! use lender::prelude::*;
 //!
 //! struct WindowsMut<'a, T> {
 //!     inner: &'a mut [T],
@@ -92,36 +100,51 @@
 //!     let mut vec = vec![1u32, 2, 3, 4, 5];
 //!     let mut windows = WindowsMut { inner: &mut vec, begin: 0, len: 3 };
 //!
-//!     let mut iter = windows.map(|x| x[0]).iter();
+//!     let mut iter = windows.map(hrc_mut!(for<'all> |x: &'all mut [u32]| -> u32 { x[0] })).iter();
 //!     assert_eq!(iter.next(), Some(1u32));
 //! }
+//! ```
+//!
+//! Within this example you might have noticed the use of the [`hrc_mut!`] macro, this a result of those strict requirements on closures mentioned earlier.
+//! The Rust borrow checker is not always smart enough to know wether a closure can be used for inputs of 'any lifetime or only for one '1 specific lifetime,
+//! and in nightly Rust, there is already a feature for higher-ranked-closures (closure_lifetime_binder) allowing the following:
+//! ```ignore
+//! #![feature(closure_lifetime_binder)]
+//! let _ = for<'all> |x: &'all mut [u32]| -> &'all mut u32 { &mut x[0] };
+//! ```
+//! However, this feature is not yet stable, and so we must use the [`hrc_once!`], [`hrc_mut!`], and [`hrc!`] macro to emulate this feature for [`FnOnce`], [`FnMut`], and [`Fn`] respectively.
+//! ```rust
+//! # use lender::prelude::*;
+//! let _ = hrc_mut!(for<'all> |x: &'all mut [u32]| -> &'all mut u32 { &mut x[0] });
+//! //   ^? impl for<'all> FnMut(&'all mut [u32]) -> &'all mut u32
 //! ```
 #![no_std]
 
 extern crate alloc;
 
-mod adapters;
-pub use adapters::*;
-mod traits;
-pub use traits::*;
-pub mod hkts;
-mod impls;
-mod sources;
-pub use sources::*;
-pub mod try_trait_v2;
-
-mod sealed {
+pub mod private {
     pub trait Sealed {}
     pub struct Seal<T>(T);
     impl<T> Sealed for Seal<T> {}
 }
-pub(crate) use sealed::{Seal, Sealed};
+pub(crate) use private::{Seal, Sealed};
+
+mod adapters;
+pub use adapters::*;
+mod traits;
+pub use traits::*;
+pub mod higher_order;
+mod sources;
+pub use sources::*;
+pub mod try_trait_v2;
 
 pub mod prelude {
-    pub use crate::{DoubleEndedLender, ExactSizeLender, ExtendLender, FromLender, IntoLender, Lender, Lending};
+    pub use crate::{
+        hrc, hrc_mut, hrc_once, DoubleEndedLender, ExactSizeLender, ExtendLender, FromLender, IntoLender, Lender, Lending,
+    };
 }
 
-#[cfg(test)]
+// #[cfg(test)]
 mod test {
     use alloc::{borrow::ToOwned, vec, vec::Vec};
     use core::borrow::Borrow;
@@ -196,7 +219,7 @@ mod test {
         let windows = _windows_mut(&mut w, 2);
         windows
             .filter(|x| x[0] > 0)
-            // .map(|x| &mut x[0]) // This is not possible because of the lifetime
-            .for_each(|x| x[0] += 1);
+            .map(hrc_mut!(for<'all> |x: &'all mut [u32]| -> &'all mut u32 { &mut x[0] }))
+            .for_each(hrc_mut!(for<'all> |x: &'all mut u32| { *x += 1 }));
     }
 }

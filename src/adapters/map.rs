@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::{hkts::FnMutHKA, DoubleEndedLender, ExactSizeLender, FusedLender, Lender, Lending};
+use crate::{higher_order::FnMutHKA, DoubleEndedLender, ExactSizeLender, FusedLender, Lender, Lending};
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Map<L, F> {
@@ -13,13 +13,12 @@ impl<L, F> Map<L, F> {
 impl<L: fmt::Debug, F> fmt::Debug for Map<L, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.debug_struct("Map").field("lender", &self.lender).finish() }
 }
-impl<'lend, B, L, F> Lending<'lend> for Map<L, F>
+impl<'lend, L, F> Lending<'lend> for Map<L, F>
 where
-    F: FnMut(<L as Lending<'lend>>::Lend) -> B,
+    F: for<'all> FnMutHKA<'all, <L as Lending<'all>>::Lend>,
     L: Lender,
-    B: 'lend,
 {
-    type Lend = B;
+    type Lend = <F as FnMutHKA<'lend, <L as Lending<'lend>>::Lend>>::B;
 }
 impl<L, F> Lender for Map<L, F>
 where

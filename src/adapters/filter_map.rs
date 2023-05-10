@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::{hkts::FnMutHKAOpt, DoubleEndedLender, FusedLender, Lender, Lending};
+use crate::{higher_order::FnMutHKAOpt, DoubleEndedLender, FusedLender, Lender, Lending};
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct FilterMap<L, F> {

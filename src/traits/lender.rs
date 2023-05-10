@@ -2,7 +2,7 @@ use alloc::borrow::ToOwned;
 use core::{cmp::Ordering, num::NonZeroUsize, ops::ControlFlow};
 
 use crate::{
-    hkts::{FnMutHKA, FnMutHKG},
+    higher_order::{FnMutHKA, FnMutHKAOpt},
     try_trait_v2::{ChangeOutputType, FromResidual, Residual, Try},
     *,
 };
@@ -12,38 +12,28 @@ use crate::{
 /// This is a result of Higher-Ranked Trait Bounds (HRTBs) not having a way to express qualifiers (```for<'any where Self: 'any> Self: Trait```)
 /// and effectively making HRTBs only useful when you want to express a trait constraint on ALL lifetimes, including 'static (```for<'all> Self: trait```)
 ///
-/// Although the common example of implementing your own LendingIterator uses a (<code rust>type Item<'a> where Self: 'a;</code>) GAT,
+/// Although the common example of implementing your own LendingIterator uses a (```type Item<'a> where Self: 'a;```) GAT,
 /// that generally only works withing a small subset of the features that a LendingIterator needs to provide to be useful.
 ///
-/// Please see [Sabrina Jewson's Blog][1] for more information on the problem and how a trait like this can be used to solve it.
+/// Please see [Sabrina Jewson's Blog][1] for more information, and how a trait like this can be used to solve it by implicitly restricting HRTBs.
 ///
 /// [1]: (https://sabrinajewson.org/blog/the-better-alternative-to-lifetime-gats)
 pub trait Lending<'lend, __Seal: Sealed = Seal<&'lend Self>> {
     type Lend: 'lend;
 }
 
-/// An iterator that yields items that can only be alive for as long as the iterator itself and only until the next item is yielded.
+/// An iterator that yields items that can only be alive for at least as long as the iterator itself or until the next item is yielded.
 ///
 /// A `Lender` cannot be used as a `dyn` trait object, because it is used `Self` as a type parameter to get around higher-ranked lifetime bounds.
 ///
-/// Lenders must promise two things:
-///     1. No lend outlives the lender itself.
-///     2. Every lend is valid at least until the next lend of the lender (`next()`).
+/// Turn a lender into an iterator with [`cloned()`](Lender::cloned) where lend is [`Clone`], [`copied()`](Lender::copied) where lend is [`Copy`], [`owned()`](Lender::owned) where lend is [`ToOwned`], or [`iter()`](Lender::iter) where lend is already owned.
 ///
-/// This pattern introduces a lot of complexity with lifetimes and
-/// causes the compiler to generate a lot of errors that are difficult to understand
-/// by users who are not extremely familiar with lifetimes. There will eventually be an [FAQ] to help with this.
-///
-/// # Safety
-///
-/// - Because of the above promises, it is safe to lend out mutable references to the same data and use traditionally unsafe methods such as `windows_mut`.
-/// - However, these also introduce a hard restriction on keeping multiple lends alive at the same time, and will most likely introduce undefined behavior if violated.
-/// - Additionally, forcing a lend's lifetime to be longer via a `transmute` is not undefined behavior as long as the lender is alive and there are no other lends made.
+/// Both [`Iterator::partition_in_place`] and [`Iterator::array_chunks`] APIs are not supported by lending iterators.
 ///
 /// # Examples
 ///
 /// ```rust
-/// use lender::{Lender, Lending};
+/// use lender::prelude::*;
 /// struct WindowsMut<'a, T> {
 ///    slice: &'a mut [T],
 ///    cur: usize,
@@ -153,10 +143,10 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         IntersperseWith::new(self, separator)
     }
     #[inline]
-    fn map<B, F>(self, f: F) -> Map<Self, F>
+    fn map<F>(self, f: F) -> Map<Self, F>
     where
         Self: Sized,
-        F: for<'all> FnMutHKG<'all, <Self as Lending<'all>>::Lend, B>,
+        F: for<'all> FnMutHKA<'all, <Self as Lending<'all>>::Lend>,
     {
         Map::new(self, f)
     }
@@ -179,10 +169,10 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         Filter::new(self, predicate)
     }
     #[inline]
-    fn filter_map<B, F>(self, f: F) -> FilterMap<Self, F>
+    fn filter_map<F>(self, f: F) -> FilterMap<Self, F>
     where
         Self: Sized,
-        F: for<'all> FnMutHKG<'all, <Self as Lending<'all>>::Lend, Option<B>>,
+        F: for<'all> FnMutHKAOpt<'all, <Self as Lending<'all>>::Lend>,
     {
         FilterMap::new(self, f)
     }
@@ -217,10 +207,10 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         TakeWhile::new(self, predicate)
     }
     #[inline]
-    fn map_while<B, P>(self, predicate: P) -> MapWhile<Self, P>
+    fn map_while<P>(self, predicate: P) -> MapWhile<Self, P>
     where
         Self: Sized,
-        P: for<'all> FnMutHKG<'all, <Self as Lending<'all>>::Lend, Option<B>>,
+        P: for<'all> FnMutHKAOpt<'all, <Self as Lending<'all>>::Lend>,
     {
         MapWhile::new(self, predicate)
     }
@@ -239,10 +229,10 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         Take::new(self, n)
     }
     #[inline]
-    fn scan<St, B, F>(self, initial_state: St, f: F) -> Scan<Self, St, F>
+    fn scan<St, F>(self, initial_state: St, f: F) -> Scan<Self, St, F>
     where
         Self: Sized,
-        F: for<'all> FnMutHKG<'all, (&'all mut St, <Self as Lending<'all>>::Lend), Option<B>>,
+        F: for<'all> FnMutHKAOpt<'all, (&'all mut St, <Self as Lending<'all>>::Lend)>,
     {
         Scan::new(self, initial_state, f)
     }
@@ -337,7 +327,6 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         }
         (left, right)
     }
-    // UNIMPLEMENTABLE: partition_in_place
     #[inline]
     fn is_partitioned<P>(mut self, mut predicate: P) -> bool
     where
@@ -462,14 +451,14 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         None
     }
     #[inline]
-    fn find_map<B, F>(&mut self, mut f: F) -> Option<B>
+    fn find_map<'a, F>(&'a mut self, mut f: F) -> Option<<F as FnMutHKAOpt<'a, <Self as Lending<'a>>::Lend>>::B>
     where
         Self: Sized,
-        F: for<'all> FnMutHKG<'all, <Self as Lending<'all>>::Lend, Option<B>>,
+        F: for<'all> FnMutHKAOpt<'all, <Self as Lending<'all>>::Lend>,
     {
         while let Some(x) = self.next() {
             if let Some(y) = f(x) {
-                return Some(y);
+                return Some(unsafe { core::mem::transmute(y) });
             }
         }
         None
@@ -550,11 +539,20 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         self.min_by(|x, y| x.partial_cmp(y).unwrap_or(Ordering::Equal))
     }
     #[inline]
+    fn max_by_key<B: Ord, T, F>(self, f: F) -> Option<T>
+    where
+        Self: Sized,
+        for<'all> <Self as Lending<'all>>::Lend: ToOwned<Owned = T>,
+        F: FnMut(&T) -> B,
+    {
+        self.owned().max_by_key::<B, F>(f)
+    }
+    #[inline]
     fn max_by<T, F>(self, mut compare: F) -> Option<T>
     where
         Self: Sized,
         for<'all> <Self as Lending<'all>>::Lend: ToOwned<Owned = T>,
-        F: for<'all> FnMut(&T, &<Self as Lending<'all>>::Lend) -> Ordering,
+        F: FnMut(&T, &<Self as Lending<'_>>::Lend) -> Ordering,
     {
         self.reduce(move |x, y| {
             match compare(&x, &y) {
@@ -564,11 +562,20 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         })
     }
     #[inline]
+    fn min_by_key<B: Ord, T, F>(self, f: F) -> Option<T>
+    where
+        Self: Sized,
+        for<'all> <Self as Lending<'all>>::Lend: ToOwned<Owned = T>,
+        F: FnMut(&T) -> B,
+    {
+        self.owned().min_by_key::<B, F>(f)
+    }
+    #[inline]
     fn min_by<T, F>(self, mut compare: F) -> Option<T>
     where
         Self: Sized,
         for<'all> <Self as Lending<'all>>::Lend: ToOwned<Owned = T>,
-        F: for<'all> FnMut(&T, &<Self as Lending<'all>>::Lend) -> Ordering,
+        F: FnMut(&T, &<Self as Lending<'_>>::Lend) -> Ordering,
     {
         self.reduce(move |x, y| {
             match compare(&x, &y) {
@@ -583,6 +590,15 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         Self: Sized + DoubleEndedLender,
     {
         Rev::new(self)
+    }
+    #[inline]
+    fn unzip<ExtA, ExtB>(self) -> (ExtA, ExtB)
+    where
+    Self: Sized,
+    for<'all> <Self as Lending<'all>>::Lend: TupleLend<'all>,
+    ExtA: Default + ExtendLender<FirstShunt<Self>>,
+    ExtB: Default + ExtendLender<SecondShunt<Self>>, {
+        unzip(self)
     }
     fn copied<T>(self) -> Copied<Self>
     where
@@ -783,8 +799,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         }
         true
     }
-    // not std::iter
-    /// Iterators method names already have unique meanings in stdlib, so why not use the ergonomic `iter` method name over `into_iterator`?
+    // Iterators method names already have unique meanings in stdlib, so why not use the ergonomic `iter` method name over `into_iterator`?
     fn iter<'this>(self) -> Iter<'this, Self>
     where
         Self: Sized + 'this,
@@ -826,17 +841,10 @@ where
         ControlFlow::Break(x) => x,
     }
 }
-
-impl<'lend, L> Lending<'lend> for &mut L
-where
-    L: Lender,
-{
+impl<'lend, L: Lender> Lending<'lend> for &mut L {
     type Lend = <L as Lending<'lend>>::Lend;
 }
-impl<L> Lender for &mut L
-where
-    L: Lender,
-{
+impl<L: Lender> Lender for &mut L {
     #[inline]
     fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> { (*self).next() }
 }

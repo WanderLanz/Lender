@@ -35,12 +35,17 @@ where
         (0, upper)
     }
     #[inline]
-    fn count(mut self) -> usize
+    fn count(self) -> usize
     where
         Self: Sized,
     {
-        let p = &mut self.predicate;
-        self.lender.map(move |x| (p)(&x) as usize).iter().sum()
+        #[inline]
+        fn f<L: for<'all> Lending<'all>, F: FnMut(&<L as Lending<'_>>::Lend) -> bool>(
+            mut f: F,
+        ) -> impl FnMut(<L as Lending<'_>>::Lend) -> usize {
+            move |x| (f)(&x) as usize
+        }
+        self.lender.map(f::<Self, _>(self.predicate)).iter().sum()
     }
 }
 impl<L, P> DoubleEndedLender for Filter<L, P>

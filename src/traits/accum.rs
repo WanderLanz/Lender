@@ -5,8 +5,8 @@ use crate::Lender;
 ///
 /// # Example
 /// ```rust
-/// use std::borrow::ToOwned;
-/// use lender::{prelude::*, SumLender};
+/// # use std::borrow::ToOwned;
+/// # use lender::{prelude::*, SumLender};
 /// struct U32Sum(pub u32);
 /// impl<'lend> Lending<'lend> for U32Sum {
 ///    type Lend = &'lend u32;

@@ -1,4 +1,4 @@
-use core::ops::ControlFlow;
+use core::{marker::PhantomData, ops::ControlFlow};
 
 mod chain;
 mod chunk;
@@ -58,13 +58,14 @@ pub use self::{
     zip::Zip,
 };
 use crate::{
+    empty,
     try_trait_v2::{ChangeOutputType, FromResidual, Residual, Try},
-    Lender, Lending,
+    Empty, ExtendLender, IntoLender, Lender, Lending, TupleLend,
 };
 
 // pub use zip::{TrustedRandomAccess, TrustedRandomAccessNoCoerce};
 
-/// Private adapter to work with `Try` lenders. Turns a `Lender`, where `Lend` implements `Try`, into a `Lender` of `<Lend as Try>::Output`.
+/// Private adapter. Turns a `Lender`, where `Lend` implements `Try`, into a `Lender` of `<Lend as Try>::Output`.
 pub struct TryShunt<'this, L: Lender>
 where
     for<'all> <L as Lending<'all>>::Lend: Try,
@@ -100,6 +101,10 @@ where
         }
         None
     }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let (_, upper) = self.lender.size_hint();
+        (0, upper)
+    }
 }
 pub(crate) fn try_process<'a, L, F, U>(lender: L, mut f: F) -> ChangeOutputType<<L as Lending<'a>>::Lend, U>
 where
@@ -117,4 +122,57 @@ where
         Some(r) => FromResidual::from_residual(r),
         None => Try::from_output(value),
     }
+}
+
+/// Private adapter. Marks a `Lender`, where `Lend` implements `TupleLend`, as a `Lender` of `<Lend as TupleLend>::First`.
+pub struct FirstShunt<L>(PhantomData<L>);
+/// Private adapter. Marks a `Lender`, where `Lend` implements `TupleLend`, as a `Lender` of `<Lend as TupleLend>::Second`.
+pub struct SecondShunt<L>(PhantomData<L>);
+impl<'lend, L: Lender> Lending<'lend> for FirstShunt<L>
+where
+    for<'all> <L as Lending<'all>>::Lend: TupleLend<'all>,
+{
+    type Lend = <<L as Lending<'lend>>::Lend as TupleLend<'lend>>::First;
+}
+impl<'lend, L: Lender> Lending<'lend> for SecondShunt<L>
+where
+    for<'all> <L as Lending<'all>>::Lend: TupleLend<'all>,
+{
+    type Lend = <<L as Lending<'lend>>::Lend as TupleLend<'lend>>::Second;
+}
+impl<L: Lender> IntoLender for FirstShunt<L>
+where
+    for<'all> <L as Lending<'all>>::Lend: TupleLend<'all>,
+{
+    type Lender = Empty<Self>;
+    fn into_lender(self) -> <Self as IntoLender>::Lender { empty() }
+}
+impl<L: Lender> IntoLender for SecondShunt<L>
+where
+    for<'all> <L as Lending<'all>>::Lend: TupleLend<'all>,
+{
+    type Lender = Empty<Self>;
+    fn into_lender(self) -> <Self as IntoLender>::Lender { empty() }
+}
+
+pub(crate) fn unzip<L, ExtA, ExtB>(mut lender: L) -> (ExtA, ExtB)
+where
+    L: Sized + Lender,
+    for<'all> <L as Lending<'all>>::Lend: TupleLend<'all>,
+    ExtA: Default + ExtendLender<FirstShunt<L>>,
+    ExtB: Default + ExtendLender<SecondShunt<L>>,
+{
+    let mut a = ExtA::default();
+    let mut b = ExtB::default();
+    let sz = lender.size_hint().0;
+    if sz > 0 {
+        a.extend_lender_reserve(sz);
+        b.extend_lender_reserve(sz);
+    }
+    while let Some(lend) = lender.next() {
+        let (x, y) = lend.tuple_lend();
+        a.extend_lender_one(x);
+        b.extend_lender_one(y);
+    }
+    (a, b)
 }
