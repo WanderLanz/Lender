@@ -19,7 +19,7 @@ use crate::Lender;
 ///         U32Sum(lender.fold(0, |acc, x| acc + *x))
 ///     }
 /// }
-/// let e = lender::empty::<U32Sum>();
+/// let e = lender::empty::<lend!(&'lend u32)>();
 /// assert_eq!(U32Sum::sum_lender(e).0, 0u32);
 /// ```
 pub trait SumLender<L: Lender>: Sized {

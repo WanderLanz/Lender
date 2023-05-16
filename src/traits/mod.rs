@@ -38,3 +38,32 @@ impl<'a, A, B> TupleLend<'a> for &'a mut (A, B) {
     #[inline(always)]
     fn tuple_lend(self) -> (Self::First, Self::Second) { (&mut self.0, &mut self.1) }
 }
+
+/// Internal struct used to implement [`lend!`], do not use directly.
+#[doc(hidden)]
+pub struct DynLendShunt<T: ?Sized>(pub T);
+
+impl<'lend, T: ?Sized + for<'all> DynLend<'all>> Lending<'lend> for DynLendShunt<T> {
+    type Lend = <T as DynLend<'lend>>::Lend;
+}
+
+/// Internal trait used to implement [`lend!`], do not use directly.
+#[doc(hidden)]
+pub trait DynLend<'lend> {
+    type Lend;
+}
+
+/// Use lifetime `'lend` within type `$T` to create an `impl for<'lend> Lending<'lend, Lend = $T>`.
+/// Uses a bug in the borrow checker which allows dyn objects to implement impossible traits.
+/// # Examples
+/// ```rust
+/// use lender::prelude::*;
+/// let mut empty = lender::empty::<lend!(&'lend mut [u32])>(); // <- same Lending signature as a WindowsMut over u32
+/// let _: Option<&mut [u32]> = empty.next(); // => None
+/// ```
+#[macro_export]
+macro_rules! lend {
+    ($T:ty) => {
+        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = $T>>
+    };
+}

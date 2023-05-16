@@ -1,6 +1,7 @@
-//! Higher-Order Types, Traits, etc.
+//! # Higher-Order Types, Traits, etc.
 //!
-//! Flexible function signatures, work around function lifetime signature restrictions.
+//! - Flexible function signatures, to work around function lifetime signature restrictions.
+//! - Higher-Ranked Closures (macro to create fn signatures as a type hint)
 //!
 //! If you are using nightly, it is recommended to use higher-ranked closures (`for<'all> |x: &'all ()| -> &'all () { x }`), which better satisfy these traits without addition function signatures. (`#![feature(closure_lifetime_binder)]`).
 //!

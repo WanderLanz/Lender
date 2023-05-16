@@ -112,12 +112,52 @@
 //! #![feature(closure_lifetime_binder)]
 //! let _ = for<'all> |x: &'all mut [u32]| -> &'all mut u32 { &mut x[0] };
 //! ```
-//! However, this feature is not yet stable, and so we must use the [`hrc_once!`], [`hrc_mut!`], and [`hrc!`] macro to emulate this feature for [`FnOnce`], [`FnMut`], and [`Fn`] respectively.
+//! However, this feature is not yet stable, and so the [`hrc_once!`], [`hrc_mut!`], and [`hrc!`] macros are provided to emulate this feature for [`FnOnce`], [`FnMut`], and [`Fn`] respectively.
 //! ```rust
 //! # use lender::prelude::*;
 //! let _ = hrc_mut!(for<'all> |x: &'all mut [u32]| -> &'all mut u32 { &mut x[0] });
 //! //   ^? impl for<'all> FnMut(&'all mut [u32]) -> &'all mut u32
 //! ```
+//!
+//! ## The Core Issue: Higher-Ranked Trait Bounds
+//!
+//! The following is essentially just a summary of [Sabrina Jewson's Blog](https://sabrinajewson.org/blog/the-better-alternative-to-lifetime-gats), which I highly recommend reading.
+//!
+//! Higher-Ranked Trait Bounds (HRTBs) are a part of stable Rust and, at first glance,
+//! they might seem to be perfect for LendingIterators:
+//!
+//! - For a trait with a lifetime generic (`trait Lending<'lt> { type Lend: 'lt; }`)
+//! - and HRTB (`...where T: for<'all> Lending<'all>`),
+//! - `T` implements `Lending` for *ALL* lifetimes.
+//!
+//! Although they are certainly the core of what makes Lender work,
+//! they prove to be anything but easy to work with.
+//! This is mostly because they do not support qualifiers (e.g. `for<'all where 'all: 'lt>`).
+//!
+//! Fortunately, there are two core solutions to the problems HRTBs present.
+//!
+//! 1. You can implictly restrict a HRTB by including
+//! a reference to the type you want to restrict the lifetime to,
+//! because references are treated special.
+//!     - For a trait with a lifetime generic (`trait Lending<'lt, T> { type Lend: 'lt; }`)
+//!     - and HRTB (`...where T: for<'all /* where Self: 'all */> Lending<'all, &'all Self>`),
+//!     - `T` implements `Lending` for all lifetimes *where Self is valid as well*.
+//!
+//! 2. OR, we can exploit a bug that allows `dyn` objects to implement
+//! traits otherwise impossible to implement.
+//!     - For a trait with lifetime generic (`trait DynLending<'lt> { type Lend; }`)
+//!     - and HRTB (`...where T: ?Sized + for<'all> DynLending<'all>`),
+//!     - `T` is not a valid type... under normal circumstances.
+//!     - However, dyn object (`dyn for<'all> Buf<'all, Lend = ...>`) IS valid for `T`!
+//!
+//! The first solution is the one used the most in this crate, and as useful as the second solution is, we try and restrict its use to a minimum because it is considered a bug and may be fixed at any time.
+//!
+//! This comes at a cost of not being able to have a `dyn` Lender, which is unfortunate, but not a deal breaker.
+//!
+//! For now, solution 2 (impossible dyn) is only used by the [`lend!`] macro,
+//! which is used in conjuction with source function like [`empty()`] to create Lenders
+//! without needing to create a unit struct just for typing.
+
 #![no_std]
 
 extern crate alloc;
@@ -140,11 +180,12 @@ pub mod try_trait_v2;
 
 pub mod prelude {
     pub use crate::{
-        hrc, hrc_mut, hrc_once, DoubleEndedLender, ExactSizeLender, ExtendLender, FromLender, IntoLender, Lender, Lending,
+        hrc, hrc_mut, hrc_once, lend, DoubleEndedLender, ExactSizeLender, ExtendLender, FromLender, IntoLender, Lender,
+        Lending,
     };
 }
 
-// #[cfg(test)]
+#[cfg(test)]
 mod test {
     use alloc::{borrow::ToOwned, vec, vec::Vec};
     use core::borrow::Borrow;
