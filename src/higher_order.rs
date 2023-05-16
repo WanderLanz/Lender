@@ -7,6 +7,14 @@
 //!
 //! If you are not on nightly, you can use the [`hrc_once!`], [`hrc_mut!`], or [`hrc!`] macro to create a higher-ranked closure.
 
+/// Higher-Kinded Associated Output `FnOnce`, where `Output` (B) is with lifetime `'b`.
+pub trait FnOnceHKA<'b, A>: FnOnce(A) -> <Self as FnOnceHKA<'b, A>>::B {
+    type B: 'b;
+}
+impl<'b, A, B: 'b, F: FnOnce(A) -> B> FnOnceHKA<'b, A> for F {
+    type B = B;
+}
+
 /// Higher-Kinded Associated Output `FnMut`, where `Output` (B) is with lifetime `'b`.
 pub trait FnMutHKA<'b, A>: FnMut(A) -> <Self as FnMutHKA<'b, A>>::B {
     type B: 'b;

@@ -1,6 +1,6 @@
 use core::iter::FusedIterator;
 
-use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lender, Lending};
+use crate::{prelude::*, FusedLender};
 
 /// Creates a lender from an iterator.
 ///
