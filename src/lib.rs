@@ -162,7 +162,7 @@
 
 extern crate alloc;
 
-pub mod private {
+mod private {
     pub trait Sealed {}
     pub struct Seal<T>(T);
     impl<T> Sealed for Seal<T> {}
