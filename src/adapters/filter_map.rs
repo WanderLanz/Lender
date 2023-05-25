@@ -29,13 +29,11 @@ where
     for<'all> F: FnMutHKAOpt<'all, <L as Lending<'all>>::Lend>,
     L: Lender,
 {
-    fn next<'next>(&'next mut self) -> Option<<Self as Lending<'next>>::Lend> {
+    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
         while let Some(x) = self.lender.next() {
             if let Some(y) = (self.f)(x) {
-                // SAFETY: polonius
-                return Some(unsafe {
-                    core::mem::transmute::<<Self as Lending<'_>>::Lend, <Self as Lending<'next>>::Lend>(y)
-                });
+                // SAFETY: polonius return
+                return Some(unsafe { core::mem::transmute::<<Self as Lending<'_>>::Lend, <Self as Lending<'_>>::Lend>(y) });
             }
         }
         None
@@ -51,13 +49,11 @@ where
     for<'all> F: FnMutHKAOpt<'all, <L as Lending<'all>>::Lend>,
     L: DoubleEndedLender,
 {
-    fn next_back<'next>(&'next mut self) -> Option<<Self as Lending<'next>>::Lend> {
+    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
         while let Some(x) = self.lender.next_back() {
             if let Some(y) = (self.f)(x) {
-                // SAFETY: polonius
-                return Some(unsafe {
-                    core::mem::transmute::<<Self as Lending<'_>>::Lend, <Self as Lending<'next>>::Lend>(y)
-                });
+                // SAFETY: polonius return
+                return Some(unsafe { core::mem::transmute::<<Self as Lending<'_>>::Lend, <Self as Lending<'_>>::Lend>(y) });
             }
         }
         None

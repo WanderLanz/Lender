@@ -104,7 +104,14 @@ where
     I: Iterator<Item = <L as Lending<'a>>::Lend>,
 {
     #[inline]
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> { unsafe { core::mem::transmute(self.iter.next()) } }
+    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+        // SAFETY: 'a: 'lend
+        unsafe {
+            core::mem::transmute::<Option<<Self as Lending<'a>>::Lend>, Option<<Self as Lending<'_>>::Lend>>(
+                self.iter.next(),
+            )
+        }
+    }
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) { self.iter.size_hint() }
 }
@@ -114,7 +121,14 @@ where
     L: ?Sized + for<'all> Lending<'all> + 'a,
     I: DoubleEndedIterator<Item = <L as Lending<'a>>::Lend>,
 {
-    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> { unsafe { core::mem::transmute(self.iter.next_back()) } }
+    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+        // SAFETY: 'a: 'lend
+        unsafe {
+            core::mem::transmute::<Option<<Self as Lending<'a>>::Lend>, Option<<Self as Lending<'_>>::Lend>>(
+                self.iter.next_back(),
+            )
+        }
+    }
 }
 
 impl<'a, L, I> ExactSizeLender for LendIter<'a, L, I>

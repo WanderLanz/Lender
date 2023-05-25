@@ -66,12 +66,13 @@ use crate::{
 // pub use zip::{TrustedRandomAccess, TrustedRandomAccessNoCoerce};
 
 /// Private adapter. Turns a `Lender`, where `Lend` implements `Try`, into a `Lender` of `<Lend as Try>::Output`.
+/// # Safety
+/// The residual of the lender cannot outlive it, otherwise UB.
 pub struct TryShunt<'this, L: Lender>
 where
     for<'all> <L as Lending<'all>>::Lend: Try,
 {
     lender: L,
-    // needs to be an elevated lifetime, because the residual is returned from the closure in case of a break.
     residual: &'this mut Option<<<L as Lending<'this>>::Lend as Try>::Residual>,
 }
 impl<'lend, 'this, L: Lender> Lending<'lend> for TryShunt<'this, L>
@@ -89,7 +90,7 @@ where
             match x.branch() {
                 ControlFlow::Continue(x) => return Some(x),
                 ControlFlow::Break(x) => {
-                    // SAFETY: we ensure that `residual` is not accessed after this point as a normal lend value with `Break`.
+                    // SAFETY: residual is manually guaranteed to be the only lend alive
                     *self.residual = Some(unsafe {
                         core::mem::transmute::<
                             <<L as Lending<'_>>::Lend as Try>::Residual,
@@ -114,7 +115,7 @@ where
     F: FnMut(TryShunt<'a, L>) -> U,
 {
     let mut residual = None;
-    // SAFETY: we ensure that `f` does not have access to `residual`.
+    // SAFETY: residual is manually guaranteed to be the only lend alive after `f`.
     let reborrow = unsafe { &mut *(&mut residual as *mut _) };
     let shunt = TryShunt { lender, residual: reborrow };
     let value = f(shunt);

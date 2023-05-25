@@ -56,10 +56,11 @@ where
     L: ?Sized + for<'all> Lending<'all>,
 {
     fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
-        // SAFETY: we only ever take the value once and 'a: 'next by definition
-        self.inner.take().map(|v| unsafe { core::mem::transmute(v) })
+        // SAFETY: 'a: 'lend
+        self.inner
+            .take()
+            .map(|v| unsafe { core::mem::transmute::<<Self as Lending<'a>>::Lend, <Self as Lending<'_>>::Lend>(v) })
     }
-
     fn size_hint(&self) -> (usize, Option<usize>) {
         if self.inner.is_some() {
             (1, Some(1))
@@ -73,10 +74,8 @@ impl<'a, L> DoubleEndedLender for Once<'a, L>
 where
     L: ?Sized + for<'all> Lending<'all>,
 {
-    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
-        // SAFETY: we only ever take the value once and 'a: 'next by definition
-        self.inner.take().map(|v| unsafe { core::mem::transmute(v) })
-    }
+    #[inline]
+    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> { self.next() }
 }
 
 impl<'a, L> ExactSizeLender for Once<'a, L> where L: ?Sized + for<'all> Lending<'all> {}

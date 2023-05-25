@@ -47,14 +47,12 @@ where
     for<'all> <L as Lending<'all>>::Lend: Clone,
     L: Lender,
 {
-    fn next<'next>(&'next mut self) -> Option<<Self as Lending<'next>>::Lend> {
+    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
         if self.needs_sep && self.lender.peek().is_some() {
             self.needs_sep = false;
-            // SAFETY: 'this: 'next
+            // SAFETY: 'this: 'lend
             Some(unsafe {
-                core::mem::transmute::<<Self as Lending<'this>>::Lend, <Self as Lending<'next>>::Lend>(
-                    self.separator.clone(),
-                )
+                core::mem::transmute::<<Self as Lending<'this>>::Lend, <Self as Lending<'_>>::Lend>(self.separator.clone())
             })
         } else {
             self.needs_sep = true;
@@ -127,12 +125,12 @@ where
     L: Lender,
     G: FnMut() -> <L as Lending<'this>>::Lend,
 {
-    fn next<'next>(&'next mut self) -> Option<<Self as Lending<'next>>::Lend> {
+    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
         if self.needs_sep && self.lender.peek().is_some() {
             self.needs_sep = false;
-            // SAFETY: 'this: 'next
+            // SAFETY: 'this: 'lend
             Some(unsafe {
-                core::mem::transmute::<<Self as Lending<'this>>::Lend, <Self as Lending<'next>>::Lend>((self.separator)())
+                core::mem::transmute::<<Self as Lending<'this>>::Lend, <Self as Lending<'_>>::Lend>((self.separator)())
             })
         } else {
             self.needs_sep = true;

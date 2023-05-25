@@ -52,17 +52,15 @@ pub trait DoubleEndedLender: Lender {
         accum
     }
     #[inline]
-    fn rfind<'call, P>(&'call mut self, mut predicate: P) -> Option<<Self as Lending<'call>>::Lend>
+    fn rfind<P>(&mut self, mut predicate: P) -> Option<<Self as Lending<'_>>::Lend>
     where
         Self: Sized,
         P: FnMut(&<Self as Lending<'_>>::Lend) -> bool,
     {
         while let Some(x) = self.next_back() {
             if predicate(&x) {
-                // SAFETY: polonius
-                return Some(unsafe {
-                    core::mem::transmute::<<Self as Lending<'_>>::Lend, <Self as Lending<'call>>::Lend>(x)
-                });
+                // SAFETY: polonius return
+                return Some(unsafe { core::mem::transmute::<<Self as Lending<'_>>::Lend, <Self as Lending<'_>>::Lend>(x) });
             }
         }
         None

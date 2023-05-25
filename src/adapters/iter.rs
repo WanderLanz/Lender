@@ -2,10 +2,10 @@ use core::{iter::FusedIterator, marker::PhantomData};
 
 use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lender, Lending};
 
-/// Iterator adapter for any Lender where Lend is `'static`,
+/// Iterator adapter for any Lender where multiple Lends can exist at a time,
 /// allowing on-the-fly conversion into an iterator where Lending is no longer needed or inferred.
 ///
-/// Implementing `Iterator` directly on any `Lender` where `Lend` is `'static` causes name conflicts, but might be possible in the future with specialization.
+/// Implementing `Iterator` directly on any `Lender` causes name conflicts, but might be possible in the future with specialization.
 /// # Example
 /// ```ignore
 /// let mut vec = vec![1u8, 2, 3];
@@ -25,43 +25,55 @@ use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lender, Lending};
 /// ```
 #[derive(Clone, Debug)]
 #[must_use = "iterators are lazy and do nothing unless consumed"]
-pub struct Iter<'l, L: 'l> {
+pub struct Iter<'this, L: 'this> {
     lender: L,
-    _marker: PhantomData<&'l ()>,
+    _marker: PhantomData<&'this ()>,
 }
-impl<'l, L: 'l> Iter<'l, L> {
-    pub(crate) fn new(lender: L) -> Iter<'l, L> { Iter { lender, _marker: PhantomData } }
+impl<'this, L: 'this> Iter<'this, L> {
+    pub(crate) fn new(lender: L) -> Iter<'this, L> { Iter { lender, _marker: PhantomData } }
 }
-impl<'l, L: 'l> Iterator for Iter<'l, L>
+impl<'this, L: 'this> Iterator for Iter<'this, L>
 where
     L: Lender,
-    for<'all> <L as Lending<'all>>::Lend: 'static,
+    for<'all> <L as Lending<'all>>::Lend: 'this,
 {
-    type Item = <L as Lending<'l>>::Lend;
+    type Item = <L as Lending<'this>>::Lend;
     #[inline]
-    fn next(&mut self) -> Option<Self::Item> { unsafe { core::mem::transmute(self.lender.next()) } }
+    fn next(&mut self) -> Option<Self::Item> {
+        // SAFETY: for<'all> <L as Lending<'all>>::Lend: 'this
+        unsafe {
+            core::mem::transmute::<Option<<L as Lending<'_>>::Lend>, Option<<L as Lending<'this>>::Lend>>(self.lender.next())
+        }
+    }
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) { self.lender.size_hint() }
 }
-impl<'l, L: 'l> DoubleEndedIterator for Iter<'l, L>
+impl<'this, L: 'this> DoubleEndedIterator for Iter<'this, L>
 where
     L: DoubleEndedLender,
-    for<'all> <L as Lending<'all>>::Lend: 'static,
+    for<'all> <L as Lending<'all>>::Lend: 'this,
 {
     #[inline]
-    fn next_back(&mut self) -> Option<Self::Item> { unsafe { core::mem::transmute(self.lender.next_back()) } }
+    fn next_back(&mut self) -> Option<Self::Item> {
+        // SAFETY: for<'all> <L as Lending<'all>>::Lend: 'this
+        unsafe {
+            core::mem::transmute::<Option<<L as Lending<'_>>::Lend>, Option<<L as Lending<'this>>::Lend>>(
+                self.lender.next_back(),
+            )
+        }
+    }
 }
-impl<'l, L: 'l> ExactSizeIterator for Iter<'l, L>
+impl<'this, L: 'this> ExactSizeIterator for Iter<'this, L>
 where
     L: ExactSizeLender,
-    for<'all> <L as Lending<'all>>::Lend: 'static,
+    for<'all> <L as Lending<'all>>::Lend: 'this,
 {
     #[inline]
     fn len(&self) -> usize { self.lender.len() }
 }
-impl<'l, L: 'l> FusedIterator for Iter<'l, L>
+impl<'this, L: 'this> FusedIterator for Iter<'this, L>
 where
     L: FusedLender,
-    for<'all> <L as Lending<'all>>::Lend: 'static,
+    for<'all> <L as Lending<'all>>::Lend: 'this,
 {
 }

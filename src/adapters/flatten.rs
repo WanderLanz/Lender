@@ -143,6 +143,7 @@ where
     for<'all> <L as Lending<'all>>::Lend: IntoLender,
 {
     fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+        // SAFETY: polonius return
         let reborrow =
             unsafe { &mut *(&mut self.inner as *mut Option<<<L as Lending<'this>>::Lend as IntoLender>::Lender>) };
         if let Some(inner) = reborrow {
@@ -150,7 +151,13 @@ where
                 return Some(x);
             }
         }
-        self.inner = self.lender.next().map(|l| unsafe { core::mem::transmute(l.into_lender()) });
+        // SAFETY: inner is manually guaranteed to be the only lend alive of the inner iterator
+        self.inner = self.lender.next().map(|l| unsafe {
+            core::mem::transmute::<
+                <<L as Lending<'_>>::Lend as IntoLender>::Lender,
+                <<L as Lending<'this>>::Lend as IntoLender>::Lender,
+            >(l.into_lender())
+        });
         self.inner.as_mut()?.next()
     }
     fn size_hint(&self) -> (usize, Option<usize>) {

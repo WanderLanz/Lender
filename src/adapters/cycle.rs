@@ -29,6 +29,7 @@ where
 {
     #[inline]
     fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+        // SAFETY: polonius return
         let reborrow = unsafe { &mut *(self as *mut Self) };
         if let x @ Some(_) = reborrow.lender.next() {
             return x;
