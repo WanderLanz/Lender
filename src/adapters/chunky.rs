@@ -22,7 +22,12 @@ where
 {
     pub(crate) fn new(lender: L, chunk_size: usize) -> Self {
         assert!(chunk_size != 0, "chunk size must be non-zero");
-        let len = lender.len();
+        let mut len = lender.len();
+        let rem = len % chunk_size;
+        len = len / chunk_size;
+        if rem > 0 {
+            len += 1;
+        }
         Self { lender, chunk_size, len }
     }
 }
@@ -40,33 +45,48 @@ where
 {
     #[inline]
     fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
-        self.len = self.len.saturating_sub(1);
-        if self.len == 0 {
-            None
-        } else {
+        if self.len > 0 {
+            self.len -= 1;
             Some(self.lender.next_chunk(self.chunk_size))
+        } else {
+            None
         }
     }
 
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let (lower, upper) = self.lender.size_hint();
+        let (mut lower, mut upper) = self.lender.size_hint();
         let sz = self.chunk_size;
-        (
-            if lower % sz == 0 { lower / sz } else { (lower / sz) + 1 },
-            upper.map(|n| if n % sz == 0 { n / sz } else { (n / sz) + 1 }),
-        )
+
+        let lrem = lower % sz;
+        lower = lower / sz;
+        if lrem > 0 {
+            lower += 1;
+        }
+
+        upper = upper.map(|mut n| {
+            let urem = n % sz;
+            n = n / sz;
+            if urem > 0 {
+                n += 1;
+            }
+            n
+        });
+
+        (lower, upper)
     }
 
     #[inline]
     fn count(self) -> usize {
-        let cnt = self.lender.count();
+        let mut cnt = self.lender.count();
         let sz = self.chunk_size;
-        if cnt % sz == 0 {
-            cnt / sz
-        } else {
-            (cnt / sz) + 1
+
+        let rem = cnt % sz;
+        cnt = cnt / sz;
+        if rem > 0 {
+            cnt += 1;
         }
+        cnt
     }
 
     fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> R
@@ -77,7 +97,8 @@ where
     {
         let mut acc = init;
         let sz = self.chunk_size;
-        for _ in 0..self.len {
+        while self.len > 0 {
+            self.len -= 1;
             acc = match f(acc, self.lender.next_chunk(sz)).branch() {
                 ControlFlow::Break(x) => return R::from_residual(x),
                 ControlFlow::Continue(x) => x,
@@ -94,7 +115,8 @@ where
     {
         let mut accum = init;
         let sz = self.chunk_size;
-        for _ in 0..self.len {
+        while self.len > 0 {
+            self.len -= 1;
             accum = f(accum, self.lender.next_chunk(sz));
         }
         accum
@@ -109,12 +131,14 @@ where
 {
     #[inline]
     fn len(&self) -> usize {
+        let mut len = self.len;
         let sz = self.chunk_size;
-        let len = self.len;
-        if len % sz == 0 {
-            len / sz
-        } else {
-            (len / sz) + 1
+
+        let rem = len % sz;
+        len = len / sz;
+        if rem > 0 {
+            len += 1;
         }
+        len
     }
 }

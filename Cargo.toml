@@ -1,10 +1,10 @@
 [package]
 name = "lender"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
 authors = ["Lance Warden <wanderlanz@proton.me>"]
 license = "MIT OR Apache-2.0"
-description = "Lending iterator based on implicitly-restricted higher-ranked lifetimes"
+description = "feature complete(-ish) lending iterator"
 repository = "https://github.com/WanderLanz/Lender"
 
 [badges]

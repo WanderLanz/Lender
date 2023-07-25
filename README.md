@@ -19,8 +19,9 @@ Nevertheless, to begin, I present to you `WindowsMut`.
 
 ```rust
 use ::lender::prelude::*;
+
 struct WindowsMut<'a, T> {
-    inner: &'a mut [T],
+    slice: &'a mut [T],
     begin: usize,
     len: usize,
 }
@@ -31,24 +32,27 @@ impl<'a, T> Lender for WindowsMut<'a, T> {
     fn next<'lend>(&'lend mut self) -> Option<&'lend mut [T]> {
         let begin = self.begin;
         self.begin = self.begin.saturating_add(1);
-        self.inner.get_mut(begin..begin + self.len)
+        self.slice.get_mut(begin..begin + self.len)
     }
 }
 // Fibonacci sequence
-let mut data = vec![0; 3 * 100];
+let mut data = vec![0u32; 3 * 3];
 data[1] = 1;
-WindowsMut { slice: &mut data, begin: 0, len: 3 }.for_each(|w: &mut [f32]| w[2] = w[0] + w[1]);
+WindowsMut { slice: &mut data, begin: 0, len: 3 }
+    .for_each(hrc_mut!(for<'lend> |w: &'lend mut [u32]| { w[2] = w[0] + w[1] }));
+assert_eq!(data, [0, 1, 1, 2, 3, 5, 8, 13, 21]);
 ```
 
 As all great standard examples are, a `WindowsMut` just for a Fibonacci sequence is actually a great example of what you **shouldn't** use lending iterators for.
 Libraries can just provide `Index` and `IndexMut` on their collections and it's a lot of boilerplate for something a simple for loop can do.
 
 ```rust
-let mut data = vec![0; 3 * 100];
+let mut data = vec![0; 3 * 3];
 data[1] = 1;
 for i in 2..data.len() {
     data[i] = data[i - 1] + data[i - 2];
 }
+assert_eq!(data, [0, 1, 1, 2, 3, 5, 8, 13, 21]);
 ```
 
 So, let's look at a slightly more interesting example, `LinesStr`, an `io::Lines` with an `Item` of `&str` instead of `String`.
@@ -57,11 +61,12 @@ It's a good example of borrowing from the iterator itself.
 ```rust
 use std::io;
 use ::lender::prelude::*;
+
 struct LinesStr<B> {
     buf: B,
     line: String,
 }
-impl<B: io::BufRead, 'lend> Lending<'lend> for LinesStr<B> {
+impl<'lend, B: io::BufRead> Lending<'lend> for LinesStr<B> {
     type Lend = io::Result<&'lend str>;
 }
 impl<B: io::BufRead> Lender for LinesStr<B> {
@@ -81,6 +86,11 @@ impl<B: io::BufRead> Lender for LinesStr<B> {
         Some(Ok(&self.line))
     }
 }
+
+let buf = io::BufReader::with_capacity(10, "Hello\nWorld\n".as_bytes());
+let mut lines = LinesStr { buf, line: String::new() };
+assert_eq!(lines.next().unwrap().unwrap(), "Hello");
+assert_eq!(lines.next().unwrap().unwrap(), "World");
 ```
 
 For most cases like this, you could just probably rely on the optimizer, i.e. reusing the same buffer instead of allocating a new one each time,
