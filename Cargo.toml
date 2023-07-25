@@ -6,6 +6,9 @@ authors = ["Lance Warden <wanderlanz@proton.me>"]
 license = "MIT OR Apache-2.0"
 description = "feature complete(-ish) lending iterator"
 repository = "https://github.com/WanderLanz/Lender"
+im-a-teapot = false
+categories = ["rust-patterns", "no-std"]
+keywords = ["lending", "iterator"]
 
 [badges]
 maintenance = { status = "experimental" }
