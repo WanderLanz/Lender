@@ -82,11 +82,11 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(chunk_lender.next(), None);
     /// ```
     #[inline]
-    fn next_chunk(&mut self, len: usize) -> Chunk<'_, Self>
+    fn next_chunk(&mut self, chunk_size: usize) -> Chunk<'_, Self>
     where
         Self: Sized,
     {
-        Chunk::new(self, len)
+        Chunk::new(self, chunk_size)
     }
     /// Get the estimated minimum and maximum length of the lender. Use `.len()` for the exact length if the lender implements `ExactSizeLender`.
     ///
@@ -1162,8 +1162,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         }
         true
     }
-    // Iterators method names already have unique meanings in stdlib, so why not use the ergonomic `iter` method name over `into_iterator`?
-    /// Turn this Lender into an Iterator.
+    /// Turn into an Iterator where the lender has fulfilled the requirements of Iterator.
     #[inline]
     fn iter<'this>(self) -> Iter<'this, Self>
     where
@@ -1171,6 +1170,14 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         for<'all> <Self as Lending<'all>>::Lend: 'this,
     {
         Iter::new(self)
+    }
+    /// Make this lender nice and chunky. (Adapter that calls `lend_chunk` on the lender on `next`)
+    #[inline]
+    fn chunky(self, chunk_size: usize) -> Chunky<Self>
+    where
+        Self: Sized + ExactSizeLender,
+    {
+        Chunky::new(self, chunk_size)
     }
 }
 

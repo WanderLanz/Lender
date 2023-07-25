@@ -44,14 +44,20 @@ where
     }
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
+        if self.n == 0 {
+            return (0, Some(0));
+        }
+
         let (lower, upper) = self.lender.size_hint();
-        (
-            lower.min(self.n),
-            match upper {
-                Some(upper) => Some(upper.min(self.n)),
-                None => Some(self.n),
-            },
-        )
+
+        let lower = lower.min(self.n);
+
+        let upper = match upper {
+            Some(x) if x < self.n => Some(x),
+            _ => Some(self.n),
+        };
+
+        (lower, upper)
     }
     #[inline]
     fn advance_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {

@@ -2,6 +2,7 @@ use core::{marker::PhantomData, ops::ControlFlow};
 
 mod chain;
 mod chunk;
+mod chunky;
 mod cloned;
 mod copied;
 mod cycle;
@@ -33,6 +34,7 @@ pub use zip::zip;
 pub use self::{
     chain::Chain,
     chunk::Chunk,
+    chunky::Chunky,
     cloned::Cloned,
     copied::Copied,
     cycle::Cycle,
