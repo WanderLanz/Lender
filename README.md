@@ -88,7 +88,7 @@ but you see where we're going with this.
 
 Turn a lender into an iterator with `cloned()` where lend is `Clone`, `copied()` where lend is `Copy`, `owned()` where lend is `ToOwned`, or `iter()` where lend already satisfies the restrictions of `Iterator::Item`.
 
-`partition_in_place` and `array_chunks` are unsupported.
+`partition_in_place` and `array_chunks` are unsupported. Instead of `array_chunks`, we have `chunky`, to make lenders nice and chunky 🙂.
 
 ## Resources
 
