@@ -245,7 +245,6 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     fn zip<U: IntoLender>(self, other: U) -> Zip<Self, <U as IntoLender>::Lender>
     where
         Self: Sized,
-        for<'all> U: Lending<'all, Lend = <Self as Lending<'all>>::Lend>,
     {
         Zip::new(self, other.into_lender())
     }
