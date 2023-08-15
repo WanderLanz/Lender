@@ -101,12 +101,20 @@ macro_rules! __hrc__ {(
     )
 )}
 
-/// Higher-Ranked Closure (FnOnce). A modified version of [`higher-order-closure`](https://crates.io/crates/higher-order-closure)'s `higher_order_closure` macro.
+/// Higher-Ranked Closure (FnOnce) macro that replaces the `closure_lifetime_binder` feature for stable.
+///
+/// This is a modified version of [`higher-order-closure`](https://crates.io/crates/higher-order-closure)'s `higher_order_closure` macro.
 #[macro_export]
 macro_rules! hrc_once {($($t:tt)+) => ($crate::__hrc__!(FnOnce, $($t)+))}
-/// Higher-Ranked Closure (FnMut). A modified version of [`higher-order-closure`](https://crates.io/crates/higher-order-closure)'s `higher_order_closure` macro.
+
+/// Higher-Ranked Closure (FnMut)  macro that replaces the `closure_lifetime_binder` feature for stable.
+///
+/// This is a modified version of [`higher-order-closure`](https://crates.io/crates/higher-order-closure)'s `higher_order_closure` macro.
 #[macro_export]
 macro_rules! hrc_mut {($($t:tt)+) => ($crate::__hrc__!(FnMut, $($t)+))}
-/// Higher-Ranked Closure (Fn). A modified version of [`higher-order-closure`](https://crates.io/crates/higher-order-closure)'s `higher_order_closure` macro.
+
+/// Higher-Ranked Closure (Fn) macro that replaces the `closure_lifetime_binder` feature for stable.
+///
+/// This is a modified version of [`higher-order-closure`](https://crates.io/crates/higher-order-closure)'s `higher_order_closure` macro.
 #[macro_export]
 macro_rules! hrc {($($t:tt)+) => ($crate::__hrc__!(Fn, $($t)+))}

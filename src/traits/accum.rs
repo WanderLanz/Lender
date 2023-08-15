@@ -26,6 +26,7 @@ pub trait SumLender<L: Lender>: Sized {
     fn sum_lender(lender: L) -> Self;
 }
 
+/// Documentation is incomplete. Refer to [`core::iter::Product`] for more information
 pub trait ProductLender<L: Lender>: Sized {
     fn product_lender(lender: L) -> Self;
 }

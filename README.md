@@ -5,17 +5,27 @@
 [![miri](https://img.shields.io/github/actions/workflow/status/WanderLanz/Lender/test.yml?label=miri)](https://github.com/WanderLanz/Lender/actions/workflows/test.yml)
 ![license](https://img.shields.io/crates/l/lender)
 
-**Lending Iterator**; a niche, yet seemingly pervasive, antipattern[^1].
+**Lending Iterator**: a niche, yet seemingly pervasive, antipattern[^1].
 This crate provides one such implementation, 'utilizing' [#84533](https://github.com/rust-lang/rust/issues/84533) and [#25860](https://github.com/rust-lang/rust/issues/25860).
 
-Ok, maybe 'antipattern' is a little tough, but let's spare the antagonizing examples, if you can avoid using lending iterators, you *probably* should.
+Ok, maybe 'antipattern' is a little tough, but let's spare the antagonizing examples, if you can avoid using lending iterators, you generally should.
 You should heed the counsel of Polonious: "Neither a borrower nor a lender be".
+
+> ℹ️A GAT implementation has been published at [`gat-lending-iterator`], go check it out if you can!
 
 Forewarning, before you go on with this crate, you should consider using a more seasoned 'lending iterator' crate, like the [`lending-iterator`] or [`streaming-iterator`] crates.
 Also, if a `dyn Lender` trait object is in your future, this crate **definitely** isn't going to work.
-This crate was not made to be used in any sort of production code, so please, use at your own risk (Documentation be damned!).
+This crate was not made to be used in any sort of production code, so please, use at your own risk (Documentation be damned! Unsafe transmutes beware!).
 
-Nevertheless, to begin, I present to you `WindowsMut`.
+Commonly known as a "lending iterator", a lender is a kind of iterator over items
+that live at least as long as the mutable reference to the lender in a call to `Lender::next()`.
+In other words, a kind of iterator that lends an item one at a time, a pattern not implementable
+by the current definition of `Iterator` which only encompasses iterators over items that live at least
+as long as the iterators themselves, i.e. `Self: 'this` implies `<Self as Iterator>::Item: 'this`.
+
+## Examples
+
+I present to you `WindowsMut`.
 
 ```rust
 use ::lender::prelude::*;
@@ -93,16 +103,56 @@ assert_eq!(lines.next().unwrap().unwrap(), "Hello");
 assert_eq!(lines.next().unwrap().unwrap(), "World");
 ```
 
-For most cases like this, you could just probably rely on the optimizer, i.e. reusing the same buffer instead of allocating a new one each time,
+For *most* cases like this, you could just probably rely on the optimizer, i.e. reusing the same buffer instead of allocating a new one each time,
 but you see where we're going with this.
 
-Turn a lender into an iterator with `cloned()` where lend is `Clone`, `copied()` where lend is `Copy`, `owned()` where lend is `ToOwned`, or `iter()` where lend already satisfies the restrictions of `Iterator::Item`.
+## Implementing Lender
 
-`partition_in_place` and `array_chunks` are unsupported. Instead of `array_chunks`, we have `chunky`, to make lenders nice and chunky 🙂.
+To implement `Lender`, first you'll need to implement the `Lending` trait for your type.
+This is the equivalent provider of `Iterator::Item` for `Lender`s.
+
+```rust
+use ::lender::prelude::*;
+struct StrRef<'a>(&'a str);
+impl<'this, 'lend> Lending<'lend> for StrRef<'this> {
+    type Lend = &'lend str;
+}
+```
+
+The lifetime parameter `'lend` describes the lifetime of the `Lend`.
+It works by using a default generic of `&'lend Self` which induces an implicit reference lifetime bound `'lend: 'this`,
+necessary for usage of higher-ranked trait bounds with `Lend`.
+
+Next, you'll need to implement the `Lender` trait for your type, the lending equivalent of `Iterator`.
+
+```rust
+use ::lender::prelude::*;
+struct StrRef<'a>(&'a str);
+impl<'this, 'lend> Lending<'lend> for StrRef<'this> {
+    type Lend = &'lend str;
+}
+impl<'this> Lender for StrRef<'this> {
+    fn next<'lend>(&'lend mut self) -> Option<&'lend str> {
+        Some(self.0)
+    }
+}
+```
+
+`Lender` provides all of the methods as `Iterator`, except `Iterator::partition_in_place` and `Iterator::array_chunks`,
+and most provide the same functionality as the equivalent `Iterator` method.
+
+Notable differences in behavior include `Lender::next_chunk` providing a lender instead of an array
+and certain closures may require usage of the `hrc!`, `hrc_mut!`, `hrc_once!` (higher-ranked closure) macros,
+which provide a stable replacement for the `closure_lifetime_binder` feature.
+
+To provide a similar functionality to `Iterator::array_chunks`, the `Lender::chunky` method makes lenders nice and chunky 🙂.
+
+Turn a lender into an iterator with `Lender::cloned()` where lend is `Clone`, `Lender::copied()` where lend is `Copy`,
+`Lender::owned()` where lend is `ToOwned`,or `Lender::iter()` where the lender already satisfies the restrictions of `Iterator`.
 
 ## Resources
 
-Please thank and check out the great resources below that helped me and many others learn about Rust and the lending iterator problem.
+Please check out the great resources below that helped me and many others learn about Rust and the lending iterator problem. Thank you to everyone!
 
 - [Sabrina Jewson's Blog](https://sabrinajewson.org/blog/the-better-alternative-to-lifetime-gats) for their awesome
 blog post on why lifetime GATs are not (yet) the solution to this problem, I highly recommend reading it.
@@ -114,7 +164,7 @@ and being patient with me and other aspiring rustaceans as we try to learn more 
 <!-- markdownlint-disable MD026 -->
 ## Unsafe & Transmutes Beware!!!
 
-Many patterns in lending iterators require polonius-emulating unsafe code, but please, if you see any unsafe code that can be made safe, please let me know! I am still learning Rust and I'm sure I've made many mistakes.
+Many patterns in lending iterators require polonius-emulating unsafe code, but please, if you see any unsafe code that can be made safe, please let me know!
 
 ## License
 
@@ -124,3 +174,4 @@ Licensed under either the [MIT](/LICENSE-MIT.txt) or [Apache-2.0](/LICENSE-APACH
 
 [`lending-iterator`]: https://crates.io/crates/lending-iterator
 [`streaming-iterator`]: https://crates.io/crates/streaming-iterator
+[`gat-lending-iterator`]: https://crates.io/crates/gat-lending-iterator

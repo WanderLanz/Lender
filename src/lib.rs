@@ -1,166 +1,185 @@
 //! # Lender
 //!
-//! Commonly known as a `LendingIterator` (although formerly referred to as a `StreamingIterator`, which now referrs to async API instead),
-//! a [`Lender`] is an [`Iterator`] over items that live at least as long as the call to [`Iterator::next()`]
-//! or as long as the iterator itself. In other words, a lender is an iterator that lends an item one at a time.
+//! **Lending Iterator**: a niche, yet seemingly pervasive, antipattern.
+//! This crate provides one such implementation, 'utilizing' [#84533](https://github.com/rust-lang/rust/issues/84533) and [#25860](https://github.com/rust-lang/rust/issues/25860).
 //!
-//! You might be wondering why you would want to use a `Lender` instead of an `Iterator`. The answer is never. If you can use an `Iterator`, you should.
+//! Ok, maybe 'antipattern' is a little tough, but let's spare the antagonizing examples, if you can avoid using lending iterators, you generally should.
+//! You should heed the counsel of Polonious: "Neither a borrower nor a lender be".
 //!
-//! However, when you do find yourself in a situation where you want the ease of use of an `Iterator` but you can't use one, `Lender` is here to help.
+//! Forewarning, before you go on with this crate, you should consider using a more seasoned 'lending iterator' crate, like the [`lending-iterator`] or [`streaming-iterator`] crates.
+//! Also, if a `dyn Lender` trait object is in your future, this crate **definitely** isn't going to work.
+//! This crate was not made to be used in any sort of production code, so please, use at your own risk (Documentation be damned! Unsafe transmutes beware!).
 //!
-//! For example, consider the `WindowsMut` problem:
+//! Commonly known as a "lending iterator", a lender is a kind of iterator over items
+//! that live at least as long as the mutable reference to the lender in a call to [`Lender::next()`].
+//! In other words, a kind of iterator that lends an item one at a time, a pattern not implementable
+//! by the current definition of [`Iterator`] which only encompasses iterators over items that live at least
+//! as long as the iterators themselves, i.e. `Self: 'this` implies `<Self as Iterator>::Item: 'this`.
 //!
-//! If you try to implement a `WindowsMut` iterator over a slice, you will soon find that the borrow checker is smart enough to know that
-//! you are attempting to mutably borrow some region of a slice multiple times, and will not allow it.
+//! ## Examples
 //!
-//! ```rust,compile_fail
-//! struct WindowsMut<'a, T> {
-//!     inner: &'a mut [T],
-//!     begin: usize,
-//!     len: usize,
-//! }
-//! impl<'a, T> Iterator for WindowsMut<'a, T> {
-//!     type Item = &'a mut [T];
-//!
-//!     // imagine the { &mut self } here has lifetime { '1 }
-//!     fn next(&mut self) -> Option<Self::Item> {
-//!         let begin = self.begin;
-//!         self.begin = self.begin.saturating_add(1);
-//!         // cannot return { &'1 mut [T] } because { '1 } does not live long enough to fulfill the lifetime { 'a }
-//!         self.inner.get_mut(begin..begin + self.len)
-//!     }
-//! }
-//! ```
-//!
-//! [`Lender`] allows you to use many of the methods and convenient APIs of [`Iterator`] without the same restrictions on lending.
-//!
-//! The caveat is that closures used on lenders and consumers of lenders have to meet stricter requirements.
-//! For example, when consuming a lender with an early return, you must use polonius-emulating unsafe code in order to convince the borrow checker that the early return is safe.
-//!
-//! ## Example
+//! I present to you `WindowsMut`.
 //!
 //! ```rust
-//! use lender::prelude::*;
+//! use ::lender::prelude::*;
 //!
 //! struct WindowsMut<'a, T> {
-//!     inner: &'a mut [T],
+//!     slice: &'a mut [T],
 //!     begin: usize,
 //!     len: usize,
 //! }
-//!
-//! // first, we need to implement the `Lending` and `Lender` traits for our `WindowsMut` type:
-//!
 //! impl<'lend, 'a, T> Lending<'lend> for WindowsMut<'a, T> {
 //!     type Lend = &'lend mut [T];
 //! }
 //! impl<'a, T> Lender for WindowsMut<'a, T> {
-//!     fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+//!     fn next<'lend>(&'lend mut self) -> Option<&'lend mut [T]> {
 //!         let begin = self.begin;
 //!         self.begin = self.begin.saturating_add(1);
-//!         self.inner.get_mut(begin..begin + self.len)
+//!         self.slice.get_mut(begin..begin + self.len)
 //!     }
 //! }
-//!
-//! // Now we can use many of the methods and convenient APIs of `Iterator` on our `WindowsMut` type:
-//!
-//! // we can manually iterate over our `WindowsMut`:
-//! {
-//!     let mut vec = vec![1u32, 2, 3, 4, 5];
-//!     let mut windows = WindowsMut { inner: &mut vec, begin: 0, len: 3 };
-//!
-//!     assert_eq!(windows.next(), Some(&mut [1, 2, 3][..]));
-//!     assert_eq!(windows.next(), Some(&mut [2, 3, 4][..]));
-//!     assert_eq!(windows.next(), Some(&mut [3, 4, 5][..]));
-//!     assert_eq!(windows.next(), None);
-//! }
-//! // we can use `for_each` or a while loop to iterate over our `WindowsMut`:
-//! {
-//!     let mut vec = vec![1u32, 2, 3, 4, 5];
-//!     let mut vec2 = vec![1u32, 2, 3, 4, 5];
-//!     let mut windows = WindowsMut { inner: &mut vec, begin: 0, len: 3 };
-//!     let mut windows2 = WindowsMut { inner: &mut vec2, begin: 0, len: 3 };
-//!
-//!     windows.for_each(|x| x[2] = x[0]);
-//!     // or
-//!     while let Some(x) = windows2.next() {
-//!         x[2] = x[0];
-//!     }
-//!     assert_eq!(vec, vec2);
-//! }
-//! // we can use familiar methods like `filter` and `map`:
-//! {
-//!     let mut vec = vec![1u32, 2, 3, 4, 5];
-//!     let mut windows = WindowsMut { inner: &mut vec, begin: 0, len: 3 };
-//!
-//!     windows.filter(|x| (x[0] % 2) != 0).for_each(|x| x[0] = 0);
-//!     assert_eq!(vec, vec![0, 2, 0, 4, 5]);
-//! }
-//! // we can even turn our `WindowsMut` into an `Iterator` that yields `u32`:
-//! {
-//!     let mut vec = vec![1u32, 2, 3, 4, 5];
-//!     let mut windows = WindowsMut { inner: &mut vec, begin: 0, len: 3 };
-//!
-//!     let mut iter = windows.map(hrc_mut!(for<'all> |x: &'all mut [u32]| -> u32 { x[0] })).iter();
-//!     assert_eq!(iter.next(), Some(1u32));
-//! }
+//! // Fibonacci sequence
+//! let mut data = vec![0u32; 9];
+//! data[1] = 1;
+//! WindowsMut { slice: &mut data, begin: 0, len: 3 }
+//!     .for_each(hrc_mut!(for<'lend> |w: &'lend mut [u32]| { w[2] = w[0] + w[1] }));
+//! assert_eq!(data, [0, 1, 1, 2, 3, 5, 8, 13, 21]);
 //! ```
 //!
-//! Within this example you might have noticed the use of the [`hrc_mut!`] macro, this a result of those strict requirements on closures mentioned earlier.
-//! The Rust borrow checker is not always smart enough to know wether a closure can be used for inputs of 'any lifetime or only for one '1 specific lifetime,
-//! and in nightly Rust, there is already a feature for higher-ranked-closures (closure_lifetime_binder) allowing the following:
-//! ```ignore
-//! #![feature(closure_lifetime_binder)]
-//! let _ = for<'all> |x: &'all mut [u32]| -> &'all mut u32 { &mut x[0] };
-//! ```
-//! However, this feature is not yet stable, and so the [`hrc_once!`], [`hrc_mut!`], and [`hrc!`] macros are provided to emulate this feature for [`FnOnce`], [`FnMut`], and [`Fn`] respectively.
+//! As all great standard examples are, a `WindowsMut` just for a Fibonacci sequence is actually a great example of what you **shouldn't** use lending iterators for.
+//! Libraries can just provide [`Index`](core::ops::Index) and [`IndexMut`](core::ops::IndexMut) on their collections and it's a lot of boilerplate for something a simple for loop can do.
+//!
 //! ```rust
-//! # use lender::prelude::*;
-//! let _ = hrc_mut!(for<'all> |x: &'all mut [u32]| -> &'all mut u32 { &mut x[0] });
-//! //   ^? impl for<'all> FnMut(&'all mut [u32]) -> &'all mut u32
+//! let mut data = vec![0; 9];
+//! data[1] = 1;
+//! for i in 2..data.len() {
+//!     data[i] = data[i - 1] + data[i - 2];
+//! }
+//! assert_eq!(data, [0, 1, 1, 2, 3, 5, 8, 13, 21]);
 //! ```
 //!
-//! ## The Core Issue: Higher-Ranked Trait Bounds
+//! So, let's look at a slightly more interesting example, `LinesStr`, an [`std::io::Lines`] with an `Item` of `&str` instead of `String`.
+//! It's a good example of borrowing from the iterator itself.
 //!
-//! The following is essentially just a summary of [Sabrina Jewson's Blog](https://sabrinajewson.org/blog/the-better-alternative-to-lifetime-gats), which I highly recommend reading.
+//! ```rust
+//! use std::io;
+//! use ::lender::prelude::*;
 //!
-//! Higher-Ranked Trait Bounds (HRTBs) are a part of stable Rust and, at first glance,
-//! they might seem to be perfect for LendingIterators:
+//! struct LinesStr<B> {
+//!     buf: B,
+//!     line: String,
+//! }
+//! impl<'lend, B: io::BufRead> Lending<'lend> for LinesStr<B> {
+//!     type Lend = io::Result<&'lend str>;
+//! }
+//! impl<B: io::BufRead> Lender for LinesStr<B> {
+//!     fn next<'lend>(&'lend mut self) -> Option<io::Result<&'lend str>> {
+//!         self.line.clear();
+//!         match self.buf.read_line(&mut self.line) {
+//!             Err(e) => return Some(Err(e)),
+//!             Ok(0) => return None,
+//!             Ok(_nread) => (),
+//!         };
+//!         if self.line.ends_with('\n') {
+//!             self.line.pop();
+//!             if self.line.ends_with('\r') {
+//!                 self.line.pop();
+//!             }
+//!         }
+//!         Some(Ok(&self.line))
+//!     }
+//! }
 //!
-//! - For a trait with a lifetime generic (`trait Lending<'lt> { type Lend: 'lt; }`)
-//! - and HRTB (`...where T: for<'all> Lending<'all>`),
-//! - `T` implements `Lending` for *ALL* lifetimes.
+//! let buf = io::BufReader::with_capacity(10, "Hello\nWorld\n".as_bytes());
+//! let mut lines = LinesStr { buf, line: String::new() };
+//! assert_eq!(lines.next().unwrap().unwrap(), "Hello");
+//! assert_eq!(lines.next().unwrap().unwrap(), "World");
+//! ```
 //!
-//! Although they are certainly the core of what makes Lender work,
-//! they prove to be anything but easy to work with.
-//! This is mostly because they do not support qualifiers (e.g. `for<'all where 'all: 'lt>`).
+//! For *most* cases like this, you could just probably rely on the optimizer, i.e. reusing the same buffer instead of allocating a new one each time,
+//! but you see where we're going with this.
 //!
-//! Fortunately, there are two core solutions to the problems HRTBs present.
+//! ## Implementing Lender
 //!
-//! 1. You can implictly restrict a HRTB by including
-//! a reference to the type you want to restrict the lifetime to,
-//! because references are treated special.
-//!     - For a trait with a lifetime generic (`trait Lending<'lt, T> { type Lend: 'lt; }`)
-//!     - and HRTB (`...where T: for<'all /* where Self: 'all */> Lending<'all, &'all Self>`),
-//!     - `T` implements `Lending` for all lifetimes *where Self is valid as well*.
+//! To implement [`Lender`], first you'll need to implement the [`Lending`] trait for your type.
+//! This is the equivalent provider of [`Iterator::Item`] for [`Lender`]s.
 //!
-//! 2. OR, we can exploit a bug that allows `dyn` objects to implement
-//! traits otherwise impossible to implement.
-//!     - For a trait with lifetime generic (`trait DynLending<'lt> { type Lend; }`)
-//!     - and HRTB (`...where T: ?Sized + for<'all> DynLending<'all>`),
-//!     - `T` is not a valid type... under normal circumstances.
-//!     - However, dyn object (`dyn for<'all> Buf<'all, Lend = ...>`) IS valid for `T`!
+//! ```rust
+//! use ::lender::prelude::*;
+//! struct StrRef<'a>(&'a str);
+//! impl<'this, 'lend> Lending<'lend> for StrRef<'this> {
+//!     type Lend = &'lend str;
+//! }
+//! ```
 //!
-//! The first solution is the one used the most in this crate, and as useful as the second solution is, we try and restrict its use to a minimum because it is considered a bug and may be fixed at any time.
+//! The lifetime parameter `'lend` describes the lifetime of the `Lend`.
+//! It works by using a default generic of `&'lend Self` which induces an implicit reference lifetime bound `'lend: 'this`,
+//! necessary for usage of higher-ranked trait bounds with `Lend`.
 //!
-//! This comes at a cost of not being able to have a `dyn` Lender, which is unfortunate, but not a deal breaker.
+//! Next, you'll need to implement the [`Lender`] trait for your type, the lending equivalent of [`Iterator`].
 //!
-//! For now, solution 2 (impossible dyn) is only used by the [`lend!`] macro,
-//! which is used in conjuction with source function like [`empty()`] to create Lenders
-//! without needing to create a unit struct just for typing.
+//! ```rust
+//! use ::lender::prelude::*;
+//! struct StrRef<'a>(&'a str);
+//! impl<'this, 'lend> Lending<'lend> for StrRef<'this> {
+//!     type Lend = &'lend str;
+//! }
+//! impl<'this> Lender for StrRef<'this> {
+//!     fn next<'lend>(&'lend mut self) -> Option<&'lend str> {
+//!         Some(self.0)
+//!     }
+//! }
+//! ```
+//!
+//! [`Lender`] provides all of the methods as [`Iterator`], except [`Iterator::partition_in_place`] and [`Iterator::array_chunks`],
+//! and most provide the same functionality as the equivalent [`Iterator`] method.
+//!
+//! Notable differences in behavior include [`Lender::next_chunk`] providing a lender instead of an array
+//! and certain closures may require usage of the [`hrc!`], [`hrc_mut!`], [`hrc_once!`] (higher-ranked closure) macros,
+//! which provide a stable replacement for the `closure_lifetime_binder` feature.
+//!
+//! To provide a similar functionality to [`Iterator::array_chunks`], the [`Lender::chunky`] method makes lenders nice and chunky 🙂.
+//!
+//! Turn a lender into an iterator with [`Lender::cloned()`] where lend is [`Clone`], [`Lender::copied()`] where lend is [`Copy`],
+//! [`Lender::owned()`] where lend is [`ToOwned`](alloc::borrow::ToOwned),or [`Lender::iter()`] where the lender already satisfies the restrictions of [`Iterator`].
+//!
+//! ## Resources
+//!
+//! Please check out the great resources below that helped me and many others learn about Rust and the lending iterator problem. Thank you to everyone!
+//!
+//! - [Sabrina Jewson's Blog](https://sabrinajewson.org/blog/the-better-alternative-to-lifetime-gats) for their awesome
+//! blog post on why lifetime GATs are not (yet) the solution to this problem, I highly recommend reading it.
+//! - The awesome people on the [Rust Users Forum](https://users.rust-lang.org/) in helping me understand the borrow checker and HRTBs better
+//! and being patient with me and other aspiring rustaceans as we try to learn more about Rust.
+//! - [Daniel Henry-Mantilla](https://github.com/danielhenrymantilla) for writing [`lending-iterator`] and many other great crates and sharing their great work.
+//! - Everyone who's contributed to Rust for making such a great language and iterator library.
+//!
+//! [`lending-iterator`]: https://crates.io/crates/lending-iterator
+//! [`streaming-iterator`]: https://crates.io/crates/streaming-iterator
 
 #![no_std]
 
 extern crate alloc;
+
+#[cfg(doctest)]
+#[allow(non_camel_case_types)]
+/// ```rust,compile_fail
+/// struct WindowsMut<'a, T> {
+///     inner: &'a mut [T],
+///     begin: usize,
+///     len: usize,
+/// }
+/// impl<'a, T> Iterator for WindowsMut<'a, T> {
+///     type Item = &mut [T];
+///
+///     fn next(&mut self) -> Option<Self::Item> {
+///         let begin = self.begin;
+///         self.begin = self.begin.saturating_add(1);
+///         self.inner.get_mut(begin..begin + self.len)
+///     }
+/// }
+/// ```
+pub struct _Lender_Doctest_Sanity_Check;
 
 mod private {
     pub trait Sealed {}

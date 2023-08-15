@@ -4,6 +4,8 @@ use crate::{
     try_trait_v2::{FromResidual, Try},
     *,
 };
+
+/// Documentation is incomplete. Refer to [`core::iter::DoubleEndedIterator`] for more information
 pub trait DoubleEndedLender: Lender {
     fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend>;
     #[inline]

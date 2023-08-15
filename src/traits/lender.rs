@@ -7,52 +7,33 @@ use crate::{
     *,
 };
 
-/// A trait necessary for implementing `Lender`. It implicitly restricts the lifetime `'lend` used in `Lending<'lend>` to be where `Self: 'lend`.
+/// A trait for dealing with the 'items' of lending iterators.
 ///
-/// This is a result of Higher-Ranked Trait Bounds (HRTBs) not having a way to express qualifiers (```for<'any where Self: 'any> Self: Trait```)
-/// and effectively making HRTBs only useful when you want to express a trait constraint on ALL lifetimes, including 'static (```for<'all> Self: trait```)
+/// Must be defined for any type that implements [`Lender`].
 ///
-/// Although the common example of implementing your own LendingIterator uses a (```type Item<'a> where Self: 'a;```) GAT,
-/// that generally only works withing a small subset of the features that a LendingIterator needs to provide to be useful.
+/// It implicitly restricts the lifetime `'lend` used in `Lending<'lend>` to be where `Self: 'lend`.
+///
+/// This is a result of Higher-Ranked Trait Bounds (HRTBs) not having a way to express qualifiers (`for<'any where Self: 'any> Self: Trait`)
+/// and effectively making HRTBs only useful when you want to express a trait constraint on ALL lifetimes, including 'static (`for<'all> Self: trait`)
+///
+/// Although the common example of implementing your own LendingIterator uses a (`type Item<'a> where Self: 'a;`) GAT,
+/// that generally only works withing a small subset of the features that a LendingIterator needs to provide to be comparable to Iterator.
 ///
 /// Please see [Sabrina Jewson's Blog][1] for more information, and how a trait like this can be used to solve it by implicitly restricting HRTBs.
 ///
 /// [1]: (https://sabrinajewson.org/blog/the-better-alternative-to-lifetime-gats)
 pub trait Lending<'lend, __Seal: Sealed = Seal<&'lend Self>> {
+    /// The type being lent.
     type Lend: 'lend;
 }
 
-/// An iterator that yields items that live at least as long as the iterator itself or until the next item is yielded.
+/// A trait for dealing with lending iterators.
 ///
-/// A `Lender` cannot be used as a `dyn` trait object, because it is used `Self` as a type parameter to get around higher-ranked lifetime bounds.
+/// This is the main lender trait. For more about the concept of lenders
+/// generally, please see the [crate documentation](crate).
 ///
-/// Turn a lender into an iterator with [`cloned()`](Lender::cloned) where lend is [`Clone`], [`copied()`](Lender::copied) where lend is [`Copy`], [`owned()`](Lender::owned) where lend is [`ToOwned`], or [`iter()`](Lender::iter) where lend is already owned.
-///
-/// Both [`Iterator::partition_in_place`] and [`Iterator::array_chunks`] APIs are not supported by lending iterators.
-///
-/// # Examples
-///
-/// ```rust
-/// use lender::prelude::*;
-/// struct WindowsMut<'a, T> {
-///    slice: &'a mut [T],
-///    cur: usize,
-///    window_size: usize,
-/// }
-/// impl<'lend, 'a, T> Lending<'lend> for WindowsMut<'a, T> {
-///    type Lend = &'lend mut [T];
-/// }
-/// impl<'a, T> Lender for WindowsMut<'a, T> {
-///   fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
-///     if let elt @ Some(_) = self.slice.get_mut(self.cur..self.cur + self.window_size) {
-///       self.cur += 1;
-///       elt
-///     } else {
-///       None
-///     }
-///   }
-/// }
-/// ```
+/// For more about the concept of iterators
+/// generally, please see [`core::iter`].
 pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// Yield the next lend, if any, of the lender.
     ///
@@ -530,7 +511,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         Take::new(self, n)
     }
-    /// Refer to [`Iterator::scan`] for more information.
+    /// Documentation is incomplete. Refer to [`Iterator::scan`] for more information.
     #[inline]
     fn scan<St, F>(self, initial_state: St, f: F) -> Scan<Self, St, F>
     where
@@ -539,7 +520,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         Scan::new(self, initial_state, f)
     }
-    /// Refer to [`Iterator::flat_map`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::flat_map`] for more information
     #[inline]
     fn flat_map<'call, F>(self, f: F) -> FlatMap<'call, Self, F>
     where
@@ -549,7 +530,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         FlatMap::new(self, f)
     }
-    /// Refer to [`Iterator::flatten`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::flatten`] for more information
     #[inline]
     fn flatten<'call>(self) -> Flatten<'call, Self>
     where
@@ -558,7 +539,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         Flatten::new(self)
     }
-    /// Refer to [`Iterator::fuse`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::fuse`] for more information
     #[inline]
     fn fuse(self) -> Fuse<Self>
     where
@@ -566,7 +547,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         Fuse::new(self)
     }
-    /// Refer to [`Iterator::inspect`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::inspect`] for more information
     #[inline]
     fn inspect<F>(self, f: F) -> Inspect<Self, F>
     where
@@ -585,13 +566,14 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         Mutate::new(self, f)
     }
+    /// Documentation is incomplete. Refer to [`Iterator::by_ref`] for more information
     fn by_ref(&mut self) -> &mut Self
     where
         Self: Sized,
     {
         self
     }
-    /// Refer to [`Iterator::collect`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::collect`] for more information
     #[inline]
     fn collect<B>(self) -> B
     where
@@ -600,7 +582,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         B::from_lender(self)
     }
-    /// Refer to [`Iterator::try_collect`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::try_collect`] for more information
     #[inline]
     fn try_collect<'a, B>(&'a mut self) -> ChangeOutputType<<Self as Lending<'a>>::Lend, B>
     where
@@ -611,7 +593,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         try_process::<&'a mut Self, _, B>(self.by_ref(),|shunt: TryShunt<'a, &'a mut Self>| B::from_lender(shunt))
     }
-    /// Refer to [`Iterator::collect_into`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::collect_into`] for more information
     #[inline]
     fn collect_into<E>(self, collection: &mut E) -> &mut E
     where
@@ -621,6 +603,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         collection.extend_lender(self);
         collection
     }
+    /// Documentation is incomplete. Refer to [`Iterator::partition`] for more information
     fn partition<A, E, F>(mut self, mut f: F) -> (E, E)
     where
         Self: Sized,
@@ -638,7 +621,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         }
         (left, right)
     }
-    /// Refer to [`Iterator::is_partitioned`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::is_partitioned`] for more information
     #[inline]
     fn is_partitioned<P>(mut self, mut predicate: P) -> bool
     where
@@ -647,7 +630,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         self.all(&mut predicate) || !self.any(predicate)
     }
-    /// Refer to [`Iterator::try_fold`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::try_fold`] for more information
     #[inline]
     fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> R
     where
@@ -664,7 +647,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         }
         R::from_output(acc)
     }
-    /// Refer to [`Iterator::try_for_each`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::try_for_each`] for more information
     #[inline]
     fn try_for_each<F, R>(&mut self, mut f: F) -> R
     where
@@ -679,7 +662,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         }
         R::from_output(())
     }
-    /// Refer to [`Iterator::fold`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::fold`] for more information
     #[inline]
     fn fold<B, F>(mut self, init: B, mut f: F) -> B
     where
@@ -692,7 +675,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         }
         accum
     }
-    /// Refer to [`Iterator::reduce`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::reduce`] for more information
     #[inline]
     fn reduce<T, F>(mut self, f: F) -> Option<T>
     where
@@ -703,7 +686,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         let first = self.next()?.to_owned();
         Some(self.fold(first, f))
     }
-    /// Refer to [`Iterator::try_reduce`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::try_reduce`] for more information
     #[inline]
     fn try_reduce<T, F, R>(mut self, f: F) -> ChangeOutputType<R, Option<T>>
     where
@@ -722,7 +705,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
             ControlFlow::Continue(x) => Try::from_output(Some(x)),
         }
     }
-    /// Refer to [`Iterator::all`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::all`] for more information
     #[inline]
     fn all<F>(&mut self, mut f: F) -> bool
     where
@@ -736,7 +719,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         }
         true
     }
-    /// Refer to [`Iterator::any`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::any`] for more information
     #[inline]
     fn any<F>(&mut self, mut f: F) -> bool
     where
@@ -750,7 +733,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         }
         false
     }
-    /// Refer to [`Iterator::find`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::find`] for more information
     #[inline]
     fn find<P>(&mut self, mut predicate: P) -> Option<<Self as Lending<'_>>::Lend>
     where
@@ -770,7 +753,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         }
         None
     }
-    /// Refer to [`Iterator::find_map`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::find_map`] for more information
     #[inline]
     fn find_map<'a, F>(&'a mut self, mut f: F) -> Option<<F as FnMutHKAOpt<'a, <Self as Lending<'a>>::Lend>>::B>
     where
@@ -790,7 +773,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         }
         None
     }
-    /// Refer to [`Iterator::try_find`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::try_find`] for more information
     #[inline]
     fn try_find<F, R>(&mut self, mut f: F) -> ChangeOutputType<R, Option<<Self as Lending<'_>>::Lend>>
     where
@@ -819,7 +802,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         }
         <ChangeOutputType<R, Option<<Self as Lending<'_>>::Lend>>>::from_output(None)
     }
-    /// Refer to [`Iterator::position`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::position`] for more information
     #[inline]
     fn position<P>(&mut self, mut predicate: P) -> Option<usize>
     where
@@ -835,7 +818,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         }
         None
     }
-    /// Refer to [`Iterator::rposition`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::rposition`] for more information
     #[inline]
     fn rposition<P>(&mut self, mut predicate: P) -> Option<usize>
     where
@@ -850,7 +833,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
             ControlFlow::Break(x) => Some(x),
         }
     }
-    /// Refer to [`Iterator::max`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::max`] for more information
     #[inline]
     fn max<T>(self) -> Option<T>
     where
@@ -860,7 +843,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         self.max_by(|x, y| x.partial_cmp(y).unwrap_or(Ordering::Equal))
     }
-    /// Refer to [`Iterator::min`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::min`] for more information
     #[inline]
     fn min<T>(self) -> Option<T>
     where
@@ -870,7 +853,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         self.min_by(|x, y| x.partial_cmp(y).unwrap_or(Ordering::Equal))
     }
-    /// Refer to [`Iterator::max_by_key`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::max_by_key`] for more information
     #[inline]
     fn max_by_key<B: Ord, T, F>(self, f: F) -> Option<T>
     where
@@ -880,7 +863,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         self.owned().max_by_key::<B, F>(f)
     }
-    /// Refer to [`Iterator::max_by`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::max_by`] for more information
     #[inline]
     fn max_by<T, F>(self, mut compare: F) -> Option<T>
     where
@@ -895,7 +878,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
             }
         })
     }
-    /// Refer to [`Iterator::min_by_key`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::min_by_key`] for more information
     #[inline]
     fn min_by_key<B: Ord, T, F>(self, f: F) -> Option<T>
     where
@@ -905,7 +888,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         self.owned().min_by_key::<B, F>(f)
     }
-    /// Refer to [`Iterator::min_by`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::min_by`] for more information
     #[inline]
     fn min_by<T, F>(self, mut compare: F) -> Option<T>
     where
@@ -920,7 +903,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
             }
         })
     }
-    /// Refer to [`Iterator::rev`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::rev`] for more information
     #[inline]
     fn rev(self) -> Rev<Self>
     where
@@ -928,7 +911,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         Rev::new(self)
     }
-    /// Refer to [`Iterator::unzip`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::unzip`] for more information
     #[inline]
     fn unzip<ExtA, ExtB>(self) -> (ExtA, ExtB)
     where
@@ -938,7 +921,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ExtB: Default + ExtendLender<SecondShunt<Self>>, {
         unzip(self)
     }
-    /// Refer to [`Iterator::copied`] for more information.
+    /// Documentation is incomplete. Refer to [`Iterator::copied`] for more information.
     ///
     /// Turns this Lender into an Iterator.
     fn copied<T>(self) -> Copied<Self>
@@ -948,7 +931,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         Copied::new(self)
     }
-    /// Refer to [`Iterator::cloned`] for more information.
+    /// Documentation is incomplete. Refer to [`Iterator::cloned`] for more information.
     ///
     /// Turns this Lender into an Iterator.
     fn cloned<T>(self) -> Cloned<Self>
@@ -968,7 +951,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         Owned::new(self)
     }
-    /// Refer to [`Iterator::cycle`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::cycle`] for more information
     #[inline]
     fn cycle(self) -> Cycle<Self>
     where
@@ -976,7 +959,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         Cycle::new(self)
     }
-    /// Refer to [`Iterator::sum`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::sum`] for more information
     #[inline]
     fn sum<S>(self) -> S
     where
@@ -985,7 +968,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         S::sum_lender(self)
     }
-    /// Refer to [`Iterator::product`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::product`] for more information
     #[inline]
     fn product<P>(self) -> P
     where
@@ -994,7 +977,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         P::product_lender(self)
     }
-    /// Refer to [`Iterator::cmp`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::cmp`] for more information
     fn cmp<L>(self, other: L) -> Ordering
     where
         L: IntoLender + for<'all> Lending<'all, Lend = <Self as Lending<'all>>::Lend>,
@@ -1003,7 +986,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         self.cmp_by(other, |x, y| x.cmp(&y))
     }
-    /// Refer to [`Iterator::cmp_by`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::cmp_by`] for more information
     fn cmp_by<L, F>(self, other: L, mut cmp: F) -> Ordering
     where
         Self: Sized,
@@ -1018,7 +1001,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
             ControlFlow::Break(ord) => ord,
         }
     }
-    /// Refer to [`Iterator::partial_cmp`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::partial_cmp`] for more information
     fn partial_cmp<L>(self, other: L) -> Option<Ordering>
     where
         L: IntoLender,
@@ -1027,7 +1010,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         self.partial_cmp_by(other, |x, y| x.partial_cmp(&y))
     }
-    /// Refer to [`Iterator::partial_cmp_by`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::partial_cmp_by`] for more information
     fn partial_cmp_by<L, F>(self, other: L, mut partial_cmp: F) -> Option<Ordering>
     where
         Self: Sized,
@@ -1042,7 +1025,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
             ControlFlow::Break(ord) => ord,
         }
     }
-    /// Refer to [`Iterator::eq`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::eq`] for more information
     fn eq<L>(self, other: L) -> bool
     where
         L: IntoLender,
@@ -1051,7 +1034,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         self.eq_by(other, |x, y| x == y)
     }
-    /// Refer to [`Iterator::eq_by`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::eq_by`] for more information
     fn eq_by<L, F>(self, other: L, mut eq: F) -> bool
     where
         Self: Sized,
@@ -1065,7 +1048,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
             ControlFlow::Break(()) => false,
         }
     }
-    /// Refer to [`Iterator::ne`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::ne`] for more information
     fn ne<L>(self, other: L) -> bool
     where
         L: IntoLender,
@@ -1074,7 +1057,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         !self.eq(other)
     }
-    /// Refer to [`Iterator::lt`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::lt`] for more information
     fn lt<L>(self, other: L) -> bool
     where
         L: IntoLender,
@@ -1083,7 +1066,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         self.partial_cmp(other) == Some(Ordering::Less)
     }
-    /// Refer to [`Iterator::le`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::le`] for more information
     fn le<L>(self, other: L) -> bool
     where
         L: IntoLender,
@@ -1092,7 +1075,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         matches!(self.partial_cmp(other), Some(Ordering::Less | Ordering::Equal))
     }
-    /// Refer to [`Iterator::gt`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::gt`] for more information
     fn gt<L>(self, other: L) -> bool
     where
         L: IntoLender,
@@ -1101,7 +1084,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         self.partial_cmp(other) == Some(Ordering::Greater)
     }
-    /// Refer to [`Iterator::ge`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::ge`] for more information
     fn ge<L>(self, other: L) -> bool
     where
         L: IntoLender,
@@ -1110,7 +1093,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         matches!(self.partial_cmp(other), Some(Ordering::Greater | Ordering::Equal))
     }
-    /// Refer to [`Iterator::is_sorted`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::is_sorted`] for more information
     #[inline]
     fn is_sorted<T>(self) -> bool
     where
@@ -1120,7 +1103,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         self.is_sorted_by(PartialOrd::partial_cmp)
     }
-    /// Refer to [`Iterator::is_sorted_by`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::is_sorted_by`] for more information
     #[inline]
     fn is_sorted_by<T, F>(self, mut compare: F) -> bool
     where
@@ -1140,7 +1123,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
             true
         })
     }
-    /// Refer to [`Iterator::is_sorted_by_key`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::is_sorted_by_key`] for more information
     #[inline]
     fn is_sorted_by_key<F, K>(mut self, mut f: F) -> bool
     where
@@ -1161,7 +1144,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         }
         true
     }
-    /// Turn into an Iterator where the lender has fulfilled the requirements of Iterator.
+    /// Turn this lender into an Iterator where it has already fulfilled the requirements of the `Iterator` trait.
     #[inline]
     fn iter<'this>(self) -> Iter<'this, Self>
     where
@@ -1171,6 +1154,21 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         Iter::new(self)
     }
     /// Make this lender nice and chunky. (Adapter that calls `lend_chunk` on the lender on `next`)
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1u8, 2, 3].iter());
+    /// let mut chunky = lender.chunky(2);
+    /// let mut chunk1 = chunky.next().unwrap();
+    /// assert_eq!(chunk1.next(), Some(&1));
+    /// assert_eq!(chunk1.next(), Some(&2));
+    /// assert_eq!(chunk1.next(), None);
+    /// let mut chunk2 = chunky.next().unwrap();
+    /// assert_eq!(chunk2.next(), Some(&3));
+    /// assert_eq!(chunk2.next(), None);
+    /// ```
     #[inline]
     fn chunky(self, chunk_size: usize) -> Chunky<Self>
     where

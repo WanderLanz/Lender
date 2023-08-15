@@ -16,6 +16,7 @@ use crate::{Lender, Lending};
 pub trait FromLender<L: IntoLender>: Sized {
     fn from_lender(lender: L) -> Self;
 }
+/// Documentation is incomplete. Refer to [`core::iter::IntoIterator`] for more information
 pub trait IntoLender: for<'all /* where Self: 'all */> Lending<'all> {
     type Lender: Lender + for<'all> Lending<'all, Lend = <Self as Lending<'all>>::Lend>;
     fn into_lender(self) -> <Self as IntoLender>::Lender;
@@ -25,6 +26,7 @@ impl<L: Lender> IntoLender for L {
     #[inline]
     fn into_lender(self) -> L { self }
 }
+/// Documentation is incomplete. Refer to [`core::iter::Extend`] for more information
 pub trait ExtendLender<L: IntoLender> {
     fn extend_lender(&mut self, lender: L);
     /// Extends a collection with exactly one element.

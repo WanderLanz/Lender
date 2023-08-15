@@ -1,5 +1,6 @@
 use crate::*;
 
+/// Documentation is incomplete. Refer to [`core::iter::ExactSizeIterator`] for more information
 pub trait ExactSizeLender: Lender {
     #[inline]
     fn len(&self) -> usize {

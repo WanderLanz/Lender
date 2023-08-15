@@ -1,10 +1,10 @@
 [package]
 name = "lender"
-version = "0.1.6"
+version = "0.1.7"
 edition = "2021"
 authors = ["Lance Warden <wanderlanz@proton.me>"]
 license = "MIT OR Apache-2.0"
-description = "feature complete(-ish) lending iterator"
+description = "iter feature complete(-ish) lending iterator"
 repository = "https://github.com/WanderLanz/Lender"
 categories = ["rust-patterns", "no-std"]
 keywords = ["lending", "iterator"]
