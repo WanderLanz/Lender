@@ -2,7 +2,7 @@ use core::{fmt, ops::ControlFlow};
 
 use crate::{
     try_trait_v2::{FromResidual, Try},
-    DoubleEndedLender, ExactSizeLender, FusedLender, Lender, Lending,
+    DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending,
 };
 
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -17,7 +17,9 @@ impl<'this, L> Peekable<'this, L>
 where
     L: Lender,
 {
-    pub(crate) fn new(lender: L) -> Peekable<'this, L> { Peekable { lender, peeked: None } }
+    pub(crate) fn new(lender: L) -> Peekable<'this, L> {
+        Peekable { lender, peeked: None }
+    }
     pub fn peek(&mut self) -> Option<&'_ <L as Lending<'this>>::Lend> {
         let lender = &mut self.lender;
         self.peeked
@@ -71,7 +73,9 @@ impl<'this, L> Clone for Peekable<'this, L>
 where
     L: Lender + Clone,
 {
-    fn clone(&self) -> Self { Peekable { lender: self.lender.clone(), peeked: None } }
+    fn clone(&self) -> Self {
+        Peekable { lender: self.lender.clone(), peeked: None }
+    }
 }
 impl<'this, L: fmt::Debug> fmt::Debug for Peekable<'this, L>
 where
@@ -86,7 +90,7 @@ impl<'lend, 'this, L> Lending<'lend> for Peekable<'this, L>
 where
     L: Lender,
 {
-    type Lend = <L as Lending<'lend>>::Lend;
+    type Lend = Lend<'lend, L>;
 }
 impl<'this, L> Lender for Peekable<'this, L>
 where

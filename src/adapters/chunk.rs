@@ -7,7 +7,9 @@ pub struct Chunk<'s, T> {
     len: usize,
 }
 impl<'s, T> Chunk<'s, T> {
-    pub(crate) fn new(lender: &'s mut T, len: usize) -> Self { Self { lender, len } }
+    pub(crate) fn new(lender: &'s mut T, len: usize) -> Self {
+        Self { lender, len }
+    }
 }
 impl<'lend, 's, T> Lending<'lend> for Chunk<'s, T>
 where

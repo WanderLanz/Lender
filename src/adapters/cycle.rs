@@ -2,7 +2,7 @@ use core::{num::NonZeroUsize, ops::ControlFlow};
 
 use crate::{
     try_trait_v2::{FromResidual, Try},
-    FusedLender, Lender, Lending,
+    FusedLender, Lend, Lender, Lending,
 };
 
 #[derive(Clone, Debug)]
@@ -15,13 +15,15 @@ impl<L> Cycle<L>
 where
     L: Clone,
 {
-    pub(crate) fn new(lender: L) -> Cycle<L> { Cycle { orig: lender.clone(), lender } }
+    pub(crate) fn new(lender: L) -> Cycle<L> {
+        Cycle { orig: lender.clone(), lender }
+    }
 }
 impl<'lend, L> Lending<'lend> for Cycle<L>
 where
     L: Clone + Lender,
 {
-    type Lend = <L as Lending<'lend>>::Lend;
+    type Lend = Lend<'lend, L>;
 }
 impl<L> Lender for Cycle<L>
 where

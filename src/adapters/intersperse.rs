@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::{Lender, Lending, Peekable};
+use crate::{Lend, Lender, Lending, Peekable};
 
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -40,7 +40,7 @@ where
     for<'all> <L as Lending<'all>>::Lend: Clone,
     L: Lender,
 {
-    type Lend = <L as Lending<'lend>>::Lend;
+    type Lend = Lend<'lend, L>;
 }
 impl<'this, L> Lender for Intersperse<'this, L>
 where
@@ -78,7 +78,9 @@ where
             acc
         })
     }
-    fn size_hint(&self) -> (usize, Option<usize>) { intersperse_size_hint(&self.lender, self.needs_sep) }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        intersperse_size_hint(&self.lender, self.needs_sep)
+    }
 }
 
 #[derive(Clone)]
@@ -118,7 +120,7 @@ where
     L: Lender,
     G: FnMut() -> <L as Lending<'this>>::Lend,
 {
-    type Lend = <L as Lending<'lend>>::Lend;
+    type Lend = Lend<'lend, L>;
 }
 impl<'this, L, G> Lender for IntersperseWith<'this, L, G>
 where
@@ -156,7 +158,9 @@ where
             acc
         })
     }
-    fn size_hint(&self) -> (usize, Option<usize>) { intersperse_size_hint(&self.lender, self.needs_sep) }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        intersperse_size_hint(&self.lender, self.needs_sep)
+    }
 }
 
 fn intersperse_size_hint<L>(lender: &L, needs_sep: bool) -> (usize, Option<usize>)

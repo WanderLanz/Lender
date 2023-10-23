@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::{higher_order::FnMutHKAOpt, DoubleEndedLender, FusedLender, Lender, Lending};
+use crate::{higher_order::FnMutHKAOpt, DoubleEndedLender, FusedLender, Lend, Lender, Lending};
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct FilterMap<L, F> {
@@ -8,7 +8,9 @@ pub struct FilterMap<L, F> {
     f: F,
 }
 impl<L, F> FilterMap<L, F> {
-    pub(crate) fn new(lender: L, f: F) -> FilterMap<L, F> { FilterMap { lender, f } }
+    pub(crate) fn new(lender: L, f: F) -> FilterMap<L, F> {
+        FilterMap { lender, f }
+    }
 }
 impl<L: fmt::Debug, F> fmt::Debug for FilterMap<L, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -17,7 +19,7 @@ impl<L: fmt::Debug, F> fmt::Debug for FilterMap<L, F> {
 }
 impl<'lend, B, L, F> Lending<'lend> for FilterMap<L, F>
 where
-    F: FnMut(<L as Lending<'lend>>::Lend) -> Option<B>,
+    F: FnMut(Lend<'lend, L>) -> Option<B>,
     B: 'lend,
     L: Lender,
 {

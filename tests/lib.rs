@@ -10,7 +10,7 @@ impl<'lend, 'a, T> Lending<'lend> for WindowsMut<'a, T> {
     type Lend = &'lend mut [T];
 }
 impl<'a, T> Lender for WindowsMut<'a, T> {
-    fn next<'lend>(&'lend mut self) -> Option<&'lend mut [T]> {
+    fn next(&mut self) -> Option<&mut [T]> {
         let begin = self.begin;
         self.begin = self.begin.saturating_add(1);
         self.slice.get_mut(begin..begin + self.len)
@@ -44,7 +44,7 @@ fn lines_str() {
         type Lend = io::Result<&'lend str>;
     }
     impl<B: io::BufRead> Lender for LinesStr<B> {
-        fn next<'lend>(&'lend mut self) -> Option<io::Result<&'lend str>> {
+        fn next(&mut self) -> Option<io::Result<&str>> {
             self.line.clear();
             match self.buf.read_line(&mut self.line) {
                 Err(e) => return Some(Err(e)),

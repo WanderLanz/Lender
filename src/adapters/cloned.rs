@@ -8,7 +8,9 @@ pub struct Cloned<L> {
     lender: L,
 }
 impl<L> Cloned<L> {
-    pub(crate) fn new(lender: L) -> Cloned<L> { Cloned { lender } }
+    pub(crate) fn new(lender: L) -> Cloned<L> {
+        Cloned { lender }
+    }
 }
 impl<T, L> Iterator for Cloned<L>
 where
@@ -18,9 +20,13 @@ where
 {
     type Item = T;
     #[inline]
-    fn next(&mut self) -> Option<Self::Item> { self.lender.next().cloned() }
+    fn next(&mut self) -> Option<Self::Item> {
+        self.lender.next().cloned()
+    }
     #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>) { self.lender.size_hint() }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.lender.size_hint()
+    }
 }
 impl<T, L> DoubleEndedIterator for Cloned<L>
 where
@@ -29,7 +35,9 @@ where
     L: for<'all> Lending<'all, Lend = &'all T>,
 {
     #[inline]
-    fn next_back(&mut self) -> Option<Self::Item> { self.lender.next_back().cloned() }
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.lender.next_back().cloned()
+    }
 }
 impl<T, L> ExactSizeIterator for Cloned<L>
 where
@@ -37,7 +45,9 @@ where
     T: Clone,
     L: for<'all> Lending<'all, Lend = &'all T>,
 {
-    fn len(&self) -> usize { self.lender.len() }
+    fn len(&self) -> usize {
+        self.lender.len()
+    }
 }
 impl<T, L> FusedIterator for Cloned<L>
 where
@@ -50,5 +60,7 @@ impl<L> Default for Cloned<L>
 where
     L: Default,
 {
-    fn default() -> Self { Self::new(L::default()) }
+    fn default() -> Self {
+        Self::new(L::default())
+    }
 }

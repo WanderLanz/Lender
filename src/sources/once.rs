@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lender, Lending};
+use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending};
 
 /// Creates a lender that yields an element exactly once.
 ///
@@ -35,20 +35,24 @@ where
     L: ?Sized + for<'all> Lending<'all>,
     <L as Lending<'a>>::Lend: Clone,
 {
-    fn clone(&self) -> Self { Once { inner: self.inner.clone() } }
+    fn clone(&self) -> Self {
+        Once { inner: self.inner.clone() }
+    }
 }
 impl<'a, L> fmt::Debug for Once<'a, L>
 where
     L: ?Sized + for<'all> Lending<'all>,
     <L as Lending<'a>>::Lend: fmt::Debug,
 {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.debug_struct("Once").field("inner", &self.inner).finish() }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Once").field("inner", &self.inner).finish()
+    }
 }
 impl<'a, 'lend, L> Lending<'lend> for Once<'a, L>
 where
     L: ?Sized + for<'all> Lending<'all>,
 {
-    type Lend = <L as Lending<'lend>>::Lend;
+    type Lend = Lend<'lend, L>;
 }
 
 impl<'a, L> Lender for Once<'a, L>
@@ -75,7 +79,9 @@ where
     L: ?Sized + for<'all> Lending<'all>,
 {
     #[inline]
-    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> { self.next() }
+    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+        self.next()
+    }
 }
 
 impl<'a, L> ExactSizeLender for Once<'a, L> where L: ?Sized + for<'all> Lending<'all> {}

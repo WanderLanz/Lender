@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::{try_trait_v2::Try, DoubleEndedLender, ExactSizeLender, FusedLender, Lender, Lending};
+use crate::{try_trait_v2::Try, DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending};
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Mutate<L, F> {
@@ -8,7 +8,9 @@ pub struct Mutate<L, F> {
     f: F,
 }
 impl<L, F> Mutate<L, F> {
-    pub(crate) fn new(lender: L, f: F) -> Mutate<L, F> { Mutate { lender, f } }
+    pub(crate) fn new(lender: L, f: F) -> Mutate<L, F> {
+        Mutate { lender, f }
+    }
 }
 impl<L: fmt::Debug, F> fmt::Debug for Mutate<L, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -18,9 +20,9 @@ impl<L: fmt::Debug, F> fmt::Debug for Mutate<L, F> {
 impl<'lend, L, F> Lending<'lend> for Mutate<L, F>
 where
     L: Lender,
-    F: FnMut(&mut <L as Lending<'lend>>::Lend),
+    F: FnMut(&mut Lend<'lend, L>),
 {
-    type Lend = <L as Lending<'lend>>::Lend;
+    type Lend = Lend<'lend, L>;
 }
 impl<L, F> Lender for Mutate<L, F>
 where
@@ -36,7 +38,9 @@ where
         next
     }
     #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>) { self.lender.size_hint() }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.lender.size_hint()
+    }
     #[inline]
     fn try_fold<B, Fold, R>(&mut self, init: B, mut fold: Fold) -> R
     where
@@ -105,8 +109,12 @@ where
     F: FnMut(&mut <L as Lending<'_>>::Lend),
 {
     #[inline]
-    fn len(&self) -> usize { self.lender.len() }
+    fn len(&self) -> usize {
+        self.lender.len()
+    }
     #[inline]
-    fn is_empty(&self) -> bool { self.lender.is_empty() }
+    fn is_empty(&self) -> bool {
+        self.lender.is_empty()
+    }
 }
 impl<L: FusedLender, F> FusedLender for Mutate<L, F> where F: FnMut(&mut <L as Lending<'_>>::Lend) {}

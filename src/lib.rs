@@ -199,7 +199,7 @@ pub mod try_trait_v2;
 
 pub mod prelude {
     pub use crate::{
-        hrc, hrc_mut, hrc_once, lend, DoubleEndedLender, ExactSizeLender, ExtendLender, FromLender, IntoLender, Lender,
-        Lending,
+        hrc, hrc_mut, hrc_once, lend, DoubleEndedLender, ExactSizeLender, ExtendLender, FromLender, IntoLender, Lend,
+        Lender, Lending,
     };
 }

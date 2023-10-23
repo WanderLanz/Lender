@@ -2,7 +2,7 @@ use core::ops::ControlFlow;
 
 use crate::{
     try_trait_v2::{FromResidual, Try},
-    DoubleEndedLender, ExactSizeLender, FusedLender, Lender, Lending,
+    DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending,
 };
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -11,14 +11,16 @@ pub struct Fuse<L> {
     flag: bool,
 }
 impl<L> Fuse<L> {
-    pub(crate) fn new(lender: L) -> Fuse<L> { Fuse { lender, flag: false } }
+    pub(crate) fn new(lender: L) -> Fuse<L> {
+        Fuse { lender, flag: false }
+    }
 }
 impl<L> FusedLender for Fuse<L> where L: Lender {}
 impl<'lend, L> Lending<'lend> for Fuse<L>
 where
     L: Lender,
 {
-    type Lend = <L as Lending<'lend>>::Lend;
+    type Lend = Lend<'lend, L>;
 }
 impl<L> Lender for Fuse<L>
 where
@@ -205,5 +207,7 @@ where
     }
 }
 impl<L: Default> Default for Fuse<L> {
-    fn default() -> Self { Self::new(L::default()) }
+    fn default() -> Self {
+        Self::new(L::default())
+    }
 }

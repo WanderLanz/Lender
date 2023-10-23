@@ -27,6 +27,9 @@ pub trait Lending<'lend, __Seal: Sealed = Seal<&'lend Self>> {
     type Lend: 'lend;
 }
 
+/// A readable shorthand for the type of the items of a [`Lender`] `L`.
+pub type Lend<'lend, L> = <L as Lending<'lend>>::Lend;
+
 /// A trait for dealing with lending iterators.
 ///
 /// This is the main lender trait. For more about the concept of lenders
@@ -1212,7 +1215,7 @@ where
     }
 }
 impl<'lend, L: Lender> Lending<'lend> for &mut L {
-    type Lend = <L as Lending<'lend>>::Lend;
+    type Lend = Lend<'lend, L>;
 }
 impl<L: Lender> Lender for &mut L {
     #[inline]

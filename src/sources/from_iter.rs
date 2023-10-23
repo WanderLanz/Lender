@@ -16,7 +16,9 @@ use crate::{prelude::*, FusedLender};
 /// let x: u8 = *item + *item2; // == 3
 /// ```
 #[inline]
-pub fn from_iter<I: Iterator>(iter: I) -> FromIter<I> { FromIter { iter } }
+pub fn from_iter<I: Iterator>(iter: I) -> FromIter<I> {
+    FromIter { iter }
+}
 
 /// A lender that yields elements from an iterator.
 ///
@@ -35,17 +37,25 @@ impl<'lend, I: Iterator> Lending<'lend> for FromIter<I> {
 
 impl<I: Iterator> Lender for FromIter<I> {
     #[inline]
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> { self.iter.next() }
+    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+        self.iter.next()
+    }
     #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>) { self.iter.size_hint() }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
 }
 
 impl<I: DoubleEndedIterator> DoubleEndedLender for FromIter<I> {
-    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> { self.iter.next_back() }
+    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+        self.iter.next_back()
+    }
 }
 
 impl<I: ExactSizeIterator> ExactSizeLender for FromIter<I> {
-    fn len(&self) -> usize { self.iter.len() }
+    fn len(&self) -> usize {
+        self.iter.len()
+    }
 }
 
 impl<I: FusedIterator> FusedLender for FromIter<I> {}
@@ -95,7 +105,7 @@ where
     L: ?Sized + for<'all> Lending<'all> + 'a,
     I: Iterator<Item = <L as Lending<'a>>::Lend>,
 {
-    type Lend = <L as Lending<'lend>>::Lend;
+    type Lend = Lend<'lend, L>;
 }
 
 impl<'a, L, I> Lender for LendIter<'a, L, I>
@@ -113,7 +123,9 @@ where
         }
     }
     #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>) { self.iter.size_hint() }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
 }
 
 impl<'a, L, I> DoubleEndedLender for LendIter<'a, L, I>
@@ -136,7 +148,9 @@ where
     L: ?Sized + for<'all> Lending<'all> + 'a,
     I: ExactSizeIterator<Item = <L as Lending<'a>>::Lend>,
 {
-    fn len(&self) -> usize { self.iter.len() }
+    fn len(&self) -> usize {
+        self.iter.len()
+    }
 }
 
 impl<'a, L, I> FusedLender for LendIter<'a, L, I>

@@ -12,7 +12,9 @@ pub struct Chain<A, B> {
     b: Fuse<B>,
 }
 impl<A, B> Chain<A, B> {
-    pub(crate) fn new(a: A, b: B) -> Self { Self { a: Fuse::new(a), b: Fuse::new(b) } }
+    pub(crate) fn new(a: A, b: B) -> Self {
+        Self { a: Fuse::new(a), b: Fuse::new(b) }
+    }
 }
 impl<'lend, A, B> Lending<'lend> for Chain<A, B>
 where
@@ -26,9 +28,13 @@ where
     A: Lender,
     B: Lender + for<'all> Lending<'all, Lend = <A as Lending<'all>>::Lend>,
 {
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> { self.a.next().or_else(|| self.b.next()) }
+    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+        self.a.next().or_else(|| self.b.next())
+    }
     #[inline]
-    fn count(self) -> usize { self.a.count() + self.b.count() }
+    fn count(self) -> usize {
+        self.a.count() + self.b.count()
+    }
     fn try_fold<Acc, F, R>(&mut self, mut acc: Acc, mut f: F) -> R
     where
         Self: Sized,
@@ -106,7 +112,9 @@ where
     B: DoubleEndedLender + for<'all> Lending<'all, Lend = <A as Lending<'all>>::Lend>,
 {
     #[inline]
-    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> { self.b.next_back().or_else(|| self.a.next_back()) }
+    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+        self.b.next_back().or_else(|| self.a.next_back())
+    }
 
     #[inline]
     fn advance_back_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {
@@ -170,5 +178,7 @@ where
 {
 }
 impl<A: Default, B: Default> Default for Chain<A, B> {
-    fn default() -> Self { Chain::new(Default::default(), Default::default()) }
+    fn default() -> Self {
+        Chain::new(Default::default(), Default::default())
+    }
 }

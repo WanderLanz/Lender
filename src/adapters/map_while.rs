@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::{higher_order::FnMutHKAOpt, Lender, Lending};
+use crate::{higher_order::FnMutHKAOpt, Lend, Lender, Lending};
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct MapWhile<L, P> {
@@ -8,7 +8,9 @@ pub struct MapWhile<L, P> {
     predicate: P,
 }
 impl<L, P> MapWhile<L, P> {
-    pub(crate) fn new(lender: L, predicate: P) -> MapWhile<L, P> { MapWhile { lender, predicate } }
+    pub(crate) fn new(lender: L, predicate: P) -> MapWhile<L, P> {
+        MapWhile { lender, predicate }
+    }
 }
 impl<L: fmt::Debug, P> fmt::Debug for MapWhile<L, P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -17,7 +19,7 @@ impl<L: fmt::Debug, P> fmt::Debug for MapWhile<L, P> {
 }
 impl<'lend, B, L, P> Lending<'lend> for MapWhile<L, P>
 where
-    P: FnMut(<L as Lending<'lend>>::Lend) -> Option<B>,
+    P: FnMut(Lend<'lend, L>) -> Option<B>,
     L: Lender,
     B: 'lend,
 {
@@ -29,7 +31,9 @@ where
     L: Lender,
 {
     #[inline]
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> { (self.predicate)(self.lender.next()?) }
+    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+        (self.predicate)(self.lender.next()?)
+    }
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (_, upper) = self.lender.size_hint();
