@@ -1,6 +1,6 @@
 use core::num::NonZeroUsize;
 
-use crate::{try_trait_v2::Try, DoubleEndedLender, ExactSizeLender, FusedLender, Lender, Lending};
+use crate::{try_trait_v2::Try, DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending};
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Take<L> {
@@ -8,13 +8,15 @@ pub struct Take<L> {
     n: usize,
 }
 impl<L> Take<L> {
-    pub(crate) fn new(lender: L, n: usize) -> Take<L> { Take { lender, n } }
+    pub(crate) fn new(lender: L, n: usize) -> Take<L> {
+        Take { lender, n }
+    }
 }
 impl<'lend, L> Lending<'lend> for Take<L>
 where
     L: Lender,
 {
-    type Lend = <L as Lending<'lend>>::Lend;
+    type Lend = Lend<'lend, L>;
 }
 impl<L> Lender for Take<L>
 where

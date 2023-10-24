@@ -62,7 +62,7 @@ pub use self::{
 use crate::{
     empty,
     try_trait_v2::{ChangeOutputType, FromResidual, Residual, Try},
-    Empty, ExtendLender, IntoLender, Lender, Lending, TupleLend,
+    Empty, ExtendLender, IntoLender, Lend, Lender, Lending, TupleLend,
 };
 
 // pub use zip::{TrustedRandomAccess, TrustedRandomAccessNoCoerce};
@@ -81,7 +81,7 @@ impl<'lend, 'this, L: Lender> Lending<'lend> for TryShunt<'this, L>
 where
     for<'all> <L as Lending<'all>>::Lend: Try,
 {
-    type Lend = <<L as Lending<'lend>>::Lend as Try>::Output;
+    type Lend = <Lend<'lend, L> as Try>::Output;
 }
 impl<'this, L: Lender> Lender for TryShunt<'this, L>
 where
@@ -135,27 +135,31 @@ impl<'lend, L: Lender> Lending<'lend> for FirstShunt<L>
 where
     for<'all> <L as Lending<'all>>::Lend: TupleLend<'all>,
 {
-    type Lend = <<L as Lending<'lend>>::Lend as TupleLend<'lend>>::First;
+    type Lend = <Lend<'lend, L> as TupleLend<'lend>>::First;
 }
 impl<'lend, L: Lender> Lending<'lend> for SecondShunt<L>
 where
     for<'all> <L as Lending<'all>>::Lend: TupleLend<'all>,
 {
-    type Lend = <<L as Lending<'lend>>::Lend as TupleLend<'lend>>::Second;
+    type Lend = <Lend<'lend, L> as TupleLend<'lend>>::Second;
 }
 impl<L: Lender> IntoLender for FirstShunt<L>
 where
     for<'all> <L as Lending<'all>>::Lend: TupleLend<'all>,
 {
     type Lender = Empty<Self>;
-    fn into_lender(self) -> <Self as IntoLender>::Lender { empty() }
+    fn into_lender(self) -> <Self as IntoLender>::Lender {
+        empty()
+    }
 }
 impl<L: Lender> IntoLender for SecondShunt<L>
 where
     for<'all> <L as Lending<'all>>::Lend: TupleLend<'all>,
 {
     type Lender = Empty<Self>;
-    fn into_lender(self) -> <Self as IntoLender>::Lender { empty() }
+    fn into_lender(self) -> <Self as IntoLender>::Lender {
+        empty()
+    }
 }
 
 pub(crate) fn unzip<L, ExtA, ExtB>(mut lender: L) -> (ExtA, ExtB)

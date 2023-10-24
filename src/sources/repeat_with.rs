@@ -33,7 +33,7 @@ where
     L: ?Sized + for<'all> Lending<'all> + 'a,
     F: FnMut() -> <L as Lending<'a>>::Lend,
 {
-    type Lend = <L as Lending<'lend>>::Lend;
+    type Lend = Lend<'lend, L>;
 }
 
 impl<'a, L, F> Lender for RepeatWith<'a, L, F>
@@ -47,7 +47,9 @@ where
         Some(unsafe { core::mem::transmute::<<Self as Lending<'a>>::Lend, <Self as Lending<'_>>::Lend>((self.f)()) })
     }
     #[inline]
-    fn advance_by(&mut self, _n: usize) -> Result<(), core::num::NonZeroUsize> { Ok(()) }
+    fn advance_by(&mut self, _n: usize) -> Result<(), core::num::NonZeroUsize> {
+        Ok(())
+    }
 }
 
 impl<'a, L, F> DoubleEndedLender for RepeatWith<'a, L, F>
@@ -56,9 +58,13 @@ where
     F: FnMut() -> <L as Lending<'a>>::Lend,
 {
     #[inline]
-    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> { self.next() }
+    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+        self.next()
+    }
     #[inline]
-    fn advance_back_by(&mut self, _n: usize) -> Result<(), core::num::NonZeroUsize> { Ok(()) }
+    fn advance_back_by(&mut self, _n: usize) -> Result<(), core::num::NonZeroUsize> {
+        Ok(())
+    }
 }
 
 impl<'a, L, F> FusedLender for RepeatWith<'a, L, F>

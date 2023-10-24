@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::{higher_order::FnMutHKA, DoubleEndedLender, ExactSizeLender, FusedLender, Lender, Lending};
+use crate::{higher_order::FnMutHKA, DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending};
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Map<L, F> {
@@ -8,17 +8,21 @@ pub struct Map<L, F> {
     f: F,
 }
 impl<L, F> Map<L, F> {
-    pub(crate) fn new(lender: L, f: F) -> Map<L, F> { Map { lender, f } }
+    pub(crate) fn new(lender: L, f: F) -> Map<L, F> {
+        Map { lender, f }
+    }
 }
 impl<L: fmt::Debug, F> fmt::Debug for Map<L, F> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.debug_struct("Map").field("lender", &self.lender).finish() }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Map").field("lender", &self.lender).finish()
+    }
 }
 impl<'lend, L, F> Lending<'lend> for Map<L, F>
 where
     F: for<'all> FnMutHKA<'all, <L as Lending<'all>>::Lend>,
     L: Lender,
 {
-    type Lend = <F as FnMutHKA<'lend, <L as Lending<'lend>>::Lend>>::B;
+    type Lend = <F as FnMutHKA<'lend, Lend<'lend, L>>>::B;
 }
 impl<L, F> Lender for Map<L, F>
 where
@@ -26,25 +30,35 @@ where
     L: Lender,
 {
     #[inline]
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> { self.lender.next().map(&mut self.f) }
+    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+        self.lender.next().map(&mut self.f)
+    }
     #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>) { self.lender.size_hint() }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.lender.size_hint()
+    }
 }
 impl<L: DoubleEndedLender, F> DoubleEndedLender for Map<L, F>
 where
     F: for<'all> FnMutHKA<'all, <L as Lending<'all>>::Lend>,
 {
     #[inline]
-    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> { self.lender.next_back().map(&mut self.f) }
+    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+        self.lender.next_back().map(&mut self.f)
+    }
 }
 impl<L: ExactSizeLender, F> ExactSizeLender for Map<L, F>
 where
     F: for<'all> FnMutHKA<'all, <L as Lending<'all>>::Lend>,
 {
     #[inline]
-    fn len(&self) -> usize { self.lender.len() }
+    fn len(&self) -> usize {
+        self.lender.len()
+    }
     #[inline]
-    fn is_empty(&self) -> bool { self.lender.is_empty() }
+    fn is_empty(&self) -> bool {
+        self.lender.is_empty()
+    }
 }
 impl<L: FusedLender, F> FusedLender for Map<L, F> where F: for<'all> FnMutHKA<'all, <L as Lending<'all>>::Lend> {}
 // impl<I, L, F> IntoIterator for Map<L, F>

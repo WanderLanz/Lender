@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::{FusedLender, Lender, Lending};
+use crate::{FusedLender, Lend, Lender, Lending};
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct TakeWhile<L, P> {
@@ -9,7 +9,9 @@ pub struct TakeWhile<L, P> {
     predicate: P,
 }
 impl<L, P> TakeWhile<L, P> {
-    pub(crate) fn new(lender: L, predicate: P) -> TakeWhile<L, P> { TakeWhile { lender, flag: false, predicate } }
+    pub(crate) fn new(lender: L, predicate: P) -> TakeWhile<L, P> {
+        TakeWhile { lender, flag: false, predicate }
+    }
 }
 impl<L: fmt::Debug, P> fmt::Debug for TakeWhile<L, P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -18,10 +20,10 @@ impl<L: fmt::Debug, P> fmt::Debug for TakeWhile<L, P> {
 }
 impl<'lend, L, P> Lending<'lend> for TakeWhile<L, P>
 where
-    P: FnMut(&<L as Lending<'lend>>::Lend) -> bool,
+    P: FnMut(&Lend<'lend, L>) -> bool,
     L: Lender,
 {
-    type Lend = <L as Lending<'lend>>::Lend;
+    type Lend = Lend<'lend, L>;
 }
 impl<L, P> Lender for TakeWhile<L, P>
 where

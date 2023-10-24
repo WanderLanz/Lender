@@ -1,6 +1,6 @@
 use core::{fmt, ops::ControlFlow};
 
-use crate::{try_trait_v2::Try, FusedLender, Lender, Lending};
+use crate::{try_trait_v2::Try, FusedLender, Lend, Lender, Lending};
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct SkipWhile<L, P> {
@@ -9,7 +9,9 @@ pub struct SkipWhile<L, P> {
     predicate: P,
 }
 impl<L, P> SkipWhile<L, P> {
-    pub(crate) fn new(lender: L, predicate: P) -> SkipWhile<L, P> { SkipWhile { lender, flag: false, predicate } }
+    pub(crate) fn new(lender: L, predicate: P) -> SkipWhile<L, P> {
+        SkipWhile { lender, flag: false, predicate }
+    }
 }
 impl<L: fmt::Debug, P> fmt::Debug for SkipWhile<L, P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -18,10 +20,10 @@ impl<L: fmt::Debug, P> fmt::Debug for SkipWhile<L, P> {
 }
 impl<'lend, L, P> Lending<'lend> for SkipWhile<L, P>
 where
-    P: FnMut(&<L as Lending<'lend>>::Lend) -> bool,
+    P: FnMut(&Lend<'lend, L>) -> bool,
     L: Lender,
 {
-    type Lend = <L as Lending<'lend>>::Lend;
+    type Lend = Lend<'lend, L>;
 }
 impl<L, P> Lender for SkipWhile<L, P>
 where

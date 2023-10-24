@@ -51,5 +51,7 @@ where
     F: for<'all> FnMutHKAOpt<'all, &'all mut St>,
 {
     #[inline]
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> { (self.f)(&mut self.state) }
+    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+        (self.f)(&mut self.state)
+    }
 }

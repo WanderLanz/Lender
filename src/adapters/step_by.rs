@@ -1,6 +1,6 @@
 use core::ops::ControlFlow;
 
-use crate::{try_trait_v2::Try, DoubleEndedLender, ExactSizeLender, Lender, Lending};
+use crate::{try_trait_v2::Try, DoubleEndedLender, ExactSizeLender, Lend, Lender, Lending};
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct StepBy<L> {
@@ -18,7 +18,7 @@ impl<'lend, L> Lending<'lend> for StepBy<L>
 where
     L: Lender,
 {
-    type Lend = <L as Lending<'lend>>::Lend;
+    type Lend = Lend<'lend, L>;
 }
 impl<L> Lender for StepBy<L>
 where
@@ -147,7 +147,9 @@ where
     L: DoubleEndedLender + ExactSizeLender,
 {
     #[inline]
-    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> { self.lender.nth_back(self.next_back_index()) }
+    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+        self.lender.nth_back(self.next_back_index())
+    }
 
     #[inline]
     fn nth_back(&mut self, n: usize) -> Option<<Self as Lending<'_>>::Lend> {

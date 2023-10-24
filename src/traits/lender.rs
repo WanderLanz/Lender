@@ -27,6 +27,9 @@ pub trait Lending<'lend, __Seal: Sealed = Seal<&'lend Self>> {
     type Lend: 'lend;
 }
 
+/// A readable shorthand for the type of the items of a [`Lender`] `L`.
+pub type Lend<'lend, L> = <L as Lending<'lend>>::Lend;
+
 /// A trait for dealing with lending iterators.
 ///
 /// This is the main lender trait. For more about the concept of lenders
@@ -980,7 +983,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// Documentation is incomplete. Refer to [`Iterator::cmp`] for more information
     fn cmp<L>(self, other: L) -> Ordering
     where
-        L: IntoLender + for<'all> Lending<'all, Lend = <Self as Lending<'all>>::Lend>,
+        L: IntoLender,
+        L::Lender: for<'all> Lending<'all, Lend = <Self as Lending<'all>>::Lend>,
         for <'all> <Self as Lending<'all>>::Lend: Ord,
         Self: Sized,
     {
@@ -991,7 +995,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     where
         Self: Sized,
         L: IntoLender,
-        F: for<'all> FnMut(<Self as Lending<'all>>::Lend, <L as Lending<'all>>::Lend) -> Ordering,
+        F: for<'all> FnMut(<Self as Lending<'all>>::Lend, <L::Lender as Lending<'all>>::Lend) -> Ordering,
     {
         match lender_compare(self, other.into_lender(), move |x, y| match cmp(x, y) {
             Ordering::Equal => ControlFlow::Continue(()),
@@ -1005,7 +1009,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     fn partial_cmp<L>(self, other: L) -> Option<Ordering>
     where
         L: IntoLender,
-        for<'all> <Self as Lending<'all>>::Lend: PartialOrd<<L as Lending<'all>>::Lend>,
+        for<'all> <Self as Lending<'all>>::Lend: PartialOrd<<L::Lender as Lending<'all>>::Lend>,
         Self: Sized,
     {
         self.partial_cmp_by(other, |x, y| x.partial_cmp(&y))
@@ -1015,7 +1019,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     where
         Self: Sized,
         L: IntoLender,
-        F: for<'all> FnMut(<Self as Lending<'all>>::Lend, <L as Lending<'all>>::Lend) -> Option<Ordering>,
+        F: for<'all> FnMut(<Self as Lending<'all>>::Lend, <L::Lender as Lending<'all>>::Lend) -> Option<Ordering>,
     {
         match lender_compare(self, other.into_lender(), move |x, y| match partial_cmp(x, y) {
             Some(Ordering::Equal) => ControlFlow::Continue(()),
@@ -1029,7 +1033,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     fn eq<L>(self, other: L) -> bool
     where
         L: IntoLender,
-        for<'all> <Self as Lending<'all>>::Lend: PartialEq<<L as Lending<'all>>::Lend>,
+        for<'all> <Self as Lending<'all>>::Lend: PartialEq<<L::Lender as Lending<'all>>::Lend>,
         Self: Sized,
     {
         self.eq_by(other, |x, y| x == y)
@@ -1039,7 +1043,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     where
         Self: Sized,
         L: IntoLender,
-        F: for<'all> FnMut(<Self as Lending<'all>>::Lend, <L as Lending<'all>>::Lend) -> bool,
+        F: for<'all> FnMut(<Self as Lending<'all>>::Lend, <L::Lender as Lending<'all>>::Lend) -> bool,
     {
         match lender_compare(self, other.into_lender(), move |x, y| {
             if eq(x, y) { ControlFlow::Continue(()) } else { ControlFlow::Break(()) }
@@ -1052,7 +1056,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     fn ne<L>(self, other: L) -> bool
     where
         L: IntoLender,
-        for<'all> <Self as Lending<'all>>::Lend: PartialEq<<L as Lending<'all>>::Lend>,
+        for<'all> <Self as Lending<'all>>::Lend: PartialEq<<L::Lender as Lending<'all>>::Lend>,
         Self: Sized,
     {
         !self.eq(other)
@@ -1061,7 +1065,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     fn lt<L>(self, other: L) -> bool
     where
         L: IntoLender,
-        for<'all> <Self as Lending<'all>>::Lend: PartialOrd<<L as Lending<'all>>::Lend>,
+        for<'all> <Self as Lending<'all>>::Lend: PartialOrd<<L::Lender as Lending<'all>>::Lend>,
         Self: Sized,
     {
         self.partial_cmp(other) == Some(Ordering::Less)
@@ -1070,7 +1074,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     fn le<L>(self, other: L) -> bool
     where
         L: IntoLender,
-        for<'all> <Self as Lending<'all>>::Lend: PartialOrd<<L as Lending<'all>>::Lend>,
+        for<'all> <Self as Lending<'all>>::Lend: PartialOrd<<L::Lender as Lending<'all>>::Lend>,
         Self: Sized,
     {
         matches!(self.partial_cmp(other), Some(Ordering::Less | Ordering::Equal))
@@ -1079,7 +1083,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     fn gt<L>(self, other: L) -> bool
     where
         L: IntoLender,
-        for<'all> <Self as Lending<'all>>::Lend: PartialOrd<<L as Lending<'all>>::Lend>,
+        for<'all> <Self as Lending<'all>>::Lend: PartialOrd<<L::Lender as Lending<'all>>::Lend>,
         Self: Sized,
     {
         self.partial_cmp(other) == Some(Ordering::Greater)
@@ -1088,7 +1092,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     fn ge<L>(self, other: L) -> bool
     where
         L: IntoLender,
-        for<'all> <Self as Lending<'all>>::Lend: PartialOrd<<L as Lending<'all>>::Lend>,
+        for<'all> <Self as Lending<'all>>::Lend: PartialOrd<<L::Lender as Lending<'all>>::Lend>,
         Self: Sized,
     {
         matches!(self.partial_cmp(other), Some(Ordering::Greater | Ordering::Equal))
@@ -1211,13 +1215,19 @@ where
     }
 }
 impl<'lend, L: Lender> Lending<'lend> for &mut L {
-    type Lend = <L as Lending<'lend>>::Lend;
+    type Lend = Lend<'lend, L>;
 }
 impl<L: Lender> Lender for &mut L {
     #[inline]
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> { (**self).next() }
+    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+        (**self).next()
+    }
     #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>) { (**self).size_hint() }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (**self).size_hint()
+    }
     #[inline]
-    fn advance_by(&mut self, n: usize) -> Result<(), NonZeroUsize> { (**self).advance_by(n) }
+    fn advance_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {
+        (**self).advance_by(n)
+    }
 }
