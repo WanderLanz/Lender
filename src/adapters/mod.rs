@@ -15,6 +15,7 @@ mod inspect;
 mod intersperse;
 mod iter;
 mod map;
+mod map_into_iter;
 mod map_while;
 mod mutate;
 mod owned;
@@ -46,6 +47,7 @@ pub use self::{
     inspect::Inspect,
     iter::Iter,
     map::Map,
+    map_into_iter::MapIntoIter,
     map_while::MapWhile,
     mutate::Mutate,
     owned::Owned,

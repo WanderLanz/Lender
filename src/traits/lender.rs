@@ -300,6 +300,32 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         Map::new(self, f)
     }
+    /// Map each lend of this lender into an owned value using the given function.
+    ///
+    /// This is a weaker version of [`Lender::map`] that returns an [`Iterator`] instead of a [`Lender`].
+    /// However, this behavior is very common, and so this method is included for convenience.
+    /// The main advantage is better type inference for the mapping function.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let mut data = [1, 2u8];
+    /// let mut lender = lender::lend_iter::<lend!(&'lend mut u8), _>(data.iter_mut());
+    /// let mut mapped_into_iter = lender.map_into_iter(|a| {
+    ///     *a += 1;
+    ///     *a
+    /// });
+    /// assert_eq!(mapped_into_iter.next(), Some(2));
+    /// assert_eq!(mapped_into_iter.next(), Some(3));
+    /// assert_eq!(mapped_into_iter.next(), None);
+    /// ```
+    #[inline]
+    fn map_into_iter<O, F: FnMut(Lend<'_, Self>)-> O>(self, f: F) -> MapIntoIter<Self, O, F>
+    where Self: Sized
+    {
+        MapIntoIter::new(self, f)
+    }
     /// Call the given function with each lend of this lender.
     ///
     /// While for most situations a basic while loop will suffice,
