@@ -1,8 +1,8 @@
 [package]
 name = "lender"
-version = "0.1.7"
+version = "0.2.0"
 edition = "2021"
-authors = ["Lance Warden <wanderlanz@proton.me>"]
+authors = ["Lance Warden <wanderlanz@proton.me>", "Sebastiano Vigna <sebastiano.vigna@gmail.com>"]
 license = "MIT OR Apache-2.0"
 description = "iter feature complete(-ish) lending iterator"
 repository = "https://github.com/WanderLanz/Lender"
