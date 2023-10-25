@@ -19,7 +19,9 @@ impl<B, C> Try for ControlFlow<B, C> {
     type Output = C;
     type Residual = ControlFlow<B, Infallible>;
     #[inline]
-    fn from_output(output: Self::Output) -> Self { ControlFlow::Continue(output) }
+    fn from_output(output: Self::Output) -> Self {
+        ControlFlow::Continue(output)
+    }
     #[inline]
     fn branch(self) -> ControlFlow<Self::Residual, Self::Output> {
         match self {
@@ -42,7 +44,9 @@ impl<T> Try for Option<T> {
     type Output = T;
     type Residual = Option<Infallible>;
     #[inline]
-    fn from_output(output: Self::Output) -> Self { Some(output) }
+    fn from_output(output: Self::Output) -> Self {
+        Some(output)
+    }
     #[inline]
     fn branch(self) -> ControlFlow<Self::Residual, Self::Output> {
         match self {
@@ -53,13 +57,17 @@ impl<T> Try for Option<T> {
 }
 impl<T> FromResidual for Option<T> {
     #[inline]
-    fn from_residual(_residual: Option<Infallible>) -> Self { None }
+    fn from_residual(_residual: Option<Infallible>) -> Self {
+        None
+    }
 }
 impl<T, E> Try for Result<T, E> {
     type Output = T;
     type Residual = Result<Infallible, E>;
     #[inline]
-    fn from_output(output: Self::Output) -> Self { Ok(output) }
+    fn from_output(output: Self::Output) -> Self {
+        Ok(output)
+    }
     #[inline]
     fn branch(self) -> ControlFlow<Self::Residual, Self::Output> {
         match self {
@@ -83,7 +91,9 @@ impl<T, E> Try for Poll<Result<T, E>> {
     type Output = Poll<T>;
     type Residual = Result<Infallible, E>;
     #[inline]
-    fn from_output(c: Self::Output) -> Self { c.map(Ok) }
+    fn from_output(c: Self::Output) -> Self {
+        c.map(Ok)
+    }
     #[inline]
     fn branch(self) -> ControlFlow<Self::Residual, Self::Output> {
         match self {
@@ -109,7 +119,9 @@ impl<T, E> Try for Poll<Option<Result<T, E>>> {
     type Residual = Result<Infallible, E>;
 
     #[inline]
-    fn from_output(c: Self::Output) -> Self { c.map(|x| x.map(Ok)) }
+    fn from_output(c: Self::Output) -> Self {
+        c.map(|x| x.map(Ok))
+    }
 
     #[inline]
     fn branch(self) -> ControlFlow<Self::Residual, Self::Output> {
