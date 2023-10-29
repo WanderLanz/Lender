@@ -2,6 +2,7 @@ mod accum;
 mod collect;
 mod double_ended;
 mod exact_size;
+mod ext;
 mod lender;
 mod marker;
 
@@ -10,6 +11,7 @@ pub use self::{
     collect::{ExtendLender, FromLender, IntoLender},
     double_ended::DoubleEndedLender,
     exact_size::ExactSizeLender,
+    ext::IteratorExt,
     lender::{Lend, Lender, Lending},
     marker::FusedLender,
 };

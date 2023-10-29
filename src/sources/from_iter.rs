@@ -4,6 +4,9 @@ use crate::{prelude::*, FusedLender};
 
 /// Creates a lender from an iterator.
 ///
+/// This function can be conviniently accessed using the [`into_lender`](IteratorExt::into_lender) method
+/// added to [`Iterator`] by this crate.
+///
 /// Does not change the behavior of the iterator, the resulting lender will yield the same items and can be adapted back into an iterator.
 /// # Examples
 /// ```rust
@@ -11,6 +14,11 @@ use crate::{prelude::*, FusedLender};
 /// let mut data = [1u8, 2, 3];
 ///
 /// let mut lender = lender::from_iter([1, 2, 3].iter());
+/// let item: &'_ u8 = lender.next().unwrap();
+/// let item2: &'_ u8 = lender.next().unwrap();
+/// let x: u8 = *item + *item2; // == 3
+///
+/// let mut lender = [1, 2, 3].iter().into_lend_iter();
 /// let item: &'_ u8 = lender.next().unwrap();
 /// let item2: &'_ u8 = lender.next().unwrap();
 /// let x: u8 = *item + *item2; // == 3
