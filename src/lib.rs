@@ -143,6 +143,97 @@
 //! Turn a lender into an iterator with [`Lender::cloned()`] where lend is [`Clone`], [`Lender::copied()`] where lend is [`Copy`],
 //! [`Lender::owned()`] where lend is [`ToOwned`](alloc::borrow::ToOwned),or [`Lender::iter()`] where the lender already satisfies the restrictions of [`Iterator`].
 //!
+//! ## Type-inference problems
+//!
+//! Due to the complex type dependencies and higher-kind trait bounds
+//! involved, the current Rust compiler cannot
+//! always infer the correct type of a lending iterator and of the items it returns.
+//! In general, when writing methods accepting a [`Lender`]
+//! restricting the returned item type with a *type* will work, as in:
+//!
+//! ```rust
+//! use lender::*;
+//!
+//! struct MockLender {}
+//!
+//! impl<'lend> Lending<'lend> for MockLender {
+//!     type Lend = &'lend str;
+//! }
+//!
+//! impl Lender for MockLender {
+//!     fn next(&mut self) -> Option<Lend<'_, Self>> {
+//!         None
+//!     }
+//! }
+//!
+//! fn read_lender<L>(lender: L)
+//! where
+//!     L: Lender + for<'lend> Lending<'lend, Lend = &'lend str>,
+//! {}
+//!
+//! fn test_mock_lender(m: MockLender) {
+//!     read_lender(m);
+//! }
+//! ```
+//!
+//! However, the following code, which restricts the returned items using a trait bound,
+//! does not compile as of Rust 1.73.0:
+//!
+//! ```ignore
+//! use lender::*;
+//!
+//! struct MockLender {}
+//!
+//! impl<'lend> Lending<'lend> for MockLender {
+//!     type Lend = &'lend str;
+//! }
+//!
+//! impl Lender for MockLender {
+//!     fn next(&mut self) -> Option<Lend<'_, Self>> {
+//!         None
+//!     }
+//! }
+//!
+//! fn read_lender<L>(lender: L)
+//! where
+//!     L: Lender,
+//!     for<'lend> Lend<'lend, L>: AsRef<str>,
+//! {}
+//!
+//! fn test_mock_lender(m: MockLender) {
+//!     read_lender(m);
+//! }
+//! ```
+//!
+//! The workaround is to use an explicit type annotation:
+//!
+//! ```rust
+//! use lender::*;
+//!
+//! struct MockLender {}
+//!
+//! impl<'lend> Lending<'lend> for MockLender {
+//!     type Lend = &'lend str;
+//! }
+//!
+//! impl Lender for MockLender {
+//!     fn next(&mut self) -> Option<Lend<'_, Self>> {
+//!         None
+//!     }
+//! }
+//!
+//! fn read_lender<L>(lender: L)
+//! where
+//!     L: Lender,
+//!     for<'lend> Lend<'lend, L>: AsRef<str>,
+//! {}
+//!
+//! fn test_mock_lender(m: MockLender) {
+//!     read_lender::<MockLender>(m);
+//! }
+//! ```
+//!
+//!
 //! ## Resources
 //!
 //! Please check out the great resources below that helped me and many others learn about Rust and the lending iterator problem. Thank you to everyone!

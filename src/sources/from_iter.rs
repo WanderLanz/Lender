@@ -4,10 +4,13 @@ use crate::{prelude::*, FusedLender};
 
 /// Creates a lender from an iterator.
 ///
-/// This function can be conviniently accessed using the [`into_lender`](IteratorExt::into_lender) method
+/// This function can be conviniently accessed using the
+/// [`into_lend_iter`](crate::traits::IteratorExt::into_lend_iter) method
 /// added to [`Iterator`] by this crate.
 ///
-/// Does not change the behavior of the iterator, the resulting lender will yield the same items and can be adapted back into an iterator.
+/// Does not change the behavior of the iterator, the resulting lender
+/// will yield the same items and can be adapted back into an iterator.
+///
 /// # Examples
 /// ```rust
 /// use lender::prelude::*;
