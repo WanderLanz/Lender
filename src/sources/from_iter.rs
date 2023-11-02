@@ -72,6 +72,13 @@ impl<I: ExactSizeIterator> ExactSizeLender for FromIter<I> {
 
 impl<I: FusedIterator> FusedLender for FromIter<I> {}
 
+impl<I: Iterator> From<I> for FromIter<I> {
+    #[inline]
+    fn from(iter: I) -> Self {
+        from_iter(iter)
+    }
+}
+
 /// Creates an [`IntoLender`] from an [`IntoIterator`].
 ///
 /// This function can be conveniently accessed using the
@@ -103,6 +110,12 @@ impl<I: IntoIterator> IntoLender for FromIntoIter<I> {
 
     fn into_lender(self) -> <Self as IntoLender>::Lender {
         self.into_iter.into_iter().into_lend_iter()
+    }
+}
+
+impl<I: IntoIterator> From<I> for FromIntoIter<I> {
+    fn from(into_iter: I) -> Self {
+        from_into_iter(into_iter)
     }
 }
 
