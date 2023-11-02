@@ -9,7 +9,7 @@ mod repeat_with;
 pub use self::{
     empty::{empty, Empty},
     from_fn::{from_fn, FromFn},
-    from_iter::{from_iter, lend_iter, FromIter, LendIter},
+    from_iter::{from_into_iter, from_iter, lend_iter, FromIntoIter, FromIter, LendIter},
     once::{once, Once},
     once_with::{once_with, OnceWith},
     repeat::{repeat, Repeat},

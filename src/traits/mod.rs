@@ -11,7 +11,7 @@ pub use self::{
     collect::{ExtendLender, FromLender, IntoLender},
     double_ended::DoubleEndedLender,
     exact_size::ExactSizeLender,
-    ext::IteratorExt,
+    ext::{IntoIteratorExt, IteratorExt},
     lender::{Lend, Lender, Lending},
     marker::FusedLender,
 };

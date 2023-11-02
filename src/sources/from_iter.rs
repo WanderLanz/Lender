@@ -4,7 +4,7 @@ use crate::{prelude::*, FusedLender};
 
 /// Creates a lender from an iterator.
 ///
-/// This function can be conviniently accessed using the
+/// This function can be conveniently accessed using the
 /// [`into_lend_iter`](crate::traits::IteratorExt::into_lend_iter) method
 /// added to [`Iterator`] by this crate.
 ///
@@ -37,6 +37,7 @@ pub fn from_iter<I: Iterator>(iter: I) -> FromIter<I> {
 /// See its documentation for more.
 
 #[derive(Clone, Debug)]
+#[repr(transparent)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct FromIter<I> {
     iter: I,
@@ -70,6 +71,40 @@ impl<I: ExactSizeIterator> ExactSizeLender for FromIter<I> {
 }
 
 impl<I: FusedIterator> FusedLender for FromIter<I> {}
+
+/// Creates an [`IntoLender`] from an [`IntoIterator`].
+///
+/// This function can be conveniently accessed using the
+/// [`into_into_lender`](crate::traits::IntoIteratorExt::into_into_lender) method
+/// added to [`IntoIterator`] by this crate.
+///
+/// The lenders returned are obtained by applying [`from_iter`]
+/// to the iterators returned by the wrapped [`IntoIterator`].
+///
+#[inline]
+pub fn from_into_iter<I: IntoIterator>(into_iter: I) -> FromIntoIter<I> {
+    FromIntoIter { into_iter }
+}
+
+/// A [`IntoLender`] that returns lenders obtained by applying [`from_iter`]
+/// to the iterators returned by the wrapped [`IntoIterator`].
+///
+/// This `struct` is created by the [`from_into_iter()`] function.
+/// See its documentation for more.
+
+#[repr(transparent)]
+#[derive(Clone, Debug)]
+pub struct FromIntoIter<I> {
+    into_iter: I,
+}
+
+impl<I: IntoIterator> IntoLender for FromIntoIter<I> {
+    type Lender = FromIter<I::IntoIter>;
+
+    fn into_lender(self) -> <Self as IntoLender>::Lender {
+        self.into_iter.into_iter().into_lend_iter()
+    }
+}
 
 /// Creates a lender from an iterator `I`, safely shortening the items' lifetimes with the given lending type `L`.
 ///
