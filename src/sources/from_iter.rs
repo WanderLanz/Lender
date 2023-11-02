@@ -49,7 +49,7 @@ impl<'lend, I: Iterator> Lending<'lend> for FromIter<I> {
 
 impl<I: Iterator> Lender for FromIter<I> {
     #[inline]
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.iter.next()
     }
     #[inline]
@@ -59,7 +59,7 @@ impl<I: Iterator> Lender for FromIter<I> {
 }
 
 impl<I: DoubleEndedIterator> DoubleEndedLender for FromIter<I> {
-    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         self.iter.next_back()
     }
 }
@@ -140,7 +140,7 @@ impl<I: IntoIterator> From<I> for FromIntoIter<I> {
 pub fn lend_iter<'a, L, I>(iter: I) -> LendIter<'a, L, I>
 where
     L: ?Sized + for<'all> Lending<'all> + 'a,
-    I: Iterator<Item = <L as Lending<'a>>::Lend>,
+    I: Iterator<Item = Lend<'a, L>>,
 {
     LendIter { iter, _marker: core::marker::PhantomData }
 }
@@ -162,7 +162,7 @@ pub struct LendIter<'a, L: ?Sized, I> {
 impl<'a, 'lend, L, I> Lending<'lend> for LendIter<'a, L, I>
 where
     L: ?Sized + for<'all> Lending<'all> + 'a,
-    I: Iterator<Item = <L as Lending<'a>>::Lend>,
+    I: Iterator<Item = Lend<'a, L>>,
 {
     type Lend = Lend<'lend, L>;
 }
@@ -170,16 +170,12 @@ where
 impl<'a, L, I> Lender for LendIter<'a, L, I>
 where
     L: ?Sized + for<'all> Lending<'all> + 'a,
-    I: Iterator<Item = <L as Lending<'a>>::Lend>,
+    I: Iterator<Item = Lend<'a, L>>,
 {
     #[inline]
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
         // SAFETY: 'a: 'lend
-        unsafe {
-            core::mem::transmute::<Option<<Self as Lending<'a>>::Lend>, Option<<Self as Lending<'_>>::Lend>>(
-                self.iter.next(),
-            )
-        }
+        unsafe { core::mem::transmute::<Option<Lend<'a, Self>>, Option<Lend<'_, Self>>>(self.iter.next()) }
     }
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -190,22 +186,18 @@ where
 impl<'a, L, I> DoubleEndedLender for LendIter<'a, L, I>
 where
     L: ?Sized + for<'all> Lending<'all> + 'a,
-    I: DoubleEndedIterator<Item = <L as Lending<'a>>::Lend>,
+    I: DoubleEndedIterator<Item = Lend<'a, L>>,
 {
-    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         // SAFETY: 'a: 'lend
-        unsafe {
-            core::mem::transmute::<Option<<Self as Lending<'a>>::Lend>, Option<<Self as Lending<'_>>::Lend>>(
-                self.iter.next_back(),
-            )
-        }
+        unsafe { core::mem::transmute::<Option<Lend<'a, Self>>, Option<Lend<'_, Self>>>(self.iter.next_back()) }
     }
 }
 
 impl<'a, L, I> ExactSizeLender for LendIter<'a, L, I>
 where
     L: ?Sized + for<'all> Lending<'all> + 'a,
-    I: ExactSizeIterator<Item = <L as Lending<'a>>::Lend>,
+    I: ExactSizeIterator<Item = Lend<'a, L>>,
 {
     fn len(&self) -> usize {
         self.iter.len()
@@ -215,6 +207,6 @@ where
 impl<'a, L, I> FusedLender for LendIter<'a, L, I>
 where
     L: ?Sized + for<'all> Lending<'all> + 'a,
-    I: FusedIterator<Item = <L as Lending<'a>>::Lend>,
+    I: FusedIterator<Item = Lend<'a, L>>,
 {
 }
