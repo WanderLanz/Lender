@@ -175,7 +175,7 @@ where
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         // SAFETY: 'a: 'lend
-        unsafe { core::mem::transmute::<Option<Lend<'a, Self>>, Option<Lend<'_, Self>>>(self.iter.next()) }
+        unsafe { core::mem::transmute::<Option<Lend<'a, L>>, Option<Lend<'_, L>>>(self.iter.next()) }
     }
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -190,7 +190,7 @@ where
 {
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         // SAFETY: 'a: 'lend
-        unsafe { core::mem::transmute::<Option<Lend<'a, Self>>, Option<Lend<'_, Self>>>(self.iter.next_back()) }
+        unsafe { core::mem::transmute::<Option<Lend<'a, L>>, Option<Lend<'_, L>>>(self.iter.next_back()) }
     }
 }
 
