@@ -2,7 +2,7 @@ use core::{num::NonZeroUsize, ops::ControlFlow};
 
 use crate::{
     try_trait_v2::{FromResidual, Try},
-    DoubleEndedLender, Fuse, FusedLender, Lender, Lending,
+    DoubleEndedLender, Fuse, FusedLender, Lend, Lender, Lending,
 };
 
 #[derive(Clone, Debug)]
@@ -19,16 +19,16 @@ impl<A, B> Chain<A, B> {
 impl<'lend, A, B> Lending<'lend> for Chain<A, B>
 where
     A: Lender,
-    B: Lender + for<'all> Lending<'all, Lend = <A as Lending<'all>>::Lend>,
+    B: Lender + for<'all> Lending<'all, Lend = Lend<'all, A>>,
 {
-    type Lend = <A as Lending<'lend>>::Lend;
+    type Lend = Lend<'lend, A>;
 }
 impl<A, B> Lender for Chain<A, B>
 where
     A: Lender,
-    B: Lender + for<'all> Lending<'all, Lend = <A as Lending<'all>>::Lend>,
+    B: Lender + for<'all> Lending<'all, Lend = Lend<'all, A>>,
 {
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.a.next().or_else(|| self.b.next())
     }
     #[inline]
@@ -38,7 +38,7 @@ where
     fn try_fold<Acc, F, R>(&mut self, mut acc: Acc, mut f: F) -> R
     where
         Self: Sized,
-        F: FnMut(Acc, <Self as Lending<'_>>::Lend) -> R,
+        F: FnMut(Acc, Lend<'_, Self>) -> R,
         R: Try<Output = Acc>,
     {
         acc = match self.a.try_fold(acc, &mut f).branch() {
@@ -53,7 +53,7 @@ where
     }
     fn fold<Acc, F>(self, mut acc: Acc, mut f: F) -> Acc
     where
-        F: FnMut(Acc, <Self as Lending<'_>>::Lend) -> Acc,
+        F: FnMut(Acc, Lend<'_, Self>) -> Acc,
     {
         acc = self.a.fold(acc, &mut f);
         acc = self.b.fold(acc, f);
@@ -67,7 +67,7 @@ where
         }
     }
     #[inline]
-    fn nth(&mut self, mut n: usize) -> Option<<Self as Lending<'_>>::Lend> {
+    fn nth(&mut self, mut n: usize) -> Option<Lend<'_, Self>> {
         n = match self.a.advance_by(n) {
             Ok(()) => match self.a.next() {
                 None => 0,
@@ -78,9 +78,9 @@ where
         self.b.nth(n)
     }
     #[inline]
-    fn find<P>(&mut self, mut predicate: P) -> Option<<Self as Lending<'_>>::Lend>
+    fn find<P>(&mut self, mut predicate: P) -> Option<Lend<'_, Self>>
     where
-        P: FnMut(&<Self as Lending<'_>>::Lend) -> bool,
+        P: FnMut(&Lend<'_, Self>) -> bool,
     {
         self.a.find(&mut predicate).or_else(|| self.b.find(predicate))
     }
@@ -109,10 +109,10 @@ where
 impl<A, B> DoubleEndedLender for Chain<A, B>
 where
     A: DoubleEndedLender,
-    B: DoubleEndedLender + for<'all> Lending<'all, Lend = <A as Lending<'all>>::Lend>,
+    B: DoubleEndedLender + for<'all> Lending<'all, Lend = Lend<'all, A>>,
 {
     #[inline]
-    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         self.b.next_back().or_else(|| self.a.next_back())
     }
 
@@ -124,7 +124,7 @@ where
         }
     }
     #[inline]
-    fn nth_back(&mut self, mut n: usize) -> Option<<Self as Lending<'_>>::Lend> {
+    fn nth_back(&mut self, mut n: usize) -> Option<Lend<'_, Self>> {
         n = match self.b.advance_back_by(n) {
             Ok(()) => match self.b.next_back() {
                 None => 0,
@@ -136,10 +136,10 @@ where
     }
 
     #[inline]
-    fn rfind<P>(&mut self, mut predicate: P) -> Option<<Self as Lending<'_>>::Lend>
+    fn rfind<P>(&mut self, mut predicate: P) -> Option<Lend<'_, Self>>
     where
         Self: Sized,
-        P: FnMut(&<Self as Lending<'_>>::Lend) -> bool,
+        P: FnMut(&Lend<'_, Self>) -> bool,
     {
         self.b.rfind(&mut predicate).or_else(|| self.a.rfind(predicate))
     }
@@ -147,7 +147,7 @@ where
     fn try_rfold<Acc, F, R>(&mut self, init: Acc, mut f: F) -> R
     where
         Self: Sized,
-        F: FnMut(Acc, <Self as Lending<'_>>::Lend) -> R,
+        F: FnMut(Acc, Lend<'_, Self>) -> R,
         R: Try<Output = Acc>,
     {
         let mut acc = match self.b.try_rfold(init, &mut f).branch() {
@@ -164,7 +164,7 @@ where
     fn rfold<Acc, F>(self, init: Acc, mut f: F) -> Acc
     where
         Self: Sized,
-        F: FnMut(Acc, <Self as Lending<'_>>::Lend) -> Acc,
+        F: FnMut(Acc, Lend<'_, Self>) -> Acc,
     {
         let mut acc = self.b.rfold(init, &mut f);
         acc = self.a.rfold(acc, f);
@@ -174,7 +174,7 @@ where
 impl<A, B> FusedLender for Chain<A, B>
 where
     A: FusedLender,
-    B: FusedLender + for<'all> Lending<'all, Lend = <A as Lending<'all>>::Lend>,
+    B: FusedLender + for<'all> Lending<'all, Lend = Lend<'all, A>>,
 {
 }
 impl<A: Default, B: Default> Default for Chain<A, B> {

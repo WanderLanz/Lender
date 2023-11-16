@@ -6,25 +6,25 @@ use crate::{Lend, Lender, Lending, Peekable};
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Intersperse<'this, L>
 where
-    for<'all> <L as Lending<'all>>::Lend: Clone,
+    for<'all> Lend<'all, L>: Clone,
     L: Lender,
 {
     lender: Peekable<'this, L>,
-    separator: <L as Lending<'this>>::Lend,
+    separator: Lend<'this, L>,
     needs_sep: bool,
 }
 impl<'this, L> Intersperse<'this, L>
 where
-    for<'all> <L as Lending<'all>>::Lend: Clone,
+    for<'all> Lend<'all, L>: Clone,
     L: Lender,
 {
-    pub(crate) fn new(lender: L, separator: <L as Lending<'this>>::Lend) -> Self {
+    pub(crate) fn new(lender: L, separator: Lend<'this, L>) -> Self {
         Self { lender: lender.peekable(), separator, needs_sep: false }
     }
 }
 impl<'this, L: fmt::Debug> fmt::Debug for Intersperse<'this, L>
 where
-    for<'all> <L as Lending<'all>>::Lend: Clone + fmt::Debug,
+    for<'all> Lend<'all, L>: Clone + fmt::Debug,
     L: Lender,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -37,23 +37,21 @@ where
 }
 impl<'lend, 'this, L> Lending<'lend> for Intersperse<'this, L>
 where
-    for<'all> <L as Lending<'all>>::Lend: Clone,
+    for<'all> Lend<'all, L>: Clone,
     L: Lender,
 {
     type Lend = Lend<'lend, L>;
 }
 impl<'this, L> Lender for Intersperse<'this, L>
 where
-    for<'all> <L as Lending<'all>>::Lend: Clone,
+    for<'all> Lend<'all, L>: Clone,
     L: Lender,
 {
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
         if self.needs_sep && self.lender.peek().is_some() {
             self.needs_sep = false;
             // SAFETY: 'this: 'lend
-            Some(unsafe {
-                core::mem::transmute::<<Self as Lending<'this>>::Lend, <Self as Lending<'_>>::Lend>(self.separator.clone())
-            })
+            Some(unsafe { core::mem::transmute::<<Self as Lending<'this>>::Lend, Lend<'_, Self>>(self.separator.clone()) })
         } else {
             self.needs_sep = true;
             self.lender.next()
@@ -62,7 +60,7 @@ where
     fn fold<B, F>(mut self, init: B, mut f: F) -> B
     where
         Self: Sized,
-        F: FnMut(B, <Self as Lending<'_>>::Lend) -> B,
+        F: FnMut(B, Lend<'_, Self>) -> B,
     {
         let mut acc = init;
         if !self.needs_sep {
@@ -96,7 +94,7 @@ where
 impl<'this, L, G> IntersperseWith<'this, L, G>
 where
     L: Lender,
-    G: FnMut() -> <L as Lending<'this>>::Lend,
+    G: FnMut() -> Lend<'this, L>,
 {
     pub(crate) fn new(lender: L, seperator: G) -> Self {
         Self { lender: Peekable::new(lender), separator: seperator, needs_sep: false }
@@ -105,7 +103,7 @@ where
 impl<'this, L: fmt::Debug, G: fmt::Debug> fmt::Debug for IntersperseWith<'this, L, G>
 where
     L: Lender,
-    for<'all> <L as Lending<'all>>::Lend: fmt::Debug,
+    for<'all> Lend<'all, L>: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("IntersperseWith")
@@ -118,22 +116,20 @@ where
 impl<'lend, 'this, L, G> Lending<'lend> for IntersperseWith<'this, L, G>
 where
     L: Lender,
-    G: FnMut() -> <L as Lending<'this>>::Lend,
+    G: FnMut() -> Lend<'this, L>,
 {
     type Lend = Lend<'lend, L>;
 }
 impl<'this, L, G> Lender for IntersperseWith<'this, L, G>
 where
     L: Lender,
-    G: FnMut() -> <L as Lending<'this>>::Lend,
+    G: FnMut() -> Lend<'this, L>,
 {
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
         if self.needs_sep && self.lender.peek().is_some() {
             self.needs_sep = false;
             // SAFETY: 'this: 'lend
-            Some(unsafe {
-                core::mem::transmute::<<L as Lending<'this>>::Lend, <L as Lending<'_>>::Lend>((self.separator)())
-            })
+            Some(unsafe { core::mem::transmute::<Lend<'this, L>, Lend<'_, L>>((self.separator)()) })
         } else {
             self.needs_sep = true;
             self.lender.next()
@@ -142,7 +138,7 @@ where
     fn fold<B, F>(mut self, init: B, mut f: F) -> B
     where
         Self: Sized,
-        F: FnMut(B, <Self as Lending<'_>>::Lend) -> B,
+        F: FnMut(B, Lend<'_, Self>) -> B,
     {
         let mut acc = init;
         if !self.needs_sep {

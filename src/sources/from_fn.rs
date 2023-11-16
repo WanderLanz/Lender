@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::{higher_order::FnMutHKAOpt, Lender, Lending};
+use crate::{higher_order::FnMutHKAOpt, Lend, Lender, Lending};
 
 /// Creates a lender from a state and a closure `F: FnMut(&mut St) -> Option<T>`.
 /// # Examples
@@ -51,7 +51,7 @@ where
     F: for<'all> FnMutHKAOpt<'all, &'all mut St>,
 {
     #[inline]
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
         (self.f)(&mut self.state)
     }
 }

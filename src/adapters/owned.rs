@@ -1,7 +1,7 @@
 use alloc::borrow::ToOwned;
 use core::iter::FusedIterator;
 
-use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lender, Lending};
+use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender};
 #[derive(Clone, Debug)]
 #[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Owned<L> {
@@ -15,7 +15,7 @@ impl<L> Owned<L> {
 impl<T, L> Iterator for Owned<L>
 where
     L: Lender,
-    for<'all> <L as Lending<'all>>::Lend: ToOwned<Owned = T>,
+    for<'all> Lend<'all, L>: ToOwned<Owned = T>,
 {
     type Item = T;
     #[inline]
@@ -30,7 +30,7 @@ where
 impl<T, L> DoubleEndedIterator for Owned<L>
 where
     L: DoubleEndedLender,
-    for<'all> <L as Lending<'all>>::Lend: ToOwned<Owned = T>,
+    for<'all> Lend<'all, L>: ToOwned<Owned = T>,
 {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
@@ -40,7 +40,7 @@ where
 impl<T, L> ExactSizeIterator for Owned<L>
 where
     L: ExactSizeLender,
-    for<'all> <L as Lending<'all>>::Lend: ToOwned<Owned = T>,
+    for<'all> Lend<'all, L>: ToOwned<Owned = T>,
 {
     fn len(&self) -> usize {
         self.lender.len()
@@ -49,7 +49,7 @@ where
 impl<T, L> FusedIterator for Owned<L>
 where
     L: FusedLender,
-    for<'all> <L as Lending<'all>>::Lend: ToOwned<Owned = T>,
+    for<'all> Lend<'all, L>: ToOwned<Owned = T>,
 {
 }
 impl<L> Default for Owned<L>

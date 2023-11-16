@@ -1,6 +1,6 @@
 use core::ops::ControlFlow;
 
-use crate::{try_trait_v2::Try, Chunk, ExactSizeLender, FusedLender, Lender, Lending};
+use crate::{try_trait_v2::Try, Chunk, ExactSizeLender, FusedLender, Lend, Lender, Lending};
 
 /// A lender over big, plumpy, chunky chunks of elements of the lender at a time.
 ///
@@ -44,7 +44,7 @@ where
     L: Lender,
 {
     #[inline]
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
         if self.len > 0 {
             self.len -= 1;
             Some(self.lender.next_chunk(self.chunk_size))
@@ -92,7 +92,7 @@ where
     fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> R
     where
         Self: Sized,
-        F: FnMut(B, <Self as Lending<'_>>::Lend) -> R,
+        F: FnMut(B, Lend<'_, Self>) -> R,
         R: Try<Output = B>,
     {
         let mut acc = init;
@@ -111,7 +111,7 @@ where
     fn fold<B, F>(mut self, init: B, mut f: F) -> B
     where
         Self: Sized,
-        F: FnMut(B, <Self as Lending<'_>>::Lend) -> B,
+        F: FnMut(B, Lend<'_, Self>) -> B,
     {
         let mut accum = init;
         let sz = self.chunk_size;

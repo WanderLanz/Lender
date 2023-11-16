@@ -74,7 +74,7 @@ fn simple_lender() {
         type Lend = &'lend mut T;
     }
     impl<'a, T: 'a> Lender for MyLender<'a, T> {
-        fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+        fn next(&mut self) -> Option<Lend<'_, Self>> {
             Some(&mut self.0)
         }
     }

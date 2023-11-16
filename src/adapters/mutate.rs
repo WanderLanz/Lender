@@ -27,10 +27,10 @@ where
 impl<L, F> Lender for Mutate<L, F>
 where
     L: Lender,
-    F: FnMut(&mut <L as Lending<'_>>::Lend),
+    F: FnMut(&mut Lend<'_, L>),
 {
     #[inline]
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
         let mut next = self.lender.next();
         if let Some(ref mut x) = next {
             (self.f)(x);
@@ -45,7 +45,7 @@ where
     fn try_fold<B, Fold, R>(&mut self, init: B, mut fold: Fold) -> R
     where
         Self: Sized,
-        Fold: FnMut(B, <Self as Lending<'_>>::Lend) -> R,
+        Fold: FnMut(B, Lend<'_, Self>) -> R,
         R: Try<Output = B>,
     {
         let f = &mut self.f;
@@ -58,7 +58,7 @@ where
     fn fold<B, Fold>(mut self, init: B, mut fold: Fold) -> B
     where
         Self: Sized,
-        Fold: FnMut(B, <Self as Lending<'_>>::Lend) -> B,
+        Fold: FnMut(B, Lend<'_, Self>) -> B,
     {
         self.lender.fold(init, move |acc, mut x| {
             (self.f)(&mut x);
@@ -69,10 +69,10 @@ where
 impl<L, F> DoubleEndedLender for Mutate<L, F>
 where
     L: DoubleEndedLender,
-    F: FnMut(&mut <L as Lending<'_>>::Lend),
+    F: FnMut(&mut Lend<'_, L>),
 {
     #[inline]
-    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         let mut next = self.lender.next_back();
         if let Some(ref mut x) = next {
             (self.f)(x);
@@ -83,7 +83,7 @@ where
     fn try_rfold<B, Fold, R>(&mut self, init: B, mut fold: Fold) -> R
     where
         Self: Sized,
-        Fold: FnMut(B, <Self as Lending<'_>>::Lend) -> R,
+        Fold: FnMut(B, Lend<'_, Self>) -> R,
         R: Try<Output = B>,
     {
         let f = &mut self.f;
@@ -96,7 +96,7 @@ where
     fn rfold<B, Fold>(mut self, init: B, mut fold: Fold) -> B
     where
         Self: Sized,
-        Fold: FnMut(B, <Self as Lending<'_>>::Lend) -> B,
+        Fold: FnMut(B, Lend<'_, Self>) -> B,
     {
         self.lender.rfold(init, move |acc, mut x| {
             (self.f)(&mut x);
@@ -106,7 +106,7 @@ where
 }
 impl<L: ExactSizeLender, F> ExactSizeLender for Mutate<L, F>
 where
-    F: FnMut(&mut <L as Lending<'_>>::Lend),
+    F: FnMut(&mut Lend<'_, L>),
 {
     #[inline]
     fn len(&self) -> usize {
@@ -117,4 +117,4 @@ where
         self.lender.is_empty()
     }
 }
-impl<L: FusedLender, F> FusedLender for Mutate<L, F> where F: FnMut(&mut <L as Lending<'_>>::Lend) {}
+impl<L: FusedLender, F> FusedLender for Mutate<L, F> where F: FnMut(&mut Lend<'_, L>) {}

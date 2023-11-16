@@ -28,14 +28,14 @@ where
 
 impl<L, F> Lender for FilterMap<L, F>
 where
-    for<'all> F: FnMutHKAOpt<'all, <L as Lending<'all>>::Lend>,
+    for<'all> F: FnMutHKAOpt<'all, Lend<'all, L>>,
     L: Lender,
 {
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
         while let Some(x) = self.lender.next() {
             if let Some(y) = (self.f)(x) {
                 // SAFETY: polonius return
-                return Some(unsafe { core::mem::transmute::<<Self as Lending<'_>>::Lend, <Self as Lending<'_>>::Lend>(y) });
+                return Some(unsafe { core::mem::transmute::<Lend<'_, Self>, Lend<'_, Self>>(y) });
             }
         }
         None
@@ -48,14 +48,14 @@ where
 }
 impl<L, F> DoubleEndedLender for FilterMap<L, F>
 where
-    for<'all> F: FnMutHKAOpt<'all, <L as Lending<'all>>::Lend>,
+    for<'all> F: FnMutHKAOpt<'all, Lend<'all, L>>,
     L: DoubleEndedLender,
 {
-    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         while let Some(x) = self.lender.next_back() {
             if let Some(y) = (self.f)(x) {
                 // SAFETY: polonius return
-                return Some(unsafe { core::mem::transmute::<<Self as Lending<'_>>::Lend, <Self as Lending<'_>>::Lend>(y) });
+                return Some(unsafe { core::mem::transmute::<Lend<'_, Self>, Lend<'_, Self>>(y) });
             }
         }
         None
@@ -63,7 +63,7 @@ where
 }
 impl<L, F> FusedLender for FilterMap<L, F>
 where
-    for<'all> F: FnMutHKAOpt<'all, <L as Lending<'all>>::Lend>,
+    for<'all> F: FnMutHKAOpt<'all, Lend<'all, L>>,
     L: FusedLender,
 {
 }

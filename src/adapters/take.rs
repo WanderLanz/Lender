@@ -23,7 +23,7 @@ where
     L: Lender,
 {
     #[inline]
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
         if self.n != 0 {
             self.n -= 1;
             self.lender.next()
@@ -32,7 +32,7 @@ where
         }
     }
     #[inline]
-    fn nth(&mut self, n: usize) -> Option<<Self as Lending<'_>>::Lend> {
+    fn nth(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         if self.n > n {
             self.n -= n + 1;
             self.lender.nth(n)
@@ -78,7 +78,7 @@ where
     L: DoubleEndedLender + ExactSizeLender,
 {
     #[inline]
-    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         if self.n != 0 {
             let n = self.n;
             self.n -= 1;
@@ -88,7 +88,7 @@ where
         }
     }
     #[inline]
-    fn nth_back(&mut self, n: usize) -> Option<<Self as Lending<'_>>::Lend> {
+    fn nth_back(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         let len = self.lender.len();
         if self.n > n {
             let m = len.saturating_sub(self.n) + n;
@@ -105,7 +105,7 @@ where
     fn try_rfold<B, F, R>(&mut self, init: B, f: F) -> R
     where
         Self: Sized,
-        F: FnMut(B, <Self as Lending<'_>>::Lend) -> R,
+        F: FnMut(B, Lend<'_, Self>) -> R,
         R: Try<Output = B>,
     {
         if self.n == 0 {
@@ -123,7 +123,7 @@ where
     fn rfold<B, F>(mut self, init: B, f: F) -> B
     where
         Self: Sized,
-        F: FnMut(B, <Self as Lending<'_>>::Lend) -> B,
+        F: FnMut(B, Lend<'_, Self>) -> B,
     {
         if self.n == 0 {
             init

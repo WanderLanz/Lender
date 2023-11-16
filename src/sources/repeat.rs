@@ -9,10 +9,10 @@ use crate::{prelude::*, FusedLender};
 /// let mut lender = lender::repeat::<lend!(&'lend u8)>(&0u8);
 /// assert_eq!(lender.next(), Some(&0));
 /// ```
-pub fn repeat<'a, L>(elt: <L as Lending<'a>>::Lend) -> Repeat<'a, L>
+pub fn repeat<'a, L>(elt: Lend<'a, L>) -> Repeat<'a, L>
 where
     L: ?Sized + for<'all> Lending<'all> + 'a,
-    for<'all> <L as Lending<'all>>::Lend: Clone,
+    for<'all> Lend<'all, L>: Clone,
 {
     Repeat { elt }
 }
@@ -24,13 +24,13 @@ pub struct Repeat<'a, L>
 where
     L: ?Sized + for<'all> Lending<'all> + 'a,
 {
-    elt: <L as Lending<'a>>::Lend,
+    elt: Lend<'a, L>,
 }
 
 impl<'lend, 'a, L> Lending<'lend> for Repeat<'a, L>
 where
     L: ?Sized + for<'all> Lending<'all> + 'a,
-    for<'all> <L as Lending<'all>>::Lend: Clone,
+    for<'all> Lend<'all, L>: Clone,
 {
     type Lend = Lend<'lend, L>;
 }
@@ -38,12 +38,12 @@ where
 impl<'a, L> Lender for Repeat<'a, L>
 where
     L: ?Sized + for<'all> Lending<'all> + 'a,
-    for<'all> <L as Lending<'all>>::Lend: Clone,
+    for<'all> Lend<'all, L>: Clone,
 {
     #[inline]
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
         // SAFETY: 'a: 'lend
-        Some(unsafe { core::mem::transmute::<<Self as Lending<'a>>::Lend, <Self as Lending<'_>>::Lend>(self.elt.clone()) })
+        Some(unsafe { core::mem::transmute::<<Self as Lending<'a>>::Lend, Lend<'_, Self>>(self.elt.clone()) })
     }
     #[inline]
     fn advance_by(&mut self, _n: usize) -> Result<(), core::num::NonZeroUsize> {
@@ -54,10 +54,10 @@ where
 impl<'a, L> DoubleEndedLender for Repeat<'a, L>
 where
     L: ?Sized + for<'all> Lending<'all> + 'a,
-    for<'all> <L as Lending<'all>>::Lend: Clone,
+    for<'all> Lend<'all, L>: Clone,
 {
     #[inline]
-    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         self.next()
     }
     #[inline]
@@ -69,6 +69,6 @@ where
 impl<'a, L> FusedLender for Repeat<'a, L>
 where
     L: ?Sized + for<'all> Lending<'all> + 'a,
-    for<'all> <L as Lending<'all>>::Lend: Clone,
+    for<'all> Lend<'all, L>: Clone,
 {
 }

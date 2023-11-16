@@ -1,4 +1,4 @@
-use crate::{FusedLender, Lender, Lending};
+use crate::{FusedLender, Lend, Lender, Lending};
 
 #[derive(Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -21,7 +21,7 @@ impl<'s, T> Lender for Chunk<'s, T>
 where
     T: Lender,
 {
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
         if self.len == 0 {
             None
         } else {

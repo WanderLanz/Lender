@@ -28,11 +28,11 @@ where
 }
 impl<L, St, F> Lender for Scan<L, St, F>
 where
-    for<'all> F: FnMutHKAOpt<'all, (&'all mut St, <L as Lending<'all>>::Lend)>,
+    for<'all> F: FnMutHKAOpt<'all, (&'all mut St, Lend<'all, L>)>,
     L: Lender,
 {
     #[inline]
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
         (self.f)((&mut self.state, self.lender.next()?))
     }
     #[inline]

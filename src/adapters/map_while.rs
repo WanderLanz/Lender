@@ -27,11 +27,11 @@ where
 }
 impl<L, P> Lender for MapWhile<L, P>
 where
-    P: for<'all> FnMutHKAOpt<'all, <L as Lending<'all>>::Lend>,
+    P: for<'all> FnMutHKAOpt<'all, Lend<'all, L>>,
     L: Lender,
 {
     #[inline]
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
         (self.predicate)(self.lender.next()?)
     }
     #[inline]

@@ -41,7 +41,7 @@ impl<L> Lender for Empty<L>
 where
     L: ?Sized + for<'all> Lending<'all>,
 {
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
         None
     }
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -53,7 +53,7 @@ impl<L> DoubleEndedLender for Empty<L>
 where
     L: ?Sized + for<'all> Lending<'all>,
 {
-    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         None
     }
 }

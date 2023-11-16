@@ -23,7 +23,7 @@ where
     L: Lender,
 {
     #[inline]
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.lender.next().map(|x| {
             let count = self.count;
             self.count += 1;
@@ -35,7 +35,7 @@ where
         self.lender.size_hint()
     }
     #[inline]
-    fn nth(&mut self, n: usize) -> Option<<Self as Lending<'_>>::Lend> {
+    fn nth(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         let a = self.lender.nth(n)?;
         let i = self.count + n;
         self.count = i + 1;
@@ -49,7 +49,7 @@ where
     fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> R
     where
         Self: Sized,
-        F: FnMut(B, <Self as Lending<'_>>::Lend) -> R,
+        F: FnMut(B, Lend<'_, Self>) -> R,
         R: Try<Output = B>,
     {
         let count = &mut self.count;
@@ -63,7 +63,7 @@ where
     fn fold<B, F>(self, init: B, mut f: F) -> B
     where
         Self: Sized,
-        F: FnMut(B, <Self as Lending<'_>>::Lend) -> B,
+        F: FnMut(B, Lend<'_, Self>) -> B,
     {
         let mut count = self.count;
         self.lender.fold(init, |acc, x| {
@@ -88,13 +88,13 @@ where
     L: ExactSizeLender + DoubleEndedLender,
 {
     #[inline]
-    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         let len = self.lender.len();
         let x = self.lender.next_back()?;
         Some((self.count + len - 1, x))
     }
     #[inline]
-    fn nth_back(&mut self, n: usize) -> Option<<Self as Lending<'_>>::Lend> {
+    fn nth_back(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         let len = self.lender.len();
         let x = self.lender.nth_back(n)?;
         Some((self.count + len - n - 1, x))
@@ -103,7 +103,7 @@ where
     fn try_rfold<B, F, R>(&mut self, init: B, mut f: F) -> R
     where
         Self: Sized,
-        F: FnMut(B, <Self as Lending<'_>>::Lend) -> R,
+        F: FnMut(B, Lend<'_, Self>) -> R,
         R: Try<Output = B>,
     {
         let mut count = self.count + self.lender.len();
@@ -116,7 +116,7 @@ where
     fn rfold<B, F>(self, init: B, mut f: F) -> B
     where
         Self: Sized,
-        F: FnMut(B, <Self as Lending<'_>>::Lend) -> B,
+        F: FnMut(B, Lend<'_, Self>) -> B,
     {
         let mut count = self.count + self.lender.len();
         self.lender.rfold(init, move |acc, x| {

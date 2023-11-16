@@ -1,6 +1,6 @@
 use core::{iter::FusedIterator, marker::PhantomData};
 
-use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lender, Lending};
+use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender};
 
 /// Iterator adapter for any Lender where multiple Lends can exist at a time,
 /// allowing on-the-fly conversion into an iterator where Lending is no longer needed or inferred.
@@ -37,15 +37,13 @@ impl<'this, L: 'this> Iter<'this, L> {
 impl<'this, L: 'this> Iterator for Iter<'this, L>
 where
     L: Lender,
-    for<'all> <L as Lending<'all>>::Lend: 'this,
+    for<'all> Lend<'all, L>: 'this,
 {
-    type Item = <L as Lending<'this>>::Lend;
+    type Item = Lend<'this, L>;
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        // SAFETY: for<'all> <L as Lending<'all>>::Lend: 'this
-        unsafe {
-            core::mem::transmute::<Option<<L as Lending<'_>>::Lend>, Option<<L as Lending<'this>>::Lend>>(self.lender.next())
-        }
+        // SAFETY: for<'all> Lend<'all, L>: 'this
+        unsafe { core::mem::transmute::<Option<Lend<'_, L>>, Option<Lend<'this, L>>>(self.lender.next()) }
     }
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -55,22 +53,18 @@ where
 impl<'this, L: 'this> DoubleEndedIterator for Iter<'this, L>
 where
     L: DoubleEndedLender,
-    for<'all> <L as Lending<'all>>::Lend: 'this,
+    for<'all> Lend<'all, L>: 'this,
 {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
-        // SAFETY: for<'all> <L as Lending<'all>>::Lend: 'this
-        unsafe {
-            core::mem::transmute::<Option<<L as Lending<'_>>::Lend>, Option<<L as Lending<'this>>::Lend>>(
-                self.lender.next_back(),
-            )
-        }
+        // SAFETY: for<'all> Lend<'all, L>: 'this
+        unsafe { core::mem::transmute::<Option<Lend<'_, L>>, Option<Lend<'this, L>>>(self.lender.next_back()) }
     }
 }
 impl<'this, L: 'this> ExactSizeIterator for Iter<'this, L>
 where
     L: ExactSizeLender,
-    for<'all> <L as Lending<'all>>::Lend: 'this,
+    for<'all> Lend<'all, L>: 'this,
 {
     #[inline]
     fn len(&self) -> usize {
@@ -80,6 +74,6 @@ where
 impl<'this, L: 'this> FusedIterator for Iter<'this, L>
 where
     L: FusedLender,
-    for<'all> <L as Lending<'all>>::Lend: 'this,
+    for<'all> Lend<'all, L>: 'this,
 {
 }

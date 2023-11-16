@@ -27,11 +27,11 @@ where
 }
 impl<L, P> Lender for TakeWhile<L, P>
 where
-    P: FnMut(&<L as Lending<'_>>::Lend) -> bool,
+    P: FnMut(&Lend<'_, L>) -> bool,
     L: Lender,
 {
     #[inline]
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
         if !self.flag {
             let x = self.lender.next()?;
             if (self.predicate)(&x) {
@@ -53,7 +53,7 @@ where
 }
 impl<L, P> FusedLender for TakeWhile<L, P>
 where
-    P: FnMut(&<L as Lending<'_>>::Lend) -> bool,
+    P: FnMut(&Lend<'_, L>) -> bool,
     L: Lender,
 {
 }

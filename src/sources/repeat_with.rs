@@ -15,7 +15,7 @@ use crate::{prelude::*, FusedLender};
 pub fn repeat_with<'a, L, F>(f: F) -> RepeatWith<'a, L, F>
 where
     L: ?Sized + for<'all> Lending<'all> + 'a,
-    F: FnMut() -> <L as Lending<'a>>::Lend,
+    F: FnMut() -> Lend<'a, L>,
 {
     RepeatWith { f, _marker: <_>::default() }
 }
@@ -31,7 +31,7 @@ pub struct RepeatWith<'a, L: ?Sized, F> {
 impl<'lend, 'a, L, F> Lending<'lend> for RepeatWith<'a, L, F>
 where
     L: ?Sized + for<'all> Lending<'all> + 'a,
-    F: FnMut() -> <L as Lending<'a>>::Lend,
+    F: FnMut() -> Lend<'a, L>,
 {
     type Lend = Lend<'lend, L>;
 }
@@ -39,12 +39,12 @@ where
 impl<'a, L, F> Lender for RepeatWith<'a, L, F>
 where
     L: ?Sized + for<'all> Lending<'all> + 'a,
-    F: FnMut() -> <L as Lending<'a>>::Lend,
+    F: FnMut() -> Lend<'a, L>,
 {
     #[inline]
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
         // SAFETY: 'a: 'lend
-        Some(unsafe { core::mem::transmute::<<L as Lending<'a>>::Lend, <L as Lending<'_>>::Lend>((self.f)()) })
+        Some(unsafe { core::mem::transmute::<Lend<'a, L>, Lend<'_, L>>((self.f)()) })
     }
     #[inline]
     fn advance_by(&mut self, _n: usize) -> Result<(), core::num::NonZeroUsize> {
@@ -55,10 +55,10 @@ where
 impl<'a, L, F> DoubleEndedLender for RepeatWith<'a, L, F>
 where
     L: ?Sized + for<'all> Lending<'all> + 'a,
-    F: FnMut() -> <L as Lending<'a>>::Lend,
+    F: FnMut() -> Lend<'a, L>,
 {
     #[inline]
-    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         self.next()
     }
     #[inline]
@@ -70,6 +70,6 @@ where
 impl<'a, L, F> FusedLender for RepeatWith<'a, L, F>
 where
     L: ?Sized + for<'all> Lending<'all> + 'a,
-    F: FnMut() -> <L as Lending<'a>>::Lend,
+    F: FnMut() -> Lend<'a, L>,
 {
 }

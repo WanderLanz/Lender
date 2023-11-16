@@ -19,18 +19,18 @@ impl<L: fmt::Debug, F> fmt::Debug for Map<L, F> {
 }
 impl<'lend, L, F> Lending<'lend> for Map<L, F>
 where
-    F: for<'all> FnMutHKA<'all, <L as Lending<'all>>::Lend>,
+    F: for<'all> FnMutHKA<'all, Lend<'all, L>>,
     L: Lender,
 {
     type Lend = <F as FnMutHKA<'lend, Lend<'lend, L>>>::B;
 }
 impl<L, F> Lender for Map<L, F>
 where
-    F: for<'all> FnMutHKA<'all, <L as Lending<'all>>::Lend>,
+    F: for<'all> FnMutHKA<'all, Lend<'all, L>>,
     L: Lender,
 {
     #[inline]
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.lender.next().map(&mut self.f)
     }
     #[inline]
@@ -40,16 +40,16 @@ where
 }
 impl<L: DoubleEndedLender, F> DoubleEndedLender for Map<L, F>
 where
-    F: for<'all> FnMutHKA<'all, <L as Lending<'all>>::Lend>,
+    F: for<'all> FnMutHKA<'all, Lend<'all, L>>,
 {
     #[inline]
-    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         self.lender.next_back().map(&mut self.f)
     }
 }
 impl<L: ExactSizeLender, F> ExactSizeLender for Map<L, F>
 where
-    F: for<'all> FnMutHKA<'all, <L as Lending<'all>>::Lend>,
+    F: for<'all> FnMutHKA<'all, Lend<'all, L>>,
 {
     #[inline]
     fn len(&self) -> usize {
@@ -60,11 +60,11 @@ where
         self.lender.is_empty()
     }
 }
-impl<L: FusedLender, F> FusedLender for Map<L, F> where F: for<'all> FnMutHKA<'all, <L as Lending<'all>>::Lend> {}
+impl<L: FusedLender, F> FusedLender for Map<L, F> where F: for<'all> FnMutHKA<'all, Lend<'all, L>> {}
 // impl<I, L, F> IntoIterator for Map<L, F>
 // where
 //     L: Lender,
-//     F: for<'all> HKAFnMut<'all, <L as Lending<'all>>::Lend, B = I>,
+//     F: for<'all> HKAFnMut<'all, Lend<'all, L>, B = I>,
 //     I: 'static,
 // {
 //     type Item = I;

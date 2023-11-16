@@ -74,32 +74,29 @@ use crate::{
 /// The residual of the lender cannot outlive it, otherwise UB.
 pub struct TryShunt<'this, L: Lender>
 where
-    for<'all> <L as Lending<'all>>::Lend: Try,
+    for<'all> Lend<'all, L>: Try,
 {
     lender: L,
-    residual: &'this mut Option<<<L as Lending<'this>>::Lend as Try>::Residual>,
+    residual: &'this mut Option<<Lend<'this, L> as Try>::Residual>,
 }
 impl<'lend, 'this, L: Lender> Lending<'lend> for TryShunt<'this, L>
 where
-    for<'all> <L as Lending<'all>>::Lend: Try,
+    for<'all> Lend<'all, L>: Try,
 {
     type Lend = <Lend<'lend, L> as Try>::Output;
 }
 impl<'this, L: Lender> Lender for TryShunt<'this, L>
 where
-    for<'all> <L as Lending<'all>>::Lend: Try,
+    for<'all> Lend<'all, L>: Try,
 {
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
         if let Some(x) = self.lender.next() {
             match x.branch() {
                 ControlFlow::Continue(x) => return Some(x),
                 ControlFlow::Break(x) => {
                     // SAFETY: residual is manually guaranteed to be the only lend alive
                     *self.residual = Some(unsafe {
-                        core::mem::transmute::<
-                            <<L as Lending<'_>>::Lend as Try>::Residual,
-                            <<L as Lending<'this>>::Lend as Try>::Residual,
-                        >(x)
+                        core::mem::transmute::<<Lend<'_, L> as Try>::Residual, <Lend<'this, L> as Try>::Residual>(x)
                     });
                 }
             }
@@ -111,11 +108,11 @@ where
         (0, upper)
     }
 }
-pub(crate) fn try_process<'a, L, F, U>(lender: L, mut f: F) -> ChangeOutputType<<L as Lending<'a>>::Lend, U>
+pub(crate) fn try_process<'a, L, F, U>(lender: L, mut f: F) -> ChangeOutputType<Lend<'a, L>, U>
 where
     L: Lender + 'a,
-    for<'all> <L as Lending<'all>>::Lend: Try,
-    for<'all> <<L as Lending<'all>>::Lend as Try>::Residual: Residual<U>,
+    for<'all> Lend<'all, L>: Try,
+    for<'all> <Lend<'all, L> as Try>::Residual: Residual<U>,
     F: FnMut(TryShunt<'a, L>) -> U,
 {
     let mut residual = None;
@@ -135,19 +132,19 @@ pub struct FirstShunt<L>(PhantomData<L>);
 pub struct SecondShunt<L>(PhantomData<L>);
 impl<'lend, L: Lender> Lending<'lend> for FirstShunt<L>
 where
-    for<'all> <L as Lending<'all>>::Lend: TupleLend<'all>,
+    for<'all> Lend<'all, L>: TupleLend<'all>,
 {
     type Lend = <Lend<'lend, L> as TupleLend<'lend>>::First;
 }
 impl<'lend, L: Lender> Lending<'lend> for SecondShunt<L>
 where
-    for<'all> <L as Lending<'all>>::Lend: TupleLend<'all>,
+    for<'all> Lend<'all, L>: TupleLend<'all>,
 {
     type Lend = <Lend<'lend, L> as TupleLend<'lend>>::Second;
 }
 impl<L: Lender> IntoLender for FirstShunt<L>
 where
-    for<'all> <L as Lending<'all>>::Lend: TupleLend<'all>,
+    for<'all> Lend<'all, L>: TupleLend<'all>,
 {
     type Lender = Empty<Self>;
     fn into_lender(self) -> <Self as IntoLender>::Lender {
@@ -156,7 +153,7 @@ where
 }
 impl<L: Lender> IntoLender for SecondShunt<L>
 where
-    for<'all> <L as Lending<'all>>::Lend: TupleLend<'all>,
+    for<'all> Lend<'all, L>: TupleLend<'all>,
 {
     type Lender = Empty<Self>;
     fn into_lender(self) -> <Self as IntoLender>::Lender {
@@ -167,7 +164,7 @@ where
 pub(crate) fn unzip<L, ExtA, ExtB>(mut lender: L) -> (ExtA, ExtB)
 where
     L: Sized + Lender,
-    for<'all> <L as Lending<'all>>::Lend: TupleLend<'all>,
+    for<'all> Lend<'all, L>: TupleLend<'all>,
     ExtA: Default + ExtendLender<FirstShunt<L>>,
     ExtB: Default + ExtendLender<SecondShunt<L>>,
 {

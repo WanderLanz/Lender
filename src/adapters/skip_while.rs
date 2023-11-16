@@ -27,11 +27,11 @@ where
 }
 impl<L, P> Lender for SkipWhile<L, P>
 where
-    P: FnMut(&<L as Lending<'_>>::Lend) -> bool,
+    P: FnMut(&Lend<'_, L>) -> bool,
     L: Lender,
 {
     #[inline]
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
         let flag = &mut self.flag;
         let predicate = &mut self.predicate;
         self.lender.find(move |x| {
@@ -52,7 +52,7 @@ where
     fn try_fold<B, F, R>(&mut self, mut init: B, mut f: F) -> R
     where
         Self: Sized,
-        F: FnMut(B, <Self as Lending<'_>>::Lend) -> R,
+        F: FnMut(B, Lend<'_, Self>) -> R,
         R: Try<Output = B>,
     {
         if !self.flag {
@@ -72,7 +72,7 @@ where
     fn fold<B, F>(mut self, mut init: B, mut f: F) -> B
     where
         Self: Sized,
-        F: FnMut(B, <Self as Lending<'_>>::Lend) -> B,
+        F: FnMut(B, Lend<'_, Self>) -> B,
     {
         if !self.flag {
             match self.next() {
@@ -85,7 +85,7 @@ where
 }
 impl<L, P> FusedLender for SkipWhile<L, P>
 where
-    P: FnMut(&<L as Lending<'_>>::Lend) -> bool,
+    P: FnMut(&Lend<'_, L>) -> bool,
     L: FusedLender,
 {
 }

@@ -30,7 +30,7 @@ where
     L: Clone + Lender,
 {
     #[inline]
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
         // SAFETY: polonius return
         let reborrow = unsafe { &mut *(self as *mut Self) };
         if let x @ Some(_) = reborrow.lender.next() {
@@ -51,7 +51,7 @@ where
     fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> R
     where
         Self: Sized,
-        F: FnMut(B, <Self as Lending<'_>>::Lend) -> R,
+        F: FnMut(B, Lend<'_, Self>) -> R,
         R: Try<Output = B>,
     {
         let mut acc = init;

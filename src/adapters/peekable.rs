@@ -25,11 +25,7 @@ where
         self.peeked
             .get_or_insert_with(|| {
                 // SAFETY: The lend is manually guaranteed to be the only one alive
-                unsafe {
-                    core::mem::transmute::<Option<<L as Lending<'_>>::Lend>, Option<<L as Lending<'this>>::Lend>>(
-                        lender.next(),
-                    )
-                }
+                unsafe { core::mem::transmute::<Option<Lend<'_, L>>, Option<<L as Lending<'this>>::Lend>>(lender.next()) }
             })
             .as_ref()
     }
@@ -38,33 +34,28 @@ where
         self.peeked
             .get_or_insert_with(|| {
                 // SAFETY: The lend is manually guaranteed to be the only one alive
-                unsafe {
-                    core::mem::transmute::<Option<<L as Lending<'_>>::Lend>, Option<<L as Lending<'this>>::Lend>>(
-                        lender.next(),
-                    )
-                }
+                unsafe { core::mem::transmute::<Option<Lend<'_, L>>, Option<<L as Lending<'this>>::Lend>>(lender.next()) }
             })
             .as_mut()
     }
-    pub fn next_if<F>(&mut self, f: F) -> Option<<L as Lending<'_>>::Lend>
+    pub fn next_if<F>(&mut self, f: F) -> Option<Lend<'_, L>>
     where
-        F: FnOnce(&<L as Lending<'_>>::Lend) -> bool,
+        F: FnOnce(&Lend<'_, L>) -> bool,
     {
         let peeked = unsafe { &mut *(&mut self.peeked as *mut _) };
         match self.next() {
             Some(v) if f(&v) => Some(v),
             v => {
                 // SAFETY: The lend is manually guaranteed to be the only one alive
-                *peeked = Some(unsafe {
-                    core::mem::transmute::<Option<<L as Lending<'_>>::Lend>, Option<<L as Lending<'this>>::Lend>>(v)
-                });
+                *peeked =
+                    Some(unsafe { core::mem::transmute::<Option<Lend<'_, L>>, Option<<L as Lending<'this>>::Lend>>(v) });
                 None
             }
         }
     }
     pub fn next_if_eq<'a, T>(&'a mut self, t: &T) -> Option<<L as Lending<'a>>::Lend>
     where
-        T: for<'all> PartialEq<<L as Lending<'all>>::Lend>,
+        T: for<'all> PartialEq<Lend<'all, L>>,
     {
         self.next_if(|v| t == v)
     }
@@ -96,11 +87,11 @@ impl<'this, L> Lender for Peekable<'this, L>
 where
     L: Lender,
 {
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
         match self.peeked.take() {
             // SAFETY: The lend is manually guaranteed to be the only one alive
             Some(peeked) => unsafe {
-                core::mem::transmute::<Option<<Self as Lending<'this>>::Lend>, Option<<Self as Lending<'_>>::Lend>>(peeked)
+                core::mem::transmute::<Option<<Self as Lending<'this>>::Lend>, Option<Lend<'_, Self>>>(peeked)
             },
             None => self.lender.next(),
         }
@@ -114,12 +105,12 @@ where
         }
     }
     #[inline]
-    fn nth(&mut self, n: usize) -> Option<<Self as Lending<'_>>::Lend> {
+    fn nth(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         match self.peeked.take() {
             Some(None) => None,
             // SAFETY: The lend is manually guaranteed to be the only one alive
             Some(v @ Some(_)) if n == 0 => unsafe {
-                core::mem::transmute::<Option<<Self as Lending<'this>>::Lend>, Option<<Self as Lending<'_>>::Lend>>(v)
+                core::mem::transmute::<Option<<Self as Lending<'this>>::Lend>, Option<Lend<'_, Self>>>(v)
             },
             Some(Some(_)) => self.lender.nth(n - 1),
             None => self.lender.nth(n),
@@ -154,7 +145,7 @@ where
     fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> R
     where
         Self: Sized,
-        F: FnMut(B, <Self as Lending<'_>>::Lend) -> R,
+        F: FnMut(B, Lend<'_, Self>) -> R,
         R: Try<Output = B>,
     {
         let acc = match self.peeked.take() {
@@ -171,7 +162,7 @@ where
     fn fold<B, F>(mut self, init: B, mut f: F) -> B
     where
         Self: Sized,
-        F: FnMut(B, <Self as Lending<'_>>::Lend) -> B,
+        F: FnMut(B, Lend<'_, Self>) -> B,
     {
         let acc = match self.peeked.take() {
             Some(None) => return init,
@@ -183,11 +174,11 @@ where
 }
 impl<'this, L: DoubleEndedLender> DoubleEndedLender for Peekable<'this, L> {
     #[inline]
-    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         match self.peeked.as_mut() {
             // SAFETY: The lend is manually guaranteed to be the only one alive
             Some(v @ Some(_)) => self.lender.next_back().or_else(|| unsafe {
-                core::mem::transmute::<Option<<Self as Lending<'this>>::Lend>, Option<<Self as Lending<'_>>::Lend>>(v.take())
+                core::mem::transmute::<Option<<Self as Lending<'this>>::Lend>, Option<Lend<'_, Self>>>(v.take())
             }),
             Some(None) => None,
             None => self.lender.next_back(),
@@ -197,7 +188,7 @@ impl<'this, L: DoubleEndedLender> DoubleEndedLender for Peekable<'this, L> {
     fn try_rfold<B, F, R>(&mut self, init: B, mut f: F) -> R
     where
         Self: Sized,
-        F: FnMut(B, <Self as Lending<'_>>::Lend) -> R,
+        F: FnMut(B, Lend<'_, Self>) -> R,
         R: Try<Output = B>,
     {
         match self.peeked.take() {
@@ -216,7 +207,7 @@ impl<'this, L: DoubleEndedLender> DoubleEndedLender for Peekable<'this, L> {
     fn rfold<B, F>(mut self, init: B, mut f: F) -> B
     where
         Self: Sized,
-        F: FnMut(B, <Self as Lending<'_>>::Lend) -> B,
+        F: FnMut(B, Lend<'_, Self>) -> B,
     {
         match self.peeked.take() {
             None => self.lender.rfold(init, f),

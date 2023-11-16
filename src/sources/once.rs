@@ -14,7 +14,7 @@ use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lendi
 /// assert_eq!(o.next(), Some(&mut 42));
 /// assert_eq!(o.next(), None);
 /// ```
-pub fn once<'a, L: ?Sized + for<'all> Lending<'all>>(value: <L as Lending<'a>>::Lend) -> Once<'a, L> {
+pub fn once<'a, L: ?Sized + for<'all> Lending<'all>>(value: Lend<'a, L>) -> Once<'a, L> {
     Once { inner: Some(value) }
 }
 
@@ -28,12 +28,12 @@ pub struct Once<'a, L>
 where
     L: ?Sized + for<'all> Lending<'all>,
 {
-    inner: Option<<L as Lending<'a>>::Lend>,
+    inner: Option<Lend<'a, L>>,
 }
 impl<'a, L> Clone for Once<'a, L>
 where
     L: ?Sized + for<'all> Lending<'all>,
-    <L as Lending<'a>>::Lend: Clone,
+    Lend<'a, L>: Clone,
 {
     fn clone(&self) -> Self {
         Once { inner: self.inner.clone() }
@@ -42,7 +42,7 @@ where
 impl<'a, L> fmt::Debug for Once<'a, L>
 where
     L: ?Sized + for<'all> Lending<'all>,
-    <L as Lending<'a>>::Lend: fmt::Debug,
+    Lend<'a, L>: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Once").field("inner", &self.inner).finish()
@@ -59,11 +59,9 @@ impl<'a, L> Lender for Once<'a, L>
 where
     L: ?Sized + for<'all> Lending<'all>,
 {
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
         // SAFETY: 'a: 'lend
-        self.inner
-            .take()
-            .map(|v| unsafe { core::mem::transmute::<<Self as Lending<'a>>::Lend, <Self as Lending<'_>>::Lend>(v) })
+        self.inner.take().map(|v| unsafe { core::mem::transmute::<<Self as Lending<'a>>::Lend, Lend<'_, Self>>(v) })
     }
     fn size_hint(&self) -> (usize, Option<usize>) {
         if self.inner.is_some() {
@@ -79,7 +77,7 @@ where
     L: ?Sized + for<'all> Lending<'all>,
 {
     #[inline]
-    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         self.next()
     }
 }

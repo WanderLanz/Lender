@@ -52,7 +52,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(lender.next(), Some(&3));
     /// assert_eq!(lender.next(), None);
     /// ```
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend>;
+    fn next(&mut self) -> Option<Lend<'_, Self>>;
     /// Take the next `len` lends of the lender with temporary lender `Chunk`. This is the quivalent of cloning the lender and calling `take(len)` on it.
     ///
     /// # Examples
@@ -118,7 +118,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
             // SAFETY: polonius return
             last = Some(unsafe {
                 core::mem::transmute::<
-                    <Self as Lending<'_>>::Lend,
+                    Lend<'_, Self>,
                     <Self as Lending<'call>>::Lend
                 >(x)
             });
@@ -157,7 +157,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(lender.nth(2), Some(&3));
     /// ```
     #[inline]
-    fn nth(&mut self, n: usize) -> Option<<Self as Lending<'_>>::Lend> {
+    fn nth(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         self.advance_by(n).ok()?;
         self.next()
     }
@@ -344,7 +344,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     fn for_each<F>(mut self, mut f: F)
     where
         Self: Sized,
-        F: FnMut(<Self as Lending<'_>>::Lend),
+        F: FnMut(Lend<'_, Self>),
     {
         while let Some(a) = self.next() {
             f(a);
@@ -365,7 +365,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     fn filter<P>(self, predicate: P) -> Filter<Self, P>
     where
         Self: Sized,
-        P: FnMut(&<Self as Lending<'_>>::Lend) -> bool,
+        P: FnMut(&Lend<'_, Self>) -> bool,
     {
         Filter::new(self, predicate)
     }
@@ -452,7 +452,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     fn skip_while<P>(self, predicate: P) -> SkipWhile<Self, P>
     where
         Self: Sized,
-        P: FnMut(&<Self as Lending<'_>>::Lend) -> bool,
+        P: FnMut(&Lend<'_, Self>) -> bool,
     {
         SkipWhile::new(self, predicate)
     }
@@ -472,7 +472,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     fn take_while<P>(self, predicate: P) -> TakeWhile<Self, P>
     where
         Self: Sized,
-        P: FnMut(&<Self as Lending<'_>>::Lend) -> bool,
+        P: FnMut(&Lend<'_, Self>) -> bool,
     {
         TakeWhile::new(self, predicate)
     }
@@ -581,7 +581,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     fn inspect<F>(self, f: F) -> Inspect<Self, F>
     where
         Self: Sized,
-        F: FnMut(&<Self as Lending<'_>>::Lend),
+        F: FnMut(&Lend<'_, Self>),
     {
         Inspect::new(self, f)
     }
@@ -591,7 +591,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     fn mutate<F>(self, f: F) -> Mutate<Self, F>
     where
         Self: Sized,
-        F: FnMut(&mut <Self as Lending<'_>>::Lend),
+        F: FnMut(&mut Lend<'_, Self>),
     {
         Mutate::new(self, f)
     }
@@ -637,7 +637,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     where
         Self: Sized,
         E: Default + ExtendLender<Self>,
-        F: FnMut(&<Self as Lending<'_>>::Lend) -> bool,
+        F: FnMut(&Lend<'_, Self>) -> bool,
     {
         let mut left = E::default();
         let mut right = E::default();
@@ -655,7 +655,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     fn is_partitioned<P>(mut self, mut predicate: P) -> bool
     where
         Self: Sized,
-        P: FnMut(<Self as Lending<'_>>::Lend) -> bool,
+        P: FnMut(Lend<'_, Self>) -> bool,
     {
         self.all(&mut predicate) || !self.any(predicate)
     }
@@ -664,7 +664,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> R
     where
         Self: Sized,
-        F: FnMut(B, <Self as Lending<'_>>::Lend) -> R,
+        F: FnMut(B, Lend<'_, Self>) -> R,
         R: Try<Output = B>,
     {
         let mut acc = init;
@@ -681,7 +681,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     fn try_for_each<F, R>(&mut self, mut f: F) -> R
     where
         Self: Sized,
-        F: FnMut(<Self as Lending<'_>>::Lend) -> R,
+        F: FnMut(Lend<'_, Self>) -> R,
         R: Try<Output = ()>,
     {
         while let Some(x) = self.next() {
@@ -696,7 +696,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     fn fold<B, F>(mut self, init: B, mut f: F) -> B
     where
         Self: Sized,
-        F: FnMut(B, <Self as Lending<'_>>::Lend) -> B,
+        F: FnMut(B, Lend<'_, Self>) -> B,
     {
         let mut accum = init;
         while let Some(x) = self.next() {
@@ -710,7 +710,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     where
         Self: Sized,
         for<'all> <Self as Lending<'all>>::Lend: ToOwned<Owned = T>,
-        F: FnMut(T, <Self as Lending<'_>>::Lend) -> T,
+        F: FnMut(T, Lend<'_, Self>) -> T,
     {
         let first = self.next()?.to_owned();
         Some(self.fold(first, f))
@@ -721,7 +721,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     where
         Self: Sized,
         for<'all> <Self as Lending<'all>>::Lend: ToOwned<Owned = T>,
-        F: FnMut(T, <Self as Lending<'_>>::Lend) -> R,
+        F: FnMut(T, Lend<'_, Self>) -> R,
         R: Try<Output = T>,
         R::Residual: Residual<Option<T>>,
     {
@@ -739,7 +739,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     fn all<F>(&mut self, mut f: F) -> bool
     where
         Self: Sized,
-        F: FnMut(<Self as Lending<'_>>::Lend) -> bool,
+        F: FnMut(Lend<'_, Self>) -> bool,
     {
         while let Some(x) = self.next() {
             if !f(x) {
@@ -753,7 +753,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     fn any<F>(&mut self, mut f: F) -> bool
     where
         Self: Sized,
-        F: FnMut(<Self as Lending<'_>>::Lend) -> bool,
+        F: FnMut(Lend<'_, Self>) -> bool,
     {
         while let Some(x) = self.next() {
             if f(x) {
@@ -764,18 +764,18 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     }
     /// Documentation is incomplete. Refer to [`Iterator::find`] for more information
     #[inline]
-    fn find<P>(&mut self, mut predicate: P) -> Option<<Self as Lending<'_>>::Lend>
+    fn find<P>(&mut self, mut predicate: P) -> Option<Lend<'_, Self>>
     where
         Self: Sized,
-        P: FnMut(&<Self as Lending<'_>>::Lend) -> bool,
+        P: FnMut(&Lend<'_, Self>) -> bool,
     {
         while let Some(x) = self.next() {
             if predicate(&x) {
                 // SAFETY: polonius return
                 return Some(unsafe {
                     core::mem::transmute::<
-                        <Self as Lending<'_>>::Lend,
-                        <Self as Lending<'_>>::Lend
+                        Lend<'_, Self>,
+                        Lend<'_, Self>
                     >(x)
                 });
             }
@@ -794,7 +794,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
                 // SAFETY: polonius return
                 return Some(unsafe {
                     core::mem::transmute::<
-                        <F as FnMutHKAOpt<'_, <Self as Lending<'_>>::Lend>>::B,
+                        <F as FnMutHKAOpt<'_, Lend<'_, Self>>>::B,
                         <F as FnMutHKAOpt<'a, <Self as Lending<'a>>::Lend>>::B
                     >(y)
                 });
@@ -804,24 +804,24 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     }
     /// Documentation is incomplete. Refer to [`Iterator::try_find`] for more information
     #[inline]
-    fn try_find<F, R>(&mut self, mut f: F) -> ChangeOutputType<R, Option<<Self as Lending<'_>>::Lend>>
+    fn try_find<F, R>(&mut self, mut f: F) -> ChangeOutputType<R, Option<Lend<'_, Self>>>
     where
         Self: Sized,
-        F: FnMut(&<Self as Lending<'_>>::Lend) -> R,
+        F: FnMut(&Lend<'_, Self>) -> R,
         R: Try<Output = bool>,
         for<'all> R::Residual: Residual<Option<<Self as Lending<'all>>::Lend>>,
     {
         while let Some(x) = self.next() {
             match f(&x).branch() {
-                ControlFlow::Break(x) => return <ChangeOutputType<R, Option<<Self as Lending<'_>>::Lend>>>::from_residual(x),
+                ControlFlow::Break(x) => return <ChangeOutputType<R, Option<Lend<'_, Self>>>>::from_residual(x),
                 ControlFlow::Continue(cond) => {
                     if cond {
                         // SAFETY: polonius return
-                        return <ChangeOutputType<R, Option<<Self as Lending<'_>>::Lend>>>::from_output(
+                        return <ChangeOutputType<R, Option<Lend<'_, Self>>>>::from_output(
                             Some(unsafe {
                                 core::mem::transmute::<
-                                    <Self as Lending<'_>>::Lend,
-                                    <Self as Lending<'_>>::Lend
+                                    Lend<'_, Self>,
+                                    Lend<'_, Self>
                                 >(x)
                             })
                         );
@@ -829,14 +829,14 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
                 }
             }
         }
-        <ChangeOutputType<R, Option<<Self as Lending<'_>>::Lend>>>::from_output(None)
+        <ChangeOutputType<R, Option<Lend<'_, Self>>>>::from_output(None)
     }
     /// Documentation is incomplete. Refer to [`Iterator::position`] for more information
     #[inline]
     fn position<P>(&mut self, mut predicate: P) -> Option<usize>
     where
         Self: Sized,
-        P: FnMut(<Self as Lending<'_>>::Lend) -> bool,
+        P: FnMut(Lend<'_, Self>) -> bool,
     {
         let mut i = 0;
         while let Some(x) = self.next() {
@@ -851,7 +851,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     #[inline]
     fn rposition<P>(&mut self, mut predicate: P) -> Option<usize>
     where
-        P: FnMut(<Self as Lending<'_>>::Lend) -> bool,
+        P: FnMut(Lend<'_, Self>) -> bool,
         Self: Sized + ExactSizeLender + DoubleEndedLender,
     {
         match self.try_rfold(self.len(), |i, x| {
@@ -898,7 +898,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     where
         Self: Sized,
         for<'all> <Self as Lending<'all>>::Lend: ToOwned<Owned = T>,
-        F: FnMut(&T, &<Self as Lending<'_>>::Lend) -> Ordering,
+        F: FnMut(&T, &Lend<'_, Self>) -> Ordering,
     {
         self.reduce(move |x, y| {
             match compare(&x, &y) {
@@ -923,7 +923,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     where
         Self: Sized,
         for<'all> <Self as Lending<'all>>::Lend: ToOwned<Owned = T>,
-        F: FnMut(&T, &<Self as Lending<'_>>::Lend) -> Ordering,
+        F: FnMut(&T, &Lend<'_, Self>) -> Ordering,
     {
         self.reduce(move |x, y| {
             match compare(&x, &y) {
@@ -1158,7 +1158,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     fn is_sorted_by_key<F, K>(mut self, mut f: F) -> bool
     where
         Self: Sized,
-        F: FnMut(<Self as Lending<'_>>::Lend) -> K,
+        F: FnMut(Lend<'_, Self>) -> K,
         K: PartialOrd,
     {
         let mut last = match self.next() {
@@ -1213,7 +1213,7 @@ pub(crate) fn lender_compare<A, B, F, T>(mut a: A, mut b: B, mut f: F) -> Contro
 where
     A: Lender,
     B: Lender,
-    for<'all> F: FnMut(<A as Lending<'all>>::Lend, <B as Lending<'all>>::Lend) -> ControlFlow<T>,
+    for<'all> F: FnMut(Lend<'all, A>, <B as Lending<'all>>::Lend) -> ControlFlow<T>,
 {
     let mut ctl = ControlFlow::Continue(());
     while let Some(x) = a.next() {
@@ -1245,7 +1245,7 @@ impl<'lend, L: Lender> Lending<'lend> for &mut L {
 }
 impl<L: Lender> Lender for &mut L {
     #[inline]
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
         (**self).next()
     }
     #[inline]

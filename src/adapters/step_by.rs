@@ -25,7 +25,7 @@ where
     L: Lender,
 {
     #[inline]
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
         if self.first_take {
             self.first_take = false;
             self.lender.next()
@@ -46,7 +46,7 @@ where
         }
     }
     #[inline]
-    fn nth(&mut self, mut n: usize) -> Option<<Self as Lending<'_>>::Lend> {
+    fn nth(&mut self, mut n: usize) -> Option<Lend<'_, Self>> {
         if self.first_take {
             self.first_take = false;
             if n == 0 {
@@ -82,7 +82,7 @@ where
     fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> R
     where
         Self: Sized,
-        F: FnMut(B, <Self as Lending<'_>>::Lend) -> R,
+        F: FnMut(B, Lend<'_, Self>) -> R,
         R: Try<Output = B>,
     {
         let mut acc = init;
@@ -109,7 +109,7 @@ where
     fn fold<B, F>(mut self, init: B, mut f: F) -> B
     where
         Self: Sized,
-        F: FnMut(B, <Self as Lending<'_>>::Lend) -> B,
+        F: FnMut(B, Lend<'_, Self>) -> B,
     {
         let mut acc = init;
         if self.first_take {
@@ -147,12 +147,12 @@ where
     L: DoubleEndedLender + ExactSizeLender,
 {
     #[inline]
-    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         self.lender.nth_back(self.next_back_index())
     }
 
     #[inline]
-    fn nth_back(&mut self, n: usize) -> Option<<Self as Lending<'_>>::Lend> {
+    fn nth_back(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         let n = n.saturating_mul(self.step + 1).saturating_add(self.next_back_index());
         self.lender.nth_back(n)
     }
@@ -160,7 +160,7 @@ where
     fn try_rfold<B, F, R>(&mut self, init: B, mut f: F) -> R
     where
         Self: Sized,
-        F: FnMut(B, <Self as Lending<'_>>::Lend) -> R,
+        F: FnMut(B, Lend<'_, Self>) -> R,
         R: Try<Output = B>,
     {
         let mut acc = init;
@@ -186,7 +186,7 @@ where
     fn rfold<B, F>(mut self, init: B, mut f: F) -> B
     where
         Self: Sized,
-        F: FnMut(B, <Self as Lending<'_>>::Lend) -> B,
+        F: FnMut(B, Lend<'_, Self>) -> B,
     {
         let mut acc = init;
         match self.next_back() {

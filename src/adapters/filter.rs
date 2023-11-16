@@ -26,11 +26,11 @@ where
 }
 impl<L, P> Lender for Filter<L, P>
 where
-    P: FnMut(&<L as Lending<'_>>::Lend) -> bool,
+    P: FnMut(&Lend<'_, L>) -> bool,
     L: Lender,
 {
     #[inline]
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.lender.find(&mut self.predicate)
     }
     #[inline]
@@ -44,9 +44,7 @@ where
         Self: Sized,
     {
         #[inline]
-        fn f<L: for<'all> Lending<'all>, F: FnMut(&<L as Lending<'_>>::Lend) -> bool>(
-            mut f: F,
-        ) -> impl FnMut(<L as Lending<'_>>::Lend) -> usize {
+        fn f<L: for<'all> Lending<'all>, F: FnMut(&Lend<'_, L>) -> bool>(mut f: F) -> impl FnMut(Lend<'_, L>) -> usize {
             move |x| (f)(&x) as usize
         }
         self.lender.map(f::<Self, _>(self.predicate)).iter().sum()
@@ -54,17 +52,17 @@ where
 }
 impl<L, P> DoubleEndedLender for Filter<L, P>
 where
-    P: FnMut(&<L as Lending<'_>>::Lend) -> bool,
+    P: FnMut(&Lend<'_, L>) -> bool,
     L: DoubleEndedLender,
 {
     #[inline]
-    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         self.lender.rfind(&mut self.predicate)
     }
 }
 impl<L, P> FusedLender for Filter<L, P>
 where
-    P: FnMut(&<L as Lending<'_>>::Lend) -> bool,
+    P: FnMut(&Lend<'_, L>) -> bool,
     L: FusedLender,
 {
 }

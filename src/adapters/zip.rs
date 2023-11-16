@@ -1,4 +1,4 @@
-use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, IntoLender, Lender, Lending};
+use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, IntoLender, Lend, Lender, Lending};
 
 pub fn zip<A, B>(a: A, b: B) -> Zip<A::Lender, B::Lender>
 where
@@ -24,7 +24,7 @@ where
     A: Lender,
     B: Lender,
 {
-    type Lend = (<A as Lending<'lend>>::Lend, <B as Lending<'lend>>::Lend);
+    type Lend = (Lend<'lend, A>, <B as Lending<'lend>>::Lend);
 }
 impl<A, B> Lender for Zip<A, B>
 where
@@ -32,7 +32,7 @@ where
     B: Lender,
 {
     #[inline]
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
         Some((self.a.next()?, self.b.next()?))
     }
     #[inline]
@@ -58,7 +58,7 @@ where
     B: DoubleEndedLender + ExactSizeIterator,
 {
     #[inline]
-    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         let a_sz = self.a.len();
         let b_sz = self.b.len();
         if a_sz != b_sz {

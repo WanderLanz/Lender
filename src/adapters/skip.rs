@@ -23,7 +23,7 @@ where
     L: Lender,
 {
     #[inline]
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
         if self.n > 0 {
             self.lender.nth(core::mem::take(&mut self.n))
         } else {
@@ -31,7 +31,7 @@ where
         }
     }
     #[inline]
-    fn nth(&mut self, n: usize) -> Option<<Self as Lending<'_>>::Lend> {
+    fn nth(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         if self.n > 0 {
             let skip = core::mem::take(&mut self.n);
             let n = match skip.checked_add(n) {
@@ -76,7 +76,7 @@ where
     fn try_fold<B, F, R>(&mut self, init: B, f: F) -> R
     where
         Self: Sized,
-        F: FnMut(B, <Self as Lending<'_>>::Lend) -> R,
+        F: FnMut(B, Lend<'_, Self>) -> R,
         R: Try<Output = B>,
     {
         let n = self.n;
@@ -90,7 +90,7 @@ where
     fn fold<B, F>(mut self, init: B, f: F) -> B
     where
         Self: Sized,
-        F: FnMut(B, <Self as Lending<'_>>::Lend) -> B,
+        F: FnMut(B, Lend<'_, Self>) -> B,
     {
         if self.n > 0 && self.lender.nth(self.n - 1).is_none() {
             return init;
@@ -125,7 +125,7 @@ impl<L> DoubleEndedLender for Skip<L>
 where
     L: DoubleEndedLender + ExactSizeLender,
 {
-    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         if self.len() > 0 {
             self.lender.next_back()
         } else {
@@ -133,7 +133,7 @@ where
         }
     }
     #[inline]
-    fn nth_back(&mut self, n: usize) -> Option<<Self as Lending<'_>>::Lend> {
+    fn nth_back(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         let len = self.len();
         if len > n {
             self.lender.nth_back(n)
@@ -147,7 +147,7 @@ where
     fn try_rfold<B, F, R>(&mut self, init: B, mut f: F) -> R
     where
         Self: Sized,
-        F: FnMut(B, <Self as Lending<'_>>::Lend) -> R,
+        F: FnMut(B, Lend<'_, Self>) -> R,
         R: Try<Output = B>,
     {
         let mut len = self.len();

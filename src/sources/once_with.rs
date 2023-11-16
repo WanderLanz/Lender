@@ -1,4 +1,4 @@
-use crate::{higher_order::FnOnceHKA, DoubleEndedLender, ExactSizeLender, FusedLender, Lender, Lending};
+use crate::{higher_order::FnOnceHKA, DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending};
 
 /// Creates an lender that lazily generates a value exactly once by invoking
 /// the provided closure.
@@ -41,7 +41,7 @@ where
     F: for<'all> FnOnceHKA<'all, &'all mut St>,
 {
     #[inline]
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.f.take().map(|f| f(&mut self.state))
     }
     #[inline]
@@ -59,7 +59,7 @@ where
     F: for<'all> FnOnceHKA<'all, &'all mut St>,
 {
     #[inline]
-    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         self.next()
     }
 }

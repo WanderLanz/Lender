@@ -20,7 +20,7 @@ where
     L: DoubleEndedLender,
 {
     #[inline]
-    fn next(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.lender.next_back()
     }
     #[inline]
@@ -32,13 +32,13 @@ where
         self.lender.advance_back_by(n)
     }
     #[inline]
-    fn nth(&mut self, n: usize) -> Option<<Self as Lending<'_>>::Lend> {
+    fn nth(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         self.lender.nth_back(n)
     }
     fn try_fold<B, F, R>(&mut self, init: B, f: F) -> R
     where
         Self: Sized,
-        F: FnMut(B, <Self as Lending<'_>>::Lend) -> R,
+        F: FnMut(B, Lend<'_, Self>) -> R,
         R: Try<Output = B>,
     {
         self.lender.try_rfold(init, f)
@@ -46,15 +46,15 @@ where
     fn fold<B, F>(self, init: B, f: F) -> B
     where
         Self: Sized,
-        F: FnMut(B, <Self as Lending<'_>>::Lend) -> B,
+        F: FnMut(B, Lend<'_, Self>) -> B,
     {
         self.lender.rfold(init, f)
     }
     #[inline]
-    fn find<P>(&mut self, predicate: P) -> Option<<Self as Lending<'_>>::Lend>
+    fn find<P>(&mut self, predicate: P) -> Option<Lend<'_, Self>>
     where
         Self: Sized,
-        P: FnMut(&<Self as Lending<'_>>::Lend) -> bool,
+        P: FnMut(&Lend<'_, Self>) -> bool,
     {
         self.lender.rfind(predicate)
     }
@@ -64,7 +64,7 @@ where
     L: DoubleEndedLender,
 {
     #[inline]
-    fn next_back(&mut self) -> Option<<Self as Lending<'_>>::Lend> {
+    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         self.lender.next()
     }
     #[inline]
@@ -72,13 +72,13 @@ where
         self.lender.advance_by(n)
     }
     #[inline]
-    fn nth_back(&mut self, n: usize) -> Option<<Self as Lending<'_>>::Lend> {
+    fn nth_back(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         self.lender.nth(n)
     }
     fn try_rfold<B, F, R>(&mut self, init: B, f: F) -> R
     where
         Self: Sized,
-        F: FnMut(B, <Self as Lending<'_>>::Lend) -> R,
+        F: FnMut(B, Lend<'_, Self>) -> R,
         R: Try<Output = B>,
     {
         self.lender.try_fold(init, f)
@@ -86,14 +86,14 @@ where
     fn rfold<B, F>(self, init: B, f: F) -> B
     where
         Self: Sized,
-        F: FnMut(B, <Self as Lending<'_>>::Lend) -> B,
+        F: FnMut(B, Lend<'_, Self>) -> B,
     {
         self.lender.fold(init, f)
     }
-    fn rfind<P>(&mut self, predicate: P) -> Option<<Self as Lending<'_>>::Lend>
+    fn rfind<P>(&mut self, predicate: P) -> Option<Lend<'_, Self>>
     where
         Self: Sized,
-        P: FnMut(&<Self as Lending<'_>>::Lend) -> bool,
+        P: FnMut(&Lend<'_, Self>) -> bool,
     {
         self.lender.find(predicate)
     }
