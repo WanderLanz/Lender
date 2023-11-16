@@ -38,7 +38,7 @@ impl<'lend, 'this, L: Lender> Lending<'lend> for Flatten<'this, L>
 where
     for<'all> Lend<'all, L>: IntoLender,
 {
-    type Lend = <<Lend<'this, L> as IntoLender>::Lender as Lending<'lend>>::Lend;
+    type Lend = Lend<'lend, <Lend<'this, L> as IntoLender>::Lender>;
 }
 impl<'this, L: Lender> Lender for Flatten<'this, L>
 where
@@ -97,7 +97,7 @@ where
     Map<L, F>: Lender,
     for<'all> Lend<'all, Map<L, F>>: IntoLender,
 {
-    type Lend = <<<Map<L, F> as Lending<'this>>::Lend as IntoLender>::Lender as Lending<'lend>>::Lend;
+    type Lend = Lend<'lend, <Lend<'this, Map<L, F>> as IntoLender>::Lender>;
 }
 impl<'this, L: Lender, F> Lender for FlatMap<'this, L, F>
 where
@@ -156,7 +156,7 @@ impl<'lend, 'this, L: Lender> Lending<'lend> for FlattenCompat<'this, L>
 where
     for<'all> Lend<'all, L>: IntoLender,
 {
-    type Lend = <<Lend<'this, L> as IntoLender>::Lender as Lending<'lend>>::Lend;
+    type Lend = Lend<'lend, <Lend<'this, L> as IntoLender>::Lender>;
 }
 impl<'this, L: Lender> Lender for FlattenCompat<'this, L>
 where

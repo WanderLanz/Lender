@@ -1,4 +1,4 @@
-use crate::{Lender, Lending};
+use crate::{Lend, Lender};
 /// # Example
 /// ```
 /// # use lender::prelude::*;
@@ -32,7 +32,7 @@ impl<L: Lender> IntoLender for L {
 pub trait ExtendLender<L: IntoLender> {
     fn extend_lender(&mut self, lender: L);
     /// Extends a collection with exactly one element.
-    fn extend_lender_one(&mut self, item: <L::Lender as Lending<'_>>::Lend);
+    fn extend_lender_one(&mut self, item: Lend<'_, L::Lender>);
     /// Reserves capacity in a collection for the given number of additional elements.
     ///
     /// The default implementation does nothing.

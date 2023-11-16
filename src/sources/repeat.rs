@@ -43,7 +43,7 @@ where
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         // SAFETY: 'a: 'lend
-        Some(unsafe { core::mem::transmute::<<Self as Lending<'a>>::Lend, Lend<'_, Self>>(self.elt.clone()) })
+        Some(unsafe { core::mem::transmute::<Lend<'a, Self>, Lend<'_, Self>>(self.elt.clone()) })
     }
     #[inline]
     fn advance_by(&mut self, _n: usize) -> Result<(), core::num::NonZeroUsize> {

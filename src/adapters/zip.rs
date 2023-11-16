@@ -24,7 +24,7 @@ where
     A: Lender,
     B: Lender,
 {
-    type Lend = (Lend<'lend, A>, <B as Lending<'lend>>::Lend);
+    type Lend = (Lend<'lend, A>, Lend<'lend, B>);
 }
 impl<A, B> Lender for Zip<A, B>
 where

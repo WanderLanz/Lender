@@ -61,7 +61,7 @@ where
 {
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         // SAFETY: 'a: 'lend
-        self.inner.take().map(|v| unsafe { core::mem::transmute::<<Self as Lending<'a>>::Lend, Lend<'_, Self>>(v) })
+        self.inner.take().map(|v| unsafe { core::mem::transmute::<Lend<'a, Self>, Lend<'_, Self>>(v) })
     }
     fn size_hint(&self) -> (usize, Option<usize>) {
         if self.inner.is_some() {

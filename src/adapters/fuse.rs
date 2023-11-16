@@ -47,7 +47,7 @@ where
         None
     }
     #[inline]
-    fn last<'call>(mut self) -> Option<<Self as Lending<'call>>::Lend>
+    fn last<'call>(mut self) -> Option<Lend<'call, Self>>
     where
         Self: Sized + 'call,
     {

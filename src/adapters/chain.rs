@@ -85,7 +85,7 @@ where
         self.a.find(&mut predicate).or_else(|| self.b.find(predicate))
     }
     #[inline]
-    fn last<'call>(self) -> Option<<Self as Lending<'call>>::Lend>
+    fn last<'call>(self) -> Option<Lend<'call, Self>>
     where
         Self: Sized + 'call,
     {

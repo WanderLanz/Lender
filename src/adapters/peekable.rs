@@ -11,7 +11,7 @@ where
     L: Lender,
 {
     lender: L,
-    peeked: Option<Option<<L as Lending<'this>>::Lend>>,
+    peeked: Option<Option<Lend<'this, L>>>,
 }
 impl<'this, L> Peekable<'this, L>
 where
@@ -20,21 +20,21 @@ where
     pub(crate) fn new(lender: L) -> Peekable<'this, L> {
         Peekable { lender, peeked: None }
     }
-    pub fn peek(&mut self) -> Option<&'_ <L as Lending<'this>>::Lend> {
+    pub fn peek(&mut self) -> Option<&'_ Lend<'this, L>> {
         let lender = &mut self.lender;
         self.peeked
             .get_or_insert_with(|| {
                 // SAFETY: The lend is manually guaranteed to be the only one alive
-                unsafe { core::mem::transmute::<Option<Lend<'_, L>>, Option<<L as Lending<'this>>::Lend>>(lender.next()) }
+                unsafe { core::mem::transmute::<Option<Lend<'_, L>>, Option<Lend<'this, L>>>(lender.next()) }
             })
             .as_ref()
     }
-    pub fn peek_mut(&mut self) -> Option<&'_ mut <L as Lending<'this>>::Lend> {
+    pub fn peek_mut(&mut self) -> Option<&'_ mut Lend<'this, L>> {
         let lender = &mut self.lender;
         self.peeked
             .get_or_insert_with(|| {
                 // SAFETY: The lend is manually guaranteed to be the only one alive
-                unsafe { core::mem::transmute::<Option<Lend<'_, L>>, Option<<L as Lending<'this>>::Lend>>(lender.next()) }
+                unsafe { core::mem::transmute::<Option<Lend<'_, L>>, Option<Lend<'this, L>>>(lender.next()) }
             })
             .as_mut()
     }
@@ -47,13 +47,12 @@ where
             Some(v) if f(&v) => Some(v),
             v => {
                 // SAFETY: The lend is manually guaranteed to be the only one alive
-                *peeked =
-                    Some(unsafe { core::mem::transmute::<Option<Lend<'_, L>>, Option<<L as Lending<'this>>::Lend>>(v) });
+                *peeked = Some(unsafe { core::mem::transmute::<Option<Lend<'_, L>>, Option<Lend<'this, L>>>(v) });
                 None
             }
         }
     }
-    pub fn next_if_eq<'a, T>(&'a mut self, t: &T) -> Option<<L as Lending<'a>>::Lend>
+    pub fn next_if_eq<'a, T>(&'a mut self, t: &T) -> Option<Lend<'a, L>>
     where
         T: for<'all> PartialEq<Lend<'all, L>>,
     {
@@ -71,7 +70,7 @@ where
 impl<'this, L: fmt::Debug> fmt::Debug for Peekable<'this, L>
 where
     L: Lender + fmt::Debug,
-    <L as Lending<'this>>::Lend: fmt::Debug,
+    Lend<'this, L>: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Peekable").field("lender", &self.lender).field("peeked", &self.peeked).finish()
@@ -90,9 +89,7 @@ where
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         match self.peeked.take() {
             // SAFETY: The lend is manually guaranteed to be the only one alive
-            Some(peeked) => unsafe {
-                core::mem::transmute::<Option<<Self as Lending<'this>>::Lend>, Option<Lend<'_, Self>>>(peeked)
-            },
+            Some(peeked) => unsafe { core::mem::transmute::<Option<Lend<'this, Self>>, Option<Lend<'_, Self>>>(peeked) },
             None => self.lender.next(),
         }
     }
@@ -110,23 +107,21 @@ where
             Some(None) => None,
             // SAFETY: The lend is manually guaranteed to be the only one alive
             Some(v @ Some(_)) if n == 0 => unsafe {
-                core::mem::transmute::<Option<<Self as Lending<'this>>::Lend>, Option<Lend<'_, Self>>>(v)
+                core::mem::transmute::<Option<Lend<'this, Self>>, Option<Lend<'_, Self>>>(v)
             },
             Some(Some(_)) => self.lender.nth(n - 1),
             None => self.lender.nth(n),
         }
     }
     #[inline]
-    fn last<'a>(mut self) -> Option<<Self as Lending<'a>>::Lend>
+    fn last<'a>(mut self) -> Option<Lend<'a, Self>>
     where
         Self: Sized + 'a,
     {
         let peek_opt = match self.peeked.take() {
             Some(None) => return None,
             // SAFETY: 'this: 'call
-            Some(v) => unsafe {
-                core::mem::transmute::<Option<<Self as Lending<'this>>::Lend>, Option<<Self as Lending<'a>>::Lend>>(v)
-            },
+            Some(v) => unsafe { core::mem::transmute::<Option<Lend<'this, Self>>, Option<Lend<'a, Self>>>(v) },
             None => None,
         };
         self.lender.last().or(peek_opt)
@@ -177,9 +172,10 @@ impl<'this, L: DoubleEndedLender> DoubleEndedLender for Peekable<'this, L> {
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         match self.peeked.as_mut() {
             // SAFETY: The lend is manually guaranteed to be the only one alive
-            Some(v @ Some(_)) => self.lender.next_back().or_else(|| unsafe {
-                core::mem::transmute::<Option<<Self as Lending<'this>>::Lend>, Option<Lend<'_, Self>>>(v.take())
-            }),
+            Some(v @ Some(_)) => self
+                .lender
+                .next_back()
+                .or_else(|| unsafe { core::mem::transmute::<Option<Lend<'this, Self>>, Option<Lend<'_, Self>>>(v.take()) }),
             Some(None) => None,
             None => self.lender.next_back(),
         }

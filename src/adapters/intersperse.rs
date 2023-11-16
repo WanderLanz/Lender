@@ -51,7 +51,7 @@ where
         if self.needs_sep && self.lender.peek().is_some() {
             self.needs_sep = false;
             // SAFETY: 'this: 'lend
-            Some(unsafe { core::mem::transmute::<<Self as Lending<'this>>::Lend, Lend<'_, Self>>(self.separator.clone()) })
+            Some(unsafe { core::mem::transmute::<Lend<'this, Self>, Lend<'_, Self>>(self.separator.clone()) })
         } else {
             self.needs_sep = true;
             self.lender.next()
