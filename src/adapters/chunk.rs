@@ -15,7 +15,7 @@ impl<'lend, 's, T> Lending<'lend> for Chunk<'s, T>
 where
     T: Lender,
 {
-    type Lend = <T as Lending<'lend>>::Lend;
+    type Lend = Lend<'lend, T>;
 }
 impl<'s, T> Lender for Chunk<'s, T>
 where
