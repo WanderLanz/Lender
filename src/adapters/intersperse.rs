@@ -132,7 +132,7 @@ where
             self.needs_sep = false;
             // SAFETY: 'this: 'lend
             Some(unsafe {
-                core::mem::transmute::<<Self as Lending<'this>>::Lend, <Self as Lending<'_>>::Lend>((self.separator)())
+                core::mem::transmute::<<L as Lending<'this>>::Lend, <L as Lending<'_>>::Lend>((self.separator)())
             })
         } else {
             self.needs_sep = true;
