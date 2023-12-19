@@ -272,12 +272,12 @@ extern crate alloc;
 /// ```
 pub struct _Lender_Doctest_Sanity_Check;
 
-mod private {
-    pub trait Sealed {}
-    pub struct Seal<T>(T);
-    impl<T> Sealed for Seal<T> {}
-}
-pub(crate) use private::{Seal, Sealed};
+#[allow(private_bounds)]
+pub trait Sealed: SealedImpl {}
+pub(crate) trait SealedImpl {}
+impl<T: ?Sized + SealedImpl> Sealed for T {}
+pub struct Seal<'lend, T: ?Sized>(&'lend T);
+impl<'lend, T: ?Sized> SealedImpl for Seal<'lend, T> {}
 
 mod adapters;
 pub use adapters::*;

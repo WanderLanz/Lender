@@ -24,7 +24,7 @@ where
         assert!(chunk_size != 0, "chunk size must be non-zero");
         let mut len = lender.len();
         let rem = len % chunk_size;
-        len = len / chunk_size;
+        len /= chunk_size;
         if rem > 0 {
             len += 1;
         }
@@ -59,14 +59,14 @@ where
         let sz = self.chunk_size;
 
         let lrem = lower % sz;
-        lower = lower / sz;
+        lower /= sz;
         if lrem > 0 {
             lower += 1;
         }
 
         upper = upper.map(|mut n| {
             let urem = n % sz;
-            n = n / sz;
+            n /= sz;
             if urem > 0 {
                 n += 1;
             }
@@ -82,7 +82,7 @@ where
         let sz = self.chunk_size;
 
         let rem = cnt % sz;
-        cnt = cnt / sz;
+        cnt /= sz;
         if rem > 0 {
             cnt += 1;
         }
@@ -135,7 +135,7 @@ where
         let sz = self.chunk_size;
 
         let rem = len % sz;
-        len = len / sz;
+        len /= sz;
         if rem > 0 {
             len += 1;
         }

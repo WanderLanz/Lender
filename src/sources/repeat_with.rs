@@ -1,3 +1,5 @@
+use core::marker::PhantomData;
+
 use crate::{prelude::*, FusedLender};
 
 /// Creates a new iterator that repeats elements of type `A` endlessly by
@@ -17,7 +19,7 @@ where
     L: ?Sized + for<'all> Lending<'all> + 'a,
     F: FnMut() -> Lend<'a, L>,
 {
-    RepeatWith { f, _marker: <_>::default() }
+    RepeatWith { f, _marker: PhantomData }
 }
 
 /// A lender that repeats an element endlessly by applying a closure.
@@ -47,9 +49,7 @@ where
         Some(unsafe { core::mem::transmute::<Lend<'a, L>, Lend<'_, L>>((self.f)()) })
     }
     #[inline]
-    fn advance_by(&mut self, _n: usize) -> Result<(), core::num::NonZeroUsize> {
-        Ok(())
-    }
+    fn advance_by(&mut self, _n: usize) -> Result<(), core::num::NonZeroUsize> { Ok(()) }
 }
 
 impl<'a, L, F> DoubleEndedLender for RepeatWith<'a, L, F>
@@ -58,13 +58,9 @@ where
     F: FnMut() -> Lend<'a, L>,
 {
     #[inline]
-    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
-        self.next()
-    }
+    fn next_back(&mut self) -> Option<Lend<'_, Self>> { self.next() }
     #[inline]
-    fn advance_back_by(&mut self, _n: usize) -> Result<(), core::num::NonZeroUsize> {
-        Ok(())
-    }
+    fn advance_back_by(&mut self, _n: usize) -> Result<(), core::num::NonZeroUsize> { Ok(()) }
 }
 
 impl<'a, L, F> FusedLender for RepeatWith<'a, L, F>

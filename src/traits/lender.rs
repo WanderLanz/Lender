@@ -22,7 +22,7 @@ use crate::{
 /// Please see [Sabrina Jewson's Blog][1] for more information, and how a trait like this can be used to solve it by implicitly restricting HRTBs.
 ///
 /// [1]: (https://sabrinajewson.org/blog/the-better-alternative-to-lifetime-gats)
-pub trait Lending<'lend, __Seal: Sealed = Seal<&'lend Self>> {
+pub trait Lending<'lend, __Seal: Sealed = Seal<'lend, Self>> {
     /// The type being lent.
     type Lend: 'lend;
 }
@@ -652,6 +652,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     }
     /// Documentation is incomplete. Refer to [`Iterator::is_partitioned`] for more information
     #[inline]
+    #[allow(clippy::wrong_self_convention)]
     fn is_partitioned<P>(mut self, mut predicate: P) -> bool
     where
         Self: Sized,
@@ -1125,6 +1126,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     }
     /// Documentation is incomplete. Refer to [`Iterator::is_sorted`] for more information
     #[inline]
+    #[allow(clippy::wrong_self_convention)]
     fn is_sorted<T>(self) -> bool
     where
         Self: Sized,
@@ -1135,6 +1137,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     }
     /// Documentation is incomplete. Refer to [`Iterator::is_sorted_by`] for more information
     #[inline]
+    #[allow(clippy::wrong_self_convention)]
     fn is_sorted_by<T, F>(self, mut compare: F) -> bool
     where
         Self: Sized,
@@ -1155,6 +1158,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     }
     /// Documentation is incomplete. Refer to [`Iterator::is_sorted_by_key`] for more information
     #[inline]
+    #[allow(clippy::wrong_self_convention)]
     fn is_sorted_by_key<F, K>(mut self, mut f: F) -> bool
     where
         Self: Sized,
@@ -1245,15 +1249,9 @@ impl<'lend, L: Lender> Lending<'lend> for &mut L {
 }
 impl<L: Lender> Lender for &mut L {
     #[inline]
-    fn next(&mut self) -> Option<Lend<'_, Self>> {
-        (**self).next()
-    }
+    fn next(&mut self) -> Option<Lend<'_, Self>> { (**self).next() }
     #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        (**self).size_hint()
-    }
+    fn size_hint(&self) -> (usize, Option<usize>) { (**self).size_hint() }
     #[inline]
-    fn advance_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {
-        (**self).advance_by(n)
-    }
+    fn advance_by(&mut self, n: usize) -> Result<(), NonZeroUsize> { (**self).advance_by(n) }
 }
