@@ -273,11 +273,11 @@ extern crate alloc;
 pub struct _Lender_Doctest_Sanity_Check;
 
 #[allow(private_bounds)]
-pub trait Sealed: SealedImpl {}
-pub(crate) trait SealedImpl {}
-impl<T: ?Sized + SealedImpl> Sealed for T {}
-pub struct Seal<'lend, T: ?Sized>(&'lend T);
-impl<'lend, T: ?Sized> SealedImpl for Seal<'lend, T> {}
+pub trait ImplBound: ImplBoundPriv {}
+pub(crate) trait ImplBoundPriv {}
+impl<T: ?Sized + ImplBoundPriv> ImplBound for T {}
+pub struct Ref<'lend, T: ?Sized>(&'lend T);
+impl<'lend, T: ?Sized> ImplBoundPriv for Ref<'lend, T> {}
 
 mod adapters;
 pub use adapters::*;
