@@ -22,6 +22,7 @@
 //!
 //! ```rust
 //! use ::lender::prelude::*;
+//! use lender_derive::for_;
 //!
 //! struct WindowsMut<'a, T> {
 //!     slice: &'a mut [T],
@@ -38,9 +39,23 @@
 //!         self.slice.get_mut(begin..begin + self.len)
 //!     }
 //! }
-//! // Fibonacci sequence
 //! let mut data = vec![0u32; 9];
 //! data[1] = 1;
+//!
+//! // Fibonacci sequence, most ergonomic usage: for_! procedural macro.
+//! for_!(w in WindowsMut { slice: &mut data, begin: 0, len: 3 }{
+//!    w[2] = w[0] + w[1];
+//! });
+//! assert_eq!(data, [0, 1, 1, 2, 3, 5, 8, 13, 21]);
+//!
+//! // Fibonacci sequence, explicit while let loop: you MUST assign the lender to a variable.
+//! let mut windows = WindowsMut { slice: &mut data, begin: 0, len: 3 };
+//! while let Some(w) = windows.next() {
+//!    w[2] = w[0] + w[1];
+//! }
+//! assert_eq!(data, [0, 1, 1, 2, 3, 5, 8, 13, 21]);
+//!
+//! // Fibonacci sequence, for_each with hrc_mut! (higher-ranked closure).
 //! WindowsMut { slice: &mut data, begin: 0, len: 3 }
 //!     .for_each(hrc_mut!(for<'lend> |w: &'lend mut [u32]| { w[2] = w[0] + w[1] }));
 //! assert_eq!(data, [0, 1, 1, 2, 3, 5, 8, 13, 21]);
