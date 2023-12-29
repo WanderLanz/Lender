@@ -3,7 +3,7 @@ name = "lender"
 version = "0.2.2"
 edition = "2021"
 authors = ["Lance Warden <wanderlanz@proton.me>", "Sebastiano Vigna <sebastiano.vigna@gmail.com>"]
-license = "MIT OR Apache-2.0"
+license = "Apache-2.0 OR LGPL-2.1-or-later OR MIT"
 description = "iter feature complete(-ish) lending iterator"
 repository = "https://github.com/WanderLanz/Lender"
 categories = ["rust-patterns", "no-std"]
@@ -13,3 +13,8 @@ keywords = ["lending", "iterator"]
 maintenance = { status = "experimental" }
 
 [dependencies]
+lender-derive = { version = "0.1.0", optional = true }
+
+[features]
+default = ["derive"]
+derive = ["lender-derive"]

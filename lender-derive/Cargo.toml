@@ -1,0 +1,18 @@
+[package]
+name = "lender-derive"
+version = "0.1.0"
+edition = "2021"
+description = "Procedural macros for lender"
+repository = "https://github.com/WanderLanz/Lender/"
+license = "Apache-2.0 OR LGPL-2.1-or-later OR MIT"
+readme = "README.md"
+keywords = ["lending", "iterator"]
+authors = ["Tommaso Fontana <tommaso.fontana.96@gmail.com>", "Sebastiano Vigna <sebastiano.vigna@unimi.it>"]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "1"
+proc-macro2 = "1.0"
+syn = { version = "2.0.43", features = ["full"] }
