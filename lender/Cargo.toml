@@ -1,6 +1,6 @@
 [package]
 name = "lender"
-version = "0.2.2"
+version = "0.2.3"
 edition = "2021"
 authors = ["Lance Warden <wanderlanz@proton.me>", "Sebastiano Vigna <sebastiano.vigna@gmail.com>"]
 license = "Apache-2.0 OR LGPL-2.1-or-later OR MIT"

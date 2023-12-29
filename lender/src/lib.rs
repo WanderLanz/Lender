@@ -16,6 +16,10 @@
 //! by the current definition of [`Iterator`] which only encompasses iterators over items that live at least
 //! as long as the iterators themselves, i.e. `Self: 'this` implies `<Self as Iterator>::Item: 'this`.
 //!
+//! A lender is not an iterator, so you cannot use directly the `for` loop syntax sugar, but we provide
+//! a derive function-like macro [`for_!`](https://docs.rs/lender-derive/latest/lender_derive/macro.for_.html)
+//! with a similar syntax.
+//!
 //! ## Examples
 //!
 //! I present to you `WindowsMut`.
