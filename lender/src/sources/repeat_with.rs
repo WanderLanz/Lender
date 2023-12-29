@@ -49,7 +49,9 @@ where
         Some(unsafe { core::mem::transmute::<Lend<'a, L>, Lend<'_, L>>((self.f)()) })
     }
     #[inline]
-    fn advance_by(&mut self, _n: usize) -> Result<(), core::num::NonZeroUsize> { Ok(()) }
+    fn advance_by(&mut self, _n: usize) -> Result<(), core::num::NonZeroUsize> {
+        Ok(())
+    }
 }
 
 impl<'a, L, F> DoubleEndedLender for RepeatWith<'a, L, F>
@@ -58,9 +60,13 @@ where
     F: FnMut() -> Lend<'a, L>,
 {
     #[inline]
-    fn next_back(&mut self) -> Option<Lend<'_, Self>> { self.next() }
+    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
+        self.next()
+    }
     #[inline]
-    fn advance_back_by(&mut self, _n: usize) -> Result<(), core::num::NonZeroUsize> { Ok(()) }
+    fn advance_back_by(&mut self, _n: usize) -> Result<(), core::num::NonZeroUsize> {
+        Ok(())
+    }
 }
 
 impl<'a, L, F> FusedLender for RepeatWith<'a, L, F>

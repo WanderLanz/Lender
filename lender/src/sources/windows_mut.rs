@@ -19,7 +19,7 @@ use crate::{Lend, Lender, Lending};
 /// let mut lender = s.windows_mut(2);
 /// assert_eq!(lender.next(), Some(&mut [0, 1][..]));
 /// ```
-pub fn windows_mut<'a, T>(slice: &'a mut [T], size: usize) -> WindowsMut<'a, T> {
+pub fn windows_mut<T>(slice: &mut [T], size: usize) -> WindowsMut<'_, T> {
     WindowsMut { slice, size, curr_pos: 0 }
 }
 
@@ -63,7 +63,7 @@ impl<'a, T> Lender for WindowsMut<'a, T> {
 /// let mut lender = s.array_windows_mut::<2>();
 /// assert_eq!(lender.next(), Some(&mut [0, 1]));
 /// ```
-pub fn array_windows_mut<'a, T, const WINDOW_SIZE: usize>(slice: &'a mut [T]) -> ArrayWindowsMut<'a, T, WINDOW_SIZE> {
+pub fn array_windows_mut<T, const WINDOW_SIZE: usize>(slice: &mut [T]) -> ArrayWindowsMut<'_, T, WINDOW_SIZE> {
     ArrayWindowsMut { slice, curr_pos: 0 }
 }
 

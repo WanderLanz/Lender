@@ -1249,9 +1249,15 @@ impl<'lend, L: Lender> Lending<'lend> for &mut L {
 }
 impl<L: Lender> Lender for &mut L {
     #[inline]
-    fn next(&mut self) -> Option<Lend<'_, Self>> { (**self).next() }
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
+        (**self).next()
+    }
     #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>) { (**self).size_hint() }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (**self).size_hint()
+    }
     #[inline]
-    fn advance_by(&mut self, n: usize) -> Result<(), NonZeroUsize> { (**self).advance_by(n) }
+    fn advance_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {
+        (**self).advance_by(n)
+    }
 }

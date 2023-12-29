@@ -61,6 +61,9 @@ iterates over the integers [0. .10), printing them,
 using a [`Lender`](https://docs.rs/lender/latest/lender/trait.Lender.html) obtained by
 adapting an `IntoIterator` (in this case, a `Range`).
 
+Note that the outer parentheses are part of the standard Rust syntax for function-like
+procedural macros, and thus can be replaced, for example, with brackets.
+
 For an example of a more complex usage, see the following code, which iterates over
 the elements of an `enum`, but only on the first two variants:
 ```[ignore]
