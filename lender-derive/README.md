@@ -12,4 +12,3 @@ The macro expands to a `while let` loop that iterates over a
 [`Lender`](https://docs.rs/lender/latest/lender/trait.Lender.html) obtained from the
 [`IntoLender`](https://docs.rs/lender/latest/lender/trait.IntoLender.html).
 The full `for` syntax is supported (patterns, etc.).
-1

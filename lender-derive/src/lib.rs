@@ -19,18 +19,18 @@ use syn::{
 };
 
 struct ForLenderInfo {
-    pub pat: Box<Pat>,
+    pub pat: Pat,
     pub _in_token: In,
-    pub expr: Box<Expr>,
+    pub expr: Expr,
     pub body: Block,
 }
 
 impl Parse for ForLenderInfo {
     fn parse(input: ParseStream) -> Result<Self> {
         Ok(ForLenderInfo {
-            pat: Box::new(Pat::parse_multi(input)?),
+            pat: Pat::parse_multi(input)?, // We allow for the | operator
             _in_token: input.parse()?,
-            expr: input.parse()?,
+            expr: Expr::parse_without_eager_brace(input)?, // As in the for loop syntax
             body: input.parse()?,
         })
     }
@@ -38,7 +38,7 @@ impl Parse for ForLenderInfo {
 
 /**
 
-Syntax sugar for iterating over a `Lender`.
+Syntax sugar for iterating over a [`Lender`](https://docs.rs/lender/latest/lender/trait.Lender.html).
 
 This function-like macro expands a syntax of the form
 ```[ignore]
@@ -46,7 +46,7 @@ for_!(PATTERN in EXPR BLOCK);
 ```
 where `PATTERN` is a valid pattern for a `for` loop, `EXPR` is an expression that
 implements [`IntoLender`](https://docs.rs/lender/latest/lender/trait.IntoLender.html) and `BLOCK` is a block of code, into a `while let` loop that
-iterates over a `Lender` obtained from the [`IntoLender`](https://docs.rs/lender/latest/lender/trait.IntoLender.html):
+iterates over a [`Lender`](https://docs.rs/lender/latest/lender/trait.Lender.html) obtained from the [`IntoLender`](https://docs.rs/lender/latest/lender/trait.IntoLender.html):
 ```[ignore]
 let mut ___ඞඞඞlenderඞඞඞ___ = (EXPR).into_lender();
 while let Some(PATTERN) = ___ඞඞඞlenderඞඞඞ___.next() BLOCK
@@ -90,6 +90,7 @@ pub fn for_(input: TokenStream) -> TokenStream {
     } = parse_macro_input!(input as ForLenderInfo);
 
     quote! {{
+        use lender::{Lender, IntoLender};
         let mut ___ඞඞඞlenderඞඞඞ___ = (#expr).into_lender();
         while let Some( #pat ) = ___ඞඞඞlenderඞඞඞ___.next() #body
     }}
