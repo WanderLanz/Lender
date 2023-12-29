@@ -7,8 +7,6 @@
 
 #![doc = include_str!("../README.md")]
 
-extern crate proc_macro;
-
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{
@@ -53,13 +51,13 @@ while let Some(PATTERN) = ___ඞඞඞlenderඞඞඞ___.next() BLOCK
 ```
 For example, the following code
 ```[ignore]
-for_!(x in from_into_iter(0..10) {
+for_!(x in (0..10).into_lender() {
     println!("{}", x);
 });
 ```
 iterates over the integers [0. .10), printing them,
 using a [`Lender`](https://docs.rs/lender/latest/lender/trait.Lender.html) obtained by
-adapting an `IntoIterator` (in this case, a `Range`).
+adapting an `Iterator` (in this case, a `Range`).
 
 Note that the outer parentheses are part of the standard Rust syntax for function-like
 procedural macros, and thus can be replaced, for example, with brackets.
@@ -76,12 +74,13 @@ enum Three {
 
 #[test]
 pub fn test_bar() {
-    for_!(x @ (Three::A | Three::B) in from_into_iter([Three::A, Three::B, Three::C]) {
+    for_!(x @ (Three::A | Three::B) in [Three::A, Three::B, Three::C].into_lender() {
         dbg!(x);
     });
 }
 ```
-
+Note that these examples have the sole purpose of showing the syntax of the macro:
+in these cases a standard iterator would be simpler and more efficient.
 */
 #[proc_macro]
 pub fn for_(input: TokenStream) -> TokenStream {
