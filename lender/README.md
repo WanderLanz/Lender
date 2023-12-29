@@ -36,7 +36,8 @@ Indeed, the crate implements for [`Lender`](https://docs.rs/lender/latest/lender
 all of the methods as `Iterator`, except `Iterator::partition_in_place` and `Iterator::array_chunks`,
 and most provide the same functionality as the equivalent `Iterator` method.
 
-Notable differences in behavior include `Lender::next_chunk` providing a lender instead of an array
+Notable differences in behavior include [`next_chunk`](https://docs.rs/lender/latest/lender/trait.Lender.html#method.next_chunk) 
+providing a lender instead of an array
 and certain closures requiring usage of the `hrc!`, `hrc_mut!`, `hrc_once!` (higher-ranked closure) macros,
 which provide a stable replacement for the `closure_lifetime_binder` feature.
 
@@ -108,6 +109,12 @@ data[1] = 1;
 // Fibonacci sequence, most ergonomic usage: for_! procedural macro.
 for_!(w in data.array_windows_mut::<3>() {
    w[2] = w[0] + w[1];
+});
+assert_eq!(data, [0, 1, 1, 2, 3, 5, 8, 13, 21]);
+
+// You can use decostructing assignments with for_!.
+for_!([a, b, c] in data.array_windows_mut::<3>() {
+   *c = *a + *b;
 });
 assert_eq!(data, [0, 1, 1, 2, 3, 5, 8, 13, 21]);
 
