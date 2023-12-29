@@ -5,6 +5,7 @@ mod once;
 mod once_with;
 mod repeat;
 mod repeat_with;
+mod windows_mut;
 
 pub use self::{
     empty::{empty, Empty},
@@ -14,4 +15,5 @@ pub use self::{
     once_with::{once_with, OnceWith},
     repeat::{repeat, Repeat},
     repeat_with::{repeat_with, RepeatWith},
+    windows_mut::{array_windows_mut, windows_mut, ArrayWindowsMut, WindowsMut, WindowsMutExt},
 };
