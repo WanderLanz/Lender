@@ -1,11 +1,12 @@
 [package]
 name = "lender"
-version = "0.2.5"
-edition = "2021"
 authors = ["Lance Warden <wanderlanz@proton.me>", "Sebastiano Vigna <sebastiano.vigna@gmail.com>"]
-license = "Apache-2.0 OR LGPL-2.1-or-later OR MIT"
-description = "iter feature complete(-ish) lending iterator"
+description = "A lending-iterator trait based on higher-rank trait bounds, with full std::iter::Iterator functionality"
+version = "0.2.6"
+edition = "2021"
 repository = "https://github.com/WanderLanz/Lender"
+license = "Apache-2.0 OR LGPL-2.1-or-later OR MIT"
+readme = "README.md"
 categories = ["rust-patterns", "no-std"]
 keywords = ["lending", "iterator"]
 

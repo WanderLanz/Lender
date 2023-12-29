@@ -44,4 +44,7 @@ pub mod prelude {
         hrc, hrc_mut, hrc_once, lend, DoubleEndedLender, ExactSizeLender, ExtendLender, FromLender, IntoLender, IteratorExt,
         Lend, Lender, Lending, WindowsMutExt,
     };
+
+    #[cfg(feature = "derive")]
+    pub use lender_derive::for_;
 }
