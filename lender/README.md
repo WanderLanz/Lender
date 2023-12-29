@@ -23,6 +23,10 @@ In other words, a kind of iterator that lends an item one at a time, a pattern n
 by the current definition of `Iterator` which only encompasses iterators over items that live at least
 as long as the iterators themselves, i.e. `Self: 'this` implies `<Self as Iterator>::Item: 'this`.
 
+A lender is not an iterator, so you cannot use directly the `for` loop syntax sugar, but we provide
+a derive function-like macro [`for_!`](https://docs.rs/lender-derive/latest/lender_derive/macro.for_.html)
+with a similar syntax.
+
 ## Examples
 
 I present to you `WindowsMut`.
@@ -48,6 +52,21 @@ impl<'a, T> Lender for WindowsMut<'a, T> {
 // Fibonacci sequence
 let mut data = vec![0u32; 3 * 3];
 data[1] = 1;
+
+// Fibonacci sequence, most ergonomic usage: for_! procedural macro.
+for_!(w in WindowsMut { slice: &mut data, begin: 0, len: 3 }{
+   w[2] = w[0] + w[1];
+});
+assert_eq!(data, [0, 1, 1, 2, 3, 5, 8, 13, 21]);
+
+// Fibonacci sequence, explicit while let loop: you MUST assign the lender to a variable.
+let mut windows = WindowsMut { slice: &mut data, begin: 0, len: 3 };
+while let Some(w) = windows.next() {
+   w[2] = w[0] + w[1];
+}
+assert_eq!(data, [0, 1, 1, 2, 3, 5, 8, 13, 21]);
+
+// Fibonacci sequence, for_each with hrc_mut! (higher-ranked closure).
 WindowsMut { slice: &mut data, begin: 0, len: 3 }
     .for_each(hrc_mut!(for<'lend> |w: &'lend mut [u32]| { w[2] = w[0] + w[1] }));
 assert_eq!(data, [0, 1, 1, 2, 3, 5, 8, 13, 21]);
