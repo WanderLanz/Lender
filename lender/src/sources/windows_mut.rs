@@ -86,7 +86,7 @@ impl<'a, T, const WINDOW_SIZE: usize> Lender for ArrayWindowsMut<'a, T, WINDOW_S
     }
 }
 
-/// Extension trait adding to slice and arrays the methods [`windows_mut`](WindowsMutExt::windows_mut)
+/// Extension trait adding to slices and arrays the methods [`windows_mut`](WindowsMutExt::windows_mut)
 /// and [`array_windows_mut`](WindowsMutExt::array_windows_mut).
 pub trait WindowsMutExt<T> {
     fn windows_mut(&mut self, size: usize) -> WindowsMut<'_, T>;

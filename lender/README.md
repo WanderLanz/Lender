@@ -12,7 +12,8 @@ invalidated by the subsequent call to `next`. Niko Matsakis has an interesting
 explaining a general view of giving vs. lending traits.
 
 The typical example that cannot be written with standard Rust iterators, 
-but is covered by lenders, is that of a lender returning [mutable, overlapping windows of a slice]().
+but is covered by lenders, is that of a lender returning 
+[mutable, overlapping windows of a slice or array](https://docs.rs/lender/latest/lender/trait.WindowsMutExt.html).
 
 But lenders are more general than that, as they might return items that depend on
 some mutable state stored in the iterator. For example, a lender might 
