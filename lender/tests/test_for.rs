@@ -1,21 +1,17 @@
-/*
- * SPDX-FileCopyrightText: 2023 Tommaso Fontana
- * SPDX-FileCopyrightText: 2023 Sebastiano Vigna
- *
- * SPDX-License-Identifier: Apache-2.0 OR LGPL-2.1-or-later OR MIT
- */
-
-use lender::{from_into_iter, from_iter};
-use lender_derive::for_;
+use lender::prelude::*;
 
 #[test]
-// Test with Lender and IntoLender, even if they are not imported
+// Test with Lender and IntoLender. Note that iterators are converted automagically.
 pub fn test_for_lender() {
     for_!(x in from_into_iter(0..10) {
         println!("{}", x);
     });
 
     for_!(x in from_iter(0..10) {
+        println!("{}", x);
+    });
+
+    for_!(x in 0..10 {
         println!("{}", x);
     });
 }
@@ -28,9 +24,10 @@ enum Three {
 }
 
 #[test]
-// Test that | works in patterns
+// Test that | works in patterns. Note that an array is an IntoIterator, but not
+// an Iterator, so we need to convert it manually.
 pub fn test_bar() {
-    for_!(x @ (Three::A | Three::B) in from_into_iter([Three::A, Three::B, Three::C]) {
+    for_!(x @ (Three::A | Three::B) in [Three::A, Three::B, Three::C].into_into_lender() {
         dbg!(x);
     });
 }

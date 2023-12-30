@@ -46,11 +46,11 @@ pub use sources::*;
 pub mod try_trait_v2;
 
 pub mod prelude {
-    pub use crate::{
-        hrc, hrc_mut, hrc_once, lend, DoubleEndedLender, ExactSizeLender, ExtendLender, FromLender, IntoLender, IteratorExt,
-        Lend, Lender, Lending, WindowsMutExt,
-    };
-
     #[cfg(feature = "derive")]
     pub use lender_derive::for_;
+
+    pub use crate::{
+        from_into_iter, from_iter, hrc, hrc_mut, hrc_once, lend, DoubleEndedLender, ExactSizeLender, ExtendLender,
+        FromLender, IntoIteratorExt, IntoLender, IteratorExt, Lend, Lender, Lending, WindowsMutExt,
+    };
 }

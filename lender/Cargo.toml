@@ -2,7 +2,7 @@
 name = "lender"
 authors = ["Lance Warden <wanderlanz@proton.me>", "Sebastiano Vigna <sebastiano.vigna@gmail.com>"]
 description = "A lending-iterator trait based on higher-rank trait bounds, with full std::iter::Iterator functionality"
-version = "0.2.7"
+version = "0.2.8"
 edition = "2021"
 repository = "https://github.com/WanderLanz/Lender"
 license = "Apache-2.0 OR LGPL-2.1-or-later OR MIT"
