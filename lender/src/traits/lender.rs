@@ -109,7 +109,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(lender.last(), Some(&3));
     /// ```
     #[inline]
-    fn last<'call>(mut self) -> Option<Lend<'call, Self>>
+    fn last<'call>(&'call mut self) -> Option<Lend<'call, Self>>
     where
         Self: Sized,
     {
@@ -1186,10 +1186,10 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     }
     /// A lending replacement for [`Iterator::array_chunks`].
     ///
-    /// It is not possible to implement the exact behavior of 
+    /// It is not possible to implement the exact behavior of
     /// [`Iterator::array_chunks`] in a lender, so this is the closest approximation:
     /// at each iteration, it yields a lender returning the next `chunk_size` lends.
-    /// 
+    ///
     /// # Examples
     ///
     /// ```rust
@@ -1250,15 +1250,9 @@ impl<'lend, L: Lender> Lending<'lend> for &mut L {
 }
 impl<L: Lender> Lender for &mut L {
     #[inline]
-    fn next(&mut self) -> Option<Lend<'_, Self>> {
-        (**self).next()
-    }
+    fn next(&mut self) -> Option<Lend<'_, Self>> { (**self).next() }
     #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        (**self).size_hint()
-    }
+    fn size_hint(&self) -> (usize, Option<usize>) { (**self).size_hint() }
     #[inline]
-    fn advance_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {
-        (**self).advance_by(n)
-    }
+    fn advance_by(&mut self, n: usize) -> Result<(), NonZeroUsize> { (**self).advance_by(n) }
 }

@@ -11,9 +11,7 @@ pub struct Fuse<L> {
     flag: bool,
 }
 impl<L> Fuse<L> {
-    pub(crate) fn new(lender: L) -> Fuse<L> {
-        Fuse { lender, flag: false }
-    }
+    pub(crate) fn new(lender: L) -> Fuse<L> { Fuse { lender, flag: false } }
 }
 impl<L> FusedLender for Fuse<L> where L: Lender {}
 impl<'lend, L> Lending<'lend> for Fuse<L>
@@ -47,9 +45,9 @@ where
         None
     }
     #[inline]
-    fn last<'call>(mut self) -> Option<Lend<'call, Self>>
+    fn last<'call>(&'call mut self) -> Option<Lend<'call, Self>>
     where
-        Self: Sized + 'call,
+        Self: Sized,
     {
         if !self.flag {
             if let x @ Some(_) = self.lender.last() {
@@ -207,7 +205,5 @@ where
     }
 }
 impl<L: Default> Default for Fuse<L> {
-    fn default() -> Self {
-        Self::new(L::default())
-    }
+    fn default() -> Self { Self::new(L::default()) }
 }

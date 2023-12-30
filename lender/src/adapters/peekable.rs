@@ -17,9 +17,7 @@ impl<'this, L> Peekable<'this, L>
 where
     L: Lender,
 {
-    pub(crate) fn new(lender: L) -> Peekable<'this, L> {
-        Peekable { lender, peeked: None }
-    }
+    pub(crate) fn new(lender: L) -> Peekable<'this, L> { Peekable { lender, peeked: None } }
     pub fn peek(&mut self) -> Option<&'_ Lend<'this, L>> {
         let lender = &mut self.lender;
         self.peeked
@@ -63,9 +61,7 @@ impl<'this, L> Clone for Peekable<'this, L>
 where
     L: Lender + Clone,
 {
-    fn clone(&self) -> Self {
-        Peekable { lender: self.lender.clone(), peeked: None }
-    }
+    fn clone(&self) -> Self { Peekable { lender: self.lender.clone(), peeked: None } }
 }
 impl<'this, L: fmt::Debug> fmt::Debug for Peekable<'this, L>
 where
@@ -114,9 +110,9 @@ where
         }
     }
     #[inline]
-    fn last<'a>(mut self) -> Option<Lend<'a, Self>>
+    fn last<'a>(&'a mut self) -> Option<Lend<'a, Self>>
     where
-        Self: Sized + 'a,
+        Self: Sized,
     {
         let peek_opt = match self.peeked.take() {
             Some(None) => return None,

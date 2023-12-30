@@ -12,9 +12,7 @@ pub struct Chain<A, B> {
     b: Fuse<B>,
 }
 impl<A, B> Chain<A, B> {
-    pub(crate) fn new(a: A, b: B) -> Self {
-        Self { a: Fuse::new(a), b: Fuse::new(b) }
-    }
+    pub(crate) fn new(a: A, b: B) -> Self { Self { a: Fuse::new(a), b: Fuse::new(b) } }
 }
 impl<'lend, A, B> Lending<'lend> for Chain<A, B>
 where
@@ -28,13 +26,9 @@ where
     A: Lender,
     B: Lender + for<'all> Lending<'all, Lend = Lend<'all, A>>,
 {
-    fn next(&mut self) -> Option<Lend<'_, Self>> {
-        self.a.next().or_else(|| self.b.next())
-    }
+    fn next(&mut self) -> Option<Lend<'_, Self>> { self.a.next().or_else(|| self.b.next()) }
     #[inline]
-    fn count(self) -> usize {
-        self.a.count() + self.b.count()
-    }
+    fn count(self) -> usize { self.a.count() + self.b.count() }
     fn try_fold<Acc, F, R>(&mut self, mut acc: Acc, mut f: F) -> R
     where
         Self: Sized,
@@ -85,9 +79,9 @@ where
         self.a.find(&mut predicate).or_else(|| self.b.find(predicate))
     }
     #[inline]
-    fn last<'call>(self) -> Option<Lend<'call, Self>>
+    fn last<'call>(&'call mut self) -> Option<Lend<'call, Self>>
     where
-        Self: Sized + 'call,
+        Self: Sized,
     {
         let a_last = self.a.last();
         let b_last = self.b.last();
@@ -112,9 +106,7 @@ where
     B: DoubleEndedLender + for<'all> Lending<'all, Lend = Lend<'all, A>>,
 {
     #[inline]
-    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
-        self.b.next_back().or_else(|| self.a.next_back())
-    }
+    fn next_back(&mut self) -> Option<Lend<'_, Self>> { self.b.next_back().or_else(|| self.a.next_back()) }
 
     #[inline]
     fn advance_back_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {
@@ -178,7 +170,5 @@ where
 {
 }
 impl<A: Default, B: Default> Default for Chain<A, B> {
-    fn default() -> Self {
-        Chain::new(Default::default(), Default::default())
-    }
+    fn default() -> Self { Chain::new(Default::default(), Default::default()) }
 }

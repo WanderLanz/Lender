@@ -8,9 +8,7 @@ pub struct Skip<L> {
     n: usize,
 }
 impl<L> Skip<L> {
-    pub(crate) fn new(lender: L, n: usize) -> Skip<L> {
-        Skip { lender, n }
-    }
+    pub(crate) fn new(lender: L, n: usize) -> Skip<L> { Skip { lender, n } }
 }
 impl<'lend, L> Lending<'lend> for Skip<L>
 where
@@ -54,9 +52,9 @@ where
         self.lender.count()
     }
     #[inline]
-    fn last<'call>(mut self) -> Option<Lend<'call, Self>>
+    fn last<'call>(&'call mut self) -> Option<Lend<'call, Self>>
     where
-        Self: Sized + 'call,
+        Self: Sized,
     {
         if self.n > 0 {
             self.lender.nth(self.n - 1)?;
