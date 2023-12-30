@@ -2,12 +2,12 @@ use core::ops::ControlFlow;
 
 use crate::{try_trait_v2::Try, Chunk, ExactSizeLender, FusedLender, Lend, Lender, Lending};
 
-/// A lender over big, plumpy, chunky chunks of elements of the lender at a time.
+/// A lender yielding lenders returning the next `chunk_size` lends.
 ///
-/// The chunks do not overlap.
+/// This is the closest lendeing approximation to [`core::iter::ArrayChunks`], as
+/// we cannot accumulate the lends into an array.
 ///
-/// This `struct` is created by [`chunky`][Lender::array_chunks]
-/// method on [`Lender`]. See its documentation for more.
+/// This struct is created by [`chunky`][Lender::chunky].
 #[derive(Debug, Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Chunky<L: Lender> {

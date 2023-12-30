@@ -34,7 +34,7 @@ pub fn from_iter<I: Iterator>(iter: I) -> FromIter<I> {
 /// A lender that yields elements from an iterator.
 ///
 /// This `struct` is created by the [`from_iter()`] function.
-/// See its documentation for more.
+///
 
 #[derive(Clone, Debug)]
 #[repr(transparent)]
@@ -97,7 +97,7 @@ pub fn from_into_iter<I: IntoIterator>(into_iter: I) -> FromIntoIter<I> {
 /// to the iterators returned by the wrapped [`IntoIterator`].
 ///
 /// This `struct` is created by the [`from_into_iter()`] function.
-/// See its documentation for more.
+///
 
 #[repr(transparent)]
 #[derive(Clone, Debug)]
@@ -150,7 +150,7 @@ where
 /// If `I::Item` is 'static, behaves like [`FromIter`].
 ///
 /// This `struct` is created by the [`lend_iter()`] function.
-/// See its documentation for more.
+///
 
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]

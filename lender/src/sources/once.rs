@@ -20,7 +20,7 @@ pub fn once<'a, L: ?Sized + for<'all> Lending<'all>>(value: Lend<'a, L>) -> Once
 
 /// A lender that yields an element exactly once.
 ///
-/// This `struct` is created by the [`once()`] function. See its documentation for more.
+/// This `struct` is created by the [`once()`] function.
 ///
 /// similar to [`core::iter::Once`].
 #[must_use = "lenders are lazy and do nothing unless consumed"]

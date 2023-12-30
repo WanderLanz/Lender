@@ -24,7 +24,7 @@ where
 
 /// A lender that repeats an element endlessly by applying a closure.
 ///
-/// This `struct` is created by the [`repeat_with()`] function. See its documentation for more.
+/// This `struct` is created by the [`repeat_with()`] function.
 pub struct RepeatWith<'a, L: ?Sized, F> {
     f: F,
     _marker: core::marker::PhantomData<&'a L>,

@@ -3,9 +3,12 @@
 //! - Flexible function signatures, to work around function lifetime signature restrictions.
 //! - Higher-Ranked Closures (macro to create fn signatures as a type hint)
 //!
-//! If you are using nightly, it is recommended to use higher-ranked closures (`for<'all> |x: &'all ()| -> &'all () { x }`), which better satisfy these traits without addition function signatures. (`#![feature(closure_lifetime_binder)]`).
+//! If you are using nightly, it is recommended to use higher-ranked closures
+//! (`for<'all> |x: &'all ()| -> &'all () { x }`), which better satisfy these traits
+//! without addition function signatures. (`#![feature(closure_lifetime_binder)]`).
 //!
-//! If you are not on nightly, you can use the [`hrc_once!`], [`hrc_mut!`], or [`hrc!`] macro to create a higher-ranked closure.
+//! If you are not on nightly, you can use the [`hrc!`](`crate::hrc`), [`hrc_mut!`](`crate::hrc_mut`),
+//! or [`hrc_once!`](`crate::hrc_once`) macros to create a higher-ranked closure.
 
 /// Higher-Kinded Associated Output `FnOnce`, where `Output` (B) is with lifetime `'b`.
 pub trait FnOnceHKA<'b, A>: FnOnce(A) -> <Self as FnOnceHKA<'b, A>>::B {

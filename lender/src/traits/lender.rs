@@ -328,9 +328,6 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     }
     /// Call the given function with each lend of this lender.
     ///
-    /// While for most situations a basic while loop will suffice,
-    /// for long chains of operations it is recommended to use [`for_each`] method instead for readability.
-    ///
     /// # Examples
     ///
     /// ```rust
@@ -1187,8 +1184,12 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         Iter::new(self)
     }
-    /// Make this lender nice and chunky. (Adapter that calls `lend_chunk` on the lender on `next`)
+    /// A lending replacement for [`Iterator::array_chunks`].
     ///
+    /// It is not possible to implement the exact behavior of 
+    /// [`Iterator::array_chunks`] in a lender, so this is the closest approximation:
+    /// at each iteration, it yields a lender returning the next `chunk_size` lends.
+    /// 
     /// # Examples
     ///
     /// ```rust

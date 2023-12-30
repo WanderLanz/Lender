@@ -23,7 +23,7 @@ where
 /// applying the provided closure `F: FnOnce() -> A`.
 ///
 /// This `struct` is created by the [`once_with()`] function.
-/// See its documentation for more.
+///
 pub struct OnceWith<St, F> {
     state: St,
     f: Option<F>,

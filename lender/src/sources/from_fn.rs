@@ -26,7 +26,7 @@ where
 /// An lender where each iteration calls the provided closure `F: FnMut(&mut St) -> Option<T>`.
 ///
 /// This `struct` is created by the [`from_fn()`] function.
-/// See its documentation for more.
+///
 #[derive(Clone)]
 pub struct FromFn<St, F> {
     state: St,

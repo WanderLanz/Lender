@@ -19,7 +19,7 @@ where
 
 /// A lender that repeats an element endlessly.
 ///
-/// This `struct` is created by the [`repeat()`] function. See its documentation for more.
+/// This `struct` is created by the [`repeat()`] function.
 pub struct Repeat<'a, L>
 where
     L: ?Sized + for<'all> Lending<'all> + 'a,

@@ -19,7 +19,7 @@ pub const fn empty<L: ?Sized + for<'all> Lending<'all>>() -> Empty<L> {
 
 /// A lender that yields nothing.
 ///
-/// This `struct` is created by the [`empty()`] function. See its documentation for more.
+/// This `struct` is created by the [`empty()`] function.
 ///
 /// similar to [`core::iter::Empty`].
 #[must_use = "lenders are lazy and do nothing unless consumed"]

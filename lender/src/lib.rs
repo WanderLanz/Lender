@@ -23,10 +23,16 @@ extern crate alloc;
 /// ```
 pub struct _Lender_Doctest_Sanity_Check;
 
+#[cfg(feature = "derive")]
+pub use lender_derive::for_;
+
+#[doc(hidden)]
 #[allow(private_bounds)]
 pub trait ImplBound: ImplBoundPriv {}
+#[doc(hidden)]
 pub(crate) trait ImplBoundPriv {}
 impl<T: ?Sized + ImplBoundPriv> ImplBound for T {}
+#[doc(hidden)]
 pub struct Ref<'lend, T: ?Sized>(&'lend T);
 impl<'lend, T: ?Sized> ImplBoundPriv for Ref<'lend, T> {}
 
