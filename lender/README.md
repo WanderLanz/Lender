@@ -332,7 +332,7 @@ that trait bound must hold for all lifetimes, that means it must be valid
 for `'static`, and since the lender must outlive the lend, 
 also the lender must be `'static`. Thus, until there is some syntax that makes it
 possible to restrict the lifetime variable that appears in a higher-rank trait bound,
-GAT-based lending iterators are, in practice, of little practical use.
+GAT-based lending iterators are of little practical use.
 
 ## Resources
 
