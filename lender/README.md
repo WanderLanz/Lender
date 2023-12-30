@@ -303,6 +303,37 @@ fn test_mock_lender(m: MockLender) {
 }
 ```
 
+## Why Not GATs?
+
+_Generic associated types_ (GATs) were introduced [exactly having lending iterators
+as a use case in mind](https://rust-lang.github.io/rfcs/1598-generic_associated_types.html). 
+With GATs, a lender trait could be easily defined as
+```rust
+pub trait Lender {
+    type Lend<'lend>: where Self: 'lend;
+    fn next(&mut self) -> Option<Self::Lend<'_>>;
+}
+```
+This looks all nice and cozy, and you can even write a full-fledged library around it.
+But you will hit a wall when trying to specify trait bounds on the lend type, something that
+can be done only using [higher-rank trait bounds](https://doc.rust-lang.org/nomicon/hrtb.html):
+```rust
+pub trait Lender {
+    type Lend<'lend>: where Self: 'lend;
+    fn next(&mut self) -> Option<Self::Lend<'_>>;
+}
+
+fn read_lender<L: Lender>(lender: L) 
+    where for<'lend> L::Lend<'lend>: AsRef<str> {}
+```
+Again, this will compile without problems, but as you try to use `read_lender` 
+with a type implementing `Lender`, since the `where` clause specifies that 
+that trait bound must hold for all lifetimes, that means it must be valid
+for `'static`, and since the lender must outlive the lend, 
+also the lender must be `'static`. Thus, until there is some syntax that makes it
+possible to restrict the lifetime variable that appears in a higher-rank trait bound,
+GAT-based lending iterators are, in practice, of little practical use.
+
 ## Resources
 
 Please check out the great resources below that helped me
