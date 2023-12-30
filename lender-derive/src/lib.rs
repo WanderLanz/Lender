@@ -38,7 +38,7 @@ impl Parse for ForLenderInfo {
 
 Syntax sugar for iterating over a [`Lender`](https://docs.rs/lender/latest/lender/trait.Lender.html).
 
-This function-like macro expands a syntax of the form
+This function-like procedural macro expands a syntax of the form
 ```[ignore]
 for_!(PATTERN in EXPR BLOCK);
 ```
@@ -51,13 +51,13 @@ while let Some(PATTERN) = ___ඞඞඞlenderඞඞඞ___.next() BLOCK
 ```
 For example, the following code
 ```[ignore]
-for_!(x in (0..10).into_lender() {
+for_!(x in 0..10 {
     println!("{}", x);
 });
 ```
 iterates over the integers [0. .10), printing them,
 using a [`Lender`](https://docs.rs/lender/latest/lender/trait.Lender.html) obtained by
-adapting an `Iterator` (in this case, a `Range`).
+automagically adapting an [`Iterator`](https://doc.rust-lang.org/std/iter/trait.Iterator.html) (in this case, a [`Range`](https://doc.rust-lang.org/std/ops/struct.Range.html)).
 
 Note that the outer parentheses are part of the standard Rust syntax for function-like
 procedural macros, and thus can be replaced, for example, with brackets.
@@ -74,11 +74,15 @@ enum Three {
 
 #[test]
 pub fn test_bar() {
-    for_!(x @ (Three::A | Three::B) in [Three::A, Three::B, Three::C].into_lender() {
+    for_!(x @ (Three::A | Three::B) in [Three::A, Three::B, Three::C].into_into_lender() {
         dbg!(x);
     });
 }
 ```
+In this case, since an array is an [`IntoIterator`](https://doc.rust-lang.org/std/iter/trait.IntoIterator.html),
+but not an [`Iterator`](https://doc.rust-lang.org/std/iter/trait.Iterator.html), we need to
+adapt it manually.
+
 Note that these examples have the sole purpose of showing the syntax of the macro:
 in these cases a standard iterator would be simpler and more efficient.
 */
