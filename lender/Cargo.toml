@@ -1,6 +1,9 @@
 [package]
 name = "lender"
-authors = ["Lance Warden <wanderlanz@proton.me>", "Sebastiano Vigna <sebastiano.vigna@gmail.com>"]
+authors = [
+    "Lance Warden <wanderlanz@proton.me>",
+    "Sebastiano Vigna <sebastiano.vigna@gmail.com>",
+]
 description = "A lending-iterator trait based on higher-rank trait bounds, with full std::iter::Iterator functionality"
 version = "0.2.9"
 edition = "2021"
@@ -15,6 +18,7 @@ maintenance = { status = "experimental" }
 
 [dependencies]
 lender-derive = { version = "0.1.1", optional = true }
+stable_try_trait_v2 = { path = "../stable_try_trait_v2", version = "1.75" }
 
 [features]
 default = ["derive"]

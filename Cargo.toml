@@ -1,7 +1,4 @@
 [workspace]
 resolver = "2"
 
-members = [
-    "lender",
-    "lender-derive",
-]
+members = ["lender", "lender-derive", "stable_try_trait_v2"]

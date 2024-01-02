@@ -43,7 +43,7 @@ pub use traits::*;
 pub mod higher_order;
 mod sources;
 pub use sources::*;
-pub mod try_trait_v2;
+pub use stable_try_trait_v2 as try_trait_v2;
 
 pub mod prelude {
     #[cfg(feature = "derive")]
