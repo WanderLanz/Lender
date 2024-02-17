@@ -1,31 +1,28 @@
 use core::fmt;
 
-use crate::{Lend, Lender, Lending, Peekable};
+use crate::{HasNext, Lend, Lender, Lending};
 
-#[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Intersperse<'this, L>
 where
     for<'all> Lend<'all, L>: Clone,
-    L: Lender,
+    L: Lender + HasNext,
 {
-    lender: Peekable<'this, L>,
+    lender: L,
     separator: Lend<'this, L>,
     needs_sep: bool,
 }
 impl<'this, L> Intersperse<'this, L>
 where
     for<'all> Lend<'all, L>: Clone,
-    L: Lender,
+    L: Lender + HasNext,
 {
-    pub(crate) fn new(lender: L, separator: Lend<'this, L>) -> Self {
-        Self { lender: lender.peekable(), separator, needs_sep: false }
-    }
+    pub(crate) fn new(lender: L, separator: Lend<'this, L>) -> Self { Self { lender, separator, needs_sep: false } }
 }
 impl<'this, L: fmt::Debug> fmt::Debug for Intersperse<'this, L>
 where
     for<'all> Lend<'all, L>: Clone + fmt::Debug,
-    L: Lender,
+    L: Lender + HasNext,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Intersperse")
@@ -38,17 +35,17 @@ where
 impl<'lend, 'this, L> Lending<'lend> for Intersperse<'this, L>
 where
     for<'all> Lend<'all, L>: Clone,
-    L: Lender,
+    L: Lender + HasNext,
 {
     type Lend = Lend<'lend, L>;
 }
 impl<'this, L> Lender for Intersperse<'this, L>
 where
     for<'all> Lend<'all, L>: Clone,
-    L: Lender,
+    L: Lender + HasNext,
 {
     fn next(&mut self) -> Option<Lend<'_, Self>> {
-        if self.needs_sep && self.lender.peek().is_some() {
+        if self.needs_sep && self.lender.has_next() {
             self.needs_sep = false;
             // SAFETY: 'this: 'lend
             Some(unsafe { core::mem::transmute::<Lend<'this, Self>, Lend<'_, Self>>(self.separator.clone()) })
@@ -76,33 +73,29 @@ where
             acc
         })
     }
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        intersperse_size_hint(&self.lender, self.needs_sep)
-    }
+    fn size_hint(&self) -> (usize, Option<usize>) { intersperse_size_hint(&self.lender, self.needs_sep) }
 }
 
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
-pub struct IntersperseWith<'this, L, G>
-where
-    L: Lender,
-{
+pub struct IntersperseWith<'this, L, G> {
     separator: G,
-    lender: Peekable<'this, L>,
+    lender: L,
     needs_sep: bool,
+    _phantom: core::marker::PhantomData<&'this ()>,
 }
-impl<'this, L, G> IntersperseWith<'this, L, G>
+impl<'this, L: 'this, G> IntersperseWith<'this, L, G>
 where
-    L: Lender,
+    L: Lender + HasNext,
     G: FnMut() -> Lend<'this, L>,
 {
     pub(crate) fn new(lender: L, seperator: G) -> Self {
-        Self { lender: Peekable::new(lender), separator: seperator, needs_sep: false }
+        Self { lender, separator: seperator, needs_sep: false, _phantom: core::marker::PhantomData }
     }
 }
 impl<'this, L: fmt::Debug, G: fmt::Debug> fmt::Debug for IntersperseWith<'this, L, G>
 where
-    L: Lender,
+    L: Lender + HasNext,
     for<'all> Lend<'all, L>: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -113,20 +106,20 @@ where
             .finish()
     }
 }
-impl<'lend, 'this, L, G> Lending<'lend> for IntersperseWith<'this, L, G>
+impl<'lend, 'this, L: 'this, G> Lending<'lend> for IntersperseWith<'this, L, G>
 where
-    L: Lender,
+    L: Lender + HasNext,
     G: FnMut() -> Lend<'this, L>,
 {
     type Lend = Lend<'lend, L>;
 }
-impl<'this, L, G> Lender for IntersperseWith<'this, L, G>
+impl<'this, L: 'this, G> Lender for IntersperseWith<'this, L, G>
 where
-    L: Lender,
+    L: Lender + HasNext,
     G: FnMut() -> Lend<'this, L>,
 {
     fn next(&mut self) -> Option<Lend<'_, Self>> {
-        if self.needs_sep && self.lender.peek().is_some() {
+        if self.needs_sep && self.lender.has_next() {
             self.needs_sep = false;
             // SAFETY: 'this: 'lend
             Some(unsafe { core::mem::transmute::<Lend<'this, L>, Lend<'_, L>>((self.separator)()) })
@@ -154,9 +147,7 @@ where
             acc
         })
     }
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        intersperse_size_hint(&self.lender, self.needs_sep)
-    }
+    fn size_hint(&self) -> (usize, Option<usize>) { intersperse_size_hint(&self.lender, self.needs_sep) }
 }
 
 fn intersperse_size_hint<L>(lender: &L, needs_sep: bool) -> (usize, Option<usize>)

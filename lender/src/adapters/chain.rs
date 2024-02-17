@@ -79,10 +79,7 @@ where
         self.a.find(&mut predicate).or_else(|| self.b.find(predicate))
     }
     #[inline]
-    fn last<'call>(&'call mut self) -> Option<Lend<'call, Self>>
-    where
-        Self: Sized,
-    {
+    fn last<'call>(&'call mut self) -> Option<Lend<'call, Self>> {
         let a_last = self.a.last();
         let b_last = self.b.last();
         b_last.or(a_last)

@@ -10,7 +10,7 @@ pub use self::{
     accum::{ProductLender, SumLender},
     collect::{ExtendLender, FromLender, IntoLender},
     double_ended::DoubleEndedLender,
-    exact_size::ExactSizeLender,
+    exact_size::{ExactSizeLender, HasNext},
     ext::{IntoIteratorExt, IteratorExt},
     lender::{Lend, Lender, Lending},
     marker::FusedLender,
@@ -26,25 +26,19 @@ impl<'a, A: 'a, B: 'a> TupleLend<'a> for (A, B) {
     type First = A;
     type Second = B;
     #[inline(always)]
-    fn tuple_lend(self) -> (Self::First, Self::Second) {
-        (self.0, self.1)
-    }
+    fn tuple_lend(self) -> (Self::First, Self::Second) { (self.0, self.1) }
 }
 impl<'a, A, B> TupleLend<'a> for &'a (A, B) {
     type First = &'a A;
     type Second = &'a B;
     #[inline(always)]
-    fn tuple_lend(self) -> (Self::First, Self::Second) {
-        (&self.0, &self.1)
-    }
+    fn tuple_lend(self) -> (Self::First, Self::Second) { (&self.0, &self.1) }
 }
 impl<'a, A, B> TupleLend<'a> for &'a mut (A, B) {
     type First = &'a mut A;
     type Second = &'a mut B;
     #[inline(always)]
-    fn tuple_lend(self) -> (Self::First, Self::Second) {
-        (&mut self.0, &mut self.1)
-    }
+    fn tuple_lend(self) -> (Self::First, Self::Second) { (&mut self.0, &mut self.1) }
 }
 
 /// Internal struct used to implement [`lend!`], do not use directly.

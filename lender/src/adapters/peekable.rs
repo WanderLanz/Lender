@@ -1,9 +1,8 @@
-use core::{fmt, ops::ControlFlow};
+use core::{fmt, marker::PhantomPinned, pin::Pin};
 
-use crate::{
-    try_trait_v2::{FromResidual, Try},
-    DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending,
-};
+use stable_try_trait_v2::{try_, Try};
+
+use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, HasNext, Lend, Lender, Lending};
 
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Peekable<'this, L>
@@ -12,56 +11,86 @@ where
 {
     lender: L,
     peeked: Option<Option<Lend<'this, L>>>,
+    _pin: PhantomPinned,
 }
 impl<'this, L> Peekable<'this, L>
 where
     L: Lender,
 {
-    pub(crate) fn new(lender: L) -> Peekable<'this, L> { Peekable { lender, peeked: None } }
-    pub fn peek(&mut self) -> Option<&'_ Lend<'this, L>> {
-        let lender = &mut self.lender;
-        self.peeked
-            .get_or_insert_with(|| {
-                // SAFETY: The lend is manually guaranteed to be the only one alive
-                unsafe { core::mem::transmute::<Option<Lend<'_, L>>, Option<Lend<'this, L>>>(lender.next()) }
-            })
-            .as_ref()
+    pub(crate) fn new(lender: L) -> Peekable<'this, L> { Peekable { lender, peeked: None, _pin: PhantomPinned } }
+    pub fn peek(self: Pin<&mut Self>) -> Option<&'_ Lend<'this, L>> {
+        unsafe {
+            let this = self.get_unchecked_mut();
+            let peeked = &mut this.peeked;
+            if let None = peeked {
+                *peeked = Some({
+                    // SAFETY: The lend is manually guaranteed to be the only one alive
+                    core::mem::transmute::<Option<Lend<'_, L>>, Option<Lend<'this, L>>>(this.lender.next())
+                });
+            }
+            // SAFETY: a `None` variant for `self` would have been replaced by a `Some`
+            // variant in the code above.
+            peeked.as_ref().unwrap_unchecked().as_ref()
+        }
     }
-    pub fn peek_mut(&mut self) -> Option<&'_ mut Lend<'this, L>> {
-        let lender = &mut self.lender;
-        self.peeked
-            .get_or_insert_with(|| {
-                // SAFETY: The lend is manually guaranteed to be the only one alive
-                unsafe { core::mem::transmute::<Option<Lend<'_, L>>, Option<Lend<'this, L>>>(lender.next()) }
-            })
-            .as_mut()
+    pub fn peek_mut(self: Pin<&mut Self>) -> Option<&'_ mut Lend<'this, L>> {
+        unsafe {
+            let this = self.get_unchecked_mut();
+            let peeked = &mut this.peeked;
+            if let None = peeked {
+                *peeked = Some({
+                    // SAFETY: The lend is manually guaranteed to be the only one alive
+                    core::mem::transmute::<Option<Lend<'_, L>>, Option<Lend<'this, L>>>(this.lender.next())
+                });
+            }
+            // SAFETY: a `None` variant for `self` would have been replaced by a `Some`
+            // variant in the code above.
+            peeked.as_mut().unwrap_unchecked().as_mut()
+        }
     }
-    pub fn next_if<F>(&mut self, f: F) -> Option<Lend<'_, L>>
+    pub fn next_if<F>(self: Pin<&mut Self>, f: F) -> Option<Lend<'_, L>>
     where
         F: FnOnce(&Lend<'_, L>) -> bool,
     {
-        let peeked = unsafe { &mut *(&mut self.peeked as *mut _) };
-        match self.next() {
-            Some(v) if f(&v) => Some(v),
-            v => {
-                // SAFETY: The lend is manually guaranteed to be the only one alive
-                *peeked = Some(unsafe { core::mem::transmute::<Option<Lend<'_, L>>, Option<Lend<'this, L>>>(v) });
-                None
+        // SAFETY: we aren't moving self
+        let this = unsafe { self.get_unchecked_mut() };
+        this.peeked = match this.peeked.take() {
+            Some(Some(v)) => {
+                if f(&v) {
+                    // SAFETY: 'this: 'call
+                    return Some(unsafe { core::mem::transmute::<Lend<'this, L>, Lend<'_, L>>(v) });
+                }
+                Some(Some(v))
             }
-        }
+            None => match this.lender.next() {
+                Some(v) if f(&v) => return Some(v),
+                // SAFETY: The lend is manually guaranteed to be the only one alive and we pin to avoid some largening pitfalls
+                v => Some(unsafe { core::mem::transmute::<Option<Lend<'_, L>>, Option<Lend<'this, L>>>(v) }),
+            },
+            v => v,
+        };
+        None
     }
-    pub fn next_if_eq<'a, T>(&'a mut self, t: &T) -> Option<Lend<'a, L>>
+    pub fn next_if_eq<'a, T>(self: Pin<&'a mut Self>, t: &T) -> Option<Lend<'a, L>>
     where
         T: for<'all> PartialEq<Lend<'all, L>>,
     {
         self.next_if(|v| t == v)
+    }
+    /// Drop any peeked value and unpin the lender.
+    #[inline]
+    pub fn unpin(self: Pin<&mut Self>) -> &mut Self {
+        // SAFETY: we're dropping the peeked value and unpinning the lender
+        let this = unsafe { self.get_unchecked_mut() };
+        this.peeked = None;
+        this
     }
 }
 impl<'this, L> Clone for Peekable<'this, L>
 where
     L: Lender + Clone,
 {
-    fn clone(&self) -> Self { Peekable { lender: self.lender.clone(), peeked: None } }
+    fn clone(&self) -> Self { Peekable { lender: self.lender.clone(), peeked: None, _pin: PhantomPinned } }
 }
 impl<'this, L: fmt::Debug> fmt::Debug for Peekable<'this, L>
 where
@@ -82,54 +111,126 @@ impl<'this, L> Lender for Peekable<'this, L>
 where
     L: Lender,
 {
+    #[inline]
+    fn next(&mut self) -> Option<Lend<'_, Self>> { self.lender.next() }
+    #[inline]
+    fn count(self) -> usize { self.lender.count() }
+    #[inline]
+    fn nth(&mut self, n: usize) -> Option<Lend<'_, Self>> { self.lender.nth(n) }
+    #[inline]
+    fn last<'a>(&'a mut self) -> Option<Lend<'a, Self>> { self.lender.last() }
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) { self.lender.size_hint() }
+    #[inline]
+    fn try_fold<B, F, R>(&mut self, init: B, f: F) -> R
+    where
+        Self: Sized,
+        F: FnMut(B, Lend<'_, Self>) -> R,
+        R: Try<Output = B>,
+    {
+        self.lender.try_fold(init, f)
+    }
+    #[inline]
+    fn fold<B, F>(self, init: B, f: F) -> B
+    where
+        Self: Sized,
+        F: FnMut(B, Lend<'_, Self>) -> B,
+    {
+        self.lender.fold(init, f)
+    }
+}
+impl<'this, L: DoubleEndedLender> DoubleEndedLender for Peekable<'this, L> {
+    #[inline]
+    fn next_back(&mut self) -> Option<Lend<'_, Self>> { self.lender.next_back() }
+    #[inline]
+    fn try_rfold<B, F, R>(&mut self, init: B, f: F) -> R
+    where
+        Self: Sized,
+        F: FnMut(B, Lend<'_, Self>) -> R,
+        R: Try<Output = B>,
+    {
+        self.lender.try_rfold(init, f)
+    }
+    #[inline]
+    fn rfold<B, F>(self, init: B, f: F) -> B
+    where
+        Self: Sized,
+        F: FnMut(B, Lend<'_, Self>) -> B,
+    {
+        self.lender.rfold(init, f)
+    }
+}
+impl<'this, L: ExactSizeLender> ExactSizeLender for Peekable<'this, L> {}
+
+impl<'this, L: FusedLender> FusedLender for Peekable<'this, L> {}
+
+impl<'lend, 'this, L> Lending<'lend> for Pin<&mut Peekable<'this, L>>
+where
+    L: Lender,
+{
+    type Lend = Lend<'lend, L>;
+}
+impl<'this, L> Lender for Pin<&mut Peekable<'this, L>>
+where
+    L: Lender,
+{
     fn next(&mut self) -> Option<Lend<'_, Self>> {
-        match self.peeked.take() {
-            // SAFETY: The lend is manually guaranteed to be the only one alive
-            Some(peeked) => unsafe { core::mem::transmute::<Option<Lend<'this, Self>>, Option<Lend<'_, Self>>>(peeked) },
-            None => self.lender.next(),
+        // SAFETY: we aren't moving self
+        let this = unsafe { self.as_mut().get_unchecked_mut() };
+        match this.peeked.take() {
+            // SAFETY: 'this: 'call
+            Some(peeked) => unsafe { core::mem::transmute::<Option<Lend<'this, L>>, Option<Lend<'_, L>>>(peeked) },
+            None => this.lender.next(),
         }
     }
     #[inline]
-    fn count(mut self) -> usize {
-        match self.peeked.take() {
+    fn count(self) -> usize {
+        // SAFETY: we aren't moving self
+        let this = unsafe { self.get_unchecked_mut() };
+        let lender = &mut this.lender;
+        match this.peeked.take() {
             Some(None) => 0,
-            Some(Some(_)) => 1 + self.lender.count(),
-            None => self.lender.count(),
+            Some(Some(_)) => 1 + lender.count(),
+            None => lender.count(),
         }
     }
     #[inline]
     fn nth(&mut self, n: usize) -> Option<Lend<'_, Self>> {
-        match self.peeked.take() {
+        // SAFETY: we aren't moving self
+        let this = unsafe { self.as_mut().get_unchecked_mut() };
+        match this.peeked.take() {
             Some(None) => None,
             // SAFETY: The lend is manually guaranteed to be the only one alive
-            Some(v @ Some(_)) if n == 0 => unsafe {
-                core::mem::transmute::<Option<Lend<'this, Self>>, Option<Lend<'_, Self>>>(v)
-            },
-            Some(Some(_)) => self.lender.nth(n - 1),
-            None => self.lender.nth(n),
+            Some(v @ Some(_)) if n == 0 => unsafe { core::mem::transmute::<Option<Lend<'this, L>>, Option<Lend<'_, L>>>(v) },
+            Some(Some(_)) => this.lender.nth(n - 1),
+            None => this.lender.nth(n),
         }
     }
     #[inline]
-    fn last<'a>(&'a mut self) -> Option<Lend<'a, Self>>
-    where
-        Self: Sized,
-    {
-        let peek_opt = match self.peeked.take() {
+    fn last<'a>(&'a mut self) -> Option<Lend<'a, Self>> {
+        // SAFETY: we aren't moving self
+        let this = unsafe { self.as_mut().get_unchecked_mut() };
+        let peek_opt = match this.peeked.take() {
             Some(None) => return None,
             // SAFETY: 'this: 'call
-            Some(v) => unsafe { core::mem::transmute::<Option<Lend<'this, Self>>, Option<Lend<'a, Self>>>(v) },
+            Some(v) => unsafe { core::mem::transmute::<Option<Lend<'this, L>>, Option<Lend<'a, L>>>(v) },
             None => None,
         };
-        self.lender.last().or(peek_opt)
+        // SAFETY: although we are using &lender when the lend may be &mut lender, we assume that the lend is not modifying the lender in *our* scope
+        match this.lender.size_hint().1 {
+            Some(n) => this.lender.nth(n.saturating_sub(1)),
+            None => peek_opt,
+        }
     }
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let peek_len = match self.peeked {
+        let this = self.as_ref().get_ref();
+        let peek_len = match this.peeked {
             Some(None) => return (0, Some(0)),
             Some(Some(_)) => 1,
             None => 0,
         };
-        let (l, r) = self.lender.size_hint();
+        let (l, r) = this.lender.size_hint();
         (l.saturating_add(peek_len), r.and_then(|r| r.checked_add(peek_len)))
     }
     #[inline]
@@ -139,78 +240,38 @@ where
         F: FnMut(B, Lend<'_, Self>) -> R,
         R: Try<Output = B>,
     {
-        let acc = match self.peeked.take() {
+        // SAFETY: we aren't moving self
+        let this = unsafe { self.as_mut().get_unchecked_mut() };
+        let acc = match this.peeked.take() {
             Some(None) => return Try::from_output(init),
-            Some(Some(v)) => match f(init, v).branch() {
-                ControlFlow::Break(b) => return FromResidual::from_residual(b),
-                ControlFlow::Continue(a) => a,
-            },
+            Some(Some(v)) => try_!(f(init, v)),
             None => init,
         };
-        self.lender.try_fold(acc, f)
+        this.lender.try_fold(acc, f)
     }
     #[inline]
-    fn fold<B, F>(mut self, init: B, mut f: F) -> B
+    fn fold<B, F>(self, init: B, mut f: F) -> B
     where
         Self: Sized,
         F: FnMut(B, Lend<'_, Self>) -> B,
     {
-        let acc = match self.peeked.take() {
+        // SAFETY: we aren't moving self
+        let this = unsafe { self.get_unchecked_mut() };
+        let acc = match this.peeked.take() {
             Some(None) => return init,
             Some(Some(v)) => f(init, v),
             None => init,
         };
-        self.lender.fold(acc, f)
+        this.lender.by_ref().fold(acc, f)
     }
 }
-impl<'this, L: DoubleEndedLender> DoubleEndedLender for Peekable<'this, L> {
-    #[inline]
-    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
-        match self.peeked.as_mut() {
-            // SAFETY: The lend is manually guaranteed to be the only one alive
-            Some(v @ Some(_)) => self
-                .lender
-                .next_back()
-                .or_else(|| unsafe { core::mem::transmute::<Option<Lend<'this, Self>>, Option<Lend<'_, Self>>>(v.take()) }),
-            Some(None) => None,
-            None => self.lender.next_back(),
-        }
-    }
-    #[inline]
-    fn try_rfold<B, F, R>(&mut self, init: B, mut f: F) -> R
-    where
-        Self: Sized,
-        F: FnMut(B, Lend<'_, Self>) -> R,
-        R: Try<Output = B>,
-    {
-        match self.peeked.take() {
-            None => self.lender.try_rfold(init, f),
-            Some(None) => Try::from_output(init),
-            Some(Some(v)) => match self.lender.try_rfold(init, &mut f).branch() {
-                ControlFlow::Continue(acc) => f(acc, v),
-                ControlFlow::Break(r) => {
-                    self.peeked = Some(Some(v));
-                    FromResidual::from_residual(r)
-                }
-            },
-        }
-    }
-    #[inline]
-    fn rfold<B, F>(mut self, init: B, mut f: F) -> B
-    where
-        Self: Sized,
-        F: FnMut(B, Lend<'_, Self>) -> B,
-    {
-        match self.peeked.take() {
-            None => self.lender.rfold(init, f),
-            Some(None) => init,
-            Some(Some(v)) => {
-                let acc = self.lender.rfold(init, &mut f);
-                f(acc, v)
-            }
-        }
-    }
-}
-impl<'this, L: ExactSizeLender> ExactSizeLender for Peekable<'this, L> {}
 
-impl<'this, L: FusedLender> FusedLender for Peekable<'this, L> {}
+impl<'this, L: FusedLender> FusedLender for Pin<&mut Peekable<'this, L>> {}
+
+impl<'this, L> HasNext for Pin<&mut Peekable<'this, L>>
+where
+    L: Lender,
+{
+    #[inline]
+    fn has_next(&mut self) -> bool { self.as_mut().peek().is_some() }
+}
