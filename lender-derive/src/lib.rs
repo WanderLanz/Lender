@@ -88,12 +88,7 @@ in these cases a standard iterator would be simpler and more efficient.
 */
 #[proc_macro]
 pub fn for_(input: TokenStream) -> TokenStream {
-    let ForLenderInfo {
-        pat,
-        _in_token,
-        expr,
-        body,
-    } = parse_macro_input!(input as ForLenderInfo);
+    let ForLenderInfo { pat, _in_token, expr, body } = parse_macro_input!(input as ForLenderInfo);
 
     quote! {{
         use lender::{Lender, IntoLender};

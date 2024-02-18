@@ -24,9 +24,7 @@ pub trait IntoLender {
 impl<L: Lender> IntoLender for L {
     type Lender = L;
     #[inline]
-    fn into_lender(self) -> L {
-        self
-    }
+    fn into_lender(self) -> L { self }
 }
 /// Documentation is incomplete. Refer to [`core::iter::Extend`] for more information
 pub trait ExtendLender<L: IntoLender> {
@@ -36,7 +34,5 @@ pub trait ExtendLender<L: IntoLender> {
     /// Reserves capacity in a collection for the given number of additional elements.
     ///
     /// The default implementation does nothing.
-    fn extend_lender_reserve(&mut self, additional: usize) {
-        let _ = additional;
-    }
+    fn extend_lender_reserve(&mut self, additional: usize) { let _ = additional; }
 }

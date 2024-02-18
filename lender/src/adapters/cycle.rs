@@ -15,9 +15,7 @@ impl<L> Cycle<L>
 where
     L: Clone,
 {
-    pub(crate) fn new(lender: L) -> Cycle<L> {
-        Cycle { orig: lender.clone(), lender }
-    }
+    pub(crate) fn new(lender: L) -> Cycle<L> { Cycle { orig: lender.clone(), lender } }
 }
 impl<'lend, L> Lending<'lend> for Cycle<L>
 where

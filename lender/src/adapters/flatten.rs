@@ -12,18 +12,14 @@ impl<'this, L: Lender> Flatten<'this, L>
 where
     for<'all> Lend<'all, L>: IntoLender,
 {
-    pub(crate) fn new(lender: L) -> Self {
-        Self { inner: FlattenCompat::new(lender) }
-    }
+    pub(crate) fn new(lender: L) -> Self { Self { inner: FlattenCompat::new(lender) } }
 }
 impl<'this, L: Lender + Clone> Clone for Flatten<'this, L>
 where
     for<'all> Lend<'all, L>: IntoLender,
     for<'all> <Lend<'all, L> as IntoLender>::Lender: Clone,
 {
-    fn clone(&self) -> Self {
-        Flatten { inner: self.inner.clone() }
-    }
+    fn clone(&self) -> Self { Flatten { inner: self.inner.clone() } }
 }
 impl<'this, L: Lender + fmt::Debug> fmt::Debug for Flatten<'this, L>
 where
@@ -45,13 +41,9 @@ where
     for<'all> Lend<'all, L>: IntoLender,
 {
     #[inline]
-    fn next(&mut self) -> Option<Lend<'_, Self>> {
-        self.inner.next()
-    }
+    fn next(&mut self) -> Option<Lend<'_, Self>> { self.inner.next() }
     #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.inner.size_hint()
-    }
+    fn size_hint(&self) -> (usize, Option<usize>) { self.inner.size_hint() }
 }
 impl<'this, L: FusedLender> FusedLender for Flatten<'this, L> where for<'all> Lend<'all, L>: IntoLender {}
 
@@ -68,9 +60,7 @@ where
     Map<L, F>: Lender,
     for<'all> Lend<'all, Map<L, F>>: IntoLender,
 {
-    pub(crate) fn new(lender: L, f: F) -> Self {
-        Self { inner: FlattenCompat::new(Map::new(lender, f)) }
-    }
+    pub(crate) fn new(lender: L, f: F) -> Self { Self { inner: FlattenCompat::new(Map::new(lender, f)) } }
 }
 impl<'this, L: Lender + Clone, F: Clone> Clone for FlatMap<'this, L, F>
 where
@@ -78,9 +68,7 @@ where
     for<'all> Lend<'all, Map<L, F>>: IntoLender,
     for<'all> <Lend<'all, Map<L, F>> as IntoLender>::Lender: Clone,
 {
-    fn clone(&self) -> Self {
-        FlatMap { inner: self.inner.clone() }
-    }
+    fn clone(&self) -> Self { FlatMap { inner: self.inner.clone() } }
 }
 impl<'this, L: Lender + fmt::Debug, F> fmt::Debug for FlatMap<'this, L, F>
 where
@@ -105,13 +93,9 @@ where
     for<'all> Lend<'all, Map<L, F>>: IntoLender,
 {
     #[inline]
-    fn next(&mut self) -> Option<Lend<'_, Self>> {
-        self.inner.next()
-    }
+    fn next(&mut self) -> Option<Lend<'_, Self>> { self.inner.next() }
     #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.inner.size_hint()
-    }
+    fn size_hint(&self) -> (usize, Option<usize>) { self.inner.size_hint() }
 }
 impl<'this, L: FusedLender, F> FusedLender for FlatMap<'this, L, F>
 where
@@ -130,18 +114,14 @@ impl<'this, L: Lender> FlattenCompat<'this, L>
 where
     for<'all> Lend<'all, L>: IntoLender,
 {
-    pub(crate) fn new(lender: L) -> Self {
-        Self { lender, inner: None }
-    }
+    pub(crate) fn new(lender: L) -> Self { Self { lender, inner: None } }
 }
 impl<'this, L: Lender + Clone> Clone for FlattenCompat<'this, L>
 where
     for<'all> Lend<'all, L>: IntoLender,
     for<'all> <Lend<'all, L> as IntoLender>::Lender: Clone,
 {
-    fn clone(&self) -> Self {
-        Self { lender: self.lender.clone(), inner: self.inner.clone() }
-    }
+    fn clone(&self) -> Self { Self { lender: self.lender.clone(), inner: self.inner.clone() } }
 }
 impl<'this, L: Lender + fmt::Debug> fmt::Debug for FlattenCompat<'this, L>
 where

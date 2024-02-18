@@ -8,9 +8,7 @@ pub struct Take<L> {
     n: usize,
 }
 impl<L> Take<L> {
-    pub(crate) fn new(lender: L, n: usize) -> Take<L> {
-        Take { lender, n }
-    }
+    pub(crate) fn new(lender: L, n: usize) -> Take<L> { Take { lender, n } }
 }
 impl<'lend, L> Lending<'lend> for Take<L>
 where

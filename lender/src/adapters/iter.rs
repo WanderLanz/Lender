@@ -30,9 +30,7 @@ pub struct Iter<'this, L: 'this> {
     _marker: PhantomData<&'this ()>,
 }
 impl<'this, L: 'this> Iter<'this, L> {
-    pub(crate) fn new(lender: L) -> Iter<'this, L> {
-        Iter { lender, _marker: PhantomData }
-    }
+    pub(crate) fn new(lender: L) -> Iter<'this, L> { Iter { lender, _marker: PhantomData } }
 }
 impl<'this, L: 'this> Iterator for Iter<'this, L>
 where
@@ -46,9 +44,7 @@ where
         unsafe { core::mem::transmute::<Option<Lend<'_, L>>, Option<Lend<'this, L>>>(self.lender.next()) }
     }
     #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.lender.size_hint()
-    }
+    fn size_hint(&self) -> (usize, Option<usize>) { self.lender.size_hint() }
 }
 impl<'this, L: 'this> DoubleEndedIterator for Iter<'this, L>
 where
@@ -67,9 +63,7 @@ where
     for<'all> Lend<'all, L>: 'this,
 {
     #[inline]
-    fn len(&self) -> usize {
-        self.lender.len()
-    }
+    fn len(&self) -> usize { self.lender.len() }
 }
 impl<'this, L: 'this> FusedIterator for Iter<'this, L>
 where

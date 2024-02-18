@@ -5,9 +5,7 @@ pub struct Rev<L> {
     lender: L,
 }
 impl<L> Rev<L> {
-    pub(crate) fn new(lender: L) -> Rev<L> {
-        Rev { lender }
-    }
+    pub(crate) fn new(lender: L) -> Rev<L> { Rev { lender } }
 }
 impl<'lend, L> Lending<'lend> for Rev<L>
 where
@@ -20,21 +18,13 @@ where
     L: DoubleEndedLender,
 {
     #[inline]
-    fn next(&mut self) -> Option<Lend<'_, Self>> {
-        self.lender.next_back()
-    }
+    fn next(&mut self) -> Option<Lend<'_, Self>> { self.lender.next_back() }
     #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.lender.size_hint()
-    }
+    fn size_hint(&self) -> (usize, Option<usize>) { self.lender.size_hint() }
     #[inline]
-    fn advance_by(&mut self, n: usize) -> Result<(), core::num::NonZeroUsize> {
-        self.lender.advance_back_by(n)
-    }
+    fn advance_by(&mut self, n: usize) -> Result<(), core::num::NonZeroUsize> { self.lender.advance_back_by(n) }
     #[inline]
-    fn nth(&mut self, n: usize) -> Option<Lend<'_, Self>> {
-        self.lender.nth_back(n)
-    }
+    fn nth(&mut self, n: usize) -> Option<Lend<'_, Self>> { self.lender.nth_back(n) }
     fn try_fold<B, F, R>(&mut self, init: B, f: F) -> R
     where
         Self: Sized,
@@ -64,17 +54,11 @@ where
     L: DoubleEndedLender,
 {
     #[inline]
-    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
-        self.lender.next()
-    }
+    fn next_back(&mut self) -> Option<Lend<'_, Self>> { self.lender.next() }
     #[inline]
-    fn advance_back_by(&mut self, n: usize) -> Result<(), core::num::NonZeroUsize> {
-        self.lender.advance_by(n)
-    }
+    fn advance_back_by(&mut self, n: usize) -> Result<(), core::num::NonZeroUsize> { self.lender.advance_by(n) }
     #[inline]
-    fn nth_back(&mut self, n: usize) -> Option<Lend<'_, Self>> {
-        self.lender.nth(n)
-    }
+    fn nth_back(&mut self, n: usize) -> Option<Lend<'_, Self>> { self.lender.nth(n) }
     fn try_rfold<B, F, R>(&mut self, init: B, f: F) -> R
     where
         Self: Sized,
@@ -103,16 +87,12 @@ where
     L: DoubleEndedLender + ExactSizeLender,
 {
     #[inline]
-    fn len(&self) -> usize {
-        self.lender.len()
-    }
+    fn len(&self) -> usize { self.lender.len() }
 }
 impl<L> FusedLender for Rev<L> where L: DoubleEndedLender + FusedLender {}
 impl<L> Default for Rev<L>
 where
     L: Default,
 {
-    fn default() -> Self {
-        Rev::new(L::default())
-    }
+    fn default() -> Self { Rev::new(L::default()) }
 }

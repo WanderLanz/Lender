@@ -8,9 +8,7 @@ pub struct MapWhile<L, P> {
     predicate: P,
 }
 impl<L, P> MapWhile<L, P> {
-    pub(crate) fn new(lender: L, predicate: P) -> MapWhile<L, P> {
-        MapWhile { lender, predicate }
-    }
+    pub(crate) fn new(lender: L, predicate: P) -> MapWhile<L, P> { MapWhile { lender, predicate } }
 }
 impl<L: fmt::Debug, P> fmt::Debug for MapWhile<L, P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -31,9 +29,7 @@ where
     L: Lender,
 {
     #[inline]
-    fn next(&mut self) -> Option<Lend<'_, Self>> {
-        (self.predicate)(self.lender.next()?)
-    }
+    fn next(&mut self) -> Option<Lend<'_, Self>> { (self.predicate)(self.lender.next()?) }
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (_, upper) = self.lender.size_hint();
