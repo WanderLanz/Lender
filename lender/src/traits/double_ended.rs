@@ -70,13 +70,7 @@ pub trait DoubleEndedLender: Lender {
 }
 
 impl<'a, L: DoubleEndedLender> DoubleEndedLender for &'a mut L {
-    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
-        (**self).next_back()
-    }
-    fn advance_back_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {
-        (**self).advance_back_by(n)
-    }
-    fn nth_back(&mut self, n: usize) -> Option<Lend<'_, Self>> {
-        (**self).nth_back(n)
-    }
+    fn next_back(&mut self) -> Option<Lend<'_, Self>> { (**self).next_back() }
+    fn advance_back_by(&mut self, n: usize) -> Result<(), NonZeroUsize> { (**self).advance_back_by(n) }
+    fn nth_back(&mut self, n: usize) -> Option<Lend<'_, Self>> { (**self).nth_back(n) }
 }

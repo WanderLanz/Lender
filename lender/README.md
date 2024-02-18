@@ -5,21 +5,21 @@
 [![miri](https://img.shields.io/github/actions/workflow/status/WanderLanz/Lender/test.yml?label=miri)](https://github.com/WanderLanz/Lender/actions/workflows/test.yml)
 ![license](https://img.shields.io/crates/l/lender)
 
-A _lender_, also called a _lending iterator_, is an iterator that lends mutable borrows 
-to the items it returns. In particular, this means that the reference to an item is 
-invalidated by the subsequent call to `next`. Niko Matsakis has an interesting 
-[blog post](https://smallcultfollowing.com/babysteps/blog/2023/05/09/giving-lending-and-async-closures/) 
+A _lender_, also called a _lending iterator_, is an iterator that lends mutable borrows
+to the items it returns. In particular, this means that the reference to an item is
+invalidated by the subsequent call to `next`. Niko Matsakis has an interesting
+[blog post](https://smallcultfollowing.com/babysteps/blog/2023/05/09/giving-lending-and-async-closures/)
 explaining a general view of giving vs. lending traits.
 
-The typical example that cannot be written with standard Rust iterators, 
-but is covered by lenders, is that of a lender returning 
+The typical example that cannot be written with standard Rust iterators,
+but is covered by lenders, is that of a lender returning
 [mutable, overlapping windows of a slice or array](https://docs.rs/lender/latest/lender/trait.WindowsMutExt.html).
 
 But lenders are more general than that, as they might return items that depend on
-some mutable state stored in the iterator. For example, a lender might 
-return references to the lines of a file reusing an internal buffer; also, 
-starting from an iterator on pairs of integers lexicographically sorted, a lender 
-might return iterators on pairs with the same first coordinate without any copying; 
+some mutable state stored in the iterator. For example, a lender might
+return references to the lines of a file reusing an internal buffer; also,
+starting from an iterator on pairs of integers lexicographically sorted, a lender
+might return iterators on pairs with the same first coordinate without any copying;
 clearly, in all these cases any call on `next` would invalidate the reference
 returned by the previous call.
 
@@ -28,7 +28,7 @@ This crate provides a lender trait and an associated library of utility methods,
 to implement the [lender design based on higher-rank trait bounds proposed by Sabrina Jewson](https://sabrinajewson.org/blog/the-better-alternative-to-lifetime-gats).
 
 Similarly to what happens with standard iterators, besides the fundamental  [`Lender`] trait there is an
-[`IntoLender`] trait, and methods such as [`for_each`](https://docs.rs/lender/latest/lender/trait.Lender.html#method.for_each). 
+[`IntoLender`] trait, and methods such as [`for_each`](https://docs.rs/lender/latest/lender/trait.Lender.html#method.for_each).
 
 Indeed, the crate implements for [`Lender`]
 all of the methods as `Iterator`, except `partition_in_place` and `array_chunks` (the latter being replaced by [`chunky`](https://docs.rs/lender/latest/lender/trait.Lender.html#method.chunky)),
@@ -37,9 +37,9 @@ and most methods provide the same functionality as the equivalent `Iterator` met
 Notable differences in behavior include [`next_chunk`](https://docs.rs/lender/latest/lender/trait.Lender.html#method.next_chunk) providing a lender instead of an array
 and certain closures requiring usage of the [`hrc!`](https://docs.rs/lender/latest/lender/macro.hrc.html), [`hrc_mut!`](https://docs.rs/lender/latest/lender/macro.hrc_mut.html), [`hrc_once!`](https://docs.rs/lender/latest/lender/macro.hrc_once.html) (higher-ranked closure) macros, which provide a stable replacement for the `closure_lifetime_binder` feature.
 
-Turn a lender into an iterator with [`cloned`](https://docs.rs/lender/latest/lender/trait.Lender.html#method.cloned) 
+Turn a lender into an iterator with [`cloned`](https://docs.rs/lender/latest/lender/trait.Lender.html#method.cloned)
 where lend is `Clone`, [`copied`](https://docs.rs/lender/latest/lender/trait.Lender.html#method.copied) where lend is `Copy`,
-[`owned`](https://docs.rs/lender/latest/lender/trait.Lender.html#method.owned) where lend is `ToOwned`, or 
+[`owned`](https://docs.rs/lender/latest/lender/trait.Lender.html#method.owned) where lend is `ToOwned`, or
 [`iter`](https://docs.rs/lender/latest/lender/trait.Lender.html#method.iter) where the lender already satisfies the restrictions of `Iterator`.
 
 ## Usage
@@ -52,36 +52,39 @@ while let Some(item) = lender.next() {
     // Do something with item
 }
 ```
+
 Note that the expression after the equal sign cannot be a method call returning a lender,
 as you would iterate over the first element forever.
 
-To simplify usage, we provide a function-like procedural macro 
-[`for_!`](https://docs.rs/lender-derive/latest/lender_derive/macro.for_.html) that makes it 
+To simplify usage, we provide a function-like procedural macro
+[`for_!`](https://docs.rs/lender-derive/latest/lender_derive/macro.for_.html) that makes it
 possible to use a `for`-like syntax with types implementing [`IntoLender`]:
+
 ```text
 for_!(item in into_lender {
     // Do something with item
 });
 ```
 
-Finally, you can use the `for_each` method, which takes a closure as argument, but managing lifetimes in closures can be 
+Finally, you can use the `for_each` method, which takes a closure as argument, but managing lifetimes in closures can be
 challenging:
+
 ```text
 lender.for_each{
     hrc_mut!(for<'lend> |item: &'lend mut TYPE| {
-        // do something with item of type TYPE 
+        // do something with item of type TYPE
     })
 };
 ```
 
 ## Caveats
 
-Forewarning, before you go on with this crate, you should consider using a more seasoned 
+Forewarning, before you go on with this crate, you should consider using a more seasoned
 crate, like [`lending-iterator`], which, however, does not use directly higher-rank trait bounds,
 but rather relies on simulating them using macros.
 
 Also, if a `dyn Lender` trait object is in your future, this crate **definitely** isn't going to work.
-This crate was not made to be used in any sort of production code, so please, use 
+This crate was not made to be used in any sort of production code, so please, use
 it at your own risk (Documentation be damned! Unsafe transmutes beware!).
 
 Finally, note that, as a general rule, if you can avoid using lenders, you should.
@@ -125,6 +128,7 @@ data.array_windows_mut::<3>()
     }));
 assert_eq!(data, [0, 1, 1, 2, 3, 5, 8, 13, 21]);
 ```
+
 This is a quite contrived example, but it shows how lenders can be used to mutate a slice in place.
 
 So, let's look at a slightly more interesting example, `LinesStr`, an `io::Lines` with an `Item` of `&str` instead of `String`.
@@ -167,8 +171,9 @@ assert_eq!(lines.next().unwrap().unwrap(), "World");
 
 ## Implementing Lender
 
-To implement [`Lender`] first you'll need to implement the [`Lending`] trait for your type. 
+To implement [`Lender`] first you'll need to implement the [`Lending`] trait for your type.
 This is the equivalent provider of `Iterator::Item`:
+
 ```rust
 use ::lender::prelude::*;
 struct StrRef<'a>(&'a str);
@@ -176,12 +181,13 @@ impl<'this, 'lend> Lending<'lend> for StrRef<'this> {
     type Lend = &'lend str;
 }
 ```
+
 The lifetime parameter `'lend` describes the lifetime of the `Lend`.
-It works by using under the hood a default generic of `&'lend Self` which induces an implicit 
-reference lifetime bound `'lend: 'this`, which is necessary for usage of 
+It works by using under the hood a default generic of `&'lend Self` which induces an implicit
+reference lifetime bound `'lend: 'this`, which is necessary for usage of
 higher-ranked trait bounds with `Lend`.
 
-Next, you'll need to implement the [`Lender`] 
+Next, you'll need to implement the [`Lender`]
 trait for your type, the lending equivalent of `Iterator`.
 
 ```rust
@@ -200,6 +206,7 @@ impl<'this> Lender for StrRef<'this> {
 The [`Lend`] type alias can be used to avoid specifying twice the type of the lend;
 combined with lifetime elision, it can make your implementations
 more concise and less prone to errors:
+
 ```rust
 use ::lender::prelude::*;
 struct StrRef<'a>(&'a str);
@@ -218,8 +225,8 @@ impl<'this> Lender for StrRef<'this> {
 Due to the complex type dependencies and higher-kind trait bounds
 involved, the current Rust compiler cannot
 always infer the correct type of a lender and the items it returns.
-In general, when writing methods accepting a [`Lender`] 
-restricting the returned item type with a *type* will work, as in:
+In general, when writing methods accepting a [`Lender`]
+restricting the returned item type with a _type_ will work, as in:
 
 ```rust
 use lender::*;
@@ -306,30 +313,34 @@ fn test_mock_lender(m: MockLender) {
 ## Why Not GATs?
 
 _Generic associated types_ (GATs) were introduced [exactly having lending iterators
-as a use case in mind](https://rust-lang.github.io/rfcs/1598-generic_associated_types.html). 
+as a use case in mind](https://rust-lang.github.io/rfcs/1598-generic_associated_types.html).
 With GATs, a lender trait could be easily defined as
+
 ```rust
 pub trait Lender {
     type Lend<'lend>: where Self: 'lend;
     fn next(&mut self) -> Option<Self::Lend<'_>>;
 }
 ```
+
 This looks all nice and cozy, and you can even write a full-fledged library around it.
 But you will hit a wall when trying to specify trait bounds on the lend type, something that
 can be done only using [higher-rank trait bounds](https://doc.rust-lang.org/nomicon/hrtb.html):
+
 ```rust
 pub trait Lender {
     type Lend<'lend>: where Self: 'lend;
     fn next(&mut self) -> Option<Self::Lend<'_>>;
 }
 
-fn read_lender<L: Lender>(lender: L) 
+fn read_lender<L: Lender>(lender: L)
     where for<'lend> L::Lend<'lend>: AsRef<str> {}
 ```
-Again, this will compile without problems, but as you try to use `read_lender` 
-with a type implementing `Lender`, since the `where` clause specifies that 
+
+Again, this will compile without problems, but as you try to use `read_lender`
+with a type implementing `Lender`, since the `where` clause specifies that
 that trait bound must hold for all lifetimes, that means it must be valid
-for `'static`, and since the lender must outlive the lend, 
+for `'static`, and since the lender must outlive the lend,
 also the lender must be `'static`. Thus, until there is some syntax that makes it
 possible to restrict the lifetime variable that appears in a higher-rank trait bound,
 GAT-based lending iterators are of little practical use.
@@ -339,20 +350,20 @@ GAT-based lending iterators are of little practical use.
 Please check out the great resources below that helped me
  and many others learn about Rust and the lending iterator problem. Thank you to everyone!
 
-- [Sabrina Jewson's Blog](https://sabrinajewson.org/blog/the-better-alternative-to-lifetime-gats) 
-for her awesome blog post on why lifetime GATs are not (yet) 
+- [Sabrina Jewson's Blog](https://sabrinajewson.org/blog/the-better-alternative-to-lifetime-gats)
+for her awesome blog post on why lifetime GATs are not (yet)
 the solution to this problem, I highly recommend reading it.
-- The awesome people on the [Rust Users Forum](https://users.rust-lang.org/) 
+- The awesome people on the [Rust Users Forum](https://users.rust-lang.org/)
 in helping me understand the borrow checker and HRTBs better
 and being patient with me and other aspiring rustaceans as we try to learn more about Rust.
-- [Daniel Henry-Mantilla](https://github.com/danielhenrymantilla) for writing 
+- [Daniel Henry-Mantilla](https://github.com/danielhenrymantilla) for writing
 [`lending-iterator`] and many other great crates and sharing their great work.
 - Everyone who's contributed to Rust for making such a great language and iterator library.
 
 <!-- markdownlint-disable MD026 -->
 ## Unsafe & Transmutes Beware!!!
 
-Many patterns in lenders require polonius-emulating unsafe code, 
+Many patterns in lenders require polonius-emulating unsafe code,
 but if you see any unsafe code that can be made safe, please let me know!
 
 [`Lender`]: https://docs.rs/lender/latest/lender/trait.Lender.html
@@ -360,5 +371,3 @@ but if you see any unsafe code that can be made safe, please let me know!
 [`Lending`]: https://docs.rs/lender/latest/lender/trait.Lending.html
 [`IntoLender`]: https://docs.rs/lender/latest/lender/trait.IntoLender.html
 [`lending-iterator`]: https://crates.io/crates/lending-iterator
-[`streaming-iterator`]: https://crates.io/crates/streaming-iterator
-[`gat-lending-iterator`]: https://crates.io/crates/gat-lending-iterator

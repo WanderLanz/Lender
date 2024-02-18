@@ -147,9 +147,7 @@ where
     L: DoubleEndedLender + ExactSizeLender,
 {
     #[inline]
-    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
-        self.lender.nth_back(self.next_back_index())
-    }
+    fn next_back(&mut self) -> Option<Lend<'_, Self>> { self.lender.nth_back(self.next_back_index()) }
 
     #[inline]
     fn nth_back(&mut self, n: usize) -> Option<Lend<'_, Self>> {

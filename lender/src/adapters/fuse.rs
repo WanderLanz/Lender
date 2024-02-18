@@ -45,10 +45,7 @@ where
         None
     }
     #[inline]
-    fn last<'call>(&'call mut self) -> Option<Lend<'call, Self>>
-    where
-        Self: Sized,
-    {
+    fn last<'call>(&'call mut self) -> Option<Lend<'call, Self>> {
         if !self.flag {
             if let x @ Some(_) = self.lender.last() {
                 return x;

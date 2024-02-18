@@ -8,9 +8,7 @@ pub struct Enumerate<L> {
     count: usize,
 }
 impl<L> Enumerate<L> {
-    pub(crate) fn new(lender: L) -> Enumerate<L> {
-        Enumerate { lender, count: 0 }
-    }
+    pub(crate) fn new(lender: L) -> Enumerate<L> { Enumerate { lender, count: 0 } }
 }
 impl<'lend, L> Lending<'lend> for Enumerate<L>
 where
@@ -31,9 +29,7 @@ where
         })
     }
     #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.lender.size_hint()
-    }
+    fn size_hint(&self) -> (usize, Option<usize>) { self.lender.size_hint() }
     #[inline]
     fn nth(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         let a = self.lender.nth(n)?;
@@ -42,9 +38,7 @@ where
         Some((i, a))
     }
     #[inline]
-    fn count(self) -> usize {
-        self.lender.count()
-    }
+    fn count(self) -> usize { self.lender.count() }
     #[inline]
     fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> R
     where
@@ -125,24 +119,16 @@ where
         })
     }
     #[inline]
-    fn advance_back_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {
-        self.lender.advance_back_by(n)
-    }
+    fn advance_back_by(&mut self, n: usize) -> Result<(), NonZeroUsize> { self.lender.advance_back_by(n) }
 }
 impl<L> ExactSizeLender for Enumerate<L>
 where
     L: ExactSizeLender,
 {
-    fn len(&self) -> usize {
-        self.lender.len()
-    }
-    fn is_empty(&self) -> bool {
-        self.lender.is_empty()
-    }
+    fn len(&self) -> usize { self.lender.len() }
+    fn is_empty(&self) -> bool { self.lender.is_empty() }
 }
 impl<L> FusedLender for Enumerate<L> where L: FusedLender {}
 impl<L: Default> Default for Enumerate<L> {
-    fn default() -> Self {
-        Enumerate::new(Default::default())
-    }
+    fn default() -> Self { Enumerate::new(Default::default()) }
 }

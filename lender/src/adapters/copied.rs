@@ -8,9 +8,7 @@ pub struct Copied<L> {
     lender: L,
 }
 impl<L> Copied<L> {
-    pub(crate) fn new(lender: L) -> Copied<L> {
-        Copied { lender }
-    }
+    pub(crate) fn new(lender: L) -> Copied<L> { Copied { lender } }
 }
 impl<T, L> Iterator for Copied<L>
 where
@@ -20,13 +18,9 @@ where
 {
     type Item = T;
     #[inline]
-    fn next(&mut self) -> Option<Self::Item> {
-        self.lender.next().copied()
-    }
+    fn next(&mut self) -> Option<Self::Item> { self.lender.next().copied() }
     #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.lender.size_hint()
-    }
+    fn size_hint(&self) -> (usize, Option<usize>) { self.lender.size_hint() }
 }
 impl<T, L> DoubleEndedIterator for Copied<L>
 where
@@ -35,9 +29,7 @@ where
     L: for<'all> Lending<'all, Lend = &'all T>,
 {
     #[inline]
-    fn next_back(&mut self) -> Option<Self::Item> {
-        self.lender.next_back().copied()
-    }
+    fn next_back(&mut self) -> Option<Self::Item> { self.lender.next_back().copied() }
 }
 impl<T, L> ExactSizeIterator for Copied<L>
 where
@@ -45,9 +37,7 @@ where
     T: Copy,
     L: for<'all> Lending<'all, Lend = &'all T>,
 {
-    fn len(&self) -> usize {
-        self.lender.len()
-    }
+    fn len(&self) -> usize { self.lender.len() }
 }
 impl<T, L> FusedIterator for Copied<L>
 where
@@ -60,7 +50,5 @@ impl<L> Default for Copied<L>
 where
     L: Default,
 {
-    fn default() -> Self {
-        Self::new(L::default())
-    }
+    fn default() -> Self { Self::new(L::default()) }
 }

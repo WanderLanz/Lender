@@ -9,9 +9,7 @@ pub struct TakeWhile<L, P> {
     predicate: P,
 }
 impl<L, P> TakeWhile<L, P> {
-    pub(crate) fn new(lender: L, predicate: P) -> TakeWhile<L, P> {
-        TakeWhile { lender, flag: false, predicate }
-    }
+    pub(crate) fn new(lender: L, predicate: P) -> TakeWhile<L, P> { TakeWhile { lender, flag: false, predicate } }
 }
 impl<L: fmt::Debug, P> fmt::Debug for TakeWhile<L, P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
