@@ -5,7 +5,7 @@ use crate::{prelude::*, FusedLender};
 /// Creates a lender from an iterator.
 ///
 /// This function can be conveniently accessed using the
-/// [`into_lendwe`](crate::traits::IteratorExt::into_lender) method
+/// [`into_lender`](crate::traits::IteratorExt::into_lender) method
 /// added to [`Iterator`] by this crate.
 ///
 /// Does not change the behavior of the iterator, the resulting lender
