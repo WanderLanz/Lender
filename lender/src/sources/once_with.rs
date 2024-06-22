@@ -41,9 +41,7 @@ where
     F: for<'all> FnOnceHKA<'all, &'all mut St>,
 {
     #[inline]
-    fn next(&mut self) -> Option<Lend<'_, Self>> {
-        self.f.take().map(|f| f(&mut self.state))
-    }
+    fn next(&mut self) -> Option<Lend<'_, Self>> { self.f.take().map(|f| f(&mut self.state)) }
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         if self.f.is_some() {
@@ -59,9 +57,7 @@ where
     F: for<'all> FnOnceHKA<'all, &'all mut St>,
 {
     #[inline]
-    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
-        self.next()
-    }
+    fn next_back(&mut self) -> Option<Lend<'_, Self>> { self.next() }
 }
 
 impl<St, F> ExactSizeLender for OnceWith<St, F>
@@ -69,9 +65,7 @@ where
     F: for<'all> FnOnceHKA<'all, &'all mut St>,
 {
     #[inline]
-    fn len(&self) -> usize {
-        self.size_hint().0
-    }
+    fn len(&self) -> usize { self.size_hint().0 }
 }
 
 impl<St, F> FusedLender for OnceWith<St, F> where F: for<'all> FnOnceHKA<'all, &'all mut St> {}

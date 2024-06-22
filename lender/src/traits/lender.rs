@@ -101,6 +101,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     }
     /// Get the last lend of the lender, if any, by consuming it.
     ///
+    /// Relies on [`Lender::size_hint()`] to determine the last lend safely.
+    ///
     /// # Examples
     ///
     /// ```rust
@@ -109,21 +111,12 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(lender.last(), Some(&3));
     /// ```
     #[inline]
-    fn last<'call>(&'call mut self) -> Option<Lend<'call, Self>>
-    where
-        Self: Sized,
+    fn last(&mut self) -> Option<Lend<'_, Self>>
     {
-        let mut last = None;
-        while let Some(x) = self.next() {
-            // SAFETY: polonius return
-            last = Some(unsafe {
-                core::mem::transmute::<
-                    Lend<'_, Self>,
-                    Lend<'call, Self>
-                >(x)
-            });
+        match self.size_hint().1 {
+            Some(n) => self.nth(n.saturating_sub(1)),
+            None => None,
         }
-        last
     }
     /// Advance the lender by `n` lends. If the lender does not have enough lends, return the number of lends left.
     ///
@@ -248,7 +241,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     #[inline]
     fn intersperse<'call>(self, separator: Lend<'call, Self>) -> Intersperse<'call, Self>
     where
-        Self: Sized,
+        Self: Sized + HasNext,
         for<'all> Lend<'all, Self>: Clone,
     {
         Intersperse::new(self, separator)
@@ -269,7 +262,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     #[inline]
     fn intersperse_with<'call, G>(self, separator: G) -> IntersperseWith<'call, Self, G>
     where
-        Self: Sized,
+        Self: 'call + Sized + HasNext,
         G: FnMut() -> Lend<'call, Self>,
     {
         IntersperseWith::new(self, separator)
@@ -417,12 +410,13 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
+    /// use core::pin::pin;
     /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2u8].iter());
-    /// let mut peekable = lender.peekable();
-    /// assert_eq!(peekable.peek(), Some(&&1));
-    /// assert_eq!(peekable.next(), Some(&1));
-    /// assert_eq!(peekable.peek(), Some(&&2));
-    /// assert_eq!(peekable.next(), Some(&2));
+    /// let mut peekable = pin!(lender.peekable());
+    /// assert_eq!(peekable.as_mut().peek(), Some(&&1));
+    /// assert_eq!(peekable.as_mut().next(), Some(&1));
+    /// assert_eq!(peekable.as_mut().peek(), Some(&&2));
+    /// assert_eq!(peekable.as_mut().next(), Some(&2));
     /// assert_eq!(peekable.peek(), None);
     /// ```
     #[inline]
@@ -1245,10 +1239,10 @@ where
         ControlFlow::Break(x) => x,
     }
 }
-impl<'lend, L: Lender> Lending<'lend> for &mut L {
+impl<'lend, L: Lender + ?Sized> Lending<'lend> for &mut L {
     type Lend = Lend<'lend, L>;
 }
-impl<L: Lender> Lender for &mut L {
+impl<L: Lender + ?Sized> Lender for &mut L {
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> { (**self).next() }
     #[inline]

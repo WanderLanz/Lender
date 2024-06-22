@@ -72,7 +72,7 @@ challenging:
 ```text
 lender.for_each{
     hrc_mut!(for<'lend> |item: &'lend mut TYPE| {
-        // do something with item of type TYPE 
+        // do something with item of type TYPE
     })
 };
 ```
@@ -333,7 +333,7 @@ pub trait Lender {
     fn next(&mut self) -> Option<Self::Lend<'_>>;
 }
 
-fn read_lender<L: Lender>(lender: L) 
+fn read_lender<L: Lender>(lender: L)
     where for<'lend> L::Lend<'lend>: AsRef<str> {}
 ```
 

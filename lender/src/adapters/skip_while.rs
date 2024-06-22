@@ -9,9 +9,7 @@ pub struct SkipWhile<L, P> {
     predicate: P,
 }
 impl<L, P> SkipWhile<L, P> {
-    pub(crate) fn new(lender: L, predicate: P) -> SkipWhile<L, P> {
-        SkipWhile { lender, flag: false, predicate }
-    }
+    pub(crate) fn new(lender: L, predicate: P) -> SkipWhile<L, P> { SkipWhile { lender, flag: false, predicate } }
 }
 impl<L: fmt::Debug, P> fmt::Debug for SkipWhile<L, P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
