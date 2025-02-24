@@ -11,6 +11,9 @@ impl<L, P> Filter<L, P> {
     pub(crate) fn new(lender: L, predicate: P) -> Filter<L, P> {
         Filter { lender, predicate }
     }
+    pub fn into_inner(self) -> L {
+        self.lender
+    }
 }
 impl<I: fmt::Debug, P> fmt::Debug for Filter<I, P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

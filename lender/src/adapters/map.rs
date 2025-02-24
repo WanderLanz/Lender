@@ -11,6 +11,9 @@ impl<L, F> Map<L, F> {
     pub(crate) fn new(lender: L, f: F) -> Map<L, F> {
         Map { lender, f }
     }
+    pub fn into_inner(self) -> L {
+        self.lender
+    }
 }
 impl<L: fmt::Debug, F> fmt::Debug for Map<L, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

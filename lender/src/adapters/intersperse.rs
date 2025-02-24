@@ -21,8 +21,11 @@ where
     pub(crate) fn new(lender: L, separator: Lend<'this, L>) -> Self {
         Self { lender: lender.peekable(), separator, needs_sep: false }
     }
+    pub fn into_inner(self) -> L {
+        self.lender.into_inner()
+    }
 }
-impl<'this, L: fmt::Debug> fmt::Debug for Intersperse<'this, L>
+impl<L: fmt::Debug> fmt::Debug for Intersperse<'_, L>
 where
     for<'all> Lend<'all, L>: Clone + fmt::Debug,
     L: Lender,
@@ -35,7 +38,7 @@ where
             .finish()
     }
 }
-impl<'lend, 'this, L> Lending<'lend> for Intersperse<'this, L>
+impl<'lend, L> Lending<'lend> for Intersperse<'_, L>
 where
     for<'all> Lend<'all, L>: Clone,
     L: Lender,
@@ -100,7 +103,7 @@ where
         Self { lender: Peekable::new(lender), separator: seperator, needs_sep: false }
     }
 }
-impl<'this, L: fmt::Debug, G: fmt::Debug> fmt::Debug for IntersperseWith<'this, L, G>
+impl<L: fmt::Debug, G: fmt::Debug> fmt::Debug for IntersperseWith<'_, L, G>
 where
     L: Lender,
     for<'all> Lend<'all, L>: fmt::Debug,

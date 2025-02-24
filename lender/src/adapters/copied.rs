@@ -11,6 +11,9 @@ impl<L> Copied<L> {
     pub(crate) fn new(lender: L) -> Copied<L> {
         Copied { lender }
     }
+    pub fn into_inner(self) -> L {
+        self.lender
+    }
 }
 impl<T, L> Iterator for Copied<L>
 where

@@ -16,6 +16,9 @@ impl<L: Lender, O, F: FnMut(Lend<'_, L>) -> O> MapIntoIter<L, O, F> {
     pub(crate) fn new(lender: L, f: F) -> MapIntoIter<L, O, F> {
         MapIntoIter { lender, f }
     }
+    pub fn into_inner(self) -> L {
+        self.lender
+    }
 }
 
 impl<L: Lender, O, F: FnMut(Lend<'_, L>) -> O> Iterator for MapIntoIter<L, O, F> {

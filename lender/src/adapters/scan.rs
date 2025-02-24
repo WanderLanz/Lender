@@ -12,6 +12,9 @@ impl<L, St, F> Scan<L, St, F> {
     pub(crate) fn new(lender: L, state: St, f: F) -> Scan<L, St, F> {
         Scan { lender, state, f }
     }
+    pub fn into_inner(self) -> L {
+        self.lender
+    }
 }
 impl<L: fmt::Debug, St: fmt::Debug, F> fmt::Debug for Scan<L, St, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

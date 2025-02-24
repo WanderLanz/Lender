@@ -30,6 +30,9 @@ where
         }
         Self { lender, chunk_size, len }
     }
+    pub fn into_inner(self) -> L {
+        self.lender
+    }
 }
 
 impl<'lend, L> Lending<'lend> for Chunky<L>

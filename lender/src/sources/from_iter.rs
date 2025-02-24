@@ -43,7 +43,7 @@ pub struct FromIter<I> {
     iter: I,
 }
 
-impl<'lend, I: Iterator> Lending<'lend> for FromIter<I> {
+impl<I: Iterator> Lending<'_> for FromIter<I> {
     type Lend = I::Item;
 }
 
@@ -97,8 +97,6 @@ pub fn from_into_iter<I: IntoIterator>(into_iter: I) -> FromIntoIter<I> {
 /// to the iterators returned by the wrapped [`IntoIterator`].
 ///
 /// This `struct` is created by the [`from_into_iter()`] function.
-///
-
 #[repr(transparent)]
 #[derive(Clone, Debug)]
 pub struct FromIntoIter<I> {

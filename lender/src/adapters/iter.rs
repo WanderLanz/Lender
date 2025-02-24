@@ -33,6 +33,9 @@ impl<'this, L: 'this> Iter<'this, L> {
     pub(crate) fn new(lender: L) -> Iter<'this, L> {
         Iter { lender, _marker: PhantomData }
     }
+    pub fn into_inner(self) -> L {
+        self.lender
+    }
 }
 impl<'this, L: 'this> Iterator for Iter<'this, L>
 where

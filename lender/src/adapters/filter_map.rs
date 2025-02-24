@@ -11,6 +11,9 @@ impl<L, F> FilterMap<L, F> {
     pub(crate) fn new(lender: L, f: F) -> FilterMap<L, F> {
         FilterMap { lender, f }
     }
+    pub fn into_inner(self) -> L {
+        self.lender
+    }
 }
 impl<L: fmt::Debug, F> fmt::Debug for FilterMap<L, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

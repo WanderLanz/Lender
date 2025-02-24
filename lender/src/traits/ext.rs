@@ -10,7 +10,9 @@ pub trait IteratorExt<I: Iterator> {
 }
 
 impl<I: Iterator> IteratorExt<I> for I {
-    fn into_lender(self) -> FromIter<I> { crate::from_iter(self) }
+    fn into_lender(self) -> FromIter<I> {
+        crate::from_iter(self)
+    }
 }
 
 /// Extension trait adding to [`IntoIterator`] the method [`into_into_lender`](IntoIteratorExt::into_into_lender),
@@ -23,5 +25,7 @@ pub trait IntoIteratorExt<I: IntoIterator> {
 }
 
 impl<I: IntoIterator> IntoIteratorExt<I> for I {
-    fn into_into_lender(self) -> FromIntoIter<I> { crate::from_into_iter(self) }
+    fn into_into_lender(self) -> FromIntoIter<I> {
+        crate::from_into_iter(self)
+    }
 }

@@ -30,11 +30,11 @@ pub struct WindowsMut<'a, T> {
     pub(crate) curr_pos: usize,
 }
 
-impl<'a, 'any, T> Lending<'any> for WindowsMut<'a, T> {
+impl<'any, T> Lending<'any> for WindowsMut<'_, T> {
     type Lend = &'any mut [T];
 }
 
-impl<'a, T> Lender for WindowsMut<'a, T> {
+impl<T> Lender for WindowsMut<'_, T> {
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         // See https://github.com/danielhenrymantilla/lending-iterator.rs/blob/5353b5e6ce8be9d07d0cfd86e23e481377074780/src/lending_iterator/constructors/windows_mut_.rs
         let window = self.slice.get_mut(self.curr_pos..)?.get_mut(..self.size)?;
@@ -73,11 +73,11 @@ pub struct ArrayWindowsMut<'a, T, const WINDOW_SIZE: usize> {
     pub(crate) curr_pos: usize,
 }
 
-impl<'a, 'any, T, const WINDOW_SIZE: usize> Lending<'any> for ArrayWindowsMut<'a, T, WINDOW_SIZE> {
+impl<'any, T, const WINDOW_SIZE: usize> Lending<'any> for ArrayWindowsMut<'_, T, WINDOW_SIZE> {
     type Lend = &'any mut [T; WINDOW_SIZE];
 }
 
-impl<'a, T, const WINDOW_SIZE: usize> Lender for ArrayWindowsMut<'a, T, WINDOW_SIZE> {
+impl<T, const WINDOW_SIZE: usize> Lender for ArrayWindowsMut<'_, T, WINDOW_SIZE> {
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         // See https://github.com/danielhenrymantilla/lending-iterator.rs/blob/5353b5e6ce8be9d07d0cfd86e23e481377074780/src/lending_iterator/constructors/windows_mut_.rs
         let window = self.slice.get_mut(self.curr_pos..)?.get_mut(..WINDOW_SIZE)?;

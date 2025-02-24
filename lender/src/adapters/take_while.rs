@@ -12,6 +12,9 @@ impl<L, P> TakeWhile<L, P> {
     pub(crate) fn new(lender: L, predicate: P) -> TakeWhile<L, P> {
         TakeWhile { lender, flag: false, predicate }
     }
+    pub fn into_inner(self) -> L {
+        self.lender
+    }
 }
 impl<L: fmt::Debug, P> fmt::Debug for TakeWhile<L, P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

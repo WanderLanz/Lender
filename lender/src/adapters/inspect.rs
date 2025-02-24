@@ -11,6 +11,9 @@ impl<L, F> Inspect<L, F> {
     pub(crate) fn new(lender: L, f: F) -> Inspect<L, F> {
         Inspect { lender, f }
     }
+    pub fn into_inner(self) -> L {
+        self.lender
+    }
 }
 impl<I: fmt::Debug, F> fmt::Debug for Inspect<I, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

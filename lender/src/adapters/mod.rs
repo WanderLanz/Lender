@@ -79,7 +79,7 @@ where
     lender: L,
     residual: &'this mut Option<<Lend<'this, L> as Try>::Residual>,
 }
-impl<'lend, 'this, L: Lender> Lending<'lend> for TryShunt<'this, L>
+impl<'lend, L: Lender> Lending<'lend> for TryShunt<'_, L>
 where
     for<'all> Lend<'all, L>: Try,
 {

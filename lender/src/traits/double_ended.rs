@@ -69,7 +69,7 @@ pub trait DoubleEndedLender: Lender {
     }
 }
 
-impl<'a, L: DoubleEndedLender> DoubleEndedLender for &'a mut L {
+impl<L: DoubleEndedLender> DoubleEndedLender for &mut L {
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         (**self).next_back()
     }

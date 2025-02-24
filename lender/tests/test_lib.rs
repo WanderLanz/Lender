@@ -1,16 +1,15 @@
 #![cfg(test)]
 use ::lender::prelude::*;
-use lender::IntoIteratorExt;
 
 struct WindowsMut<'a, T> {
     slice: &'a mut [T],
     begin: usize,
     len: usize,
 }
-impl<'lend, 'a, T> Lending<'lend> for WindowsMut<'a, T> {
+impl<'lend, T> Lending<'lend> for WindowsMut<'_, T> {
     type Lend = &'lend mut [T];
 }
-impl<'a, T> Lender for WindowsMut<'a, T> {
+impl<T> Lender for WindowsMut<'_, T> {
     fn next(&mut self) -> Option<&mut [T]> {
         let begin = self.begin;
         self.begin = self.begin.saturating_add(1);
@@ -75,7 +74,9 @@ fn simple_lender() {
         type Lend = &'lend mut T;
     }
     impl<'a, T: 'a> Lender for MyLender<'a, T> {
-        fn next(&mut self) -> Option<Lend<'_, Self>> { Some(&mut self.0) }
+        fn next(&mut self) -> Option<Lend<'_, Self>> {
+            Some(&mut self.0)
+        }
     }
     let mut x = 0u32;
     let mut bar: MyLender<'_, u32> = MyLender(&mut x);

@@ -17,7 +17,12 @@ impl<'this, L> Peekable<'this, L>
 where
     L: Lender,
 {
-    pub(crate) fn new(lender: L) -> Peekable<'this, L> { Peekable { lender, peeked: None } }
+    pub(crate) fn new(lender: L) -> Peekable<'this, L> {
+        Peekable { lender, peeked: None }
+    }
+    pub fn into_inner(self) -> L {
+        self.lender
+    }
     pub fn peek(&mut self) -> Option<&'_ Lend<'this, L>> {
         let lender = &mut self.lender;
         self.peeked
@@ -57,11 +62,13 @@ where
         self.next_if(|v| t == v)
     }
 }
-impl<'this, L> Clone for Peekable<'this, L>
+impl<L> Clone for Peekable<'_, L>
 where
     L: Lender + Clone,
 {
-    fn clone(&self) -> Self { Peekable { lender: self.lender.clone(), peeked: None } }
+    fn clone(&self) -> Self {
+        Peekable { lender: self.lender.clone(), peeked: None }
+    }
 }
 impl<'this, L: fmt::Debug> fmt::Debug for Peekable<'this, L>
 where
@@ -72,7 +79,7 @@ where
         f.debug_struct("Peekable").field("lender", &self.lender).field("peeked", &self.peeked).finish()
     }
 }
-impl<'lend, 'this, L> Lending<'lend> for Peekable<'this, L>
+impl<'lend, L> Lending<'lend> for Peekable<'_, L>
 where
     L: Lender,
 {
@@ -211,6 +218,6 @@ impl<'this, L: DoubleEndedLender> DoubleEndedLender for Peekable<'this, L> {
         }
     }
 }
-impl<'this, L: ExactSizeLender> ExactSizeLender for Peekable<'this, L> {}
+impl<L: ExactSizeLender> ExactSizeLender for Peekable<'_, L> {}
 
-impl<'this, L: FusedLender> FusedLender for Peekable<'this, L> {}
+impl<L: FusedLender> FusedLender for Peekable<'_, L> {}

@@ -8,6 +8,9 @@ impl<L> Rev<L> {
     pub(crate) fn new(lender: L) -> Rev<L> {
         Rev { lender }
     }
+    pub fn into_inner(self) -> L {
+        self.lender
+    }
 }
 impl<'lend, L> Lending<'lend> for Rev<L>
 where

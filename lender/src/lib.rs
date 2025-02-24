@@ -34,7 +34,7 @@ pub(crate) trait ImplBoundPriv {}
 impl<T: ?Sized + ImplBoundPriv> ImplBound for T {}
 #[doc(hidden)]
 pub struct Ref<'lend, T: ?Sized>(&'lend T);
-impl<'lend, T: ?Sized> ImplBoundPriv for Ref<'lend, T> {}
+impl<T: ?Sized> ImplBoundPriv for Ref<'_, T> {}
 
 mod adapters;
 pub use adapters::*;

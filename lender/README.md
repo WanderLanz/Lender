@@ -351,13 +351,13 @@ Please check out the great resources below that helped me
  and many others learn about Rust and the lending iterator problem. Thank you to everyone!
 
 - [Sabrina Jewson's Blog](https://sabrinajewson.org/blog/the-better-alternative-to-lifetime-gats)
-for her awesome blog post on why lifetime GATs are not (yet)
-the solution to this problem, I highly recommend reading it.
+  for her awesome blog post on why lifetime GATs are not (yet)
+  the solution to this problem, I highly recommend reading it.
 - The awesome people on the [Rust Users Forum](https://users.rust-lang.org/)
-in helping me understand the borrow checker and HRTBs better
-and being patient with me and other aspiring rustaceans as we try to learn more about Rust.
+  in helping me understand the borrow checker and HRTBs better
+  and being patient with me and other aspiring rustaceans as we try to learn more about Rust.
 - [Daniel Henry-Mantilla](https://github.com/danielhenrymantilla) for writing
-[`lending-iterator`] and many other great crates and sharing their great work.
+  [`lending-iterator`] and many other great crates and sharing their great work.
 - Everyone who's contributed to Rust for making such a great language and iterator library.
 
 <!-- markdownlint-disable MD026 -->

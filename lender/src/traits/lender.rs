@@ -205,10 +205,10 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(chained.next(), None);
     /// ```
     #[inline]
-    fn chain<U: IntoLender>(self, other: U) -> Chain<Self, <U as IntoLender>::Lender>
+    fn chain<U>(self, other: U) -> Chain<Self, <U as IntoLender>::Lender>
     where
         Self: Sized,
-        for<'all> U: Lending<'all, Lend = Lend<'all, Self>>,
+        for<'all> U: IntoLender + Lending<'all, Lend = Lend<'all, Self>>,
     {
         Chain::new(self, other.into_lender())
     }
@@ -1250,9 +1250,15 @@ impl<'lend, L: Lender> Lending<'lend> for &mut L {
 }
 impl<L: Lender> Lender for &mut L {
     #[inline]
-    fn next(&mut self) -> Option<Lend<'_, Self>> { (**self).next() }
+    fn next(&mut self) -> Option<Lend<'_, Self>> {
+        (**self).next()
+    }
     #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>) { (**self).size_hint() }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (**self).size_hint()
+    }
     #[inline]
-    fn advance_by(&mut self, n: usize) -> Result<(), NonZeroUsize> { (**self).advance_by(n) }
+    fn advance_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {
+        (**self).advance_by(n)
+    }
 }

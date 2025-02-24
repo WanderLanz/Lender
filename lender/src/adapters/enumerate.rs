@@ -11,6 +11,9 @@ impl<L> Enumerate<L> {
     pub(crate) fn new(lender: L) -> Enumerate<L> {
         Enumerate { lender, count: 0 }
     }
+    pub fn into_inner(self) -> L {
+        self.lender
+    }
 }
 impl<'lend, L> Lending<'lend> for Enumerate<L>
 where

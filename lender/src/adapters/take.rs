@@ -11,6 +11,9 @@ impl<L> Take<L> {
     pub(crate) fn new(lender: L, n: usize) -> Take<L> {
         Take { lender, n }
     }
+    pub fn into_inner(self) -> L {
+        self.lender
+    }
 }
 impl<'lend, L> Lending<'lend> for Take<L>
 where

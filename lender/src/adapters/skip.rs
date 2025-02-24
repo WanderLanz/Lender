@@ -8,7 +8,12 @@ pub struct Skip<L> {
     n: usize,
 }
 impl<L> Skip<L> {
-    pub(crate) fn new(lender: L, n: usize) -> Skip<L> { Skip { lender, n } }
+    pub(crate) fn new(lender: L, n: usize) -> Skip<L> {
+        Skip { lender, n }
+    }
+    pub fn into_inner(self) -> L {
+        self.lender
+    }
 }
 impl<'lend, L> Lending<'lend> for Skip<L>
 where
@@ -52,7 +57,7 @@ where
         self.lender.count()
     }
     #[inline]
-    fn last<'call>(&'call mut self) -> Option<Lend<'call, Self>>
+    fn last(&mut self) -> Option<Lend<'_, Self>>
     where
         Self: Sized,
     {

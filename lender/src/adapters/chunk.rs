@@ -10,14 +10,17 @@ impl<'s, T> Chunk<'s, T> {
     pub(crate) fn new(lender: &'s mut T, len: usize) -> Self {
         Self { lender, len }
     }
+    pub fn into_inner(self) -> &'s mut T {
+        self.lender
+    }
 }
-impl<'lend, 's, T> Lending<'lend> for Chunk<'s, T>
+impl<'lend, T> Lending<'lend> for Chunk<'_, T>
 where
     T: Lender,
 {
     type Lend = Lend<'lend, T>;
 }
-impl<'s, T> Lender for Chunk<'s, T>
+impl<T> Lender for Chunk<'_, T>
 where
     T: Lender,
 {
@@ -34,4 +37,4 @@ where
         (lower.min(self.len), upper.map(|x| x.min(self.len)))
     }
 }
-impl<'a, L> FusedLender for Chunk<'a, L> where L: FusedLender {}
+impl<L> FusedLender for Chunk<'_, L> where L: FusedLender {}

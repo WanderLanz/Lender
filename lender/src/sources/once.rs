@@ -48,7 +48,7 @@ where
         f.debug_struct("Once").field("inner", &self.inner).finish()
     }
 }
-impl<'a, 'lend, L> Lending<'lend> for Once<'a, L>
+impl<'lend, L> Lending<'lend> for Once<'_, L>
 where
     L: ?Sized + for<'all> Lending<'all>,
 {
@@ -72,7 +72,7 @@ where
     }
 }
 
-impl<'a, L> DoubleEndedLender for Once<'a, L>
+impl<L> DoubleEndedLender for Once<'_, L>
 where
     L: ?Sized + for<'all> Lending<'all>,
 {
@@ -82,6 +82,6 @@ where
     }
 }
 
-impl<'a, L> ExactSizeLender for Once<'a, L> where L: ?Sized + for<'all> Lending<'all> {}
+impl<L> ExactSizeLender for Once<'_, L> where L: ?Sized + for<'all> Lending<'all> {}
 
-impl<'a, L> FusedLender for Once<'a, L> where L: ?Sized + for<'all> Lending<'all> {}
+impl<L> FusedLender for Once<'_, L> where L: ?Sized + for<'all> Lending<'all> {}

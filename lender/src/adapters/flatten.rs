@@ -8,15 +8,18 @@ where
 {
     inner: FlattenCompat<'this, L>,
 }
-impl<'this, L: Lender> Flatten<'this, L>
+impl<L: Lender> Flatten<'_, L>
 where
     for<'all> Lend<'all, L>: IntoLender,
 {
     pub(crate) fn new(lender: L) -> Self {
         Self { inner: FlattenCompat::new(lender) }
     }
+    pub fn into_inner(self) -> L {
+        self.inner.lender
+    }
 }
-impl<'this, L: Lender + Clone> Clone for Flatten<'this, L>
+impl<L: Lender + Clone> Clone for Flatten<'_, L>
 where
     for<'all> Lend<'all, L>: IntoLender,
     for<'all> <Lend<'all, L> as IntoLender>::Lender: Clone,
@@ -25,7 +28,7 @@ where
         Flatten { inner: self.inner.clone() }
     }
 }
-impl<'this, L: Lender + fmt::Debug> fmt::Debug for Flatten<'this, L>
+impl<L: Lender + fmt::Debug> fmt::Debug for Flatten<'_, L>
 where
     for<'all> Lend<'all, L>: IntoLender,
     for<'all> <Lend<'all, L> as IntoLender>::Lender: fmt::Debug,
@@ -40,7 +43,7 @@ where
 {
     type Lend = Lend<'lend, <Lend<'this, L> as IntoLender>::Lender>;
 }
-impl<'this, L: Lender> Lender for Flatten<'this, L>
+impl<L: Lender> Lender for Flatten<'_, L>
 where
     for<'all> Lend<'all, L>: IntoLender,
 {
@@ -53,7 +56,7 @@ where
         self.inner.size_hint()
     }
 }
-impl<'this, L: FusedLender> FusedLender for Flatten<'this, L> where for<'all> Lend<'all, L>: IntoLender {}
+impl<L: FusedLender> FusedLender for Flatten<'_, L> where for<'all> Lend<'all, L>: IntoLender {}
 
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct FlatMap<'this, L: Lender, F>
@@ -63,7 +66,7 @@ where
 {
     inner: FlattenCompat<'this, Map<L, F>>,
 }
-impl<'this, L: Lender, F> FlatMap<'this, L, F>
+impl<L: Lender, F> FlatMap<'_, L, F>
 where
     Map<L, F>: Lender,
     for<'all> Lend<'all, Map<L, F>>: IntoLender,
@@ -72,7 +75,7 @@ where
         Self { inner: FlattenCompat::new(Map::new(lender, f)) }
     }
 }
-impl<'this, L: Lender + Clone, F: Clone> Clone for FlatMap<'this, L, F>
+impl<L: Lender + Clone, F: Clone> Clone for FlatMap<'_, L, F>
 where
     Map<L, F>: Lender + Clone,
     for<'all> Lend<'all, Map<L, F>>: IntoLender,
@@ -82,7 +85,7 @@ where
         FlatMap { inner: self.inner.clone() }
     }
 }
-impl<'this, L: Lender + fmt::Debug, F> fmt::Debug for FlatMap<'this, L, F>
+impl<L: Lender + fmt::Debug, F> fmt::Debug for FlatMap<'_, L, F>
 where
     Map<L, F>: Lender + Clone,
     for<'all> Lend<'all, Map<L, F>>: IntoLender,
@@ -99,7 +102,7 @@ where
 {
     type Lend = Lend<'lend, <Lend<'this, Map<L, F>> as IntoLender>::Lender>;
 }
-impl<'this, L: Lender, F> Lender for FlatMap<'this, L, F>
+impl<L: Lender, F> Lender for FlatMap<'_, L, F>
 where
     Map<L, F>: Lender,
     for<'all> Lend<'all, Map<L, F>>: IntoLender,
@@ -113,7 +116,7 @@ where
         self.inner.size_hint()
     }
 }
-impl<'this, L: FusedLender, F> FusedLender for FlatMap<'this, L, F>
+impl<L: FusedLender, F> FusedLender for FlatMap<'_, L, F>
 where
     Map<L, F>: Lender,
     for<'all> Lend<'all, Map<L, F>>: IntoLender,
@@ -126,7 +129,7 @@ where
     lender: L,
     inner: Option<<Lend<'this, L> as IntoLender>::Lender>,
 }
-impl<'this, L: Lender> FlattenCompat<'this, L>
+impl<L: Lender> FlattenCompat<'_, L>
 where
     for<'all> Lend<'all, L>: IntoLender,
 {
@@ -134,7 +137,7 @@ where
         Self { lender, inner: None }
     }
 }
-impl<'this, L: Lender + Clone> Clone for FlattenCompat<'this, L>
+impl<L: Lender + Clone> Clone for FlattenCompat<'_, L>
 where
     for<'all> Lend<'all, L>: IntoLender,
     for<'all> <Lend<'all, L> as IntoLender>::Lender: Clone,
@@ -143,7 +146,7 @@ where
         Self { lender: self.lender.clone(), inner: self.inner.clone() }
     }
 }
-impl<'this, L: Lender + fmt::Debug> fmt::Debug for FlattenCompat<'this, L>
+impl<L: Lender + fmt::Debug> fmt::Debug for FlattenCompat<'_, L>
 where
     for<'all> Lend<'all, L>: IntoLender,
     for<'all> <Lend<'all, L> as IntoLender>::Lender: fmt::Debug,
@@ -188,4 +191,4 @@ where
         )
     }
 }
-impl<'this, L: FusedLender> FusedLender for FlattenCompat<'this, L> where for<'all> Lend<'all, L>: IntoLender {}
+impl<L: FusedLender> FusedLender for FlattenCompat<'_, L> where for<'all> Lend<'all, L>: IntoLender {}

@@ -13,6 +13,9 @@ impl<L> StepBy<L> {
         assert!(step != 0);
         StepBy { lender, step: step - 1, first_take: true }
     }
+    pub fn into_inner(self) -> L {
+        self.lender
+    }
 }
 impl<'lend, L> Lending<'lend> for StepBy<L>
 where

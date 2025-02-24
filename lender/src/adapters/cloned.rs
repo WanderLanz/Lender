@@ -11,6 +11,9 @@ impl<L> Cloned<L> {
     pub(crate) fn new(lender: L) -> Cloned<L> {
         Cloned { lender }
     }
+    pub fn into_inner(self) -> L {
+        self.lender
+    }
 }
 impl<T, L> Iterator for Cloned<L>
 where

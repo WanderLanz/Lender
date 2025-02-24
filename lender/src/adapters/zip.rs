@@ -18,6 +18,9 @@ impl<A, B> Zip<A, B> {
     pub(crate) fn new(a: A, b: B) -> Self {
         Self { a, b }
     }
+    pub fn into_inner(self) -> (A, B) {
+        (self.a, self.b)
+    }
 }
 impl<'lend, A, B> Lending<'lend> for Zip<A, B>
 where
