@@ -24,6 +24,9 @@ where
     pub fn into_inner(self) -> L {
         self.lender.into_inner()
     }
+    pub fn into_parts(self) -> (L, Lend<'this, L>) {
+        (self.lender.into_inner(), self.separator)
+    }
 }
 impl<L: fmt::Debug> fmt::Debug for Intersperse<'_, L>
 where

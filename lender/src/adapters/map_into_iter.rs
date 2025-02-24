@@ -19,6 +19,9 @@ impl<L: Lender, O, F: FnMut(Lend<'_, L>) -> O> MapIntoIter<L, O, F> {
     pub fn into_inner(self) -> L {
         self.lender
     }
+    pub fn into_parts(self) -> (L, F) {
+        (self.lender, self.f)
+    }
 }
 
 impl<L: Lender, O, F: FnMut(Lend<'_, L>) -> O> Iterator for MapIntoIter<L, O, F> {

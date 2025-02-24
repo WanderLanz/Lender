@@ -15,6 +15,9 @@ impl<L, St, F> Scan<L, St, F> {
     pub fn into_inner(self) -> L {
         self.lender
     }
+    pub fn into_parts(self) -> (L, St, F) {
+        (self.lender, self.state, self.f)
+    }
 }
 impl<L: fmt::Debug, St: fmt::Debug, F> fmt::Debug for Scan<L, St, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

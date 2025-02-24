@@ -14,6 +14,9 @@ impl<L, F> Mutate<L, F> {
     pub fn into_inner(self) -> L {
         self.lender
     }
+    pub fn into_parts(self) -> (L, F) {
+        (self.lender, self.f)
+    }
 }
 impl<L: fmt::Debug, F> fmt::Debug for Mutate<L, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

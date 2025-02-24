@@ -14,6 +14,9 @@ impl<L, F> Inspect<L, F> {
     pub fn into_inner(self) -> L {
         self.lender
     }
+    pub fn into_parts(self) -> (L, F) {
+        (self.lender, self.f)
+    }
 }
 impl<I: fmt::Debug, F> fmt::Debug for Inspect<I, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

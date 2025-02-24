@@ -16,6 +16,9 @@ impl<L> StepBy<L> {
     pub fn into_inner(self) -> L {
         self.lender
     }
+    pub fn into_parts(self) -> (L, usize) {
+        (self.lender, self.step)
+    }
 }
 impl<'lend, L> Lending<'lend> for StepBy<L>
 where

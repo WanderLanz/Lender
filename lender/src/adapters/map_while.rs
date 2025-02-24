@@ -14,6 +14,9 @@ impl<L, P> MapWhile<L, P> {
     pub fn into_inner(self) -> L {
         self.lender
     }
+    pub fn into_parts(self) -> (L, P) {
+        (self.lender, self.predicate)
+    }
 }
 impl<L: fmt::Debug, P> fmt::Debug for MapWhile<L, P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

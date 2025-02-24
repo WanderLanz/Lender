@@ -33,6 +33,9 @@ where
     pub fn into_inner(self) -> L {
         self.lender
     }
+    pub fn into_parts(self) -> (L, usize) {
+        (self.lender, self.chunk_size)
+    }
 }
 
 impl<'lend, L> Lending<'lend> for Chunky<L>
