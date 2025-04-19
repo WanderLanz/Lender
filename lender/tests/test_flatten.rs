@@ -84,6 +84,8 @@ impl<'parent> Iterator for Parent<'parent> {
 }
 
 #[test]
+/// This test at the the time of creation documented an odd case where
+/// the data in the parent was not kept in sync with the child.
 fn test_flatten() {
     let inner_parent = InnerParent { stack: Vec::new(), current_root_id: 0 };
     let parent = Parent { inner: inner_parent.flatten() };
