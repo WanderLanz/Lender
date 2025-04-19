@@ -1,4 +1,5 @@
 use core::fmt;
+use alloc::boxed::Box;
 
 use crate::{FusedLender, IntoLender, Lend, Lender, Lending, Map};
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -16,7 +17,7 @@ where
         Self { inner: FlattenCompat::new(lender) }
     }
     pub fn into_inner(self) -> L {
-        self.inner.lender
+        *self.inner.lender
     }
 }
 impl<L: Lender + Clone> Clone for Flatten<'_, L>
@@ -126,7 +127,7 @@ pub struct FlattenCompat<'this, L: Lender>
 where
     for<'all> Lend<'all, L>: IntoLender,
 {
-    lender: L,
+    lender: Box<L>,
     inner: Option<<Lend<'this, L> as IntoLender>::Lender>,
 }
 impl<L: Lender> FlattenCompat<'_, L>
@@ -134,7 +135,7 @@ where
     for<'all> Lend<'all, L>: IntoLender,
 {
     pub(crate) fn new(lender: L) -> Self {
-        Self { lender, inner: None }
+        Self { lender: Box::new(lender), inner: None }
     }
 }
 impl<L: Lender + Clone> Clone for FlattenCompat<'_, L>
