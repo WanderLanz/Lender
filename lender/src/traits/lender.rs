@@ -11,7 +11,7 @@ use crate::{
 ///
 /// Must be defined for any type that implements [`Lender`].
 ///
-/// It implicitly restricts the lifetime `'lend` used in `Lending<'lend>` to be where `Self: 'lend`.
+/// It implicitly restricts the lifetime `'lend` used in `Lending<'lend>` to be `where Self: 'lend`.
 ///
 /// This is a result of Higher-Ranked Trait Bounds (HRTBs) not having a way to express qualifiers (`for<'any where Self: 'any> Self: Trait`)
 /// and effectively making HRTBs only useful when you want to express a trait constraint on ALL lifetimes, including 'static (`for<'all> Self: trait`)
