@@ -1,5 +1,7 @@
 use core::{fmt, ops::ControlFlow};
 
+use alloc::boxed::Box;
+
 use crate::{
     try_trait_v2::{FromResidual, Try},
     DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending,
@@ -10,7 +12,7 @@ pub struct Peekable<'this, L>
 where
     L: Lender,
 {
-    lender: L,
+    lender: Box<L>,
     peeked: Option<Option<Lend<'this, L>>>,
 }
 impl<'this, L> Peekable<'this, L>
@@ -18,10 +20,10 @@ where
     L: Lender,
 {
     pub(crate) fn new(lender: L) -> Peekable<'this, L> {
-        Peekable { lender, peeked: None }
+        Peekable { lender: Box::new(lender), peeked: None }
     }
     pub fn into_inner(self) -> L {
-        self.lender
+        *self.lender
     }
     pub fn peek(&mut self) -> Option<&'_ Lend<'this, L>> {
         let lender = &mut self.lender;

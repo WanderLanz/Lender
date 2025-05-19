@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.3.2] - 2025-05-18
+
+### Fixed
+
+* Fixed use-after-free bug in `Flatten`/`Peek`.
+
 ## [0.3.1] - 2025-02-24
 
 ### New

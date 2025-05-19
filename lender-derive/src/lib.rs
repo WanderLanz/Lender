@@ -39,18 +39,18 @@ impl Parse for ForLenderInfo {
 Syntax sugar for iterating over a [`Lender`](https://docs.rs/lender/latest/lender/trait.Lender.html).
 
 This function-like procedural macro expands a syntax of the form
-```[ignore]
+```ignore
 for_!(PATTERN in EXPR BLOCK);
 ```
 where `PATTERN` is a valid pattern for a `for` loop, `EXPR` is an expression that
 implements [`IntoLender`](https://docs.rs/lender/latest/lender/trait.IntoLender.html) and `BLOCK` is a block of code, into a `while let` loop that
 iterates over a [`Lender`](https://docs.rs/lender/latest/lender/trait.Lender.html) obtained from the [`IntoLender`](https://docs.rs/lender/latest/lender/trait.IntoLender.html):
-```[ignore]
+```ignore
 let mut ___ඞඞඞlenderඞඞඞ___ = (EXPR).into_lender();
 while let Some(PATTERN) = ___ඞඞඞlenderඞඞඞ___.next() BLOCK
 ```
 For example, the following code
-```[ignore]
+```ignore
 for_!(x in 0..10 {
     println!("{}", x);
 });
@@ -64,7 +64,7 @@ procedural macros, and thus can be replaced, for example, with brackets.
 
 For an example of a more complex usage, see the following code, which iterates over
 the elements of an `enum`, but only on the first two variants:
-```[ignore]
+```ignore
 #[derive(Debug)]
 enum Three {
     A,
