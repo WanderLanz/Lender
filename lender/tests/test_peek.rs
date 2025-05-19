@@ -74,22 +74,22 @@ impl Lender for InnerParent {
 
 pub struct Parent<'parent> {
     /// The underlying iterator.
-    inner: lender::Flatten<'parent, InnerParent>,
+    inner: lender::Peekable<'parent, InnerParent>,
 }
 
 impl<'parent> Iterator for Parent<'parent> {
     type Item = Vec<usize>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.inner.next().map(|vec| vec.to_vec())
+        self.inner.next().map(|vec| vec.stack.to_vec())
     }
 }
 
 #[test]
 // This test at the the time of creation was causing an use-after-free error
-// because of the wrong management of self-referencing data in FlattenCompat.
+// because of the wrong management of self-referencing data in Peekable.
 fn test_flatten() {
     let inner_parent = InnerParent { stack: Vec::new(), current_root_id: 0 };
-    let parent = Parent { inner: inner_parent.flatten() };
+    let parent = Parent { inner: inner_parent.peekable() };
     let _results = parent.collect::<Vec<_>>();
 }
