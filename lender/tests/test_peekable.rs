@@ -88,7 +88,7 @@ impl<'parent> Iterator for Parent<'parent> {
 #[test]
 // This test at the the time of creation was causing an use-after-free error
 // because of the wrong management of self-referencing data in Peekable.
-fn test_flatten() {
+fn test_peekable() {
     let inner_parent = InnerParent { stack: Vec::new(), current_root_id: 0 };
     let parent = Parent { inner: inner_parent.peekable() };
     let _results = parent.collect::<Vec<_>>();
