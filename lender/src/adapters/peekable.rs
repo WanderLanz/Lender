@@ -223,3 +223,43 @@ impl<'this, L: DoubleEndedLender> DoubleEndedLender for Peekable<'this, L> {
 impl<L: ExactSizeLender> ExactSizeLender for Peekable<'_, L> {}
 
 impl<L: FusedLender> FusedLender for Peekable<'_, L> {}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    struct ArrayLender {
+        array: [i32; 4],
+        pos: usize,
+    }
+
+    impl<'lend> Lending<'lend> for ArrayLender {
+        type Lend = &'lend i32;
+    }
+
+    impl<'lend> Lender for ArrayLender {
+        fn next(&mut self) -> Option<Lend<'_, Self>> {
+            return if self.pos == self.array.len() {
+                None
+            } else {
+                self.pos += 1;
+                Some(&self.array[self.pos - 1])
+            };
+        }
+    }
+
+    #[test]
+    fn test_peekable() {
+        let lender = ArrayLender { array: [-1, 1, 2, 3], pos: 0 };
+        let mut peekable = lender.peekable();
+        assert_eq!(**peekable.peek().unwrap(), -1);
+        assert_eq!(peekable.peeked.unwrap().unwrap() as *const _, &peekable.lender.array as *const _);
+        moved_peekable(peekable);
+    }
+
+    fn moved_peekable(peekable: Peekable<ArrayLender>) {
+        let peeked = peekable.peeked.unwrap().unwrap() as *const _;
+        let array = &peekable.lender.array as *const _;
+        assert_eq!(peeked, array, "Peeked element pointer should be the same as the array pointer");
+    }
+}
