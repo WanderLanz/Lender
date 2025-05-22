@@ -79,13 +79,11 @@ lender.for_each{
 
 ## Caveats
 
-Forewarning, before you go on with this crate, you should consider using a more seasoned
-crate, like [`lending-iterator`], which, however, does not use directly higher-rank trait bounds,
-but rather relies on simulating them using macros.
-
-Also, if a `dyn Lender` trait object is in your future, this crate **definitely** isn't going to work.
-This crate was not made to be used in any sort of production code, so please, use
-it at your own risk (Documentation be damned! Unsafe transmutes beware!).
+Before you go on with this crate, you should consider using a more seasoned
+crate, like [`lending-iterator`], which, however, does not use directly
+higher-rank trait bounds, but rather relies on simulating them using macros.
+Also, if a `dyn Lender` trait object is in your future, this crate is not going
+to work.
 
 Finally, note that, as a general rule, if you can avoid using lenders, you should.
 You should heed the counsel of Polonius: “Neither a borrower nor a lender be”.
@@ -361,10 +359,10 @@ Please check out the great resources below that helped me
 - Everyone who's contributed to Rust for making such a great language and iterator library.
 
 <!-- markdownlint-disable MD026 -->
-## Unsafe & Transmutes Beware!!!
+## Unsafe & Transmutes
 
 Many patterns in lenders require polonius-emulating unsafe code,
-but if you see any unsafe code that can be made safe, please let me know!
+but if you see any unsafe code that can be made safe, please let us know!
 
 [`Lender`]: https://docs.rs/lender/latest/lender/trait.Lender.html
 [`Lend`]: https://docs.rs/lender/latest/lender/type.Lend.html
