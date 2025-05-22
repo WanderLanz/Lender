@@ -1,5 +1,5 @@
-use core::fmt;
 use alloc::boxed::Box;
+use core::fmt;
 
 use crate::{FusedLender, IntoLender, Lend, Lender, Lending, Map};
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -167,7 +167,7 @@ where
     for<'all> Lend<'all, L>: IntoLender,
 {
     fn next(&mut self) -> Option<Lend<'_, Self>> {
-        // SAFETY: polonius return
+        // SAFETY: Polonius return
         let reborrow = unsafe { &mut *(&mut self.inner as *mut Option<<Lend<'this, L> as IntoLender>::Lender>) };
         if let Some(inner) = reborrow {
             if let Some(x) = inner.next() {
@@ -193,3 +193,55 @@ where
     }
 }
 impl<L: FusedLender> FusedLender for FlattenCompat<'_, L> where for<'all> Lend<'all, L>: IntoLender {}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    struct Parent([i32; 4]);
+
+    impl<'lend> Lending<'lend> for Parent {
+        type Lend = Child<'lend>;
+    }
+
+    impl<'lend> Lender for Parent {
+        fn next(&mut self) -> Option<Lend<'_, Self>> {
+            Some(Child { array_ref: &self.0 })
+        }
+    }
+
+    struct Child<'a> {
+        array_ref: &'a [i32; 4],
+    }
+
+    impl<'a, 'lend> Lending<'lend> for Child<'a> {
+        type Lend = &'lend [i32; 4];
+    }
+
+    impl<'a, 'lend> Lender for Child<'a> {
+        fn next(&mut self) -> Option<Lend<'_, Self>> {
+            Some(&self.array_ref)
+        }
+    }
+
+    // This test will fail if FlattenCompat stores L instead of Box<L>. In that
+    // case, when Flatten<Parent> is moved, the array inside Parent is moved,
+    // too, but FlattenCompat.inner will still contain a Child holding a
+    // reference to the previous location.
+    #[test]
+    fn test_flatten() {
+        let lender = Parent([0, 1, 2, 3]);
+        let mut flatten = lender.flatten();
+        flatten.next();
+        moved_flatten(flatten);
+    }
+
+    fn moved_flatten(mut flatten: Flatten<Parent>) {
+        let next_array_ref = flatten.next().unwrap() as *const _;
+        let array_ref = &flatten.inner.lender.0 as *const _;
+        assert_eq!(
+            next_array_ref, array_ref,
+            "Array references returned by the flattened lender should refer to the array in the parent lender"
+        );
+    }
+}

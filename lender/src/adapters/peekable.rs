@@ -230,7 +230,6 @@ mod test {
 
     struct ArrayLender {
         array: [i32; 4],
-        pos: usize,
     }
 
     impl<'lend> Lending<'lend> for ArrayLender {
@@ -239,27 +238,26 @@ mod test {
 
     impl<'lend> Lender for ArrayLender {
         fn next(&mut self) -> Option<Lend<'_, Self>> {
-            return if self.pos == self.array.len() {
-                None
-            } else {
-                self.pos += 1;
-                Some(&self.array[self.pos - 1])
-            };
+            Some(&self.array[0])
         }
     }
 
+    // This test will fail if Peekable stores L instead of Box<L>. In that case,
+    // when Peekable<ArrayLender> is moved, the array inside ArrayLender is
+    // moved, too, but Peekable.peeked will still contain a reference to the
+    // previous location.
     #[test]
     fn test_peekable() {
-        let lender = ArrayLender { array: [-1, 1, 2, 3], pos: 0 };
+        let lender = ArrayLender { array: [-1, 1, 2, 3] };
         let mut peekable = lender.peekable();
         assert_eq!(**peekable.peek().unwrap(), -1);
-        assert_eq!(peekable.peeked.unwrap().unwrap() as *const _, &peekable.lender.array as *const _);
+        assert_eq!(peekable.peeked.unwrap().unwrap() as *const _, &peekable.lender.array[0] as *const _);
         moved_peekable(peekable);
     }
 
     fn moved_peekable(peekable: Peekable<ArrayLender>) {
         let peeked = peekable.peeked.unwrap().unwrap() as *const _;
-        let array = &peekable.lender.array as *const _;
-        assert_eq!(peeked, array, "Peeked element pointer should be the same as the array pointer");
+        let array = &peekable.lender.array[0] as *const _;
+        assert_eq!(peeked, array, "Peeked element pointer should point to the first element of the array");
     }
 }
