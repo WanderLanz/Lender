@@ -1,6 +1,10 @@
 //! A simple stable replacement for the unstable `Try`, `FromResidual`, and `Residual` traits under the `try_trait_v2` feature
 #![no_std]
 use core::{convert::Infallible, ops::ControlFlow, task::Poll};
+#[doc(hidden)]
+pub mod __ {
+    pub use core;
+}
 
 /// A simple macro emulating the `?` operator for this crate's `Try` types,
 /// useful for contexts generic over this crate's `Try` types where the `?` operator is not usable.
@@ -8,8 +12,10 @@ use core::{convert::Infallible, ops::ControlFlow, task::Poll};
 macro_rules! try_ {
     ($expr:expr $(,)?) => {
         match $crate::Try::branch($expr) {
-            ::core::ops::ControlFlow::Continue(o) => o,
-            ::core::ops::ControlFlow::Break(r) => return $crate::FromResidual::from_residual(r),
+            $crate::__::core::ops::ControlFlow::Continue(o) => o,
+            $crate::__::core::ops::ControlFlow::Break(r) => {
+                return $crate::FromResidual::from_residual(r)
+            }
         }
     };
 }
