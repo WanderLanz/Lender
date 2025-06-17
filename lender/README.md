@@ -85,10 +85,12 @@ type of the returned lend you need to use a higher-rank trait bound, as in:
 ```rust
 use lender::*;
 
-fn read_lender<L>(lender: L)
+fn read_lender<L>(mut lender: L)
 where
     L: Lender + for<'lend> Lending<'lend, Lend = &'lend str>,
-{}
+{
+    let _: Option<&'_ str> = lender.next(); 
+}
 ```
 
 You can also bind the lend using traits:
@@ -96,10 +98,13 @@ You can also bind the lend using traits:
 ```rust
 use lender::*;
 
-fn read_lender<L>(lender: L)
+fn read_lender<L>(mut lender: L)
 where
     L: Lender + for<'lend> Lending<'lend, Lend: AsRef<str>>,
-{}
+{
+    let lend = lender.next();
+    let _: Option<&'_ str> = lend.as_ref().map(AsRef::as_ref);
+}
 ```
 
 In this case, you can equivalently use the [`Lend`] type alias, which might be
@@ -108,11 +113,14 @@ more concise:
 ```rust
 use lender::*;
 
-fn read_lender<L>(lender: L)
+fn read_lender<L>(mut lender: L)
 where
     L: Lender,
     for<'lend> Lend<'lend, L>: AsRef<str>,
-{}
+{
+    let lend = lender.next();
+    let _: Option<&'_ str> = lend.as_ref().map(AsRef::as_ref);
+}
 ```
 
 ## Caveats
