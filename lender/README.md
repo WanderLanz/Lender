@@ -110,16 +110,14 @@ use lender::*;
 
 fn read_lender<L>(lender: L)
 where
-    L: Lender + for<'lend> Lend<'lend, L>: AsRef<str>,
+    L: Lender,
+    for<'lend> Lend<'lend, L>: AsRef<str>,
 {}
 ```
 
 ## Caveats
 
-Before you go on with this crate, you should consider using a more seasoned
-crate, like [`lending-iterator`], which, however, does not use directly
-higher-rank trait bounds, but rather relies on simulating them using macros.
-Also, if a `dyn Lender` trait object is in your future, this crate is not going
+If a `dyn Lender` trait object is in your future, this crate is not going
 to work.
 
 Finally, note that, as a general rule, if you can avoid using lenders, you should.
@@ -181,7 +179,7 @@ impl<'lend, B: io::BufRead> Lending<'lend> for LinesStr<B> {
     type Lend = io::Result<&'lend str>;
 }
 impl<B: io::BufRead> Lender for LinesStr<B> {
-    fn next<'lend>(&'lend mut self) -> Option<io::Result<&'lend str>> {
+    fn next(&mut self) -> Option<io::Result<&'_ str>> {
         self.line.clear();
         match self.buf.read_line(&mut self.line) {
             Err(e) => return Some(Err(e)),
@@ -232,7 +230,7 @@ impl<'this, 'lend> Lending<'lend> for StrRef<'this> {
     type Lend = &'lend str;
 }
 impl<'this> Lender for StrRef<'this> {
-    fn next<'lend>(&'lend mut self) -> Option<&'lend str> {
+    fn next(&mut self) -> Option<&'_ str> {
         Some(self.0)
     }
 }
