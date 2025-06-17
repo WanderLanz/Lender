@@ -77,12 +77,47 @@ lender.for_each{
 };
 ```
 
+## Binding the Lend
+
+When writing methods accepting a [`Lender`], to bind the
+type of the returned lend you need to use a higher-rank trait bound, as in:
+
+```rust
+use lender::*;
+
+fn read_lender<L>(lender: L)
+where
+    L: Lender + for<'lend> Lending<'lend, Lend = &'lend str>,
+{}
+```
+
+You can also bind the lend using traits:
+
+```rust
+use lender::*;
+
+fn read_lender<L>(lender: L)
+where
+    L: Lender + for<'lend> Lending<'lend, Lend: AsRef<str>>,
+{}
+```
+
+In this case, you can equivalently use the [`Lend`] type alias, which might be
+more concise:
+
+```rust
+use lender::*;
+
+fn read_lender<L>(lender: L)
+where
+    L: Lender,
+    for<'lend> Lend<'lend, L>: AsRef<str>,
+{}
+```
+
 ## Caveats
 
-Before you go on with this crate, you should consider using a more seasoned
-crate, like [`lending-iterator`], which, however, does not use directly
-higher-rank trait bounds, but rather relies on simulating them using macros.
-Also, if a `dyn Lender` trait object is in your future, this crate is not going
+If a `dyn Lender` trait object is in your future, this crate is not going
 to work.
 
 Finally, note that, as a general rule, if you can avoid using lenders, you should.
@@ -144,7 +179,7 @@ impl<'lend, B: io::BufRead> Lending<'lend> for LinesStr<B> {
     type Lend = io::Result<&'lend str>;
 }
 impl<B: io::BufRead> Lender for LinesStr<B> {
-    fn next<'lend>(&'lend mut self) -> Option<io::Result<&'lend str>> {
+    fn next(&mut self) -> Option<io::Result<&'_ str>> {
         self.line.clear();
         match self.buf.read_line(&mut self.line) {
             Err(e) => return Some(Err(e)),
@@ -195,7 +230,7 @@ impl<'this, 'lend> Lending<'lend> for StrRef<'this> {
     type Lend = &'lend str;
 }
 impl<'this> Lender for StrRef<'this> {
-    fn next<'lend>(&'lend mut self) -> Option<&'lend str> {
+    fn next(&mut self) -> Option<&'_ str> {
         Some(self.0)
     }
 }
@@ -215,96 +250,6 @@ impl<'this> Lender for StrRef<'this> {
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         Some(self.0)
     }
-}
-```
-
-## Type-inference problems
-
-Due to the complex type dependencies and higher-kind trait bounds
-involved, the current Rust compiler cannot
-always infer the correct type of a lender and the items it returns.
-In general, when writing methods accepting a [`Lender`]
-restricting the returned item type with a _type_ will work, as in:
-
-```rust
-use lender::*;
-
-struct MockLender {}
-
-impl<'lend> Lending<'lend> for MockLender {
-    type Lend = &'lend str;
-}
-
-impl Lender for MockLender {
-    fn next(&mut self) -> Option<Lend<'_, Self>> {
-        None
-    }
-}
-
-fn read_lender<L>(lender: L)
-where
-    L: Lender + for<'lend> Lending<'lend, Lend = &'lend str>,
-{}
-
-fn test_mock_lender(m: MockLender) {
-    read_lender(m);
-}
-```
-
-However, the following code, which restricts the returned items using a trait bound,
-does not compile as of Rust 1.74.1:
-
-```ignore
-use lender::*;
-
-struct MockLender {}
-
-impl<'lend> Lending<'lend> for MockLender {
-    type Lend = &'lend str;
-}
-
-impl Lender for MockLender {
-    fn next(&mut self) -> Option<Lend<'_, Self>> {
-        None
-    }
-}
-
-fn read_lender<L>(lender: L)
-where
-    L: Lender,
-    for<'lend> Lend<'lend, L>: AsRef<str>,
-{}
-
-fn test_mock_lender(m: MockLender) {
-    read_lender(m);
-}
-```
-
-The workaround is to use an explicit type annotation:
-
-```rust
-use lender::*;
-
-struct MockLender {}
-
-impl<'lend> Lending<'lend> for MockLender {
-    type Lend = &'lend str;
-}
-
-impl Lender for MockLender {
-    fn next(&mut self) -> Option<Lend<'_, Self>> {
-        None
-    }
-}
-
-fn read_lender<L>(lender: L)
-where
-    L: Lender,
-    for<'lend> Lend<'lend, L>: AsRef<str>,
-{}
-
-fn test_mock_lender(m: MockLender) {
-    read_lender::<MockLender>(m);
 }
 ```
 
