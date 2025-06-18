@@ -126,9 +126,13 @@ where
     }
 }
 
-/// Private adapter. Marks a `Lender`, where `Lend` implements `TupleLend`, as a `Lender` of `<Lend as TupleLend>::First`.
+#[doc(hidden)]
+/// Private adapter. Marks a `Lender`, where `Lend` implements `TupleLend`, as a
+/// `Lender` of `<Lend as TupleLend>::First`.
 pub struct FirstShunt<L>(PhantomData<L>);
-/// Private adapter. Marks a `Lender`, where `Lend` implements `TupleLend`, as a `Lender` of `<Lend as TupleLend>::Second`.
+#[doc(hidden)]
+/// Private adapter. Marks a `Lender`, where `Lend` implements `TupleLend`, as a
+/// `Lender` of `<Lend as TupleLend>::Second`.
 pub struct SecondShunt<L>(PhantomData<L>);
 impl<'lend, L: Lender> Lending<'lend> for FirstShunt<L>
 where

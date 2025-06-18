@@ -13,7 +13,7 @@ use crate::{
 ///
 /// It implicitly restricts the lifetime `'lend` used in `Lending<'lend>` to be `where Self: 'lend`.
 ///
-/// This is a result of Higher-Ranked Trait Bounds (HRTBs) not having a way to express qualifiers (`for<'any where Self: 'any> Self: Trait`)
+/// This is a result of Higher-Rank Trait Bounds (HRTBs) not having a way to express qualifiers (`for<'any where Self: 'any> Self: Trait`)
 /// and effectively making HRTBs only useful when you want to express a trait constraint on ALL lifetimes, including 'static (`for<'all> Self: trait`)
 ///
 /// Although the common example of implementing your own LendingIterator uses a (`type Item<'a> where Self: 'a;`) GAT,

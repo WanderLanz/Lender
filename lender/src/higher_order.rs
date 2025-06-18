@@ -1,14 +1,14 @@
 //! # Higher-Order Types, Traits, etc.
 //!
 //! - Flexible function signatures, to work around function lifetime signature restrictions.
-//! - Higher-Ranked Closures (macro to create fn signatures as a type hint)
+//! - Higher-Rank Closures (macro to create fn signatures as a type hint)
 //!
-//! If you are using nightly, it is recommended to use higher-ranked closures
+//! If you are using nightly, it is recommended to use higher-rank closures
 //! (`for<'all> |x: &'all ()| -> &'all () { x }`), which better satisfy these traits
 //! without addition function signatures. (`#![feature(closure_lifetime_binder)]`).
 //!
 //! If you are not on nightly, you can use the [`hrc!`](`crate::hrc`), [`hrc_mut!`](`crate::hrc_mut`),
-//! or [`hrc_once!`](`crate::hrc_once`) macros to create a higher-ranked closure.
+//! or [`hrc_once!`](`crate::hrc_once`) macros to create a higher-rank closure.
 
 /// Higher-Kinded Associated Output `FnOnce`, where `Output` (B) is with lifetime `'b`.
 pub trait FnOnceHKA<'b, A>: FnOnce(A) -> <Self as FnOnceHKA<'b, A>>::B {
@@ -104,19 +104,19 @@ macro_rules! __hrc__ {(
     )
 )}
 
-/// Higher-Ranked Closure (FnOnce) macro that replaces the `closure_lifetime_binder` feature for stable.
+/// Higher-Rank Closure (FnOnce) macro that replaces the `closure_lifetime_binder` feature for stable.
 ///
 /// This is a modified version of [`higher-order-closure`](https://crates.io/crates/higher-order-closure)'s `higher_order_closure` macro.
 #[macro_export]
 macro_rules! hrc_once {($($t:tt)+) => ($crate::__hrc__!(FnOnce, $($t)+))}
 
-/// Higher-Ranked Closure (FnMut)  macro that replaces the `closure_lifetime_binder` feature for stable.
+/// Higher-Rank Closure (FnMut)  macro that replaces the `closure_lifetime_binder` feature for stable.
 ///
 /// This is a modified version of [`higher-order-closure`](https://crates.io/crates/higher-order-closure)'s `higher_order_closure` macro.
 #[macro_export]
 macro_rules! hrc_mut {($($t:tt)+) => ($crate::__hrc__!(FnMut, $($t)+))}
 
-/// Higher-Ranked Closure (Fn) macro that replaces the `closure_lifetime_binder` feature for stable.
+/// Higher-Rank Closure (Fn) macro that replaces the `closure_lifetime_binder` feature for stable.
 ///
 /// This is a modified version of [`higher-order-closure`](https://crates.io/crates/higher-order-closure)'s `higher_order_closure` macro.
 #[macro_export]

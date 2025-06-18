@@ -35,7 +35,7 @@ all of the methods as `Iterator`, except `partition_in_place` and `array_chunks`
 and most methods provide the same functionality as the equivalent `Iterator` method.
 
 Notable differences in behavior include [`next_chunk`](https://docs.rs/lender/latest/lender/trait.Lender.html#method.next_chunk) providing a lender instead of an array
-and certain closures requiring usage of the [`hrc!`](https://docs.rs/lender/latest/lender/macro.hrc.html), [`hrc_mut!`](https://docs.rs/lender/latest/lender/macro.hrc_mut.html), [`hrc_once!`](https://docs.rs/lender/latest/lender/macro.hrc_once.html) (higher-ranked closure) macros, which provide a stable replacement for the `closure_lifetime_binder` feature.
+and certain closures requiring usage of the [`hrc!`](https://docs.rs/lender/latest/lender/macro.hrc.html), [`hrc_mut!`](https://docs.rs/lender/latest/lender/macro.hrc_mut.html), [`hrc_once!`](https://docs.rs/lender/latest/lender/macro.hrc_once.html) (higher-rank closure) macros, which provide a stable replacement for the `closure_lifetime_binder` feature.
 
 Turn a lender into an iterator with [`cloned`](https://docs.rs/lender/latest/lender/trait.Lender.html#method.cloned)
 where lend is `Clone`, [`copied`](https://docs.rs/lender/latest/lender/trait.Lender.html#method.copied) where lend is `Copy`,
@@ -226,7 +226,7 @@ impl<'this, 'lend> Lending<'lend> for StrRef<'this> {
 The lifetime parameter `'lend` describes the lifetime of the `Lend`.
 It works by using under the hood a default generic of `&'lend Self` which induces an implicit
 reference lifetime bound `'lend: 'this`, which is necessary for usage of
-higher-ranked trait bounds with `Lend`.
+higher-rank trait bounds with `Lend`.
 
 Next, you'll need to implement the [`Lender`]
 trait for your type, the lending equivalent of `Iterator`.
@@ -298,18 +298,19 @@ GAT-based lending iterators are of little practical use.
 
 ## Resources
 
-Please check out the great resources below that helped me
- and many others learn about Rust and the lending iterator problem. Thank you to everyone!
+Please check out the great resources below that helped us and many others learn
+about Rust and the lending iterator problem. Thank you to everyone!
 
 - [Sabrina Jewson's Blog](https://sabrinajewson.org/blog/the-better-alternative-to-lifetime-gats)
   for her awesome blog post on why lifetime GATs are not (yet)
-  the solution to this problem, I highly recommend reading it.
-- The awesome people on the [Rust Users Forum](https://users.rust-lang.org/)
-  in helping me understand the borrow checker and HRTBs better
-  and being patient with me and other aspiring rustaceans as we try to learn more about Rust.
+  the solution to this problem, we highly recommend reading it.
+- The awesome people on the [Rust Users Forum](https://users.rust-lang.org/) in
+  helping us understand the borrow checker and HRTBs better and being patient
+  with us and other aspiring rustaceans as we try to learn more about Rust.
 - [Daniel Henry-Mantilla](https://github.com/danielhenrymantilla) for writing
   [`lending-iterator`] and many other great crates and sharing their great work.
-- Everyone who's contributed to Rust for making such a great language and iterator library.
+- Everyone who's contributed to Rust for making such a great language and
+  iterator library.
 
 <!-- markdownlint-disable MD026 -->
 ## Unsafe & Transmutes
