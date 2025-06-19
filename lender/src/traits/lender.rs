@@ -338,14 +338,12 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// });
     /// ```
     #[inline]
-    fn for_each<F>(mut self, mut f: F)
+    fn for_each<F>(self, mut f: F)
     where
         Self: Sized,
         F: FnMut(Lend<'_, Self>),
     {
-        while let Some(a) = self.next() {
-            f(a);
-        }
+	self.fold((), |_, t| f(t))
     }
     /// Filter this lender using the given predicate.
     ///
