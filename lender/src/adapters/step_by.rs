@@ -1,6 +1,9 @@
 use core::ops::ControlFlow;
 
-use crate::{try_trait_v2::Try, DoubleEndedLender, ExactSizeLender, Lend, Lender, Lending};
+use crate::{
+    try_trait_v2::Try, DoubleEndedLender, ExactSizeLender, FallibleLend, FallibleLender, FallibleLending, Lend, Lender,
+    Lending,
+};
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct StepBy<L> {
@@ -206,3 +209,117 @@ where
     }
 }
 impl<L> ExactSizeLender for StepBy<L> where L: ExactSizeLender {}
+
+impl<'lend, L> FallibleLending<'lend> for StepBy<L>
+where
+    L: FallibleLender,
+{
+    type Lend = FallibleLend<'lend, L>;
+}
+impl<L> FallibleLender for StepBy<L>
+where
+    L: FallibleLender,
+{
+    type Error = L::Error;
+
+    #[inline]
+    fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        if self.first_take {
+            self.first_take = false;
+            self.lender.next()
+        } else {
+            self.lender.nth(self.step)
+        }
+    }
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let (low, high) = self.lender.size_hint();
+        let step = self.step;
+        if self.first_take {
+            let f = move |n| if n == 0 { 0 } else { 1 + (n - 1) / (step + 1) };
+            (f(low), high.map(f))
+        } else {
+            let f = move |n| n / (step + 1);
+            (f(low), high.map(f))
+        }
+    }
+    #[inline]
+    fn nth(&mut self, mut n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        if self.first_take {
+            self.first_take = false;
+            if n == 0 {
+                return self.lender.next();
+            }
+            n -= 1;
+        }
+        let mut step = self.step + 1;
+        if n == usize::MAX {
+            self.lender.nth(step - 1)?;
+        } else {
+            n += 1;
+        }
+        loop {
+            let mul = n.checked_mul(step);
+            if let Some(mul) = mul {
+                return self.lender.nth(mul - 1);
+            }
+            let div_n = usize::MAX / n;
+            let div_step = usize::MAX / step;
+            let nth_n = div_n * n;
+            let nth_step = div_step * step;
+            let nth = if nth_n > nth_step {
+                step -= div_n;
+                nth_n
+            } else {
+                n -= div_step;
+                nth_step
+            };
+            self.lender.nth(nth - 1)?;
+        }
+    }
+    fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> Result<R, Self::Error>
+    where
+        Self: Sized,
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<R, Self::Error>,
+        R: Try<Output = B>,
+    {
+        let mut acc = init;
+        if self.first_take {
+            self.first_take = false;
+            match self.lender.next()? {
+                None => return Ok(R::from_output(acc)),
+                Some(x) => {
+                    acc = match f(acc, x)?.branch() {
+                        ControlFlow::Break(b) => return Ok(R::from_residual(b)),
+                        ControlFlow::Continue(c) => c,
+                    }
+                }
+            }
+        }
+        while let Some(x) = self.lender.nth(self.step)? {
+            acc = match f(acc, x)?.branch() {
+                ControlFlow::Break(b) => return Ok(R::from_residual(b)),
+                ControlFlow::Continue(c) => c,
+            };
+        }
+        Ok(R::from_output(acc))
+    }
+    fn fold<B, F>(mut self, init: B, mut f: F) -> Result<B, Self::Error>
+    where
+        Self: Sized,
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
+    {
+        let mut acc = init;
+        if self.first_take {
+            self.first_take = false;
+            match self.lender.next()? {
+                None => return Ok(acc),
+                Some(x) => acc = f(acc, x)?,
+            }
+        }
+        while let Some(x) = self.lender.nth(self.step)? {
+            acc = f(acc, x)?;
+        }
+        Ok(acc)
+    }
+}

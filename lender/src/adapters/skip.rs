@@ -1,6 +1,9 @@
 use core::{num::NonZeroUsize, ops::ControlFlow};
 
-use crate::{try_trait_v2::Try, DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending};
+use crate::{
+    try_trait_v2::Try, DoubleEndedLender, ExactSizeLender, FallibleLend, FallibleLender, FallibleLending, FusedLender, Lend,
+    Lender, Lending,
+};
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Skip<L> {
@@ -186,3 +189,114 @@ where
     }
 }
 impl<L> FusedLender for Skip<L> where L: FusedLender {}
+
+impl<'lend, L> FallibleLending<'lend> for Skip<L>
+where
+    L: FallibleLender,
+{
+    type Lend = FallibleLend<'lend, L>;
+}
+impl<L> FallibleLender for Skip<L>
+where
+    L: FallibleLender,
+{
+    type Error = L::Error;
+
+    #[inline]
+    fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        if self.n > 0 {
+            self.lender.nth(core::mem::take(&mut self.n))
+        } else {
+            self.lender.next()
+        }
+    }
+    #[inline]
+    fn nth(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        if self.n > 0 {
+            let skip = core::mem::take(&mut self.n);
+            let n = match skip.checked_add(n) {
+                Some(nth) => nth,
+                None => {
+                    self.lender.nth(skip - 1)?;
+                    n
+                }
+            };
+            self.lender.nth(n)
+        } else {
+            self.lender.nth(n)
+        }
+    }
+    #[inline]
+    fn count(mut self) -> Result<usize, <L as FallibleLender>::Error> {
+        if self.n > 0 && self.lender.nth(self.n - 1)?.is_none() {
+            return Ok(0);
+        }
+        self.lender.count()
+    }
+    #[inline]
+    fn last(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error>
+    where
+        Self: Sized,
+    {
+        if self.n > 0 && self.lender.nth(self.n - 1)?.is_none() {
+            return Ok(None);
+        }
+        self.lender.last()
+    }
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let (lower, upper) = self.lender.size_hint();
+
+        let lower = lower.saturating_sub(self.n);
+        let upper = upper.map(|x| x.saturating_sub(self.n));
+
+        (lower, upper)
+    }
+    #[inline]
+    fn try_fold<B, F, R>(&mut self, init: B, f: F) -> Result<R, Self::Error>
+    where
+        Self: Sized,
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<R, Self::Error>,
+        R: Try<Output = B>,
+    {
+        let n = self.n;
+        self.n = 0;
+        if n > 0 && self.lender.nth(n - 1)?.is_none() {
+            return Ok(R::from_output(init));
+        }
+        self.lender.try_fold(init, f)
+    }
+    #[inline]
+    fn fold<B, F>(mut self, init: B, f: F) -> Result<B, Self::Error>
+    where
+        Self: Sized,
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
+    {
+        if self.n > 0 && self.lender.nth(self.n - 1)?.is_none() {
+            return Ok(init);
+        }
+        self.lender.fold(init, f)
+    }
+    #[inline]
+    fn advance_by(&mut self, mut n: usize) -> Result<Option<NonZeroUsize>, Self::Error> {
+        let skip_inner = self.n;
+        let skip_and_advance = skip_inner.saturating_add(n);
+
+        let remainder = match self.lender.advance_by(skip_and_advance)? {
+            None => 0,
+            Some(n) => n.get(),
+        };
+        let advanced_inner = skip_and_advance - remainder;
+        n -= advanced_inner.saturating_sub(skip_inner);
+        self.n = self.n.saturating_sub(advanced_inner);
+
+        if remainder == 0 && n > 0 {
+            n = match self.lender.advance_by(n)? {
+                None => 0,
+                Some(n) => n.get(),
+            }
+        }
+
+        Ok(NonZeroUsize::new(n))
+    }
+}

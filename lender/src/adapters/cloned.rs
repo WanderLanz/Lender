@@ -1,6 +1,11 @@
 use core::iter::FusedIterator;
 
-use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lender, Lending};
+use fallible_iterator::{DoubleEndedFallibleIterator, FallibleIterator};
+
+use crate::{
+    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeLender, FallibleLender, FallibleLending, FusedLender, Lender,
+    Lending,
+};
 
 #[derive(Clone, Debug)]
 #[must_use = "iterators are lazy and do nothing unless consumed"]
@@ -65,5 +70,35 @@ where
 {
     fn default() -> Self {
         Self::new(L::default())
+    }
+}
+
+impl<T, L> FallibleIterator for Cloned<L>
+where
+    L: FallibleLender,
+    T: Clone,
+    L: for<'all> FallibleLending<'all, Lend = &'all T>,
+{
+    type Item = T;
+    type Error = L::Error;
+
+    #[inline]
+    fn next(&mut self) -> Result<Option<Self::Item>, Self::Error> {
+        self.lender.next().map(Option::<&T>::cloned)
+    }
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.lender.size_hint()
+    }
+}
+impl<T, L> DoubleEndedFallibleIterator for Cloned<L>
+where
+    L: DoubleEndedFallibleLender,
+    T: Clone,
+    L: for<'all> FallibleLending<'all, Lend = &'all T>,
+{
+    #[inline]
+    fn next_back(&mut self) -> Result<Option<Self::Item>, Self::Error> {
+        self.lender.next_back().map(Option::<&T>::cloned)
     }
 }

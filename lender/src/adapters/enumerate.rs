@@ -1,6 +1,9 @@
 use core::num::NonZeroUsize;
 
-use crate::{try_trait_v2::Try, DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending};
+use crate::{
+    try_trait_v2::Try, DoubleEndedLender, ExactSizeLender, FallibleLend, FallibleLender, FallibleLending,
+    FusedFallibleLender, FusedLender, Lend, Lender, Lending,
+};
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Enumerate<L> {
@@ -149,3 +152,81 @@ impl<L: Default> Default for Enumerate<L> {
         Enumerate::new(Default::default())
     }
 }
+
+impl<'lend, L> FallibleLending<'lend> for Enumerate<L>
+where
+    L: FallibleLender,
+{
+    type Lend = (usize, FallibleLend<'lend, L>);
+}
+impl<L> FallibleLender for Enumerate<L>
+where
+    L: FallibleLender,
+{
+    type Error = L::Error;
+
+    #[inline]
+    fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        Ok(self.lender.next()?.map(|x| {
+            let count = self.count;
+            self.count += 1;
+            (count, x)
+        }))
+    }
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.lender.size_hint()
+    }
+    #[inline]
+    fn nth(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        let a = match self.lender.nth(n)? {
+            Some(a) => a,
+            None => return Ok(None),
+        };
+        let i = self.count + n;
+        self.count = i + 1;
+        Ok(Some((i, a)))
+    }
+    #[inline]
+    fn count(self) -> Result<usize, Self::Error> {
+        self.lender.count()
+    }
+    #[inline]
+    fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> Result<R, Self::Error>
+    where
+        Self: Sized,
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<R, Self::Error>,
+        R: Try<Output = B>,
+    {
+        let count = &mut self.count;
+        self.lender.try_fold(init, |acc, x| {
+            let elt = (*count, x);
+            *count += 1;
+            f(acc, elt)
+        })
+    }
+    #[inline]
+    fn fold<B, F>(self, init: B, mut f: F) -> Result<B, Self::Error>
+    where
+        Self: Sized,
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
+    {
+        let mut count = self.count;
+        self.lender.fold(init, |acc, x| {
+            let elt = (count, x);
+            count += 1;
+            f(acc, elt)
+        })
+    }
+    #[inline]
+    fn advance_by(&mut self, n: usize) -> Result<Option<NonZeroUsize>, Self::Error> {
+        let remaining = self.lender.advance_by(n)?;
+        let advanced = match remaining {
+            None => n,
+            Some(rem) => n - rem.get(),
+        };
+        self.count += advanced;
+        Ok(remaining)
+    }
+}
+impl<L> FusedFallibleLender for Enumerate<L> where L: FallibleLender {}

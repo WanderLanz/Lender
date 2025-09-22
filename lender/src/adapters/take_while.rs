@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::{FusedLender, Lend, Lender, Lending};
+use crate::{FallibleLend, FallibleLender, FallibleLending, FusedLender, Lend, Lender, Lending};
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct TakeWhile<L, P> {
@@ -62,4 +62,43 @@ where
     P: FnMut(&Lend<'_, L>) -> bool,
     L: Lender,
 {
+}
+
+impl<'lend, L, P> FallibleLending<'lend> for TakeWhile<L, P>
+where
+    P: FnMut(&FallibleLend<'lend, L>) -> Result<bool, L::Error>,
+    L: FallibleLender,
+{
+    type Lend = FallibleLend<'lend, L>;
+}
+impl<L, P> FallibleLender for TakeWhile<L, P>
+where
+    P: FnMut(&FallibleLend<'_, L>) -> Result<bool, L::Error>,
+    L: FallibleLender,
+{
+    type Error = L::Error;
+
+    #[inline]
+    fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        if !self.flag {
+            let x = match self.lender.next()? {
+                Some(x) => x,
+                None => return Ok(None),
+            };
+            if (self.predicate)(&x)? {
+                return Ok(Some(x));
+            }
+            self.flag = true;
+        }
+        Ok(None)
+    }
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        if self.flag {
+            (0, Some(0))
+        } else {
+            let (_, upper) = self.lender.size_hint();
+            (0, upper)
+        }
+    }
 }

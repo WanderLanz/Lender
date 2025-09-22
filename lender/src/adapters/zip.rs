@@ -1,4 +1,7 @@
-use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, IntoLender, Lend, Lender, Lending};
+use crate::{
+    DoubleEndedLender, ExactSizeLender, FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender,
+    IntoLender, Lend, Lender, Lending,
+};
 
 pub fn zip<A, B>(a: A, b: B) -> Zip<A::Lender, B::Lender>
 where
@@ -93,5 +96,49 @@ impl<A, B> FusedLender for Zip<A, B>
 where
     A: FusedLender,
     B: FusedLender,
+{
+}
+
+impl<'lend, A, B> FallibleLending<'lend> for Zip<A, B>
+where
+    A: FallibleLender,
+    B: FallibleLender<Error = A::Error>,
+{
+    type Lend = (FallibleLend<'lend, A>, FallibleLend<'lend, B>);
+}
+impl<A, B> FallibleLender for Zip<A, B>
+where
+    A: FallibleLender,
+    B: FallibleLender<Error = A::Error>,
+{
+    type Error = A::Error;
+
+    #[inline]
+    fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        let Some(value_a) = self.a.next()? else { return Ok(None) };
+        let Some(value_b) = self.b.next()? else { return Ok(None) };
+        Ok(Some((value_a, value_b)))
+    }
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let (a_lower, a_upper) = self.a.size_hint();
+        let (b_lower, b_upper) = self.b.size_hint();
+
+        let lower = core::cmp::min(a_lower, b_lower);
+
+        let upper = match (a_upper, b_upper) {
+            (Some(x), Some(y)) => Some(core::cmp::min(x, y)),
+            (Some(x), None) => Some(x),
+            (None, Some(y)) => Some(y),
+            (None, None) => None,
+        };
+
+        (lower, upper)
+    }
+}
+impl<A, B> FusedFallibleLender for Zip<A, B>
+where
+    A: FusedFallibleLender,
+    B: FusedFallibleLender<Error = A::Error>,
 {
 }

@@ -1,6 +1,9 @@
 use core::num::NonZeroUsize;
 
-use crate::{try_trait_v2::Try, DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending};
+use crate::{
+    try_trait_v2::Try, DoubleEndedLender, ExactSizeLender, FallibleLend, FallibleLender, FallibleLending, FusedLender, Lend,
+    Lender, Lending,
+};
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Take<L> {
@@ -158,3 +161,67 @@ where
 }
 impl<L> ExactSizeLender for Take<L> where L: ExactSizeLender {}
 impl<L> FusedLender for Take<L> where L: FusedLender {}
+
+impl<'lend, L> FallibleLending<'lend> for Take<L>
+where
+    L: FallibleLender,
+{
+    type Lend = FallibleLend<'lend, L>;
+}
+impl<L> FallibleLender for Take<L>
+where
+    L: FallibleLender,
+{
+    type Error = L::Error;
+
+    #[inline]
+    fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        if self.n != 0 {
+            self.n -= 1;
+            self.lender.next()
+        } else {
+            Ok(None)
+        }
+    }
+    #[inline]
+    fn nth(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        if self.n > n {
+            self.n -= n + 1;
+            self.lender.nth(n)
+        } else {
+            if self.n > 0 {
+                self.lender.nth(self.n - 1)?;
+                self.n = 0;
+            }
+            Ok(None)
+        }
+    }
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        if self.n == 0 {
+            return (0, Some(0));
+        }
+
+        let (lower, upper) = self.lender.size_hint();
+
+        let lower = lower.min(self.n);
+
+        let upper = match upper {
+            Some(x) if x < self.n => Some(x),
+            _ => Some(self.n),
+        };
+
+        (lower, upper)
+    }
+    #[inline]
+    fn advance_by(&mut self, n: usize) -> Result<Option<NonZeroUsize>, Self::Error> {
+        let min = self.n.min(n);
+        let rem = match self.lender.advance_by(min)? {
+            None => 0,
+            Some(rem) => rem.get(),
+        };
+        let advanced = min - rem;
+        self.n -= advanced;
+        Ok(NonZeroUsize::new(n - advanced))
+    }
+}

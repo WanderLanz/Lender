@@ -1,6 +1,9 @@
 use core::fmt;
 
-use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending};
+use crate::{
+    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeLender, FallibleLend, FallibleLender, FallibleLending,
+    FusedFallibleLender, FusedLender, Lend, Lender, Lending,
+};
 
 /// Creates a lender that yields an element exactly once.
 ///
@@ -85,3 +88,96 @@ where
 impl<L> ExactSizeLender for Once<'_, L> where L: ?Sized + for<'all> Lending<'all> {}
 
 impl<L> FusedLender for Once<'_, L> where L: ?Sized + for<'all> Lending<'all> {}
+
+/// Creates a fallible lender that yields an element exactly once.
+///
+/// similar to [`core::iter::once()`].
+pub fn fallible_once<'a, E, L: ?Sized + for<'all> FallibleLending<'all>>(
+    value: Result<FallibleLend<'a, L>, E>,
+) -> FallibleOnce<'a, E, L> {
+    FallibleOnce { inner: Some(value) }
+}
+
+/// A fallible lender that yields an element exactly once.
+///
+/// This `struct` is created by the [`fallible_once()`] function.
+///
+/// similar to [`core::iter::Once`].
+#[must_use = "lenders are lazy and do nothing unless consumed"]
+pub struct FallibleOnce<'a, E, L>
+where
+    L: ?Sized + for<'all> FallibleLending<'all>,
+{
+    inner: Option<Result<FallibleLend<'a, L>, E>>,
+}
+impl<'a, E, L> Clone for FallibleOnce<'a, E, L>
+where
+    L: ?Sized + for<'all> FallibleLending<'all>,
+    E: Clone,
+    FallibleLend<'a, L>: Clone,
+{
+    fn clone(&self) -> Self {
+        FallibleOnce { inner: self.inner.clone() }
+    }
+}
+impl<'a, E, L> fmt::Debug for FallibleOnce<'a, E, L>
+where
+    L: ?Sized + for<'all> FallibleLending<'all>,
+    E: fmt::Debug,
+    FallibleLend<'a, L>: fmt::Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("FallibleOnce").field("inner", &self.inner).finish()
+    }
+}
+impl<'lend, E, L> FallibleLending<'lend> for FallibleOnce<'_, E, L>
+where
+    L: ?Sized + for<'all> FallibleLending<'all>,
+{
+    type Lend = FallibleLend<'lend, L>;
+}
+
+impl<'a, E, L> FallibleLender for FallibleOnce<'a, E, L>
+where
+    E: 'a,
+    L: ?Sized + for<'all> FallibleLending<'all>,
+{
+    type Error = E;
+
+    fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        match self.inner.take() {
+            None => Ok(None),
+            Some(inner) => inner.map(|value| {
+                Some(
+                    // SAFETY: 'a: 'lend
+                    unsafe { core::mem::transmute::<FallibleLend<'a, Self>, FallibleLend<'_, Self>>(value) },
+                )
+            }),
+        }
+    }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        if self.inner.is_some() {
+            (1, Some(1))
+        } else {
+            (0, Some(0))
+        }
+    }
+}
+
+impl<'a, E, L> DoubleEndedFallibleLender for FallibleOnce<'a, E, L>
+where
+    E: 'a,
+    L: ?Sized + for<'all> FallibleLending<'all>,
+{
+    #[inline]
+    fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        self.next()
+    }
+}
+
+impl<'a, E, L> FusedFallibleLender for FallibleOnce<'a, E, L>
+where
+    E: 'a,
+    L: ?Sized + for<'all> FallibleLending<'all>,
+{
+}

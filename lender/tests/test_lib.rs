@@ -1,5 +1,7 @@
 #![cfg(test)]
 use ::lender::prelude::*;
+use lender::{Once, TryShunt};
+use stable_try_trait_v2::ChangeOutputType;
 
 struct WindowsMut<'a, T> {
     slice: &'a mut [T],

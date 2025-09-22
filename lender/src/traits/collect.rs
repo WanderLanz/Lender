@@ -1,4 +1,4 @@
-use crate::{Lend, Lender};
+use crate::{FallibleLender, Lend, Lender};
 /// # Example
 /// ```
 /// # use lender::prelude::*;
@@ -16,6 +16,7 @@ use crate::{Lend, Lender};
 pub trait FromLender<L: IntoLender>: Sized {
     fn from_lender(lender: L) -> Self;
 }
+
 /// Documentation is incomplete. Refer to [`core::iter::IntoIterator`] for more information
 pub trait IntoLender {
     type Lender: Lender;
@@ -38,5 +39,20 @@ pub trait ExtendLender<L: IntoLender> {
     /// The default implementation does nothing.
     fn extend_lender_reserve(&mut self, additional: usize) {
         let _ = additional;
+    }
+}
+
+/// Documentation is incomplete. Refer to [`core::iter::IntoIterator`] for more information
+pub trait IntoFallibleLender {
+    type Error;
+    type FallibleLender: FallibleLender<Error = Self::Error>;
+    fn into_fallible_lender(self) -> Self::FallibleLender;
+}
+impl<L: FallibleLender> IntoFallibleLender for L {
+    type Error = L::Error;
+    type FallibleLender = L;
+    #[inline]
+    fn into_fallible_lender(self) -> L {
+        self
     }
 }

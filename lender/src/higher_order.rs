@@ -34,6 +34,33 @@ impl<'b, A, B: 'b, F: FnMut(A) -> Option<B>> FnMutHKAOpt<'b, A> for F {
     type B = B;
 }
 
+/// Higher-Kinded Associated Output `FnOnce`, where `Output` (`Result<B, E>`)
+/// has output type `B` with lifetime `'b`.
+pub trait FnOnceHKARes<'b, A, E>: FnOnce(A) -> Result<<Self as FnOnceHKARes<'b, A, E>>::B, E> {
+    type B: 'b;
+}
+impl<'b, A, B: 'b, E, F: FnOnce(A) -> Result<B, E>> FnOnceHKARes<'b, A, E> for F {
+    type B = B;
+}
+
+/// Higher-Kinded Associated Output `FnMut`, where `Output` (`Result<B, E>`)
+/// has output type `B` with lifetime `'b`.
+pub trait FnMutHKARes<'b, A, E>: FnMut(A) -> Result<<Self as FnMutHKARes<'b, A, E>>::B, E> {
+    type B: 'b;
+}
+impl<'b, A, B: 'b, E, F: FnMut(A) -> Result<B, E>> FnMutHKARes<'b, A, E> for F {
+    type B = B;
+}
+
+/// Higher-Kinded Associated Output `FnMut`, where `Output` (`Result<Option<B>, E>`)
+/// has output type `B` with lifetime `'b`.
+pub trait FnMutHKAResOpt<'b, A, E>: FnMut(A) -> Result<Option<<Self as FnMutHKAResOpt<'b, A, E>>::B>, E> {
+    type B: 'b;
+}
+impl<'b, A, B: 'b, E, F: FnMut(A) -> Result<Option<B>, E>> FnMutHKAResOpt<'b, A, E> for F {
+    type B = B;
+}
+
 /// Not meant to be called directly. A modified version of [`higher-order-closure`](https://crates.io/crates/higher-order-closure)'s `higher_order_closure` macro to use any `Fn` trait.
 #[doc(hidden)]
 #[macro_export]
