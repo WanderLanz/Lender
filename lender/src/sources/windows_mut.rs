@@ -19,9 +19,7 @@ use crate::{Lend, Lender, Lending};
 /// let mut lender = s.windows_mut(2);
 /// assert_eq!(lender.next(), Some(&mut [0, 1][..]));
 /// ```
-pub fn windows_mut<T>(slice: &mut [T], size: usize) -> WindowsMut<'_, T> {
-    WindowsMut { slice, size, curr_pos: 0 }
-}
+pub fn windows_mut<T>(slice: &mut [T], size: usize) -> WindowsMut<'_, T> { WindowsMut { slice, size, curr_pos: 0 } }
 
 /// This struct is returned by [`windows_mut`].
 pub struct WindowsMut<'a, T> {
@@ -95,9 +93,7 @@ pub trait WindowsMutExt<T> {
 
 impl<T> WindowsMutExt<T> for [T] {
     /// This method is a convenient entry point for [`windows_mut`](crate::windows_mut).
-    fn windows_mut(&mut self, size: usize) -> WindowsMut<'_, T> {
-        windows_mut(self, size)
-    }
+    fn windows_mut(&mut self, size: usize) -> WindowsMut<'_, T> { windows_mut(self, size) }
     /// This method is a convenient entry point for [`array_windows_mut`](crate::array_windows_mut).
     fn array_windows_mut<const WINDOW_SIZE: usize>(&mut self) -> ArrayWindowsMut<'_, T, WINDOW_SIZE> {
         array_windows_mut(self)
@@ -106,9 +102,7 @@ impl<T> WindowsMutExt<T> for [T] {
 
 impl<T, const N: usize> WindowsMutExt<T> for [T; N] {
     /// This method is a convenient entry point for [`windows_mut`](crate::windows_mut).
-    fn windows_mut(&mut self, size: usize) -> WindowsMut<'_, T> {
-        windows_mut(self, size)
-    }
+    fn windows_mut(&mut self, size: usize) -> WindowsMut<'_, T> { windows_mut(self, size) }
     /// This method is a convenient entry point for [`array_windows_mut`](crate::array_windows_mut).
     fn array_windows_mut<const WINDOW_SIZE: usize>(&mut self) -> ArrayWindowsMut<'_, T, WINDOW_SIZE> {
         array_windows_mut(self)

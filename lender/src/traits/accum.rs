@@ -1,4 +1,5 @@
-use crate::Lender;
+use crate::{FallibleLender, Lender};
+
 /// Sums lends of a [`Lender`] into a single Self.
 ///
 /// This trait is similar to [`core::iter::Sum`], but for [`Lender`]s.
@@ -26,7 +27,19 @@ pub trait SumLender<L: Lender>: Sized {
     fn sum_lender(lender: L) -> Self;
 }
 
+/// Sums lends of a [`FallibleLender`] into a single Self.
+///
+/// This trait is similar to [`core::iter::Sum`], but for [`FallibleLender`]s.
+pub trait SumFallibleLender<L: FallibleLender>: Sized {
+    fn sum_lender(lender: L) -> Result<Self, L::Error>;
+}
+
 /// Documentation is incomplete. Refer to [`core::iter::Product`] for more information
 pub trait ProductLender<L: Lender>: Sized {
     fn product_lender(lender: L) -> Self;
+}
+
+/// Documentation is incomplete. Refer to [`core::iter::Product`] for more information
+pub trait ProductFallibleLender<L: FallibleLender>: Sized {
+    fn product_lender(lender: L) -> Result<Self, L::Error>;
 }
