@@ -1,0 +1,29 @@
+error[E0597]: `lender` does not live long enough
+  --> tests/fail/try_collect.rs:40:55
+   |
+25 |     let mut lender = lender::from_fn(
+   |         ---------- binding `lender` declared here
+...
+40 |     let wrapper: ChangeOutputType<Result<(), _>, _> = lender.try_collect::<Wrapper<TryShunt<'_, _>>>();
+   |                                                       ^^^^^^------------------------------------------
+   |                                                       |
+   |                                                       borrowed value does not live long enough
+   |                                                       argument requires that `lender` is borrowed for `'static`
+...
+49 | }
+   | - `lender` dropped here while still borrowed
+   |
+note: due to current limitations in the borrow checker, this implies a `'static` lifetime
+  --> src/traits/lender.rs
+   |
+   |         for<'all> B: FromLender<TryShunt<'all, &'a mut Self>>,
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: implementation of `lender::FromLender` is not general enough
+  --> tests/fail/try_collect.rs:40:62
+   |
+40 |     let wrapper: ChangeOutputType<Result<(), _>, _> = lender.try_collect::<Wrapper<TryShunt<'_, _>>>();
+   |                                                              ^^^^^^^^^^^ implementation of `lender::FromLender` is not general enough
+   |
+   = note: `Wrapper<lender::TryShunt<'2, &mut lender::FromFn<(), {closure@$DIR/src/higher_order.rs:103:11: 103:39}>>>` must implement `lender::FromLender<lender::TryShunt<'1, &mut lender::FromFn<(), {closure@$DIR/src/higher_order.rs:103:11: 103:39}>>>`, for any lifetime `'1`...
+   = note: ...but it actually implements `lender::FromLender<lender::TryShunt<'2, &mut lender::FromFn<(), {closure@$DIR/src/higher_order.rs:103:11: 103:39}>>>`, for some specific lifetime `'2`

@@ -5,7 +5,7 @@ authors = [
     "Sebastiano Vigna <sebastiano.vigna@gmail.com>",
 ]
 description = "A lending-iterator trait based on higher-rank trait bounds, with full std::iter::Iterator functionality"
-version = "0.3.2"
+version = "0.4.0"
 edition = "2021"
 repository = "https://github.com/WanderLanz/Lender"
 license = "Apache-2.0 OR LGPL-2.1-or-later OR MIT"
@@ -13,11 +13,8 @@ readme = "README.md"
 categories = ["rust-patterns", "no-std"]
 keywords = ["lending", "iterator"]
 
-[badges]
-maintenance = { status = "experimental" }
-
 [dependencies]
-lender-derive = { version = "0.1.1", optional = true }
+lender-derive = { version = "0.1.2", optional = true }
 stable_try_trait_v2 = { path = "../stable_try_trait_v2", version = "1.75" }
 trybuild = "1.0.111"
 
