@@ -113,7 +113,7 @@ where
     L: Lender + 'a,
     for<'all> Lend<'all, L>: Try,
     for<'all> <Lend<'all, L> as Try>::Residual: Residual<U>,
-    F: FnMut(TryShunt<'a, L>) -> U,
+    for<'all> F: FnMut(TryShunt<'all, L>) -> U,
 {
     let mut residual = None;
     // SAFETY: residual is manually guaranteed to be the only lend alive after `f`.
