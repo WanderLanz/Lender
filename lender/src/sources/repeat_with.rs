@@ -54,21 +54,6 @@ where
     }
 }
 
-impl<'a, L, F> DoubleEndedLender for RepeatWith<'a, L, F>
-where
-    L: ?Sized + for<'all> Lending<'all> + 'a,
-    F: FnMut() -> Lend<'a, L>,
-{
-    #[inline]
-    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
-        self.next()
-    }
-    #[inline]
-    fn advance_back_by(&mut self, _n: usize) -> Result<(), core::num::NonZeroUsize> {
-        Ok(())
-    }
-}
-
 impl<'a, L, F> FusedLender for RepeatWith<'a, L, F>
 where
     L: ?Sized + for<'all> Lending<'all> + 'a,

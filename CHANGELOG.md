@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.3.3] - 2025-09-30
+
+### Fixed
+
+* Removed semantically wrong `DoubleEndedLender` implementation for
+  `RepeatWith`.
+
+* Fixed possible UB in `Lender::try_collect`.
+
 ## [0.3.2] - 2025-05-22
 
 ### Fixed
