@@ -613,9 +613,9 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         Self: Sized,
         for<'all> Lend<'all, Self>: Try,
         for<'all> <Lend<'all, Self> as Try>::Residual: Residual<B>,
-        B: FromLender<TryShunt<'a, &'a mut Self>>,
+        for<'all> B: FromLender<TryShunt<'all, &'a mut Self>>,
     {
-        try_process::<&'a mut Self, _, B>(self.by_ref(),|shunt: TryShunt<'a, &'a mut Self>| B::from_lender(shunt))
+        try_process::<&'a mut Self, _, B>(self.by_ref(),|shunt: TryShunt<'_, &'a mut Self>| B::from_lender(shunt))
     }
     /// Documentation is incomplete. Refer to [`Iterator::collect_into`] for more information
     #[inline]
