@@ -108,3 +108,94 @@ fn from_lender() {
         }
     }
 }
+
+#[test]
+fn try_collect() {
+    use stable_try_trait_v2::ChangeOutputType;
+
+    const ERR_MSG: &'static str = "Try Collect Error";
+
+    #[derive(Debug)]
+    struct WriteOnDrop<'a> {
+        src: &'a str,
+        dst: &'a mut String,
+    }
+
+    impl Drop for WriteOnDrop<'_> {
+        fn drop(&mut self) {
+            use std::fmt::Write;
+            self.dst.write_str(self.src).expect("Write failed")
+        }
+    }
+
+    enum ErrLenderInner {
+        Count(usize),
+        Err(String),
+    }
+
+    impl Default for ErrLenderInner {
+        fn default() -> Self {
+            Self::Count(0)
+        }
+    }
+
+    struct ErrLender<'a> {
+        inner: ErrLenderInner,
+        dst: &'a mut String,
+    }
+
+    impl<'a> ErrLender<'a> {
+        fn new(dst: &'a mut String) -> Self {
+            Self { inner: ErrLenderInner::default(), dst }
+        }
+    }
+
+    impl<'lend> Lending<'lend> for ErrLender<'_> {
+        type Lend = Result<(), WriteOnDrop<'lend>>;
+    }
+
+    impl Lender for ErrLender<'_> {
+        fn next(&mut self) -> Option<Lend<'_, Self>> {
+            match self.inner {
+                ErrLenderInner::Count(1) => {
+                    let err = ERR_MSG.to_owned();
+                    self.inner = ErrLenderInner::Err(err);
+                    match &self.inner {
+                        ErrLenderInner::Err(err) => Some(Err(WriteOnDrop { src: err.as_str(), dst: self.dst })),
+                        ErrLenderInner::Count(_) => unreachable!(),
+                    }
+                }
+                ErrLenderInner::Count(count) => {
+                    self.inner = ErrLenderInner::Count(count + 1);
+                    Some(Ok(()))
+                }
+                ErrLenderInner::Err(_) => {
+                    self.inner = ErrLenderInner::Count(0);
+                    Some(Ok(()))
+                }
+            }
+        }
+    }
+
+    #[derive(Debug)]
+    struct Wrapper;
+
+    impl<L> FromLender<L> for Wrapper
+    where
+        L: IntoLender,
+    {
+        fn from_lender(lender: L) -> Self {
+            let mut lender = lender.into_lender();
+            while lender.next().is_some() {}
+            let _ = lender.next();
+            Self
+        }
+    }
+
+    let mut err = String::new();
+    let mut lender = ErrLender::new(&mut err);
+    let res: ChangeOutputType<Result<(), _>, _> = lender.try_collect::<Wrapper>();
+    let write_on_drop = res.expect_err("Expected an error");
+    drop(write_on_drop);
+    assert_eq!(err, ERR_MSG);
+}

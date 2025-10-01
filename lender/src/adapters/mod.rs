@@ -90,6 +90,9 @@ where
     for<'all> Lend<'all, L>: Try,
 {
     fn next(&mut self) -> Option<Lend<'_, Self>> {
+        if self.residual.is_some() {
+            return None;
+        }
         if let Some(x) = self.lender.next() {
             match x.branch() {
                 ControlFlow::Continue(x) => return Some(x),
