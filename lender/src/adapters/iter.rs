@@ -1,6 +1,10 @@
 use core::{iter::FusedIterator, marker::PhantomData};
 
-use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender};
+use fallible_iterator::{DoubleEndedFallibleIterator, FallibleIterator};
+
+use crate::{
+    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeLender, FallibleLend, FallibleLender, FusedLender, Lend, Lender,
+};
 
 /// Iterator adapter for any Lender where multiple Lends can exist at a time,
 /// allowing on-the-fly conversion into an iterator where Lending is no longer needed or inferred.
@@ -30,12 +34,8 @@ pub struct Iter<'this, L: 'this> {
     _marker: PhantomData<&'this ()>,
 }
 impl<'this, L: 'this> Iter<'this, L> {
-    pub(crate) fn new(lender: L) -> Iter<'this, L> {
-        Iter { lender, _marker: PhantomData }
-    }
-    pub fn into_inner(self) -> L {
-        self.lender
-    }
+    pub(crate) fn new(lender: L) -> Iter<'this, L> { Iter { lender, _marker: PhantomData } }
+    pub fn into_inner(self) -> L { self.lender }
 }
 impl<'this, L: 'this> Iterator for Iter<'this, L>
 where
@@ -49,9 +49,7 @@ where
         unsafe { core::mem::transmute::<Option<Lend<'_, L>>, Option<Lend<'this, L>>>(self.lender.next()) }
     }
     #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.lender.size_hint()
-    }
+    fn size_hint(&self) -> (usize, Option<usize>) { self.lender.size_hint() }
 }
 impl<'this, L: 'this> DoubleEndedIterator for Iter<'this, L>
 where
@@ -70,13 +68,46 @@ where
     for<'all> Lend<'all, L>: 'this,
 {
     #[inline]
-    fn len(&self) -> usize {
-        self.lender.len()
-    }
+    fn len(&self) -> usize { self.lender.len() }
 }
 impl<'this, L: 'this> FusedIterator for Iter<'this, L>
 where
     L: FusedLender,
     for<'all> Lend<'all, L>: 'this,
 {
+}
+
+impl<'this, L: 'this> FallibleIterator for Iter<'this, L>
+where
+    L: FallibleLender,
+    for<'all> FallibleLend<'all, L>: 'this,
+{
+    type Item = FallibleLend<'this, L>;
+    type Error = L::Error;
+    #[inline]
+    fn next(&mut self) -> Result<Option<Self::Item>, Self::Error> {
+        Ok(
+            // SAFETY: for<'all> FallibleLend<'all, L>: 'this
+            unsafe {
+                core::mem::transmute::<Option<FallibleLend<'_, L>>, Option<FallibleLend<'this, L>>>(self.lender.next()?)
+            },
+        )
+    }
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) { self.lender.size_hint() }
+}
+impl<'this, L: 'this> DoubleEndedFallibleIterator for Iter<'this, L>
+where
+    L: DoubleEndedFallibleLender,
+    for<'all> FallibleLend<'all, L>: 'this,
+{
+    #[inline]
+    fn next_back(&mut self) -> Result<Option<Self::Item>, Self::Error> {
+        Ok(
+            // SAFETY: for<'all> Lend<'all, L>: 'this
+            unsafe {
+                core::mem::transmute::<Option<FallibleLend<'_, L>>, Option<FallibleLend<'this, L>>>(self.lender.next_back()?)
+            },
+        )
+    }
 }

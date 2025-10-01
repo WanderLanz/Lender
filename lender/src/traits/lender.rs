@@ -1209,6 +1209,13 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         Chunky::new(self, chunk_size)
     }
+
+    /// Convert an lender of anything into `FallibleLender` by wrapping
+    /// into `Result<Lend<'_, Self>, E>` where `E` is an
+    /// error that can never actually happen.
+    fn into_fallible<E>(self) -> IntoFallible<E, Self> where Self: Sized {
+        IntoFallible::new(self)
+    }
 }
 
 #[inline]
@@ -1248,15 +1255,9 @@ impl<'lend, L: Lender> Lending<'lend> for &mut L {
 }
 impl<L: Lender> Lender for &mut L {
     #[inline]
-    fn next(&mut self) -> Option<Lend<'_, Self>> {
-        (**self).next()
-    }
+    fn next(&mut self) -> Option<Lend<'_, Self>> { (**self).next() }
     #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        (**self).size_hint()
-    }
+    fn size_hint(&self) -> (usize, Option<usize>) { (**self).size_hint() }
     #[inline]
-    fn advance_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {
-        (**self).advance_by(n)
-    }
+    fn advance_by(&mut self, n: usize) -> Result<(), NonZeroUsize> { (**self).advance_by(n) }
 }
