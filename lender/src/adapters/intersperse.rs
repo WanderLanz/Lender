@@ -97,7 +97,7 @@ where
     G: FnMut() -> Lend<'this, L>,
 {
     pub(crate) fn new(lender: L, separator: G) -> Self {
-        Self { lender: Peekable::new(lender), separator: separator, needs_sep: false }
+        Self { lender: Peekable::new(lender), separator, needs_sep: false }
     }
 }
 impl<L: fmt::Debug, G: fmt::Debug> fmt::Debug for IntersperseWith<'_, L, G>
