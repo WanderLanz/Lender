@@ -1,6 +1,9 @@
 use core::fmt;
 
-use crate::{higher_order::FnMutHKAOpt, Lend, Lender, Lending};
+use crate::{
+    higher_order::{FnMutHKAOpt, FnMutHKAResOpt},
+    FallibleLend, FallibleLender, FallibleLending, Lend, Lender, Lending,
+};
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct MapWhile<L, P> {
@@ -8,15 +11,9 @@ pub struct MapWhile<L, P> {
     predicate: P,
 }
 impl<L, P> MapWhile<L, P> {
-    pub(crate) fn new(lender: L, predicate: P) -> MapWhile<L, P> {
-        MapWhile { lender, predicate }
-    }
-    pub fn into_inner(self) -> L {
-        self.lender
-    }
-    pub fn into_parts(self) -> (L, P) {
-        (self.lender, self.predicate)
-    }
+    pub(crate) fn new(lender: L, predicate: P) -> MapWhile<L, P> { MapWhile { lender, predicate } }
+    pub fn into_inner(self) -> L { self.lender }
+    pub fn into_parts(self) -> (L, P) { (self.lender, self.predicate) }
 }
 impl<L: fmt::Debug, P> fmt::Debug for MapWhile<L, P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -37,8 +34,35 @@ where
     L: Lender,
 {
     #[inline]
-    fn next(&mut self) -> Option<Lend<'_, Self>> {
-        (self.predicate)(self.lender.next()?)
+    fn next(&mut self) -> Option<Lend<'_, Self>> { (self.predicate)(self.lender.next()?) }
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let (_, upper) = self.lender.size_hint();
+        (0, upper)
+    }
+}
+
+impl<'lend, B, L, P> FallibleLending<'lend> for MapWhile<L, P>
+where
+    P: FnMut(FallibleLend<'lend, L>) -> Result<Option<B>, L::Error>,
+    L: FallibleLender,
+    B: 'lend,
+{
+    type Lend = B;
+}
+impl<L, P> FallibleLender for MapWhile<L, P>
+where
+    P: for<'all> FnMutHKAResOpt<'all, FallibleLend<'all, L>, L::Error>,
+    L: FallibleLender,
+{
+    type Error = L::Error;
+
+    #[inline]
+    fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        match self.lender.next()? {
+            Some(next) => (self.predicate)(next),
+            None => Ok(None),
+        }
     }
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {

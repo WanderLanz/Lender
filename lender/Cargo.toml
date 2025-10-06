@@ -14,6 +14,7 @@ categories = ["rust-patterns", "no-std"]
 keywords = ["lending", "iterator"]
 
 [dependencies]
+fallible-iterator = "0.3.0"
 lender-derive = { version = "0.1.2", optional = true }
 stable_try_trait_v2 = { path = "../stable_try_trait_v2", version = "1.75" }
 trybuild = "1.0.111"

@@ -1,6 +1,9 @@
 use core::fmt;
 
-use crate::{try_trait_v2::Try, DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending};
+use crate::{
+    try_trait_v2::Try, DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeLender, FallibleLend, FallibleLender,
+    FallibleLending, FusedLender, Lend, Lender, Lending,
+};
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Mutate<L, F> {
@@ -8,15 +11,9 @@ pub struct Mutate<L, F> {
     f: F,
 }
 impl<L, F> Mutate<L, F> {
-    pub(crate) fn new(lender: L, f: F) -> Mutate<L, F> {
-        Mutate { lender, f }
-    }
-    pub fn into_inner(self) -> L {
-        self.lender
-    }
-    pub fn into_parts(self) -> (L, F) {
-        (self.lender, self.f)
-    }
+    pub(crate) fn new(lender: L, f: F) -> Mutate<L, F> { Mutate { lender, f } }
+    pub fn into_inner(self) -> L { self.lender }
+    pub fn into_parts(self) -> (L, F) { (self.lender, self.f) }
 }
 impl<L: fmt::Debug, F> fmt::Debug for Mutate<L, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -44,9 +41,7 @@ where
         next
     }
     #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.lender.size_hint()
-    }
+    fn size_hint(&self) -> (usize, Option<usize>) { self.lender.size_hint() }
     #[inline]
     fn try_fold<B, Fold, R>(&mut self, init: B, mut fold: Fold) -> R
     where
@@ -115,12 +110,96 @@ where
     F: FnMut(&mut Lend<'_, L>),
 {
     #[inline]
-    fn len(&self) -> usize {
-        self.lender.len()
-    }
+    fn len(&self) -> usize { self.lender.len() }
     #[inline]
-    fn is_empty(&self) -> bool {
-        self.lender.is_empty()
-    }
+    fn is_empty(&self) -> bool { self.lender.is_empty() }
 }
 impl<L: FusedLender, F> FusedLender for Mutate<L, F> where F: FnMut(&mut Lend<'_, L>) {}
+
+impl<'lend, L, F> FallibleLending<'lend> for Mutate<L, F>
+where
+    L: FallibleLender,
+    F: FnMut(&mut FallibleLend<'lend, L>) -> Result<(), L::Error>,
+{
+    type Lend = FallibleLend<'lend, L>;
+}
+impl<L, F> FallibleLender for Mutate<L, F>
+where
+    L: FallibleLender,
+    F: FnMut(&mut FallibleLend<'_, L>) -> Result<(), L::Error>,
+{
+    type Error = L::Error;
+
+    #[inline]
+    fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        let mut next = self.lender.next()?;
+        if let Some(ref mut x) = next {
+            (self.f)(x)?;
+        }
+        Ok(next)
+    }
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) { self.lender.size_hint() }
+    #[inline]
+    fn try_fold<B, Fold, R>(&mut self, init: B, mut fold: Fold) -> Result<R, Self::Error>
+    where
+        Self: Sized,
+        Fold: FnMut(B, FallibleLend<'_, Self>) -> Result<R, Self::Error>,
+        R: Try<Output = B>,
+    {
+        let f = &mut self.f;
+        self.lender.try_fold(init, move |acc, mut x| {
+            (f)(&mut x)?;
+            fold(acc, x)
+        })
+    }
+    #[inline]
+    fn fold<B, Fold>(mut self, init: B, mut fold: Fold) -> Result<B, Self::Error>
+    where
+        Self: Sized,
+        Fold: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
+    {
+        self.lender.fold(init, move |acc, mut x| {
+            (self.f)(&mut x)?;
+            fold(acc, x)
+        })
+    }
+}
+impl<L, F> DoubleEndedFallibleLender for Mutate<L, F>
+where
+    L: DoubleEndedFallibleLender,
+    F: FnMut(&mut FallibleLend<'_, L>) -> Result<(), L::Error>,
+{
+    #[inline]
+    fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        let mut next = self.lender.next_back()?;
+        if let Some(ref mut x) = next {
+            (self.f)(x)?;
+        }
+        Ok(next)
+    }
+    #[inline]
+    fn try_rfold<B, Fold, R>(&mut self, init: B, mut fold: Fold) -> Result<R, Self::Error>
+    where
+        Self: Sized,
+        Fold: FnMut(B, FallibleLend<'_, Self>) -> Result<R, Self::Error>,
+        R: Try<Output = B>,
+    {
+        let f = &mut self.f;
+        self.lender.try_rfold(init, move |acc, mut x| {
+            (f)(&mut x)?;
+            fold(acc, x)
+        })
+    }
+    #[inline]
+    fn rfold<B, Fold>(mut self, init: B, mut fold: Fold) -> Result<B, Self::Error>
+    where
+        Self: Sized,
+        Fold: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
+    {
+        self.lender.rfold(init, move |acc, mut x| {
+            (self.f)(&mut x)?;
+            fold(acc, x)
+        })
+    }
+}

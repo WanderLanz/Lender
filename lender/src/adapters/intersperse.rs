@@ -21,12 +21,8 @@ where
     pub(crate) fn new(lender: L, separator: Lend<'this, L>) -> Self {
         Self { lender: lender.peekable(), separator, needs_sep: false }
     }
-    pub fn into_inner(self) -> L {
-        self.lender.into_inner()
-    }
-    pub fn into_parts(self) -> (L, Lend<'this, L>) {
-        (self.lender.into_inner(), self.separator)
-    }
+    pub fn into_inner(self) -> L { self.lender.into_inner() }
+    pub fn into_parts(self) -> (L, Lend<'this, L>) { (self.lender.into_inner(), self.separator) }
 }
 impl<L: fmt::Debug> fmt::Debug for Intersperse<'_, L>
 where
@@ -82,9 +78,7 @@ where
             acc
         })
     }
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        intersperse_size_hint(&self.lender, self.needs_sep)
-    }
+    fn size_hint(&self) -> (usize, Option<usize>) { intersperse_size_hint(&self.lender, self.needs_sep) }
 }
 
 #[derive(Clone)]
@@ -160,9 +154,7 @@ where
             acc
         })
     }
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        intersperse_size_hint(&self.lender, self.needs_sep)
-    }
+    fn size_hint(&self) -> (usize, Option<usize>) { intersperse_size_hint(&self.lender, self.needs_sep) }
 }
 
 fn intersperse_size_hint<L>(lender: &L, needs_sep: bool) -> (usize, Option<usize>)

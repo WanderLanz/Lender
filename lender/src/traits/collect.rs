@@ -1,4 +1,4 @@
-use crate::{Lend, Lender};
+use crate::{FallibleLender, Lend, Lender};
 /// # Example
 /// ```
 /// # use lender::prelude::*;
@@ -16,6 +16,7 @@ use crate::{Lend, Lender};
 pub trait FromLender<L: IntoLender>: Sized {
     fn from_lender(lender: L) -> Self;
 }
+
 /// Documentation is incomplete. Refer to [`core::iter::IntoIterator`] for more information
 pub trait IntoLender {
     type Lender: Lender;
@@ -24,9 +25,7 @@ pub trait IntoLender {
 impl<L: Lender> IntoLender for L {
     type Lender = L;
     #[inline]
-    fn into_lender(self) -> L {
-        self
-    }
+    fn into_lender(self) -> L { self }
 }
 /// Documentation is incomplete. Refer to [`core::iter::Extend`] for more information
 pub trait ExtendLender<L: IntoLender> {
@@ -36,7 +35,18 @@ pub trait ExtendLender<L: IntoLender> {
     /// Reserves capacity in a collection for the given number of additional elements.
     ///
     /// The default implementation does nothing.
-    fn extend_lender_reserve(&mut self, additional: usize) {
-        let _ = additional;
-    }
+    fn extend_lender_reserve(&mut self, additional: usize) { let _ = additional; }
+}
+
+/// Documentation is incomplete. Refer to [`core::iter::IntoIterator`] for more information
+pub trait IntoFallibleLender {
+    type Error;
+    type FallibleLender: FallibleLender<Error = Self::Error>;
+    fn into_fallible_lender(self) -> Self::FallibleLender;
+}
+impl<L: FallibleLender> IntoFallibleLender for L {
+    type Error = L::Error;
+    type FallibleLender = L;
+    #[inline]
+    fn into_fallible_lender(self) -> L { self }
 }

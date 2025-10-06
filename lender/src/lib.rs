@@ -38,6 +38,8 @@ impl<T: ?Sized> ImplBoundPriv for Ref<'_, T> {}
 
 mod adapters;
 pub use adapters::*;
+mod fallible_adapters;
+pub use fallible_adapters::*;
 mod traits;
 pub use traits::*;
 pub mod higher_order;
@@ -50,7 +52,9 @@ pub mod prelude {
     pub use lender_derive::for_;
 
     pub use crate::{
-        from_into_iter, from_iter, hrc, hrc_mut, hrc_once, lend, DoubleEndedLender, ExactSizeLender, ExtendLender,
-        FromLender, IntoIteratorExt, IntoLender, IteratorExt, Lend, Lender, Lending, WindowsMutExt,
+        fallible_lend, from_fallible_iter, from_into_fallible_iter, from_into_iter, from_iter, hrc, hrc_mut, hrc_once, lend,
+        DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeLender, ExtendLender, FallibleIteratorExt, FallibleLend,
+        FallibleLender, FallibleLending, FromLender, IntoFallibleIteratorExt, IntoFallibleLender, IntoIteratorExt,
+        IntoLender, IteratorExt, Lend, Lender, Lending, WindowsMutExt,
     };
 }
