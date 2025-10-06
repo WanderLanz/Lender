@@ -8,15 +8,9 @@ pub struct Mutate<L, F> {
     f: F,
 }
 impl<L, F> Mutate<L, F> {
-    pub(crate) fn new(lender: L, f: F) -> Mutate<L, F> {
-        Mutate { lender, f }
-    }
-    pub fn into_inner(self) -> L {
-        self.lender
-    }
-    pub fn into_parts(self) -> (L, F) {
-        (self.lender, self.f)
-    }
+    pub(crate) fn new(lender: L, f: F) -> Mutate<L, F> { Mutate { lender, f } }
+    pub fn into_inner(self) -> L { self.lender }
+    pub fn into_parts(self) -> (L, F) { (self.lender, self.f) }
 }
 impl<L: fmt::Debug, F> fmt::Debug for Mutate<L, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -44,9 +38,7 @@ where
         next
     }
     #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.lender.size_hint()
-    }
+    fn size_hint(&self) -> (usize, Option<usize>) { self.lender.size_hint() }
     #[inline]
     fn try_fold<B, Fold, R>(&mut self, init: B, mut fold: Fold) -> R
     where
@@ -115,12 +107,8 @@ where
     F: FnMut(&mut Lend<'_, L>),
 {
     #[inline]
-    fn len(&self) -> usize {
-        self.lender.len()
-    }
+    fn len(&self) -> usize { self.lender.len() }
     #[inline]
-    fn is_empty(&self) -> bool {
-        self.lender.is_empty()
-    }
+    fn is_empty(&self) -> bool { self.lender.is_empty() }
 }
 impl<L: FusedLender, F> FusedLender for Mutate<L, F> where F: FnMut(&mut Lend<'_, L>) {}

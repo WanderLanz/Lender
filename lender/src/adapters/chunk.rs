@@ -7,15 +7,9 @@ pub struct Chunk<'s, T> {
     len: usize,
 }
 impl<'s, T> Chunk<'s, T> {
-    pub(crate) fn new(lender: &'s mut T, len: usize) -> Self {
-        Self { lender, len }
-    }
-    pub fn into_inner(self) -> &'s mut T {
-        self.lender
-    }
-    pub fn into_parts(self) -> (&'s mut T, usize) {
-        (self.lender, self.len)
-    }
+    pub(crate) fn new(lender: &'s mut T, len: usize) -> Self { Self { lender, len } }
+    pub fn into_inner(self) -> &'s mut T { self.lender }
+    pub fn into_parts(self) -> (&'s mut T, usize) { (self.lender, self.len) }
 }
 impl<'lend, T> Lending<'lend> for Chunk<'_, T>
 where

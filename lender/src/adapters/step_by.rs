@@ -13,12 +13,8 @@ impl<L> StepBy<L> {
         assert!(step != 0);
         StepBy { lender, step: step - 1, first_take: true }
     }
-    pub fn into_inner(self) -> L {
-        self.lender
-    }
-    pub fn into_parts(self) -> (L, usize) {
-        (self.lender, self.step)
-    }
+    pub fn into_inner(self) -> L { self.lender }
+    pub fn into_parts(self) -> (L, usize) { (self.lender, self.step) }
 }
 impl<'lend, L> Lending<'lend> for StepBy<L>
 where
@@ -153,9 +149,7 @@ where
     L: DoubleEndedLender + ExactSizeLender,
 {
     #[inline]
-    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
-        self.lender.nth_back(self.next_back_index())
-    }
+    fn next_back(&mut self) -> Option<Lend<'_, Self>> { self.lender.nth_back(self.next_back_index()) }
 
     #[inline]
     fn nth_back(&mut self, n: usize) -> Option<Lend<'_, Self>> {

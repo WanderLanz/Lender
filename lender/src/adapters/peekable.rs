@@ -1,6 +1,5 @@
-use core::{fmt, ops::ControlFlow};
-
 use alloc::boxed::Box;
+use core::{fmt, ops::ControlFlow};
 
 use crate::{
     try_trait_v2::{FromResidual, Try},
@@ -19,12 +18,8 @@ impl<'this, L> Peekable<'this, L>
 where
     L: Lender,
 {
-    pub(crate) fn new(lender: L) -> Peekable<'this, L> {
-        Peekable { lender: Box::new(lender), peeked: None }
-    }
-    pub fn into_inner(self) -> L {
-        *self.lender
-    }
+    pub(crate) fn new(lender: L) -> Peekable<'this, L> { Peekable { lender: Box::new(lender), peeked: None } }
+    pub fn into_inner(self) -> L { *self.lender }
     pub fn peek(&mut self) -> Option<&'_ Lend<'this, L>> {
         let lender = &mut self.lender;
         self.peeked
@@ -68,9 +63,7 @@ impl<L> Clone for Peekable<'_, L>
 where
     L: Lender + Clone,
 {
-    fn clone(&self) -> Self {
-        Peekable { lender: self.lender.clone(), peeked: None }
-    }
+    fn clone(&self) -> Self { Peekable { lender: self.lender.clone(), peeked: None } }
 }
 impl<'this, L: fmt::Debug> fmt::Debug for Peekable<'this, L>
 where
@@ -237,9 +230,7 @@ mod test {
     }
 
     impl<'lend> Lender for ArrayLender {
-        fn next(&mut self) -> Option<Lend<'_, Self>> {
-            Some(&self.array[0])
-        }
+        fn next(&mut self) -> Option<Lend<'_, Self>> { Some(&self.array[0]) }
     }
 
     // This test will fail if Peekable stores L instead of Box<L>. In that case,

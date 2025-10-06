@@ -9,15 +9,9 @@ pub struct Scan<L, St, F> {
     state: St,
 }
 impl<L, St, F> Scan<L, St, F> {
-    pub(crate) fn new(lender: L, state: St, f: F) -> Scan<L, St, F> {
-        Scan { lender, state, f }
-    }
-    pub fn into_inner(self) -> L {
-        self.lender
-    }
-    pub fn into_parts(self) -> (L, St, F) {
-        (self.lender, self.state, self.f)
-    }
+    pub(crate) fn new(lender: L, state: St, f: F) -> Scan<L, St, F> { Scan { lender, state, f } }
+    pub fn into_inner(self) -> L { self.lender }
+    pub fn into_parts(self) -> (L, St, F) { (self.lender, self.state, self.f) }
 }
 impl<L: fmt::Debug, St: fmt::Debug, F> fmt::Debug for Scan<L, St, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -38,9 +32,7 @@ where
     L: Lender,
 {
     #[inline]
-    fn next(&mut self) -> Option<Lend<'_, Self>> {
-        (self.f)((&mut self.state, self.lender.next()?))
-    }
+    fn next(&mut self) -> Option<Lend<'_, Self>> { (self.f)((&mut self.state, self.lender.next()?)) }
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (_, upper) = self.lender.size_hint();

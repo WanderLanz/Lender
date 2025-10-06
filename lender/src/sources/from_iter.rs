@@ -27,9 +27,7 @@ use crate::{prelude::*, FusedLender};
 /// let x: u8 = *item + *item2; // == 3
 /// ```
 #[inline]
-pub fn from_iter<I: Iterator>(iter: I) -> FromIter<I> {
-    FromIter { iter }
-}
+pub fn from_iter<I: Iterator>(iter: I) -> FromIter<I> { FromIter { iter } }
 
 /// A lender that yields elements from an iterator.
 ///
@@ -49,34 +47,24 @@ impl<I: Iterator> Lending<'_> for FromIter<I> {
 
 impl<I: Iterator> Lender for FromIter<I> {
     #[inline]
-    fn next(&mut self) -> Option<Lend<'_, Self>> {
-        self.iter.next()
-    }
+    fn next(&mut self) -> Option<Lend<'_, Self>> { self.iter.next() }
     #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.iter.size_hint()
-    }
+    fn size_hint(&self) -> (usize, Option<usize>) { self.iter.size_hint() }
 }
 
 impl<I: DoubleEndedIterator> DoubleEndedLender for FromIter<I> {
-    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
-        self.iter.next_back()
-    }
+    fn next_back(&mut self) -> Option<Lend<'_, Self>> { self.iter.next_back() }
 }
 
 impl<I: ExactSizeIterator> ExactSizeLender for FromIter<I> {
-    fn len(&self) -> usize {
-        self.iter.len()
-    }
+    fn len(&self) -> usize { self.iter.len() }
 }
 
 impl<I: FusedIterator> FusedLender for FromIter<I> {}
 
 impl<I: Iterator> From<I> for FromIter<I> {
     #[inline]
-    fn from(iter: I) -> Self {
-        from_iter(iter)
-    }
+    fn from(iter: I) -> Self { from_iter(iter) }
 }
 
 /// Creates an [`IntoLender`] from an [`IntoIterator`].
@@ -89,9 +77,7 @@ impl<I: Iterator> From<I> for FromIter<I> {
 /// to the iterators returned by the wrapped [`IntoIterator`].
 ///
 #[inline]
-pub fn from_into_iter<I: IntoIterator>(into_iter: I) -> FromIntoIter<I> {
-    FromIntoIter { into_iter }
-}
+pub fn from_into_iter<I: IntoIterator>(into_iter: I) -> FromIntoIter<I> { FromIntoIter { into_iter } }
 
 /// A [`IntoLender`] that returns lenders obtained by applying [`from_iter`]
 /// to the iterators returned by the wrapped [`IntoIterator`].
@@ -106,15 +92,11 @@ pub struct FromIntoIter<I> {
 impl<I: IntoIterator> IntoLender for FromIntoIter<I> {
     type Lender = FromIter<I::IntoIter>;
 
-    fn into_lender(self) -> <Self as IntoLender>::Lender {
-        self.into_iter.into_iter().into_lender()
-    }
+    fn into_lender(self) -> <Self as IntoLender>::Lender { self.into_iter.into_iter().into_lender() }
 }
 
 impl<I: IntoIterator> From<I> for FromIntoIter<I> {
-    fn from(into_iter: I) -> Self {
-        from_into_iter(into_iter)
-    }
+    fn from(into_iter: I) -> Self { from_into_iter(into_iter) }
 }
 
 /// Creates a lender from an iterator `I`, safely shortening the items' lifetimes with the given lending type `L`.
@@ -176,9 +158,7 @@ where
         unsafe { core::mem::transmute::<Option<Lend<'a, L>>, Option<Lend<'_, L>>>(self.iter.next()) }
     }
     #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.iter.size_hint()
-    }
+    fn size_hint(&self) -> (usize, Option<usize>) { self.iter.size_hint() }
 }
 
 impl<'a, L, I> DoubleEndedLender for LendIter<'a, L, I>
@@ -197,9 +177,7 @@ where
     L: ?Sized + for<'all> Lending<'all> + 'a,
     I: ExactSizeIterator<Item = Lend<'a, L>>,
 {
-    fn len(&self) -> usize {
-        self.iter.len()
-    }
+    fn len(&self) -> usize { self.iter.len() }
 }
 
 impl<'a, L, I> FusedLender for LendIter<'a, L, I>

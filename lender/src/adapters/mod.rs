@@ -151,18 +151,14 @@ where
     for<'all> Lend<'all, L>: TupleLend<'all>,
 {
     type Lender = Empty<Self>;
-    fn into_lender(self) -> <Self as IntoLender>::Lender {
-        empty()
-    }
+    fn into_lender(self) -> <Self as IntoLender>::Lender { empty() }
 }
 impl<L: Lender> IntoLender for SecondShunt<L>
 where
     for<'all> Lend<'all, L>: TupleLend<'all>,
 {
     type Lender = Empty<Self>;
-    fn into_lender(self) -> <Self as IntoLender>::Lender {
-        empty()
-    }
+    fn into_lender(self) -> <Self as IntoLender>::Lender { empty() }
 }
 
 pub(crate) fn unzip<L, ExtA, ExtB>(mut lender: L) -> (ExtA, ExtB)

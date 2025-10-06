@@ -15,12 +15,8 @@ pub struct Zip<A, B> {
     b: B,
 }
 impl<A, B> Zip<A, B> {
-    pub(crate) fn new(a: A, b: B) -> Self {
-        Self { a, b }
-    }
-    pub fn into_inner(self) -> (A, B) {
-        (self.a, self.b)
-    }
+    pub(crate) fn new(a: A, b: B) -> Self { Self { a, b } }
+    pub fn into_inner(self) -> (A, B) { (self.a, self.b) }
 }
 impl<'lend, A, B> Lending<'lend> for Zip<A, B>
 where
@@ -35,9 +31,7 @@ where
     B: Lender,
 {
     #[inline]
-    fn next(&mut self) -> Option<Lend<'_, Self>> {
-        Some((self.a.next()?, self.b.next()?))
-    }
+    fn next(&mut self) -> Option<Lend<'_, Self>> { Some((self.a.next()?, self.b.next()?)) }
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (a_lower, a_upper) = self.a.size_hint();

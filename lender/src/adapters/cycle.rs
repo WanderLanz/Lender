@@ -15,12 +15,8 @@ impl<L> Cycle<L>
 where
     L: Clone,
 {
-    pub(crate) fn new(lender: L) -> Cycle<L> {
-        Cycle { orig: lender.clone(), lender }
-    }
-    pub fn into_inner(self) -> (L, L) {
-        (self.orig, self.lender)
-    }
+    pub(crate) fn new(lender: L) -> Cycle<L> { Cycle { orig: lender.clone(), lender } }
+    pub fn into_inner(self) -> (L, L) { (self.orig, self.lender) }
 }
 impl<'lend, L> Lending<'lend> for Cycle<L>
 where
