@@ -100,7 +100,7 @@ pub trait DynFallibleLend<'lend> {
 ///
 /// use lender::prelude::*;
 ///
-/// let mut empty = lender::empty_fallible::<Infallible, fallible_lend!(&'lend mut [u32])>();
+/// let mut empty = lender::fallible_empty::<Infallible, fallible_lend!(&'lend mut [u32])>();
 /// let _: Result<Option<&mut [u32]>, Infallible> = empty.next(); // => Ok(None)
 /// ```
 #[macro_export]
