@@ -1,7 +1,5 @@
 #![cfg(test)]
 use ::lender::prelude::*;
-use lender::{Once, TryShunt};
-use stable_try_trait_v2::ChangeOutputType;
 
 struct WindowsMut<'a, T> {
     slice: &'a mut [T],
@@ -486,7 +484,7 @@ fn intersperse_adapters() {
     use lender::from_fallible_fn;
 
     // Test intersperse with fixed separator
-    let mut interspersed = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
+    let interspersed = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
         *state += 1;
         if *state <= 3 {
             Ok(Some(*state))
@@ -504,7 +502,7 @@ fn intersperse_adapters() {
 
     // Test intersperse_with using a closure
     let mut counter = 10;
-    let mut interspersed_with = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
+    let interspersed_with = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
         *state += 1;
         if *state <= 3 {
             Ok(Some(*state))
@@ -525,26 +523,68 @@ fn intersperse_adapters() {
 }
 
 #[test]
-fn flatten_flatmap_adapters() {
-    // For these complex adapters, we'll just verify they exist and compile
-    // The actual flatten/flatmap functionality is complex due to lifetime requirements
-
-    use lender::prelude::*;
-
-    // Verify that flatten exists in the API (though complex to test directly)
-    // Note: Flatten requires the inner type to implement IntoFallibleLender,
-    // which is complex for arbitrary nested structures
-
-    // Basic test - these adapters are available and type-check
+fn map_adapters() {
     let data = vec![1, 2, 3];
 
-    // Test that the methods exist and are callable
-    let _ = data.into_iter()
+    let mut iter = data.into_iter()
         .into_lender()
-        .into_fallible::<String>()
-        .map(hrc_mut!(for<'lend> |x: i32| -> Result<i32, String> { Ok(x * 2) }));
+        .into_fallible::<std::convert::Infallible>()
+        .map(hrc_mut!(for<'lend> |x: i32| -> Result<i32, std::convert::Infallible> { Ok(x * 2) }));
 
-    // The flatten and flat_map adapters exist but require complex trait bounds
-    // that make testing them with simple examples difficult.
-    // Their existence is proven by successful compilation.
+    assert_eq!(iter.next().unwrap(), Some(2));
+    assert_eq!(iter.next().unwrap(), Some(4));
+    assert_eq!(iter.next().unwrap(), Some(6));
+    assert_eq!(iter.next().unwrap(), None);
+}
+
+struct Wrapper(Vec<i32>);
+impl<'lend> FallibleLending<'lend> for Wrapper {
+    type Lend = i32;
+}
+impl FallibleLender for Wrapper {
+    type Error = std::convert::Infallible;
+    fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        if self.0.is_empty() {
+            Ok(None)
+        } else {
+            Ok(Some(self.0.remove(0)))
+        }
+    }
+}
+
+#[test]
+fn flatten_adapters() {
+    let data = vec![Wrapper(vec![1, 2, 3]), Wrapper(vec![1, 2, 3]), Wrapper(vec![1, 2, 3])];
+
+    let mut iter = data.into_iter()
+        .into_lender()
+        .into_fallible()
+        .flatten();
+
+    assert_eq!(iter.next().unwrap(), Some(1));
+    assert_eq!(iter.next().unwrap(), Some(2));
+    assert_eq!(iter.next().unwrap(), Some(3));
+    assert_eq!(iter.next().unwrap(), Some(1));
+    assert_eq!(iter.next().unwrap(), Some(2));
+    assert_eq!(iter.next().unwrap(), Some(3));
+    assert_eq!(iter.next().unwrap(), Some(1));
+    assert_eq!(iter.next().unwrap(), Some(2));
+    assert_eq!(iter.next().unwrap(), Some(3));    
+}
+
+#[test]
+fn flat_map_adapters() {
+    let data = vec![1, 2, 3];
+
+    let mut iter = data.into_iter()
+        .into_lender()
+        .into_fallible()
+        .flat_map(hrc_mut!(for<'lend> |x: i32| -> Result<Wrapper, std::convert::Infallible> { Ok(Wrapper(vec![x; 2])) }));
+
+    assert_eq!(iter.next().unwrap(), Some(1));
+    assert_eq!(iter.next().unwrap(), Some(1));
+    assert_eq!(iter.next().unwrap(), Some(2));
+    assert_eq!(iter.next().unwrap(), Some(2));
+    assert_eq!(iter.next().unwrap(), Some(3));
+    assert_eq!(iter.next().unwrap(), Some(3));
 }
