@@ -8,7 +8,7 @@ mod repeat_with;
 mod windows_mut;
 
 pub use self::{
-    empty::{empty, empty_fallible, Empty, EmptyFallible},
+    empty::{empty, fallible_empty, Empty, FallibleEmpty},
     from_fn::{from_fallible_fn, from_fn, FromFallibleFn, FromFn},
     from_iter::{
         from_fallible_iter, from_into_fallible_iter, from_into_iter, from_iter, lend_fallible_iter, lend_iter,

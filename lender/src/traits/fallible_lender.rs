@@ -212,7 +212,9 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
 
     /// Map each lend of this lender using the given function.
     ///
-    /// Please note that it is likely required that you use the [`hrc_mut!`] macro to create the closure.
+    /// Please note that it is likely required that you use the
+    /// [`hrc_mut!`](crate::hrc_mut!) macro to create
+    /// the closure.
     #[inline]
     fn map<F>(self, f: F) -> Map<Self, F>
     where
@@ -234,9 +236,11 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
 
     /// Map each lend of this lender into an owned value using the given function.
     ///
-    /// This is a weaker version of [`FallibleLender::map`] that returns a [`FallibleIterator`] instead of a [`FallibleLender`].
-    /// However, this behavior is very common, and so this method is included for convenience.
-    /// The main advantage is better type inference for the mapping function.
+    /// This is a weaker version of [`FallibleLender::map`] that returns a
+    /// [`FallibleIterator`](fallible_iterator::FallibleIterator) instead
+    /// of a [`FallibleLender`]. However, this behavior is very common, and so
+    /// this method is included for convenience. The main advantage is better
+    /// type inference for the mapping function.
     #[inline]
     fn map_into_iter<O, F>(self, f: F) -> MapIntoIter<Self, O, F>
     where

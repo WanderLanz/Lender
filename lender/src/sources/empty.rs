@@ -87,8 +87,8 @@ impl<L: ?Sized> Default for Empty<L> {
 /// Creates a fallible lender that yields nothing.
 ///
 /// similar to [`core::iter::empty()`]
-pub const fn empty_fallible<E, L: ?Sized + for<'all> FallibleLending<'all>>() -> EmptyFallible<E, L> {
-    EmptyFallible(marker::PhantomData)
+pub const fn fallible_empty<E, L: ?Sized + for<'all> FallibleLending<'all>>() -> FallibleEmpty<E, L> {
+    FallibleEmpty(marker::PhantomData)
 }
 
 /// A lender that yields nothing.
@@ -97,21 +97,21 @@ pub const fn empty_fallible<E, L: ?Sized + for<'all> FallibleLending<'all>>() ->
 ///
 /// similar to [`core::iter::Empty`].
 #[must_use = "lenders are lazy and do nothing unless consumed"]
-pub struct EmptyFallible<E, L: ?Sized>(marker::PhantomData<(E, L)>);
+pub struct FallibleEmpty<E, L: ?Sized>(marker::PhantomData<(E, L)>);
 
-impl<E, L: ?Sized> fmt::Debug for EmptyFallible<E, L> {
+impl<E, L: ?Sized> fmt::Debug for FallibleEmpty<E, L> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("EmptyFallible").finish()
     }
 }
 
-impl<'lend, E, L> FallibleLending<'lend> for EmptyFallible<E, L>
+impl<'lend, E, L> FallibleLending<'lend> for FallibleEmpty<E, L>
 where
     L: ?Sized + for<'all> FallibleLending<'all>,
 {
     type Lend = FallibleLend<'lend, L>;
 }
-impl<E, L> FallibleLender for EmptyFallible<E, L>
+impl<E, L> FallibleLender for FallibleEmpty<E, L>
 where
     L: ?Sized + for<'all> FallibleLending<'all>,
 {
@@ -125,7 +125,7 @@ where
     }
 }
 
-impl<E, L> DoubleEndedFallibleLender for EmptyFallible<E, L>
+impl<E, L> DoubleEndedFallibleLender for FallibleEmpty<E, L>
 where
     L: ?Sized + for<'all> FallibleLending<'all>,
 {
@@ -134,4 +134,4 @@ where
     }
 }
 
-impl<E, L> FusedFallibleLender for EmptyFallible<E, L> where L: ?Sized + for<'all> FallibleLending<'all> {}
+impl<E, L> FusedFallibleLender for FallibleEmpty<E, L> where L: ?Sized + for<'all> FallibleLending<'all> {}

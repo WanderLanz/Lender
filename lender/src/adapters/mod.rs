@@ -62,9 +62,9 @@ pub use self::{
     zip::Zip,
 };
 use crate::{
-    empty, empty_fallible,
+    empty, fallible_empty,
     try_trait_v2::{ChangeOutputType, FromResidual, Residual, Try},
-    Empty, EmptyFallible, ExtendLender, FallibleLend, FallibleLender, FallibleLending, IntoFallibleLender, IntoLender, Lend,
+    Empty, FallibleEmpty, ExtendLender, FallibleLend, FallibleLender, FallibleLending, IntoFallibleLender, IntoLender, Lend,
     Lender, Lending, NonFallibleAdapter, TupleLend,
 };
 
@@ -185,9 +185,9 @@ where
     for<'all> FallibleLend<'all, L>: TupleLend<'all>,
 {
     type Error = L::Error;
-    type FallibleLender = EmptyFallible<L::Error, Self>;
+    type FallibleLender = FallibleEmpty<L::Error, Self>;
     fn into_fallible_lender(self) -> <Self as IntoFallibleLender>::FallibleLender {
-        empty_fallible()
+        fallible_empty()
     }
 }
 impl<L: FallibleLender> IntoFallibleLender for SecondShunt<L>
@@ -195,9 +195,9 @@ where
     for<'all> FallibleLend<'all, L>: TupleLend<'all>,
 {
     type Error = L::Error;
-    type FallibleLender = EmptyFallible<L::Error, Self>;
+    type FallibleLender = FallibleEmpty<L::Error, Self>;
     fn into_fallible_lender(self) -> <Self as IntoFallibleLender>::FallibleLender {
-        empty_fallible()
+        fallible_empty()
     }
 }
 
