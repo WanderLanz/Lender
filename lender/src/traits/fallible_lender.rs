@@ -6,6 +6,7 @@ use stable_try_trait_v2::{internal::NeverShortCircuit, ChangeOutputType, FromRes
 use crate::{
     fallible_unzip,
     higher_order::{FnMutHKARes, FnMutHKAResOpt},
+    non_fallible_adapter,
     traits::collect::IntoFallibleLender,
     Chain, Chunk, Cloned, Copied, Cycle, DoubleEndedFallibleLender, Enumerate, ExtendLender, FallibleFlatMap,
     FallibleFlatten, FallibleIntersperse, FallibleIntersperseWith, FalliblePeekable, FallibleTryShuntAdapter, Filter,
@@ -437,33 +438,27 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// If any invocation of next returns Err, returns the collection built
     /// from values yielded successfully, together with the error.
     #[inline]
-    fn collect<'this, B>(self) -> Result<B, (B, Self::Error)>
+    fn collect<B>(self) -> Result<B, (B, Self::Error)>
     where
-        Self: Sized + 'this,
-        B: FromLender<NonFallibleAdapter<'this, Self>>,
+        Self: Sized,
+        for<'all> B: FromLender<NonFallibleAdapter<'all, Self>>,
     {
-        NonFallibleAdapter::process(self, B::from_lender)
+        non_fallible_adapter::process(self, |lender| B::from_lender(lender))
     }
 
     /// Transforms the iterator into a collection.
     /// If any invocation of next returns Err, returns the collection built
     /// from values yielded successfully, together with the error.
-    #[allow(clippy::type_complexity)]
     #[inline]
-    fn try_collect<'a, B>(&'a mut self) -> Result<
-        ChangeOutputType<FallibleLend<'a, Self>, B>,
-        (ChangeOutputType<FallibleLend<'a, Self>, B>, Self::Error)
-    >
+    fn try_collect<'a, B, T>(&'a mut self) -> Result<T, (T, Self::Error)>
     where
         Self: Sized,
         for<'all> FallibleLend<'all, Self>: Try,
-        for<'all> <FallibleLend<'all, Self> as Try>::Residual: Residual<B>,
-        for<'b, 'c> B: FromLender<FallibleTryShuntAdapter<'b, 'c, 'a, Self>>,
+        for<'all> <FallibleLend<'all, Self> as Try>::Residual: Residual<B, TryType = T>,
+        for<'b, 'c, 'd> B: FromLender<FallibleTryShuntAdapter<'b, 'c, 'd, 'a, Self>>,
     {
-        NonFallibleAdapter::process(self, |mut lender: NonFallibleAdapter<'a, &'a mut Self>| {
-            // SAFETY: lender is manually guaranteed to be the only lend alive after `f`.
-            let reborrow = unsafe { &mut *(&mut lender as *mut _) };
-            crate::Lender::try_collect(reborrow)
+        non_fallible_adapter::process(self, |mut lender| {
+            crate::Lender::try_collect(&mut lender)
         })
     }
 
@@ -471,12 +466,12 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// If any invocation of next returns Err, returns the collection built
     /// from values yielded successfully, together with the error.
     #[inline]
-    fn collect_into<'this, E>(self, collection: &mut E) -> Result<&mut E, (&mut E, Self::Error)>
+    fn collect_into<E>(self, collection: &mut E) -> Result<&mut E, (&mut E, Self::Error)>
     where
-        Self: Sized + 'this,
-        E: ExtendLender<NonFallibleAdapter<'this, Self>>,
+        Self: Sized,
+        for<'all> E: ExtendLender<NonFallibleAdapter<'all, Self>>,
     {
-        match NonFallibleAdapter::process(self, |lender|
+        match non_fallible_adapter::process(self, |lender|
             collection.extend_lender(lender)
         ) {
             Ok(()) => Ok(collection),

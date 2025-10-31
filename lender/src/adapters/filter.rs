@@ -111,7 +111,8 @@ where
             move |x| (f)(&x).map(|res| res as usize)
         }
         let lender = self.lender.map(f::<_, Self, _>(self.predicate));
-        crate::fallible_adapters::NonFallibleAdapter::process(lender, core::iter::Iterator::sum).map_err(|(_, err)| err)
+        crate::fallible_adapters::non_fallible_adapter::process(lender, |iter| core::iter::Iterator::sum(iter))
+            .map_err(|(_, err)| err)
     }
 }
 impl<L, P> DoubleEndedFallibleLender for Filter<L, P>

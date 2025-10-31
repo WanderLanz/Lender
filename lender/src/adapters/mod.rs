@@ -64,7 +64,7 @@ pub use self::{
 use crate::{
     empty, fallible_empty,
     try_trait_v2::{ChangeOutputType, FromResidual, Residual, Try},
-    Empty, FallibleEmpty, ExtendLender, FallibleLend, FallibleLender, FallibleLending, IntoFallibleLender, IntoLender, Lend,
+    Empty, ExtendLender, FallibleEmpty, FallibleLend, FallibleLender, FallibleLending, IntoFallibleLender, IntoLender, Lend,
     Lender, Lending, NonFallibleAdapter, TupleLend,
 };
 

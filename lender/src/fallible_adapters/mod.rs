@@ -5,7 +5,7 @@ mod flatten;
 mod intersperse;
 mod into_fallible;
 mod map_err;
-mod non_fallible_adapter;
+pub(crate) mod non_fallible_adapter;
 mod peekable;
 
 pub use convert::Convert;
@@ -16,4 +16,4 @@ pub use map_err::MapErr;
 pub(crate) use non_fallible_adapter::NonFallibleAdapter;
 pub use peekable::Peekable as FalliblePeekable;
 
-pub type FallibleTryShuntAdapter<'a, 'b, 'c, L> = TryShunt<'a, &'b mut NonFallibleAdapter<'c, &'c mut L>>;
+pub type FallibleTryShuntAdapter<'a, 'b, 'c, 'd, L> = TryShunt<'a, &'b mut NonFallibleAdapter<'c, &'d mut L>>;

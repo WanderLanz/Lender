@@ -216,8 +216,7 @@ fn fallible_empty() {
     }
 
     // Test fold operation
-    let sum: Result<i32, String> = fallible_empty::<String, fallible_lend!(i32)>()
-        .fold(0, |acc, _x: i32| Ok(acc + 1));
+    let sum: Result<i32, String> = fallible_empty::<String, fallible_lend!(i32)>().fold(0, |acc, _x: i32| Ok(acc + 1));
     assert_eq!(sum, Ok(0)); // Should never iterate so result is 0
 
     // Test count
@@ -231,7 +230,7 @@ fn fallible_empty() {
 
 #[test]
 fn fallible_once() {
-    use lender::{fallible_once, fallible_lend};
+    use lender::{fallible_lend, fallible_once};
 
     // Test with Ok value
     let mut once = fallible_once::<String, fallible_lend!(i32)>(Ok(42));
@@ -249,13 +248,12 @@ fn fallible_once() {
     assert!(once_err.next().unwrap().is_none());
 
     // Test fold with Ok
-    let sum: Result<i32, String> = fallible_once::<String, fallible_lend!(i32)>(Ok(10))
-        .fold(0, |acc, x| Ok(acc + x));
+    let sum: Result<i32, String> = fallible_once::<String, fallible_lend!(i32)>(Ok(10)).fold(0, |acc, x| Ok(acc + x));
     assert_eq!(sum, Ok(10));
 
     // Test fold with Err
-    let sum_err: Result<i32, String> = fallible_once::<String, fallible_lend!(i32)>(Err("error".to_string()))
-        .fold(0, |acc, x: i32| Ok(acc + x));
+    let sum_err: Result<i32, String> =
+        fallible_once::<String, fallible_lend!(i32)>(Err("error".to_string())).fold(0, |acc, x: i32| Ok(acc + x));
     assert!(sum_err.is_err());
 
     // Test count with Ok
@@ -269,7 +267,7 @@ fn fallible_once() {
 
 #[test]
 fn fallible_repeat() {
-    use lender::{fallible_repeat, fallible_lend};
+    use lender::{fallible_lend, fallible_repeat};
 
     // Test with Ok value
     let mut repeat = fallible_repeat::<String, fallible_lend!(i32)>(Ok(42));
@@ -295,23 +293,19 @@ fn fallible_repeat() {
 
     // Test take with Ok - manually collect
     let mut collected = Vec::new();
-    let result = fallible_repeat::<String, fallible_lend!(i32)>(Ok(5))
-        .take(3)
-        .for_each(|x| {
-            collected.push(x);
-            Ok(())
-        });
+    let result = fallible_repeat::<String, fallible_lend!(i32)>(Ok(5)).take(3).for_each(|x| {
+        collected.push(x);
+        Ok(())
+    });
     assert!(result.is_ok());
     assert_eq!(collected, vec![5, 5, 5]);
 
     // Test take with Err - should fail on first item
     let mut collected_err = Vec::new();
-    let result_err = fallible_repeat::<String, fallible_lend!(i32)>(Err("error".to_string()))
-        .take(3)
-        .for_each(|x| {
-            collected_err.push(x);
-            Ok(())
-        });
+    let result_err = fallible_repeat::<String, fallible_lend!(i32)>(Err("error".to_string())).take(3).for_each(|x| {
+        collected_err.push(x);
+        Ok(())
+    });
     assert!(result_err.is_err());
     assert!(collected_err.is_empty()); // Should not have collected anything
 }
@@ -327,10 +321,8 @@ fn fallible_once_with() {
     assert!(once_with.next().unwrap().is_none()); // Should be fused
 
     // Test with Err value from closure
-    let mut once_with_err = fallible_once_with(
-        42,
-        hrc_once!(move |_x: &mut i32| -> Result<i32, String> { Err("error".to_string()) })
-    );
+    let mut once_with_err =
+        fallible_once_with(42, hrc_once!(move |_x: &mut i32| -> Result<i32, String> { Err("error".to_string()) }));
     match once_with_err.next() {
         Err(e) => assert_eq!(e, "error"),
         Ok(_) => panic!("Expected error"),
@@ -340,7 +332,7 @@ fn fallible_once_with() {
 
 #[test]
 fn fallible_repeat_with() {
-    use lender::{fallible_repeat_with, fallible_lend};
+    use lender::{fallible_lend, fallible_repeat_with};
 
     // Test with closure that returns Ok
     let mut counter = 0;
@@ -353,9 +345,7 @@ fn fallible_repeat_with() {
     assert_eq!(repeat_with.next().unwrap(), Some(3));
 
     // Test with closure that returns Err
-    let mut repeat_with_err = fallible_repeat_with::<'_, fallible_lend!(i32), String, _>(|| {
-        Err("error".to_string())
-    });
+    let mut repeat_with_err = fallible_repeat_with::<'_, fallible_lend!(i32), String, _>(|| Err("error".to_string()));
     match repeat_with_err.next() {
         Err(e) => assert_eq!(e, "error"),
         Ok(_) => panic!("Expected error"),
@@ -418,28 +408,24 @@ fn into_fallible_adapter() {
 
     // Test with fold
     let data2 = vec![10, 20, 30];
-    let sum: Result<i32, String> = data2.into_iter()
-        .into_lender()
-        .into_fallible::<String>()
-        .fold(0, |acc, x| Ok(acc + x));
+    let sum: Result<i32, String> = data2.into_iter().into_lender().into_fallible::<String>().fold(0, |acc, x| Ok(acc + x));
     assert_eq!(sum, Ok(60));
 }
 
 #[test]
 fn map_err_adapter() {
-    use lender::{fallible_once, fallible_lend};
+    use lender::{fallible_lend, fallible_once};
 
     // Test mapping error type
-    let mut mapped = fallible_once::<i32, fallible_lend!(u32)>(Err(42))
-        .map_err(|e: i32| format!("Error: {}", e));
+    let mut mapped = fallible_once::<i32, fallible_lend!(u32)>(Err(42)).map_err(|e: i32| format!("Error: {}", e));
     match mapped.next() {
         Err(e) => assert_eq!(e, "Error: 42"),
         Ok(_) => panic!("Expected error"),
     }
 
     // Test with Ok value (error mapper shouldn't be called)
-    let mut mapped_ok = fallible_once::<String, fallible_lend!(i32)>(Ok(100))
-        .map_err(|_e: String| panic!("Should not be called"));
+    let mut mapped_ok =
+        fallible_once::<String, fallible_lend!(i32)>(Ok(100)).map_err(|_e: String| panic!("Should not be called"));
     assert_eq!(mapped_ok.next().unwrap(), Some(100));
 }
 
@@ -455,7 +441,8 @@ fn fallible_peekable_adapter() {
         } else {
             Ok(None)
         }
-    }).peekable();
+    })
+    .peekable();
 
     // Peek multiple times - should see same value
     assert_eq!(peekable.peek().unwrap(), Some(&1));
@@ -491,13 +478,16 @@ fn intersperse_adapters() {
         } else {
             Ok(None)
         }
-    }).intersperse(0);
+    })
+    .intersperse(0);
 
     let mut collected = Vec::new();
-    interspersed.for_each(|x| {
-        collected.push(x);
-        Ok(())
-    }).unwrap();
+    interspersed
+        .for_each(|x| {
+            collected.push(x);
+            Ok(())
+        })
+        .unwrap();
     assert_eq!(collected, vec![1, 0, 2, 0, 3]);
 
     // Test intersperse_with using a closure
@@ -509,16 +499,19 @@ fn intersperse_adapters() {
         } else {
             Ok(None)
         }
-    }).intersperse_with(move || {
+    })
+    .intersperse_with(move || {
         counter += 1;
         Ok(counter)
     });
 
     let mut collected_with = Vec::new();
-    interspersed_with.for_each(|x| {
-        collected_with.push(x);
-        Ok(())
-    }).unwrap();
+    interspersed_with
+        .for_each(|x| {
+            collected_with.push(x);
+            Ok(())
+        })
+        .unwrap();
     assert_eq!(collected_with, vec![1, 11, 2, 12, 3]);
 }
 
@@ -526,7 +519,8 @@ fn intersperse_adapters() {
 fn map_adapters() {
     let data = vec![1, 2, 3];
 
-    let mut iter = data.into_iter()
+    let mut iter = data
+        .into_iter()
         .into_lender()
         .into_fallible::<std::convert::Infallible>()
         .map(hrc_mut!(for<'lend> |x: i32| -> Result<i32, std::convert::Infallible> { Ok(x * 2) }));
@@ -556,10 +550,7 @@ impl FallibleLender for Wrapper {
 fn flatten_adapters() {
     let data = vec![Wrapper(vec![1, 2, 3]), Wrapper(vec![1, 2, 3]), Wrapper(vec![1, 2, 3])];
 
-    let mut iter = data.into_iter()
-        .into_lender()
-        .into_fallible()
-        .flatten();
+    let mut iter = data.into_iter().into_lender().into_fallible().flatten();
 
     assert_eq!(iter.next().unwrap(), Some(1));
     assert_eq!(iter.next().unwrap(), Some(2));
@@ -569,14 +560,15 @@ fn flatten_adapters() {
     assert_eq!(iter.next().unwrap(), Some(3));
     assert_eq!(iter.next().unwrap(), Some(1));
     assert_eq!(iter.next().unwrap(), Some(2));
-    assert_eq!(iter.next().unwrap(), Some(3));    
+    assert_eq!(iter.next().unwrap(), Some(3));
 }
 
 #[test]
 fn flat_map_adapters() {
     let data = vec![1, 2, 3];
 
-    let mut iter = data.into_iter()
+    let mut iter = data
+        .into_iter()
         .into_lender()
         .into_fallible()
         .flat_map(hrc_mut!(for<'lend> |x: i32| -> Result<Wrapper, std::convert::Infallible> { Ok(Wrapper(vec![x; 2])) }));
