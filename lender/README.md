@@ -179,7 +179,7 @@ for_!(w in data.array_windows_mut::<3>() {
 });
 assert_eq!(data, [0, 1, 1, 2, 3, 5, 8, 13, 21]);
 
-// You can use decostructing assignments with for_!.
+// You can use destructuring assignments with for_!.
 for_!([a, b, c] in data.array_windows_mut::<3>() {
    *c = *a + *b;
 });
