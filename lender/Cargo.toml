@@ -16,6 +16,8 @@ keywords = ["lending", "iterator"]
 [dependencies]
 lender-derive = { version = "0.1.2", optional = true }
 stable_try_trait_v2 = { path = "../stable_try_trait_v2", version = "1.75" }
+
+[dev-dependencies]
 trybuild = "1.0.111"
 
 [features]
