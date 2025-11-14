@@ -94,22 +94,22 @@ pub trait WindowsMutExt<T> {
 }
 
 impl<T> WindowsMutExt<T> for [T] {
-    /// This method is a convenient entry point for [`windows_mut`](crate::windows_mut).
+    /// This method is a convenient entry point for [`windows_mut`].
     fn windows_mut(&mut self, size: usize) -> WindowsMut<'_, T> {
         windows_mut(self, size)
     }
-    /// This method is a convenient entry point for [`array_windows_mut`](crate::array_windows_mut).
+    /// This method is a convenient entry point for [`array_windows_mut`].
     fn array_windows_mut<const WINDOW_SIZE: usize>(&mut self) -> ArrayWindowsMut<'_, T, WINDOW_SIZE> {
         array_windows_mut(self)
     }
 }
 
 impl<T, const N: usize> WindowsMutExt<T> for [T; N] {
-    /// This method is a convenient entry point for [`windows_mut`](crate::windows_mut).
+    /// This method is a convenient entry point for [`windows_mut`].
     fn windows_mut(&mut self, size: usize) -> WindowsMut<'_, T> {
         windows_mut(self, size)
     }
-    /// This method is a convenient entry point for [`array_windows_mut`](crate::array_windows_mut).
+    /// This method is a convenient entry point for [`array_windows_mut`].
     fn array_windows_mut<const WINDOW_SIZE: usize>(&mut self) -> ArrayWindowsMut<'_, T, WINDOW_SIZE> {
         array_windows_mut(self)
     }
