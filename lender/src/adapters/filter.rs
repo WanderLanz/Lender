@@ -1,6 +1,9 @@
 use core::fmt;
 
-use crate::{DoubleEndedLender, FusedLender, Lend, Lender, Lending};
+use crate::{
+    DoubleEndedFallibleLender, DoubleEndedLender, FallibleLend, FallibleLender, FallibleLending, FusedLender, Lend, Lender,
+    Lending,
+};
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Filter<L, P> {
@@ -71,4 +74,54 @@ where
     P: FnMut(&Lend<'_, L>) -> bool,
     L: FusedLender,
 {
+}
+
+impl<'lend, L, P> FallibleLending<'lend> for Filter<L, P>
+where
+    P: FnMut(&FallibleLend<'lend, L>) -> Result<bool, L::Error>,
+    L: FallibleLender,
+{
+    type Lend = FallibleLend<'lend, L>;
+}
+impl<L, P> FallibleLender for Filter<L, P>
+where
+    P: FnMut(&FallibleLend<'_, L>) -> Result<bool, L::Error>,
+    L: FallibleLender,
+{
+    type Error = L::Error;
+
+    #[inline]
+    fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        self.lender.find(&mut self.predicate)
+    }
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let (_, upper) = self.lender.size_hint();
+        (0, upper)
+    }
+    #[inline]
+    fn count(self) -> Result<usize, Self::Error>
+    where
+        Self: Sized,
+    {
+        #[inline]
+        fn f<E, L: for<'all> FallibleLending<'all>, F: FnMut(&FallibleLend<'_, L>) -> Result<bool, E>>(
+            mut f: F,
+        ) -> impl FnMut(FallibleLend<'_, L>) -> Result<usize, E> {
+            move |x| (f)(&x).map(|res| res as usize)
+        }
+        let lender = self.lender.map(f::<_, Self, _>(self.predicate));
+        crate::fallible_adapters::non_fallible_adapter::process(lender, |iter| core::iter::Iterator::sum(iter))
+            .map_err(|(_, err)| err)
+    }
+}
+impl<L, P> DoubleEndedFallibleLender for Filter<L, P>
+where
+    P: FnMut(&FallibleLend<'_, L>) -> Result<bool, L::Error>,
+    L: DoubleEndedFallibleLender,
+{
+    #[inline]
+    fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        self.lender.rfind(&mut self.predicate)
+    }
 }

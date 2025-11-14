@@ -1209,6 +1209,13 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         Chunky::new(self, chunk_size)
     }
+
+    /// Convert an lender of anything into `FallibleLender` by wrapping
+    /// into `Result<Lend<'_, Self>, E>` where `E` is an
+    /// error that can never actually happen.
+    fn into_fallible<E>(self) -> IntoFallible<E, Self> where Self: Sized {
+        IntoFallible::new(self)
+    }
 }
 
 #[inline]

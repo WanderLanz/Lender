@@ -1,4 +1,4 @@
-use crate::{FusedLender, Lend, Lender, Lending};
+use crate::{FallibleLend, FallibleLender, FallibleLending, FusedLender, Lend, Lender, Lending};
 
 #[derive(Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -41,3 +41,29 @@ where
     }
 }
 impl<L> FusedLender for Chunk<'_, L> where L: FusedLender {}
+
+impl<'lend, T> FallibleLending<'lend> for Chunk<'_, T>
+where
+    T: FallibleLender,
+{
+    type Lend = FallibleLend<'lend, T>;
+}
+impl<T> FallibleLender for Chunk<'_, T>
+where
+    T: FallibleLender,
+{
+    type Error = T::Error;
+
+    fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        if self.len == 0 {
+            Ok(None)
+        } else {
+            self.len -= 1;
+            self.lender.next()
+        }
+    }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let (lower, upper) = self.lender.size_hint();
+        (lower.min(self.len), upper.map(|x| x.min(self.len)))
+    }
+}

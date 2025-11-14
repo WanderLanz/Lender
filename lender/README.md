@@ -77,6 +77,36 @@ lender.for_each{
 };
 ```
 
+## Fallible Lenders
+
+[Fallible lenders] offer the same semantics of [fallible
+iterators](https://crates.io/crates/fallible-iterator), where the `next` method
+returns a [`Result`] type, for lenders. They offer more flexibility than a
+lender returning `Option<Result<…>>`: for example, they can short-circuit the
+iteration on errors using the `?` operator; moreover, some adapters are
+difficult or impossible to write for a lender returning `Option<Result<…>>`.
+
+The idiomatic way of iterating over a fallible lender, propagating the error, is
+to use a `while let` loop, as in:
+
+```text
+while let Some(item) = lender.next()? {
+    // Do something with item
+}
+```
+
+If you want to handle the error, you can use a three-armed match statement: 
+
+```text
+loop {
+    match lender.next() {
+        Err(e) => { /* handle error */ },
+        Ok(None) => { /* end of iteration */ },
+        Ok(Some(item)) => { /* do something with item */ },  
+    }
+}
+```
+
 ## Binding the Lend
 
 When writing methods accepting a [`Lender`], to bind the
@@ -149,7 +179,7 @@ for_!(w in data.array_windows_mut::<3>() {
 });
 assert_eq!(data, [0, 1, 1, 2, 3, 5, 8, 13, 21]);
 
-// You can use decostructing assignments with for_!.
+// You can use destructuring assignments with for_!.
 for_!([a, b, c] in data.array_windows_mut::<3>() {
    *c = *a + *b;
 });
@@ -322,4 +352,7 @@ but if you see any unsafe code that can be made safe, please let us know!
 [`Lend`]: https://docs.rs/lender/latest/lender/type.Lend.html
 [`Lending`]: https://docs.rs/lender/latest/lender/trait.Lending.html
 [`IntoLender`]: https://docs.rs/lender/latest/lender/trait.IntoLender.html
-[`lending-iterator`]: https://crates.io/crates/lending-iterator
+[`lending-iterator`]: https://crates.io/crates/lending-iterator/
+[fallible iterators]: https://crates.io/crates/fallible-iterator/
+[`Result`]: https://doc.rust-lang.org/std/result/enum.Result.html
+[Fallible lenders]: https://docs.rs/lender/latest/lender/trait.FallibleLender.html

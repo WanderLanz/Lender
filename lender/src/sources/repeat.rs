@@ -72,3 +72,56 @@ where
     for<'all> Lend<'all, L>: Clone,
 {
 }
+
+/// Creates a new fallible lender that endlessly repeats a single element.
+///
+/// See [`iter::repeat()`](core::iter::repeat) for more information.
+pub fn fallible_repeat<'a, E, L>(elt: Result<FallibleLend<'a, L>, E>) -> FallibleRepeat<'a, E, L>
+where
+    E: Clone,
+    L: ?Sized + for<'all> FallibleLending<'all> + 'a,
+    for<'all> FallibleLend<'all, L>: Clone,
+{
+    FallibleRepeat { elt }
+}
+
+/// A fallible lender that repeats an element endlessly.
+///
+/// This `struct` is created by the [`fallible_repeat()`] function.
+pub struct FallibleRepeat<'a, E, L>
+where
+    L: ?Sized + for<'all> FallibleLending<'all> + 'a,
+{
+    elt: Result<FallibleLend<'a, L>, E>,
+}
+
+impl<'lend, 'a, E, L> FallibleLending<'lend> for FallibleRepeat<'a, E, L>
+where
+    L: ?Sized + for<'all> FallibleLending<'all> + 'a,
+    for<'all> FallibleLend<'all, L>: Clone,
+{
+    type Lend = FallibleLend<'lend, L>;
+}
+
+impl<'a, E, L> FallibleLender for FallibleRepeat<'a, E, L>
+where
+    E: Clone + 'a,
+    L: ?Sized + for<'all> FallibleLending<'all> + 'a,
+    for<'all> FallibleLend<'all, L>: Clone,
+{
+    type Error = E;
+
+    #[inline]
+    fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        self.elt.clone().map(|value| {
+            Some(
+                // SAFETY: 'a: 'lend
+                unsafe { core::mem::transmute::<FallibleLend<'a, Self>, FallibleLend<'_, Self>>(value) },
+            )
+        })
+    }
+    #[inline]
+    fn advance_by(&mut self, _n: usize) -> Result<Option<core::num::NonZeroUsize>, Self::Error> {
+        Ok(None)
+    }
+}

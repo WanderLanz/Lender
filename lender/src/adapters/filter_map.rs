@@ -1,6 +1,10 @@
 use core::fmt;
 
-use crate::{higher_order::FnMutHKAOpt, DoubleEndedLender, FusedLender, Lend, Lender, Lending};
+use crate::{
+    higher_order::{FnMutHKAOpt, FnMutHKAResOpt},
+    DoubleEndedFallibleLender, DoubleEndedLender, FallibleLend, FallibleLender, FallibleLending, FusedLender, Lend, Lender,
+    Lending,
+};
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct FilterMap<L, F> {
@@ -72,4 +76,55 @@ where
     for<'all> F: FnMutHKAOpt<'all, Lend<'all, L>>,
     L: FusedLender,
 {
+}
+
+impl<'lend, B, L, F> FallibleLending<'lend> for FilterMap<L, F>
+where
+    F: FnMut(FallibleLend<'lend, L>) -> Result<Option<B>, L::Error>,
+    B: 'lend,
+    L: FallibleLender,
+{
+    type Lend = B;
+}
+
+impl<L, F> FallibleLender for FilterMap<L, F>
+where
+    for<'all> F: FnMutHKAResOpt<'all, FallibleLend<'all, L>, L::Error>,
+    L: FallibleLender,
+{
+    type Error = L::Error;
+
+    fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        while let Some(x) = self.lender.next()? {
+            if let Some(y) = (self.f)(x)? {
+                return Ok(Some(
+                    // SAFETY: polonius return
+                    unsafe { core::mem::transmute::<FallibleLend<'_, Self>, FallibleLend<'_, Self>>(y) },
+                ));
+            }
+        }
+        Ok(None)
+    }
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let (_, upper) = self.lender.size_hint();
+        (0, upper)
+    }
+}
+impl<L, F> DoubleEndedFallibleLender for FilterMap<L, F>
+where
+    for<'all> F: FnMutHKAResOpt<'all, FallibleLend<'all, L>, L::Error>,
+    L: DoubleEndedFallibleLender,
+{
+    fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        while let Some(x) = self.lender.next_back()? {
+            if let Some(y) = (self.f)(x)? {
+                return Ok(Some(
+                    // SAFETY: polonius return
+                    unsafe { core::mem::transmute::<FallibleLend<'_, Self>, FallibleLend<'_, Self>>(y) },
+                ));
+            }
+        }
+        Ok(None)
+    }
 }

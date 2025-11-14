@@ -1,6 +1,10 @@
 use core::fmt;
 
-use crate::{higher_order::FnMutHKA, DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending};
+use crate::{
+    higher_order::{FnMutHKA, FnMutHKARes},
+    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeLender, FallibleLend, FallibleLender, FallibleLending,
+    FusedLender, Lend, Lender, Lending,
+};
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Map<L, F> {
@@ -78,3 +82,36 @@ impl<L: FusedLender, F> FusedLender for Map<L, F> where F: for<'all> FnMutHKA<'a
 //     #[inline]
 //     fn into_iter(self) -> Iter<Self> { Iter::new(self) }
 // }
+
+impl<'lend, L, F> FallibleLending<'lend> for Map<L, F>
+where
+    F: for<'all> FnMutHKARes<'all, FallibleLend<'all, L>, L::Error>,
+    L: FallibleLender,
+{
+    type Lend = <F as FnMutHKARes<'lend, FallibleLend<'lend, L>, L::Error>>::B;
+}
+impl<L, F> FallibleLender for Map<L, F>
+where
+    F: for<'all> FnMutHKARes<'all, FallibleLend<'all, L>, L::Error>,
+    L: FallibleLender,
+{
+    type Error = L::Error;
+
+    #[inline]
+    fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        self.lender.next()?.map(&mut self.f).transpose()
+    }
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.lender.size_hint()
+    }
+}
+impl<L: DoubleEndedFallibleLender, F> DoubleEndedFallibleLender for Map<L, F>
+where
+    F: for<'all> FnMutHKARes<'all, FallibleLend<'all, L>, L::Error>,
+{
+    #[inline]
+    fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        self.lender.next_back()?.map(&mut self.f).transpose()
+    }
+}

@@ -3,17 +3,19 @@ mod collect;
 mod double_ended;
 mod exact_size;
 mod ext;
+mod fallible_lender;
 mod lender;
 mod marker;
 
 pub use self::{
-    accum::{ProductLender, SumLender},
-    collect::{ExtendLender, FromLender, IntoLender},
-    double_ended::DoubleEndedLender,
+    accum::{ProductFallibleLender, ProductLender, SumFallibleLender, SumLender},
+    collect::{ExtendLender, FromLender, IntoFallibleLender, IntoLender},
+    double_ended::{DoubleEndedFallibleLender, DoubleEndedLender},
     exact_size::ExactSizeLender,
-    ext::{IntoIteratorExt, IteratorExt},
+    ext::{FallibleIteratorExt, IntoFallibleIteratorExt, IntoIteratorExt, IteratorExt},
+    fallible_lender::{FallibleLend, FallibleLender, FallibleLending},
     lender::{Lend, Lender, Lending},
-    marker::FusedLender,
+    marker::{FusedFallibleLender, FusedLender},
 };
 
 /// Marker trait for tuple lends, used by [`Lender::unzip()`].
@@ -73,5 +75,37 @@ pub trait DynLend<'lend> {
 macro_rules! lend {
     ($T:ty) => {
         $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = $T>>
+    };
+}
+
+/// Internal struct used to implement [`fallible_lend!`], do not use directly.
+#[doc(hidden)]
+pub struct DynFallibleLendShunt<T: ?Sized>(pub T);
+
+impl<'lend, T: ?Sized + for<'all> DynFallibleLend<'all>> FallibleLending<'lend> for DynFallibleLendShunt<T> {
+    type Lend = <T as DynFallibleLend<'lend>>::Lend;
+}
+
+/// Internal trait used to implement [`lend!`], do not use directly.
+#[doc(hidden)]
+pub trait DynFallibleLend<'lend> {
+    type Lend;
+}
+
+/// Use lifetime `'lend` within type `$T` to create an `impl for<'lend> FallibleLending<'lend, Lend = $T>`.
+/// Uses a bug in the borrow checker which allows dyn objects to implement impossible traits.
+/// # Examples
+/// ```rust
+/// use std::convert::Infallible;
+///
+/// use lender::prelude::*;
+///
+/// let mut empty = lender::fallible_empty::<Infallible, fallible_lend!(&'lend mut [u32])>();
+/// let _: Result<Option<&mut [u32]>, Infallible> = empty.next(); // => Ok(None)
+/// ```
+#[macro_export]
+macro_rules! fallible_lend {
+    ($T:ty) => {
+        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = $T>>
     };
 }

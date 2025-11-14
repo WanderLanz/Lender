@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.4.1] - 2025-09-30
+
+* Significant API expansion with the addition of fallible lenders,
+  which return a result containing an option.
+
 ## [0.4.0] - 2025-09-30
 
 ### Fixed

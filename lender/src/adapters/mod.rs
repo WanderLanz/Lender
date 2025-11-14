@@ -62,9 +62,10 @@ pub use self::{
     zip::Zip,
 };
 use crate::{
-    empty,
+    empty, fallible_empty,
     try_trait_v2::{ChangeOutputType, FromResidual, Residual, Try},
-    Empty, ExtendLender, IntoLender, Lend, Lender, Lending, TupleLend,
+    Empty, ExtendLender, FallibleEmpty, FallibleLend, FallibleLender, FallibleLending, IntoFallibleLender, IntoLender, Lend,
+    Lender, Lending, NonFallibleAdapter, TupleLend,
 };
 
 // pub use zip::{TrustedRandomAccess, TrustedRandomAccessNoCoerce};
@@ -167,6 +168,38 @@ where
         empty()
     }
 }
+impl<'lend, L: FallibleLender> FallibleLending<'lend> for FirstShunt<L>
+where
+    for<'all> FallibleLend<'all, L>: TupleLend<'all>,
+{
+    type Lend = <FallibleLend<'lend, L> as TupleLend<'lend>>::First;
+}
+impl<'lend, L: FallibleLender> FallibleLending<'lend> for SecondShunt<L>
+where
+    for<'all> FallibleLend<'all, L>: TupleLend<'all>,
+{
+    type Lend = <FallibleLend<'lend, L> as TupleLend<'lend>>::Second;
+}
+impl<L: FallibleLender> IntoFallibleLender for FirstShunt<L>
+where
+    for<'all> FallibleLend<'all, L>: TupleLend<'all>,
+{
+    type Error = L::Error;
+    type FallibleLender = FallibleEmpty<L::Error, Self>;
+    fn into_fallible_lender(self) -> <Self as IntoFallibleLender>::FallibleLender {
+        fallible_empty()
+    }
+}
+impl<L: FallibleLender> IntoFallibleLender for SecondShunt<L>
+where
+    for<'all> FallibleLend<'all, L>: TupleLend<'all>,
+{
+    type Error = L::Error;
+    type FallibleLender = FallibleEmpty<L::Error, Self>;
+    fn into_fallible_lender(self) -> <Self as IntoFallibleLender>::FallibleLender {
+        fallible_empty()
+    }
+}
 
 pub(crate) fn unzip<L, ExtA, ExtB>(mut lender: L) -> (ExtA, ExtB)
 where
@@ -188,4 +221,28 @@ where
         b.extend_lender_one(y);
     }
     (a, b)
+}
+
+pub(crate) fn fallible_unzip<L, ExtA, ExtB>(mut lender: L) -> Result<(ExtA, ExtB), L::Error>
+where
+    L: Sized + FallibleLender,
+    for<'all> FallibleLend<'all, L>: TupleLend<'all>,
+    ExtA:
+        Default + for<'this> ExtendLender<NonFallibleAdapter<'this, <FirstShunt<L> as IntoFallibleLender>::FallibleLender>>,
+    ExtB:
+        Default + for<'this> ExtendLender<NonFallibleAdapter<'this, <SecondShunt<L> as IntoFallibleLender>::FallibleLender>>,
+{
+    let mut a = ExtA::default();
+    let mut b = ExtB::default();
+    let sz = lender.size_hint().0;
+    if sz > 0 {
+        a.extend_lender_reserve(sz);
+        b.extend_lender_reserve(sz);
+    }
+    while let Some(lend) = lender.next()? {
+        let (x, y) = lend.tuple_lend();
+        a.extend_lender_one(x);
+        b.extend_lender_one(y);
+    }
+    Ok((a, b))
 }

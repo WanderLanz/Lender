@@ -1,6 +1,5 @@
-use core::{fmt, ops::ControlFlow};
-
 use alloc::boxed::Box;
+use core::{fmt, ops::ControlFlow};
 
 use crate::{
     try_trait_v2::{FromResidual, Try},
