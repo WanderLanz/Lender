@@ -261,7 +261,7 @@ mod test {
         type Lend = &'lend i32;
     }
 
-    impl<'lend> Lender for ArrayLender {
+    impl Lender for ArrayLender {
         fn next(&mut self) -> Option<Lend<'_, Self>> {
             Some(&self.array[0])
         }

@@ -60,7 +60,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error>;
 
     /// Take the next `len` lends of the lender with temporary lender `Chunk`.
-    /// This is the quivalent of cloning the lender and calling `take(len)` on it.
+    /// This is equivalent to cloning the lender and calling `take(len)` on it.
     /// 
     /// # Examples
     ///

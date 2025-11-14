@@ -53,7 +53,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(lender.next(), None);
     /// ```
     fn next(&mut self) -> Option<Lend<'_, Self>>;
-    /// Take the next `len` lends of the lender with temporary lender `Chunk`. This is the quivalent of cloning the lender and calling `take(len)` on it.
+    /// Take the next `len` lends of the lender with temporary lender `Chunk`. This is equivalent to cloning the lender and calling `take(len)` on it.
     ///
     /// # Examples
     ///

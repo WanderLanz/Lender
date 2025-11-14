@@ -213,7 +213,7 @@ mod test {
         type Lend = Child<'lend>;
     }
 
-    impl<'lend> Lender for Parent {
+    impl Lender for Parent {
         fn next(&mut self) -> Option<Lend<'_, Self>> {
             Some(Child { array_ref: &self.0 })
         }
@@ -227,11 +227,11 @@ mod test {
         type Lend = &'lend [i32; 4];
     }
 
-    impl<'a, 'lend> FallibleLender for Child<'a> {
+    impl<'a> FallibleLender for Child<'a> {
         type Error = Infallible;
 
         fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
-            Ok(Some(&self.array_ref))
+            Ok(Some(self.array_ref))
         }
     }
 

@@ -113,7 +113,7 @@ fn from_lender() {
 fn try_collect() {
     use stable_try_trait_v2::ChangeOutputType;
 
-    const ERR_MSG: &'static str = "Try Collect Error";
+    const ERR_MSG: &str = "Try Collect Error";
 
     #[derive(Debug)]
     struct WriteOnDrop<'a> {
