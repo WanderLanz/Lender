@@ -267,7 +267,7 @@ impl<I: FallibleIterator> From<I> for FromFallibleIter<I> {
     }
 }
 
-/// Creates an [`IntoLender`] from an [`IntoIterator`].
+/// Creates an [`IntoFallibleLender`] from an [`IntoFallibleIterator`].
 ///
 /// This function can be conveniently accessed using the
 /// [`into_into_lender`](crate::traits::IntoIteratorExt::into_into_lender) method
@@ -281,10 +281,10 @@ pub fn from_into_fallible_iter<I: IntoFallibleIterator>(into_iter: I) -> FromInt
     FromIntoFallibleIter { into_iter }
 }
 
-/// A [`IntoLender`] that returns lenders obtained by applying [`from_iter`]
-/// to the iterators returned by the wrapped [`IntoIterator`].
+/// A [`IntoFallibleLender`] that returns lenders obtained by applying [`from_iter`]
+/// to the iterators returned by the wrapped [`IntoFallibleIterator`].
 ///
-/// This `struct` is created by the [`from_into_iter()`] function.
+/// This `struct` is created by the [`from_into_fallible_iter()`] function.
 #[repr(transparent)]
 #[derive(Clone, Debug)]
 pub struct FromIntoFallibleIter<I> {

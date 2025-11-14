@@ -107,6 +107,12 @@ loop {
 }
 ```
 
+If you have a [`Lender`] you can make it into a [`FallibleLender`] with
+[`into_fallible`], and analogously for an [`IntoLender`]. You can also 
+[obtain a fallible lender from a fallible iterator]. In general, all 
+reasonable automatic conversions between iterators and lenders (fallible or not)
+are provided.
+
 ## Binding the Lend
 
 When writing methods accepting a [`Lender`], to bind the
@@ -352,7 +358,9 @@ but if you see any unsafe code that can be made safe, please let us know!
 [`Lend`]: https://docs.rs/lender/latest/lender/type.Lend.html
 [`Lending`]: https://docs.rs/lender/latest/lender/trait.Lending.html
 [`IntoLender`]: https://docs.rs/lender/latest/lender/trait.IntoLender.html
+[`into_fallible`]: https://docs.rs/lender/latest/lender/trait.Lender.html#method.into_fallible
 [`lending-iterator`]: https://crates.io/crates/lending-iterator/
 [fallible iterators]: https://crates.io/crates/fallible-iterator/
 [`Result`]: https://doc.rust-lang.org/std/result/enum.Result.html
 [Fallible lenders]: https://docs.rs/lender/latest/lender/trait.FallibleLender.html
+[obtain a fallible lender from a fallible iterator]: https://docs.rs/lender/latest/later/trait.FallibleIteratorExt.html#tymethod.into_fallible_lender
