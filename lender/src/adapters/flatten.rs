@@ -167,20 +167,26 @@ where
     for<'all> Lend<'all, L>: IntoLender,
 {
     fn next(&mut self) -> Option<Lend<'_, Self>> {
-        // SAFETY: Polonius return
-        let reborrow = unsafe { &mut *(&mut self.inner as *mut Option<<Lend<'this, L> as IntoLender>::Lender>) };
-        if let Some(inner) = reborrow {
-            if let Some(x) = inner.next() {
-                return Some(x);
+        loop {
+            // SAFETY: Polonius return
+            let reborrow = unsafe { &mut *(&mut self.inner as *mut Option<<Lend<'this, L> as IntoLender>::Lender>) };
+            if let Some(inner) = reborrow {
+                if let Some(x) = inner.next() {
+                    return Some(x);
+                }
+            }
+
+            // SAFETY: inner is manually guaranteed to be the only lend alive of the inner iterator
+            self.inner = self.lender.next().map(|l| unsafe {
+                core::mem::transmute::<<Lend<'_, L> as IntoLender>::Lender, <Lend<'this, L> as IntoLender>::Lender>(
+                    l.into_lender(),
+                )
+            });
+
+            if self.inner.is_none() {
+                return None;
             }
         }
-        // SAFETY: inner is manually guaranteed to be the only lend alive of the inner iterator
-        self.inner = self.lender.next().map(|l| unsafe {
-            core::mem::transmute::<<Lend<'_, L> as IntoLender>::Lender, <Lend<'this, L> as IntoLender>::Lender>(
-                l.into_lender(),
-            )
-        });
-        self.inner.as_mut()?.next()
     }
     fn size_hint(&self) -> (usize, Option<usize>) {
         (
@@ -243,5 +249,17 @@ mod test {
             next_array_ref, array_ref,
             "Array references returned by the flattened lender should refer to the array in the parent lender"
         );
+    }
+
+    #[test]
+    fn test_flatmap_empty() {
+        use crate::traits::IteratorExt;
+
+        let mut l = vec![1, 0, 2].into_iter().into_lender().flat_map(|n| (0..n).into_lender());
+        assert_eq!(l.next(), Some(0));
+        assert_eq!(l.next(), Some(0));
+        assert_eq!(l.next(), Some(1));
+        assert_eq!(l.next(), None);
+        assert_eq!(l.next(), None);
     }
 }
