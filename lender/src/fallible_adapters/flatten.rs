@@ -170,9 +170,8 @@ where
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         loop {
             // SAFETY: Polonius return
-            let reborrow = unsafe {
-                &mut *(&mut self.inner as *mut Option<<FallibleLend<'this, L> as IntoFallibleLender>::FallibleLender>)
-            };
+            #[allow(clippy::deref_addrof)]
+            let reborrow = unsafe { &mut *(&raw mut self.inner) };
             if let Some(inner) = reborrow {
                 if let Some(x) = inner.next()? {
                     return Ok(Some(x));
@@ -260,7 +259,7 @@ mod test {
     }
 
     #[test]
-    fn test_flatmap_empty() {
+    fn test_flat_map_empty() {
         use crate::traits::IteratorExt;
 
         let mut l = [1, 0, 2]

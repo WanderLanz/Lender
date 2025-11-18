@@ -166,10 +166,12 @@ impl<'this, L: Lender> Lender for FlattenCompat<'this, L>
 where
     for<'all> Lend<'all, L>: IntoLender,
 {
+    #[allow(clippy::question_mark)]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         loop {
             // SAFETY: Polonius return
-            let reborrow = unsafe { &mut *(&mut self.inner as *mut Option<<Lend<'this, L> as IntoLender>::Lender>) };
+            #[allow(clippy::deref_addrof)]
+            let reborrow = unsafe { &mut *(&raw mut self.inner) };
             if let Some(inner) = reborrow {
                 if let Some(x) = inner.next() {
                     return Some(x);

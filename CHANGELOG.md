@@ -1,6 +1,14 @@
 # Change Log
 
+## [0.4.2]
+
+### Fixed
+
+* Fixed flatten when one of the lenders is empty.
+
 ## [0.4.1] - 2025-11-15
+
+### New
 
 * Significant API expansion with the addition of fallible lenders,
   which return a result containing an option.
