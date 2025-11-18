@@ -168,25 +168,27 @@ where
     type Error = L::Error;
 
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
-        // SAFETY: Polonius return
-        let reborrow = unsafe {
-            &mut *(&mut self.inner as *mut Option<<FallibleLend<'this, L> as IntoFallibleLender>::FallibleLender>)
-        };
-        if let Some(inner) = reborrow {
-            if let Some(x) = inner.next()? {
-                return Ok(Some(x));
+        loop {
+            // SAFETY: Polonius return
+            let reborrow = unsafe {
+                &mut *(&mut self.inner as *mut Option<<FallibleLend<'this, L> as IntoFallibleLender>::FallibleLender>)
+            };
+            if let Some(inner) = reborrow {
+                if let Some(x) = inner.next()? {
+                    return Ok(Some(x));
+                }
             }
-        }
-        // SAFETY: inner is manually guaranteed to be the only FallibleLend alive of the inner iterator
-        self.inner = self.lender.next()?.map(|l| unsafe {
-            core::mem::transmute::<
-                <FallibleLend<'_, L> as IntoFallibleLender>::FallibleLender,
-                <FallibleLend<'this, L> as IntoFallibleLender>::FallibleLender,
-            >(l.into_fallible_lender())
-        });
-        match self.inner.as_mut() {
-            Some(inner) => inner.next(),
-            None => Ok(None),
+            // SAFETY: inner is manually guaranteed to be the only FallibleLend alive of the inner iterator
+            self.inner = self.lender.next()?.map(|l| unsafe {
+                core::mem::transmute::<
+                    <FallibleLend<'_, L> as IntoFallibleLender>::FallibleLender,
+                    <FallibleLend<'this, L> as IntoFallibleLender>::FallibleLender,
+                >(l.into_fallible_lender())
+            });
+
+            if self.inner.is_none() {
+                return Ok(None);
+            }
         }
     }
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -255,5 +257,21 @@ mod test {
             "Array references returned by the flattened FallibleLender should refer to the array in the parent FallibleLender"
         );
         Ok(())
+    }
+
+    #[test]
+    fn test_flatmap_empty() {
+        use crate::traits::IteratorExt;
+
+        let mut l = [1, 0, 2]
+            .into_iter()
+            .into_lender()
+            .into_fallible::<Infallible>()
+            .flat_map(|n| Ok((0..n).into_lender().into_fallible()));
+        assert_eq!(l.next(), Ok(Some(0)));
+        assert_eq!(l.next(), Ok(Some(0)));
+        assert_eq!(l.next(), Ok(Some(1)));
+        assert_eq!(l.next(), Ok(None));
+        assert_eq!(l.next(), Ok(None));
     }
 }
