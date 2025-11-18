@@ -255,7 +255,7 @@ mod test {
     fn test_flatmap_empty() {
         use crate::traits::IteratorExt;
 
-        let mut l = vec![1, 0, 2].into_iter().into_lender().flat_map(|n| (0..n).into_lender());
+        let mut l = [1, 0, 2].into_iter().into_lender().flat_map(|n| (0..n).into_lender());
         assert_eq!(l.next(), Some(0));
         assert_eq!(l.next(), Some(0));
         assert_eq!(l.next(), Some(1));
