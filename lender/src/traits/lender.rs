@@ -21,7 +21,7 @@ use crate::{
 ///
 /// Please see [Sabrina Jewson's Blog][1] for more information, and how a trait like this can be used to solve it by implicitly restricting HRTBs.
 ///
-/// [1]: (https://sabrinajewson.org/blog/the-better-alternative-to-lifetime-gats)
+/// [1]: https://sabrinajewson.org/blog/the-better-alternative-to-lifetime-gats
 pub trait Lending<'lend, __ImplBound: ImplBound = Ref<'lend, Self>> {
     /// The type being lent.
     type Lend: 'lend;
