@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.4.3]
+
+### Changed
+
+- `windows_mut` is now double-ended.
+
 ## [0.4.2] - 2025-11-18
 
 ### Fixed
