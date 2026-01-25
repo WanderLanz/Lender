@@ -1,4 +1,4 @@
-use crate::{Lend, Lender, Lending};
+use crate::{DoubleEndedLender, Lend, Lender, Lending};
 
 /// Create a new lender that returns mutable contiguous overlapping windows of fixed size over a slice.
 ///
@@ -20,14 +20,43 @@ use crate::{Lend, Lender, Lending};
 /// assert_eq!(lender.next(), Some(&mut [0, 1][..]));
 /// ```
 pub fn windows_mut<T>(slice: &mut [T], size: usize) -> WindowsMut<'_, T> {
-    WindowsMut { slice, size, curr_pos: 0 }
+    WindowsMut { slice, size, position: WindowPosition::Init }
 }
 
 /// This struct is returned by [`windows_mut`].
 pub struct WindowsMut<'a, T> {
-    pub(crate) slice: &'a mut [T],
-    pub(crate) size: usize,
-    pub(crate) curr_pos: usize,
+    slice: &'a mut [T],
+    size: usize,
+    position: WindowPosition,
+}
+
+/// Track which position we most recently returned.
+#[derive(Clone, Copy)]
+enum WindowPosition {
+    Init,
+    Front,
+    Back,
+}
+
+impl WindowPosition {
+    /// Drop the end of the slice that we most recently returned.
+    fn update_slice<T>(self, slice: &mut &mut [T]) {
+        match self {
+            WindowPosition::Init => {}
+            WindowPosition::Front => {
+                // slice.split_off_first_mut();
+                if let [_, tail @ ..] = core::mem::take(slice) {
+                    *slice = tail;
+                }
+            }
+            WindowPosition::Back => {
+                // slice.split_off_last_mut();
+                if let [init @ .., _] = core::mem::take(slice) {
+                    *slice = init;
+                }
+            }
+        }
+    }
 }
 
 impl<'any, T> Lending<'any> for WindowsMut<'_, T> {
@@ -36,10 +65,18 @@ impl<'any, T> Lending<'any> for WindowsMut<'_, T> {
 
 impl<T> Lender for WindowsMut<'_, T> {
     fn next(&mut self) -> Option<Lend<'_, Self>> {
-        // See https://github.com/danielhenrymantilla/lending-iterator.rs/blob/5353b5e6ce8be9d07d0cfd86e23e481377074780/src/lending_iterator/constructors/windows_mut_.rs
-        let window = self.slice.get_mut(self.curr_pos..)?.get_mut(..self.size)?;
-        self.curr_pos += 1;
-        Some(window)
+        self.position.update_slice(&mut self.slice);
+        self.position = WindowPosition::Front;
+        self.slice.get_mut(..self.size)
+    }
+}
+
+impl<T> DoubleEndedLender for WindowsMut<'_, T> {
+    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
+        self.position.update_slice(&mut self.slice);
+        self.position = WindowPosition::Back;
+        let index = self.slice.len().checked_sub(self.size)?;
+        self.slice.get_mut(index..)
     }
 }
 
@@ -64,13 +101,13 @@ impl<T> Lender for WindowsMut<'_, T> {
 /// assert_eq!(lender.next(), Some(&mut [0, 1]));
 /// ```
 pub fn array_windows_mut<T, const WINDOW_SIZE: usize>(slice: &mut [T]) -> ArrayWindowsMut<'_, T, WINDOW_SIZE> {
-    ArrayWindowsMut { slice, curr_pos: 0 }
+    ArrayWindowsMut { slice, position: WindowPosition::Init }
 }
 
 /// This struct is returned by [`array_windows_mut`].
 pub struct ArrayWindowsMut<'a, T, const WINDOW_SIZE: usize> {
-    pub(crate) slice: &'a mut [T],
-    pub(crate) curr_pos: usize,
+    slice: &'a mut [T],
+    position: WindowPosition,
 }
 
 impl<'any, T, const WINDOW_SIZE: usize> Lending<'any> for ArrayWindowsMut<'_, T, WINDOW_SIZE> {
@@ -79,10 +116,17 @@ impl<'any, T, const WINDOW_SIZE: usize> Lending<'any> for ArrayWindowsMut<'_, T,
 
 impl<T, const WINDOW_SIZE: usize> Lender for ArrayWindowsMut<'_, T, WINDOW_SIZE> {
     fn next(&mut self) -> Option<Lend<'_, Self>> {
-        // See https://github.com/danielhenrymantilla/lending-iterator.rs/blob/5353b5e6ce8be9d07d0cfd86e23e481377074780/src/lending_iterator/constructors/windows_mut_.rs
-        let window = self.slice.get_mut(self.curr_pos..)?.get_mut(..WINDOW_SIZE)?;
-        self.curr_pos += 1;
-        Some(window.try_into().unwrap())
+        self.position.update_slice(&mut self.slice);
+        self.position = WindowPosition::Front;
+        self.slice.first_chunk_mut()
+    }
+}
+
+impl<T, const WINDOW_SIZE: usize> DoubleEndedLender for ArrayWindowsMut<'_, T, WINDOW_SIZE> {
+    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
+        self.position.update_slice(&mut self.slice);
+        self.position = WindowPosition::Back;
+        self.slice.last_chunk_mut()
     }
 }
 
@@ -115,7 +159,6 @@ impl<T, const N: usize> WindowsMutExt<T> for [T; N] {
     }
 }
 
-#[cfg(test)]
 #[test]
 fn test_array_windows_mut() {
     let mut s = [0, 1, 2, 3];
@@ -127,11 +170,55 @@ fn test_array_windows_mut() {
 }
 
 #[test]
+fn test_array_windows_mut_rev() {
+    let mut s = [0, 1, 2, 3];
+    let mut lender = array_windows_mut::<_, 2>(&mut s).rev();
+    assert_eq!(lender.next(), Some(&mut [2, 3]));
+    assert_eq!(lender.next(), Some(&mut [1, 2]));
+    assert_eq!(lender.next(), Some(&mut [0, 1]));
+    assert_eq!(lender.next(), None);
+}
+
+#[test]
+fn test_array_windows_mut_mixed() {
+    let mut s = [0, 1, 2, 3, 4];
+    let mut lender = array_windows_mut::<_, 2>(&mut s);
+    assert_eq!(lender.next_back(), Some(&mut [3, 4]));
+    assert_eq!(lender.next(), Some(&mut [0, 1]));
+    assert_eq!(lender.next_back(), Some(&mut [2, 3]));
+    assert_eq!(lender.next(), Some(&mut [1, 2]));
+    assert_eq!(lender.next_back(), None);
+    assert_eq!(lender.next(), None);
+}
+
+#[test]
 fn test_windows_mut() {
     let mut s = [0, 1, 2, 3];
     let mut lender = windows_mut(&mut s, 2);
     assert_eq!(lender.next(), Some(&mut [0, 1][..]));
     assert_eq!(lender.next(), Some(&mut [1, 2][..]));
     assert_eq!(lender.next(), Some(&mut [2, 3][..]));
+    assert_eq!(lender.next(), None);
+}
+
+#[test]
+fn test_windows_mut_rev() {
+    let mut s = [0, 1, 2, 3];
+    let mut lender = windows_mut(&mut s, 2).rev();
+    assert_eq!(lender.next(), Some(&mut [2, 3][..]));
+    assert_eq!(lender.next(), Some(&mut [1, 2][..]));
+    assert_eq!(lender.next(), Some(&mut [0, 1][..]));
+    assert_eq!(lender.next(), None);
+}
+
+#[test]
+fn test_windows_mut_back() {
+    let mut s = [0, 1, 2, 3, 4];
+    let mut lender = windows_mut(&mut s, 2);
+    assert_eq!(lender.next_back(), Some(&mut [3, 4][..]));
+    assert_eq!(lender.next(), Some(&mut [0, 1][..]));
+    assert_eq!(lender.next_back(), Some(&mut [2, 3][..]));
+    assert_eq!(lender.next(), Some(&mut [1, 2][..]));
+    assert_eq!(lender.next_back(), None);
     assert_eq!(lender.next(), None);
 }
