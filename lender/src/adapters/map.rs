@@ -2,8 +2,8 @@ use core::fmt;
 
 use crate::{
     higher_order::{FnMutHKA, FnMutHKARes},
-    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeLender, FallibleLend, FallibleLender, FallibleLending,
-    FusedLender, Lend, Lender, Lending,
+    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender, FallibleLend, FallibleLender,
+    FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender, Lending,
 };
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -116,4 +116,21 @@ where
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.lender.next_back()?.map(&mut self.f).transpose()
     }
+}
+impl<L: ExactSizeFallibleLender, F> ExactSizeFallibleLender for Map<L, F>
+where
+    F: for<'all> FnMutHKARes<'all, FallibleLend<'all, L>, L::Error>,
+{
+    #[inline]
+    fn len(&self) -> usize {
+        self.lender.len()
+    }
+    #[inline]
+    fn is_empty(&self) -> bool {
+        self.lender.is_empty()
+    }
+}
+impl<L: FusedFallibleLender, F> FusedFallibleLender for Map<L, F> where
+    F: for<'all> FnMutHKARes<'all, FallibleLend<'all, L>, L::Error>
+{
 }

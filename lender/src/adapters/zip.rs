@@ -1,6 +1,6 @@
 use crate::{
-    DoubleEndedLender, ExactSizeLender, FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender,
-    IntoLender, Lend, Lender, Lending,
+    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender, FallibleLend, FallibleLender,
+    FallibleLending, FusedFallibleLender, FusedLender, IntoLender, Lend, Lender, Lending,
 };
 
 pub fn zip<A, B>(a: A, b: B) -> Zip<A::Lender, B::Lender>
@@ -61,8 +61,8 @@ where
 }
 impl<A, B> DoubleEndedLender for Zip<A, B>
 where
-    A: DoubleEndedLender + ExactSizeIterator,
-    B: DoubleEndedLender + ExactSizeIterator,
+    A: DoubleEndedLender + ExactSizeLender,
+    B: DoubleEndedLender + ExactSizeLender,
 {
     #[inline]
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
@@ -137,6 +137,40 @@ where
 
         (lower, upper)
     }
+}
+impl<A, B> DoubleEndedFallibleLender for Zip<A, B>
+where
+    A: DoubleEndedFallibleLender + ExactSizeFallibleLender,
+    B: DoubleEndedFallibleLender<Error = A::Error> + ExactSizeFallibleLender,
+{
+    #[inline]
+    fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        let a_sz = self.a.len();
+        let b_sz = self.b.len();
+        if a_sz != b_sz {
+            // Adjust a, b to equal length
+            if a_sz > b_sz {
+                for _ in 0..a_sz - b_sz {
+                    self.a.next_back()?;
+                }
+            } else {
+                for _ in 0..b_sz - a_sz {
+                    self.b.next_back()?;
+                }
+            }
+        }
+        match (self.a.next_back()?, self.b.next_back()?) {
+            (Some(x), Some(y)) => Ok(Some((x, y))),
+            (None, None) => Ok(None),
+            _ => unreachable!(),
+        }
+    }
+}
+impl<A, B> ExactSizeFallibleLender for Zip<A, B>
+where
+    A: ExactSizeFallibleLender,
+    B: ExactSizeFallibleLender<Error = A::Error>,
+{
 }
 impl<A, B> FusedFallibleLender for Zip<A, B>
 where

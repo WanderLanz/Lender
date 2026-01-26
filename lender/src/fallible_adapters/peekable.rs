@@ -3,7 +3,7 @@ use core::{fmt, ops::ControlFlow};
 
 use crate::{
     try_trait_v2::{FromResidual, Try},
-    DoubleEndedFallibleLender, FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender,
+    DoubleEndedFallibleLender, ExactSizeFallibleLender, FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender,
 };
 
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -245,6 +245,7 @@ impl<'this, L: DoubleEndedFallibleLender> DoubleEndedFallibleLender for Peekable
     }
 }
 
+impl<'this, L> ExactSizeFallibleLender for Peekable<'this, L> where L: ExactSizeFallibleLender {}
 impl<'this, L> FusedFallibleLender for Peekable<'this, L> where L: FusedFallibleLender {}
 
 #[cfg(test)]

@@ -1,8 +1,8 @@
 use core::num::NonZeroUsize;
 
 use crate::{
-    try_trait_v2::Try, DoubleEndedLender, ExactSizeLender, FallibleLend, FallibleLender, FallibleLending, FusedLender, Lend,
-    Lender, Lending,
+    try_trait_v2::Try, DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender, FallibleLend,
+    FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender, Lending,
 };
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -227,3 +227,82 @@ where
         Ok(NonZeroUsize::new(n - advanced))
     }
 }
+impl<L> DoubleEndedFallibleLender for Take<L>
+where
+    L: DoubleEndedFallibleLender + ExactSizeFallibleLender,
+{
+    #[inline]
+    fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        if self.n != 0 {
+            let n = self.n;
+            self.n -= 1;
+            self.lender.nth_back(self.lender.len().saturating_sub(n))
+        } else {
+            Ok(None)
+        }
+    }
+    #[inline]
+    fn nth_back(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        let len = self.lender.len();
+        if self.n > n {
+            let m = len.saturating_sub(self.n) + n;
+            self.n -= n + 1;
+            self.lender.nth_back(m)
+        } else {
+            if len > 0 {
+                self.lender.nth_back(len - 1)?;
+            }
+            Ok(None)
+        }
+    }
+    #[inline]
+    fn try_rfold<B, F, R>(&mut self, init: B, f: F) -> Result<R, Self::Error>
+    where
+        Self: Sized,
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<R, Self::Error>,
+        R: Try<Output = B>,
+    {
+        if self.n == 0 {
+            Ok(R::from_output(init))
+        } else {
+            let len = self.lender.len();
+            if len > self.n && self.lender.nth_back(len - self.n - 1)?.is_none() {
+                Ok(R::from_output(init))
+            } else {
+                self.lender.try_rfold(init, f)
+            }
+        }
+    }
+    #[inline]
+    fn rfold<B, F>(mut self, init: B, f: F) -> Result<B, Self::Error>
+    where
+        Self: Sized,
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
+    {
+        if self.n == 0 {
+            Ok(init)
+        } else {
+            let len = self.lender.len();
+            if len > self.n && self.lender.nth_back(len - self.n - 1)?.is_none() {
+                Ok(init)
+            } else {
+                self.lender.rfold(init, f)
+            }
+        }
+    }
+    #[inline]
+    fn advance_back_by(&mut self, n: usize) -> Result<Option<NonZeroUsize>, Self::Error> {
+        let trim_inner = self.lender.len().saturating_sub(self.n);
+        let advance_by = trim_inner.saturating_add(n);
+        let remainder = match self.lender.advance_back_by(advance_by)? {
+            None => 0,
+            Some(rem) => rem.get(),
+        };
+        let advanced_by_inner = advance_by - remainder;
+        let advanced_by = advanced_by_inner - trim_inner;
+        self.n -= advanced_by;
+        Ok(NonZeroUsize::new(n - advanced_by))
+    }
+}
+impl<L> ExactSizeFallibleLender for Take<L> where L: ExactSizeFallibleLender {}
+impl<L> FusedFallibleLender for Take<L> where L: FusedFallibleLender {}

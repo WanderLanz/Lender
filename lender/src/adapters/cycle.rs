@@ -2,7 +2,7 @@ use core::{num::NonZeroUsize, ops::ControlFlow};
 
 use crate::{
     try_trait_v2::{FromResidual, Try},
-    FallibleLend, FallibleLender, FallibleLending, FusedLender, Lend, Lender, Lending,
+    FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender, Lending,
 };
 
 #[derive(Clone, Debug)]
@@ -194,3 +194,4 @@ where
         Ok(NonZeroUsize::new(n))
     }
 }
+impl<L> FusedFallibleLender for Cycle<L> where L: Clone + FusedFallibleLender {}

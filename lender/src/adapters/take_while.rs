@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::{FallibleLend, FallibleLender, FallibleLending, FusedLender, Lend, Lender, Lending};
+use crate::{FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender, Lending};
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct TakeWhile<L, P> {
@@ -103,4 +103,10 @@ where
             (0, upper)
         }
     }
+}
+impl<L, P> FusedFallibleLender for TakeWhile<L, P>
+where
+    P: FnMut(&FallibleLend<'_, L>) -> Result<bool, L::Error>,
+    L: FallibleLender,
+{
 }

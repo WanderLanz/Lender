@@ -2,8 +2,8 @@ use core::ops::ControlFlow;
 
 use crate::{
     try_trait_v2::{FromResidual, Try},
-    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeLender, FallibleLend, FallibleLender, FallibleLending,
-    FusedFallibleLender, FusedLender, Lend, Lender, Lending,
+    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender, FallibleLend, FallibleLender,
+    FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender, Lending,
 };
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -399,6 +399,21 @@ where
             self.flag = true;
         }
         Ok(None)
+    }
+}
+impl<L> ExactSizeFallibleLender for Fuse<L>
+where
+    L: ExactSizeFallibleLender,
+{
+    fn len(&self) -> usize {
+        if self.flag {
+            0
+        } else {
+            self.lender.len()
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.flag || self.lender.is_empty()
     }
 }
 impl<L> FusedFallibleLender for Fuse<L> where L: FallibleLender {}

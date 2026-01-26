@@ -1,8 +1,8 @@
 use core::fmt;
 
 use crate::{
-    DoubleEndedFallibleLender, DoubleEndedLender, FallibleLend, FallibleLender, FallibleLending, FusedLender, Lend, Lender,
-    Lending,
+    DoubleEndedFallibleLender, DoubleEndedLender, FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender,
+    FusedLender, Lend, Lender, Lending,
 };
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -126,4 +126,10 @@ where
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.lender.rfind(&mut self.predicate)
     }
+}
+impl<L, P> FusedFallibleLender for Filter<L, P>
+where
+    P: FnMut(&FallibleLend<'_, L>) -> Result<bool, L::Error>,
+    L: FusedFallibleLender,
+{
 }

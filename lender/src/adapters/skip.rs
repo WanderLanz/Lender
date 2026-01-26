@@ -1,8 +1,8 @@
 use core::{num::NonZeroUsize, ops::ControlFlow};
 
 use crate::{
-    try_trait_v2::Try, DoubleEndedLender, ExactSizeLender, FallibleLend, FallibleLender, FallibleLending, FusedLender, Lend,
-    Lender, Lending,
+    try_trait_v2::Try, DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender, FallibleLend,
+    FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender, Lending,
 };
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -302,3 +302,64 @@ where
         Ok(NonZeroUsize::new(n))
     }
 }
+impl<L> ExactSizeFallibleLender for Skip<L> where L: ExactSizeFallibleLender {}
+impl<L> DoubleEndedFallibleLender for Skip<L>
+where
+    L: DoubleEndedFallibleLender + ExactSizeFallibleLender,
+{
+    fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        if self.len() > 0 {
+            self.lender.next_back()
+        } else {
+            Ok(None)
+        }
+    }
+    #[inline]
+    fn nth_back(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        let len = self.len();
+        if len > n {
+            self.lender.nth_back(n)
+        } else {
+            if len > 0 {
+                self.lender.nth_back(len - 1)?;
+            }
+            Ok(None)
+        }
+    }
+    fn try_rfold<B, F, R>(&mut self, init: B, mut f: F) -> Result<R, Self::Error>
+    where
+        Self: Sized,
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<R, Self::Error>,
+        R: Try<Output = B>,
+    {
+        use core::ops::ControlFlow;
+        let mut len = self.len();
+        if len == 0 {
+            Ok(R::from_output(init))
+        } else {
+            match self.lender.try_rfold(init, |acc, x| {
+                len -= 1;
+                let r = f(acc, x)?;
+                if len == 0 {
+                    Ok(ControlFlow::Break(r))
+                } else {
+                    match r.branch() {
+                        ControlFlow::Continue(r) => Ok(ControlFlow::Continue(r)),
+                        ControlFlow::Break(r) => Ok(ControlFlow::Break(R::from_residual(r))),
+                    }
+                }
+            })? {
+                ControlFlow::Continue(r) => Ok(R::from_output(r)),
+                ControlFlow::Break(r) => Ok(r),
+            }
+        }
+    }
+    #[inline]
+    fn advance_back_by(&mut self, n: usize) -> Result<Option<NonZeroUsize>, Self::Error> {
+        let min = core::cmp::min(self.len(), n);
+        let rem = self.lender.advance_back_by(min)?;
+        assert!(rem.is_none(), "ExactSizeFallibleLender contract violation");
+        Ok(NonZeroUsize::new(n - min))
+    }
+}
+impl<L> FusedFallibleLender for Skip<L> where L: FusedFallibleLender {}

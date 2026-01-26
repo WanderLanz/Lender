@@ -1,4 +1,4 @@
-use crate::{FallibleLend, FallibleLender, FallibleLending, FusedLender, Lend, Lender, Lending};
+use crate::{FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender, Lending};
 
 #[derive(Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -69,3 +69,4 @@ where
         (lower.min(self.len), upper.map(|x| x.min(self.len)))
     }
 }
+impl<L> FusedFallibleLender for Chunk<'_, L> where L: FusedFallibleLender {}

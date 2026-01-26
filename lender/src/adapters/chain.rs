@@ -2,8 +2,8 @@ use core::{num::NonZeroUsize, ops::ControlFlow};
 
 use crate::{
     try_trait_v2::{FromResidual, Try},
-    DoubleEndedFallibleLender, DoubleEndedLender, FallibleLend, FallibleLender, FallibleLending, Fuse, FusedLender, Lend,
-    Lender, Lending,
+    DoubleEndedFallibleLender, DoubleEndedLender, FallibleLend, FallibleLender, FallibleLending, Fuse, FusedFallibleLender,
+    FusedLender, Lend, Lender, Lending,
 };
 
 #[derive(Clone, Debug)]
@@ -358,4 +358,10 @@ where
         acc = self.a.rfold(acc, f)?;
         Ok(acc)
     }
+}
+impl<A, B> FusedFallibleLender for Chain<A, B>
+where
+    A: FusedFallibleLender,
+    B: FusedFallibleLender<Error = A::Error> + for<'all> FallibleLending<'all, Lend = FallibleLend<'all, A>>,
+{
 }

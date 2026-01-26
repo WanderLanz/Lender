@@ -21,3 +21,25 @@ impl<I: ExactSizeLender> ExactSizeLender for &mut I {
         (**self).is_empty()
     }
 }
+
+/// Documentation is incomplete. Refer to [`core::iter::ExactSizeIterator`] for more information
+pub trait ExactSizeFallibleLender: FallibleLender {
+    #[inline]
+    fn len(&self) -> usize {
+        let (lower, upper) = self.size_hint();
+        assert_eq!(upper, Some(lower));
+        lower
+    }
+    #[inline]
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+}
+impl<I: ExactSizeFallibleLender> ExactSizeFallibleLender for &mut I {
+    fn len(&self) -> usize {
+        (**self).len()
+    }
+    fn is_empty(&self) -> bool {
+        (**self).is_empty()
+    }
+}

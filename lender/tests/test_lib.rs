@@ -585,3 +585,325 @@ fn flat_map_adapters() {
     assert_eq!(iter.next().unwrap(), Some(3));
     assert_eq!(iter.next().unwrap(), Some(3));
 }
+
+// Helper struct for testing fallible traits
+struct VecFallibleLender {
+    data: Vec<i32>,
+    front: usize,
+    back: usize,
+}
+
+impl VecFallibleLender {
+    fn new(data: Vec<i32>) -> Self {
+        let len = data.len();
+        Self { data, front: 0, back: len }
+    }
+}
+
+impl<'lend> lender::FallibleLending<'lend> for VecFallibleLender {
+    type Lend = i32;
+}
+
+impl lender::FallibleLender for VecFallibleLender {
+    type Error = std::convert::Infallible;
+    check_covariance_fallible!();
+
+    fn next(&mut self) -> Result<Option<lender::FallibleLend<'_, Self>>, Self::Error> {
+        if self.front < self.back {
+            let item = self.data[self.front];
+            self.front += 1;
+            Ok(Some(item))
+        } else {
+            Ok(None)
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.back - self.front;
+        (len, Some(len))
+    }
+}
+
+impl lender::DoubleEndedFallibleLender for VecFallibleLender {
+    fn next_back(&mut self) -> Result<Option<lender::FallibleLend<'_, Self>>, Self::Error> {
+        if self.front < self.back {
+            self.back -= 1;
+            let item = self.data[self.back];
+            Ok(Some(item))
+        } else {
+            Ok(None)
+        }
+    }
+}
+
+impl lender::ExactSizeFallibleLender for VecFallibleLender {
+    fn len(&self) -> usize {
+        self.back - self.front
+    }
+}
+
+impl lender::FusedFallibleLender for VecFallibleLender {}
+
+#[test]
+fn exact_size_fallible_lender_basic() {
+    use lender::ExactSizeFallibleLender;
+
+    let mut lender = VecFallibleLender::new(vec![1, 2, 3, 4, 5]);
+    assert_eq!(lender.len(), 5);
+    assert!(!lender.is_empty());
+
+    lender.next().unwrap();
+    assert_eq!(lender.len(), 4);
+
+    lender.next().unwrap();
+    lender.next().unwrap();
+    lender.next().unwrap();
+    lender.next().unwrap();
+    assert_eq!(lender.len(), 0);
+    assert!(lender.is_empty());
+}
+
+#[test]
+fn double_ended_fallible_lender_basic() {
+    use lender::DoubleEndedFallibleLender;
+
+    let mut lender = VecFallibleLender::new(vec![1, 2, 3, 4, 5]);
+
+    // Front and back iteration
+    assert_eq!(lender.next().unwrap(), Some(1));
+    assert_eq!(lender.next_back().unwrap(), Some(5));
+    assert_eq!(lender.next().unwrap(), Some(2));
+    assert_eq!(lender.next_back().unwrap(), Some(4));
+    assert_eq!(lender.next().unwrap(), Some(3));
+    assert_eq!(lender.next().unwrap(), None);
+    assert_eq!(lender.next_back().unwrap(), None);
+}
+
+#[test]
+fn fused_fallible_lender_basic() {
+    use lender::FusedFallibleLender;
+
+    fn assert_fused<L: FusedFallibleLender>(_: &L) {}
+
+    let lender = VecFallibleLender::new(vec![1, 2, 3]);
+    assert_fused(&lender);
+
+    // Test fused behavior - should continue returning None after exhaustion
+    let mut lender = VecFallibleLender::new(vec![1]);
+    assert_eq!(lender.next().unwrap(), Some(1));
+    assert_eq!(lender.next().unwrap(), None);
+    assert_eq!(lender.next().unwrap(), None);
+    assert_eq!(lender.next().unwrap(), None);
+}
+
+#[test]
+fn fallible_trait_adapters_map() {
+    use lender::{ExactSizeFallibleLender, FusedFallibleLender};
+
+    fn assert_exact_size<L: ExactSizeFallibleLender>(_: &L) {}
+    fn assert_fused<L: FusedFallibleLender>(_: &L) {}
+
+    let lender = VecFallibleLender::new(vec![1, 2, 3]);
+    let mapped = lender.map(hrc_mut!(for<'lend> |x: i32| -> Result<i32, std::convert::Infallible> { Ok(x * 2) }));
+
+    assert_exact_size(&mapped);
+    assert_fused(&mapped);
+}
+
+#[test]
+fn fallible_trait_adapters_filter() {
+    use lender::FusedFallibleLender;
+
+    fn assert_fused<L: FusedFallibleLender>(_: &L) {}
+
+    let lender = VecFallibleLender::new(vec![1, 2, 3, 4, 5]);
+    let filtered = lender.filter(|x| Ok(*x > 2));
+
+    assert_fused(&filtered);
+}
+
+#[test]
+fn fallible_trait_adapters_enumerate() {
+    use lender::{DoubleEndedFallibleLender, ExactSizeFallibleLender, FusedFallibleLender};
+
+    fn assert_exact_size<L: ExactSizeFallibleLender>(_: &L) {}
+    fn assert_fused<L: FusedFallibleLender>(_: &L) {}
+    fn assert_double_ended<L: DoubleEndedFallibleLender>(_: &L) {}
+
+    let lender = VecFallibleLender::new(vec![10, 20, 30]);
+    let enumerated = lender.enumerate();
+
+    assert_exact_size(&enumerated);
+    assert_fused(&enumerated);
+    assert_double_ended(&enumerated);
+}
+
+#[test]
+fn fallible_trait_adapters_skip() {
+    use lender::{DoubleEndedFallibleLender, ExactSizeFallibleLender, FusedFallibleLender};
+
+    fn assert_exact_size<L: ExactSizeFallibleLender>(_: &L) {}
+    fn assert_fused<L: FusedFallibleLender>(_: &L) {}
+    fn assert_double_ended<L: DoubleEndedFallibleLender>(_: &L) {}
+
+    let lender = VecFallibleLender::new(vec![1, 2, 3, 4, 5]);
+    let skipped = lender.skip(2);
+
+    assert_exact_size(&skipped);
+    assert_fused(&skipped);
+    assert_double_ended(&skipped);
+
+    // Test that skip works correctly with double-ended iteration
+    let mut skipped = VecFallibleLender::new(vec![1, 2, 3, 4, 5]).skip(2);
+    assert_eq!(skipped.next_back().unwrap(), Some(5));
+    assert_eq!(skipped.next_back().unwrap(), Some(4));
+    assert_eq!(skipped.next_back().unwrap(), Some(3));
+    assert_eq!(skipped.next_back().unwrap(), None);
+}
+
+#[test]
+fn fallible_trait_adapters_take() {
+    use lender::{DoubleEndedFallibleLender, ExactSizeFallibleLender, FusedFallibleLender};
+
+    fn assert_exact_size<L: ExactSizeFallibleLender>(_: &L) {}
+    fn assert_fused<L: FusedFallibleLender>(_: &L) {}
+    fn assert_double_ended<L: DoubleEndedFallibleLender>(_: &L) {}
+
+    let lender = VecFallibleLender::new(vec![1, 2, 3, 4, 5]);
+    let taken = lender.take(3);
+
+    assert_exact_size(&taken);
+    assert_fused(&taken);
+    assert_double_ended(&taken);
+
+    // Test that take works correctly with double-ended iteration
+    let mut taken = VecFallibleLender::new(vec![1, 2, 3, 4, 5]).take(3);
+    assert_eq!(taken.next_back().unwrap(), Some(3));
+    assert_eq!(taken.next_back().unwrap(), Some(2));
+    assert_eq!(taken.next_back().unwrap(), Some(1));
+    assert_eq!(taken.next_back().unwrap(), None);
+}
+
+#[test]
+fn fallible_trait_adapters_zip() {
+    use lender::{DoubleEndedFallibleLender, ExactSizeFallibleLender, FusedFallibleLender};
+
+    fn assert_exact_size<L: ExactSizeFallibleLender>(_: &L) {}
+    fn assert_fused<L: FusedFallibleLender>(_: &L) {}
+    fn assert_double_ended<L: DoubleEndedFallibleLender>(_: &L) {}
+
+    let lender1 = VecFallibleLender::new(vec![1, 2, 3]);
+    let lender2 = VecFallibleLender::new(vec![10, 20, 30]);
+    let zipped = lender1.zip(lender2);
+
+    assert_exact_size(&zipped);
+    assert_fused(&zipped);
+    assert_double_ended(&zipped);
+
+    // Test zip with double-ended iteration
+    let mut zipped = VecFallibleLender::new(vec![1, 2, 3]).zip(VecFallibleLender::new(vec![10, 20, 30]));
+    assert_eq!(zipped.next_back().unwrap(), Some((3, 30)));
+    assert_eq!(zipped.next_back().unwrap(), Some((2, 20)));
+    assert_eq!(zipped.next_back().unwrap(), Some((1, 10)));
+    assert_eq!(zipped.next_back().unwrap(), None);
+}
+
+#[test]
+fn fallible_trait_adapters_rev() {
+    use lender::{DoubleEndedFallibleLender, ExactSizeFallibleLender, FusedFallibleLender};
+
+    fn assert_exact_size<L: ExactSizeFallibleLender>(_: &L) {}
+    fn assert_fused<L: FusedFallibleLender>(_: &L) {}
+    fn assert_double_ended<L: DoubleEndedFallibleLender>(_: &L) {}
+
+    let lender = VecFallibleLender::new(vec![1, 2, 3]);
+    let reversed = lender.rev();
+
+    assert_exact_size(&reversed);
+    assert_fused(&reversed);
+    assert_double_ended(&reversed);
+
+    // Test rev works correctly
+    let mut reversed = VecFallibleLender::new(vec![1, 2, 3]).rev();
+    assert_eq!(reversed.next().unwrap(), Some(3));
+    assert_eq!(reversed.next().unwrap(), Some(2));
+    assert_eq!(reversed.next().unwrap(), Some(1));
+    assert_eq!(reversed.next().unwrap(), None);
+}
+
+#[test]
+fn fallible_trait_adapters_step_by() {
+    use lender::{DoubleEndedFallibleLender, ExactSizeFallibleLender};
+
+    fn assert_exact_size<L: ExactSizeFallibleLender>(_: &L) {}
+    fn assert_double_ended<L: DoubleEndedFallibleLender>(_: &L) {}
+
+    let lender = VecFallibleLender::new(vec![1, 2, 3, 4, 5, 6]);
+    let stepped = lender.step_by(2);
+
+    assert_exact_size(&stepped);
+    assert_double_ended(&stepped);
+
+    // Test step_by works correctly
+    let mut stepped = VecFallibleLender::new(vec![1, 2, 3, 4, 5, 6]).step_by(2);
+    assert_eq!(stepped.next().unwrap(), Some(1));
+    assert_eq!(stepped.next().unwrap(), Some(3));
+    assert_eq!(stepped.next().unwrap(), Some(5));
+    assert_eq!(stepped.next().unwrap(), None);
+
+    // Test step_by with next_back
+    let mut stepped = VecFallibleLender::new(vec![1, 2, 3, 4, 5, 6]).step_by(2);
+    assert_eq!(stepped.next_back().unwrap(), Some(5));
+    assert_eq!(stepped.next_back().unwrap(), Some(3));
+    assert_eq!(stepped.next_back().unwrap(), Some(1));
+    assert_eq!(stepped.next_back().unwrap(), None);
+}
+
+#[test]
+fn fallible_trait_adapters_chain() {
+    use lender::FusedFallibleLender;
+
+    fn assert_fused<L: FusedFallibleLender>(_: &L) {}
+
+    let lender1 = VecFallibleLender::new(vec![1, 2, 3]);
+    let lender2 = VecFallibleLender::new(vec![4, 5, 6]);
+    let chained = lender1.chain(lender2);
+
+    assert_fused(&chained);
+
+    // Test chain works correctly
+    let mut chained = VecFallibleLender::new(vec![1, 2]).chain(VecFallibleLender::new(vec![3, 4]));
+    assert_eq!(chained.next().unwrap(), Some(1));
+    assert_eq!(chained.next().unwrap(), Some(2));
+    assert_eq!(chained.next().unwrap(), Some(3));
+    assert_eq!(chained.next().unwrap(), Some(4));
+    assert_eq!(chained.next().unwrap(), None);
+}
+
+#[test]
+fn fallible_trait_adapters_inspect() {
+    use lender::{ExactSizeFallibleLender, FusedFallibleLender};
+
+    fn assert_exact_size<L: ExactSizeFallibleLender>(_: &L) {}
+    fn assert_fused<L: FusedFallibleLender>(_: &L) {}
+
+    let lender = VecFallibleLender::new(vec![1, 2, 3]);
+    let inspected = lender.inspect(|_| Ok(()));
+
+    assert_exact_size(&inspected);
+    assert_fused(&inspected);
+}
+
+#[test]
+fn fallible_trait_adapters_fuse() {
+    use lender::{ExactSizeFallibleLender, FusedFallibleLender};
+
+    fn assert_exact_size<L: ExactSizeFallibleLender>(_: &L) {}
+    fn assert_fused<L: FusedFallibleLender>(_: &L) {}
+
+    let lender = VecFallibleLender::new(vec![1, 2, 3]);
+    let fused = lender.fuse();
+
+    assert_exact_size(&fused);
+    assert_fused(&fused);
+}

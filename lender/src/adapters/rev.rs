@@ -1,6 +1,6 @@
 use crate::{
-    try_trait_v2::Try, DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeLender, FallibleLend, FallibleLender,
-    FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender, Lending,
+    try_trait_v2::Try, DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender, FallibleLend,
+    FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender, Lending,
 };
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -214,6 +214,17 @@ where
         P: FnMut(&FallibleLend<'_, Self>) -> Result<bool, Self::Error>,
     {
         self.lender.find(predicate)
+    }
+}
+impl<L> ExactSizeFallibleLender for Rev<L>
+where
+    L: ExactSizeFallibleLender + DoubleEndedFallibleLender,
+{
+    fn len(&self) -> usize {
+        self.lender.len()
+    }
+    fn is_empty(&self) -> bool {
+        self.lender.is_empty()
     }
 }
 impl<L> FusedFallibleLender for Rev<L> where L: DoubleEndedFallibleLender + FusedFallibleLender {}

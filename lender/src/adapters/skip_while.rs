@@ -1,6 +1,8 @@
 use core::{fmt, ops::ControlFlow};
 
-use crate::{try_trait_v2::Try, FallibleLend, FallibleLender, FallibleLending, FusedLender, Lend, Lender, Lending};
+use crate::{
+    try_trait_v2::Try, FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender, Lending,
+};
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct SkipWhile<L, P> {
@@ -164,4 +166,10 @@ where
         }
         self.lender.fold(init, f)
     }
+}
+impl<L, P> FusedFallibleLender for SkipWhile<L, P>
+where
+    P: FnMut(&FallibleLend<'_, L>) -> Result<bool, L::Error>,
+    L: FusedFallibleLender,
+{
 }

@@ -2,8 +2,8 @@ use core::fmt;
 
 use crate::{
     higher_order::{FnMutHKAOpt, FnMutHKAResOpt},
-    DoubleEndedFallibleLender, DoubleEndedLender, FallibleLend, FallibleLender, FallibleLending, FusedLender, Lend, Lender,
-    Lending,
+    DoubleEndedFallibleLender, DoubleEndedLender, FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender,
+    FusedLender, Lend, Lender, Lending,
 };
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -129,4 +129,10 @@ where
         }
         Ok(None)
     }
+}
+impl<L, F> FusedFallibleLender for FilterMap<L, F>
+where
+    for<'all> F: FnMutHKAResOpt<'all, FallibleLend<'all, L>, L::Error>,
+    L: FusedFallibleLender,
+{
 }

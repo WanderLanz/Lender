@@ -1,8 +1,8 @@
 use core::fmt;
 
 use crate::{
-    try_trait_v2::Try, DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeLender, FallibleLend, FallibleLender,
-    FallibleLending, FusedLender, Lend, Lender, Lending,
+    try_trait_v2::Try, DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender, FallibleLend,
+    FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender, Lending,
 };
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -218,4 +218,21 @@ where
             fold(acc, x)
         })
     }
+}
+impl<L: ExactSizeFallibleLender, F> ExactSizeFallibleLender for Mutate<L, F>
+where
+    F: FnMut(&mut FallibleLend<'_, L>) -> Result<(), L::Error>,
+{
+    #[inline]
+    fn len(&self) -> usize {
+        self.lender.len()
+    }
+    #[inline]
+    fn is_empty(&self) -> bool {
+        self.lender.is_empty()
+    }
+}
+impl<L: FusedFallibleLender, F> FusedFallibleLender for Mutate<L, F> where
+    F: FnMut(&mut FallibleLend<'_, L>) -> Result<(), L::Error>
+{
 }
