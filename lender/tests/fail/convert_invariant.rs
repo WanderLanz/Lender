@@ -1,13 +1,10 @@
-// Test that Convert with an invariant lend type fails covariance check.
+// Test that Convert (fallible-only adapter) with an invariant lend type fails covariance check.
 
 use std::cell::Cell;
 
 use lender::{FallibleLend, FallibleLender, FallibleLending};
 
-struct InvariantConvert<E, I> {
-    iter: I,
-    _marker: std::marker::PhantomData<E>,
-}
+struct InvariantConvert<E, I>(I, std::marker::PhantomData<E>);
 
 impl<'lend, E, I> FallibleLending<'lend> for InvariantConvert<E, I> {
     type Lend = &'lend Cell<Option<&'lend String>>;

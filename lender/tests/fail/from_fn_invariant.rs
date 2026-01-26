@@ -2,7 +2,7 @@
 
 use std::cell::Cell;
 
-use lender::{Lend, Lender, Lending};
+use lender::{FallibleLend, FallibleLender, FallibleLending, Lend, Lender, Lending};
 
 struct InvariantFromFn<F> {
     f: F,
@@ -23,6 +23,21 @@ where
 
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         (self.f)()
+    }
+}
+
+struct InvariantFromFallibleFn<E>(std::marker::PhantomData<E>);
+
+impl<'lend, E> FallibleLending<'lend> for InvariantFromFallibleFn<E> {
+    type Lend = &'lend Cell<Option<&'lend String>>;
+}
+
+impl<E> FallibleLender for InvariantFromFallibleFn<E> {
+    type Error = E;
+    lender::fallible_covariance_check!();
+
+    fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        Ok(None)
     }
 }
 

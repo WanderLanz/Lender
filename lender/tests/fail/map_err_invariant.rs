@@ -1,14 +1,10 @@
-// Test that MapErr with an invariant lend type fails covariance check.
+// Test that MapErr (fallible-only adapter) with an invariant lend type fails covariance check.
 
 use std::cell::Cell;
 
 use lender::{FallibleLend, FallibleLender, FallibleLending};
 
-struct InvariantMapErr<E, L, F> {
-    lender: L,
-    f: F,
-    _marker: std::marker::PhantomData<E>,
-}
+struct InvariantMapErr<E, L, F>(L, F, std::marker::PhantomData<E>);
 
 impl<'lend, E, L, F> FallibleLending<'lend> for InvariantMapErr<E, L, F> {
     type Lend = &'lend Cell<Option<&'lend String>>;

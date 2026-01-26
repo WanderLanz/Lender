@@ -1,7 +1,7 @@
 error: lifetime may not live long enough
-  --> tests/fail/into_fallible_invariant.rs:18:5
+  --> tests/fail/into_fallible_invariant.rs:15:5
    |
-18 |     lender::fallible_covariance_check!();
+15 |     lender::fallible_covariance_check!();
    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    |     |
    |     lifetime `'short` defined here

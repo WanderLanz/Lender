@@ -2,22 +2,34 @@
 
 use std::cell::Cell;
 
-use lender::{Lend, Lender, Lending};
+use lender::{FallibleLend, FallibleLender, FallibleLending, Lend, Lender, Lending};
 
-struct InvariantCycle<L> {
-    orig: L,
-    lender: L,
-}
+struct InvariantCycle<L>(L);
 
 impl<'lend, L> Lending<'lend> for InvariantCycle<L> {
     type Lend = &'lend Cell<Option<&'lend String>>;
 }
 
-impl<L: Clone> Lender for InvariantCycle<L> {
+impl<L> Lender for InvariantCycle<L> {
     lender::covariance_check!();
 
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         None
+    }
+}
+
+struct InvariantFallibleCycle<L, E>(L, std::marker::PhantomData<E>);
+
+impl<'lend, L, E> FallibleLending<'lend> for InvariantFallibleCycle<L, E> {
+    type Lend = &'lend Cell<Option<&'lend String>>;
+}
+
+impl<L, E> FallibleLender for InvariantFallibleCycle<L, E> {
+    type Error = E;
+    lender::fallible_covariance_check!();
+
+    fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        Ok(None)
     }
 }
 
