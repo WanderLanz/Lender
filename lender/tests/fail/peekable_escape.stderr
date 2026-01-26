@@ -1,12 +1,25 @@
 error[E0597]: `lending_iter` does not live long enough
-  --> tests/fail/peekable_escape.rs:23:19
+  --> tests/fail/peekable_escape.rs:40:19
    |
-20 |     let goodbye: &'static str;
+37 |     let goodbye: &'static str;
    |                  ------------ type annotation requires that `lending_iter` is borrowed for `'static`
-21 |     {
-22 |         let mut lending_iter = StaticLender(String::from("Goodbye, world!")).peekable();
+38 |     {
+39 |         let mut lending_iter = StaticLender(String::from("Goodbye, world!")).peekable();
    |             ---------------- binding `lending_iter` declared here
-23 |         goodbye = lending_iter.peek().unwrap();
+40 |         goodbye = lending_iter.peek().unwrap();
    |                   ^^^^^^^^^^^^ borrowed value does not live long enough
-24 |     }
+41 |     }
    |     - `lending_iter` dropped here while still borrowed
+
+error[E0597]: `fallible_iter` does not live long enough
+  --> tests/fail/peekable_escape.rs:48:20
+   |
+45 |     let farewell: &'static str;
+   |                   ------------ type annotation requires that `fallible_iter` is borrowed for `'static`
+46 |     {
+47 |         let mut fallible_iter = StaticFallibleLender(String::from("Farewell!")).peekable();
+   |             ----------------- binding `fallible_iter` declared here
+48 |         farewell = fallible_iter.peek().unwrap().unwrap();
+   |                    ^^^^^^^^^^^^^ borrowed value does not live long enough
+49 |     }
+   |     - `fallible_iter` dropped here while still borrowed

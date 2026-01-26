@@ -24,21 +24,25 @@ where
     pub fn into_inner(self) -> L {
         *self.lender
     }
-    pub fn peek(&mut self) -> Result<Option<&'_ FallibleLend<'this, L>>, L::Error> {
+    pub fn peek(&mut self) -> Result<Option<&'_ FallibleLend<'_, L>>, L::Error> {
         let lender = &mut self.lender;
         if self.peeked.is_none() {
-            self.peeked = Some(
-                // SAFETY: The lend is manually guaranteed to be the only one alive
-                unsafe {
-                    core::mem::transmute::<Option<FallibleLend<'_, L>>, Option<FallibleLend<'this, L>>>(lender.next()?)
-                },
-            );
+            // SAFETY: Extends the lend's lifetime to store it in `self.peeked`.
+            // Safe because the lender is boxed (stable address) and only one lend
+            // is alive at a time.
+            self.peeked = Some(unsafe {
+                core::mem::transmute::<Option<FallibleLend<'_, L>>, Option<FallibleLend<'this, L>>>(lender.next()?)
+            });
         }
-        Ok(
-            // SAFETY: a `None` variant for `self` would have been replaced by a `Some`
-            // variant in the code above.
-            unsafe { self.peeked.as_mut().unwrap_unchecked().as_ref() },
-        )
+        // SAFETY: Ties the lend's lifetime to the borrow of `self`, preventing it
+        // from escaping. Safe because `L::Lend` is covariant in its lifetime
+        // (required by FallibleLender). The `unwrap_unchecked` is safe because
+        // `self.peeked` was set to `Some` above if it was `None`.
+        Ok(unsafe {
+            core::mem::transmute::<Option<&'_ FallibleLend<'this, L>>, Option<&'_ FallibleLend<'_, L>>>(
+                self.peeked.as_mut().unwrap_unchecked().as_ref(),
+            )
+        })
     }
     pub fn peek_mut(&mut self) -> Result<Option<&'_ mut FallibleLend<'this, L>>, L::Error> {
         let lender = &mut self.lender;
