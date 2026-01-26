@@ -3,6 +3,25 @@ use crate::{
     FallibleLending, FusedFallibleLender, FusedLender, IntoLender, Lend, Lender, Lending,
 };
 
+/// Zips two lenders into a single lender of pairs.
+///
+/// This is the lender equivalent of [`Iterator::zip`].
+///
+/// # Examples
+///
+/// ```
+/// use lender::prelude::*;
+///
+/// let a = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3].iter());
+/// let b = lender::lend_iter::<lend!(&'lend i32), _>([4, 5, 6].iter());
+///
+/// let mut zipped = lender::zip(a, b);
+///
+/// assert_eq!(zipped.next(), Some((&1, &4)));
+/// assert_eq!(zipped.next(), Some((&2, &5)));
+/// assert_eq!(zipped.next(), Some((&3, &6)));
+/// assert_eq!(zipped.next(), None);
+/// ```
 pub fn zip<A, B>(a: A, b: B) -> Zip<A::Lender, B::Lender>
 where
     A: IntoLender,
@@ -11,6 +30,10 @@ where
     Zip::new(a.into_lender(), b.into_lender())
 }
 
+/// A lender that yields pairs of elements from two underlying lenders.
+///
+/// This `struct` is created by [`Lender::zip`] or [`zip`]. See their
+/// documentation for more.
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Zip<A, B> {
@@ -21,6 +44,24 @@ impl<A, B> Zip<A, B> {
     pub(crate) fn new(a: A, b: B) -> Self {
         Self { a, b }
     }
+    /// Returns the inner lenders.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use lender::prelude::*;
+    ///
+    /// let a = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3].iter());
+    /// let b = lender::lend_iter::<lend!(&'lend i32), _>([4, 5, 6].iter());
+    ///
+    /// let mut zipped = lender::zip(a, b);
+    ///
+    /// assert_eq!(zipped.next(), Some((&1, &4)));
+    ///
+    /// let (mut a, mut b) = zipped.into_inner();
+    /// assert_eq!(a.next(), Some(&2));
+    /// assert_eq!(b.next(), Some(&5));
+    /// ```
     pub fn into_inner(self) -> (A, B) {
         (self.a, self.b)
     }
