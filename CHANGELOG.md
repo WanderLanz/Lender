@@ -26,6 +26,9 @@
 - Several possible UBs are no longer possible thanks to the new covariance
   checking infrastructure.
 
+- `Peekable` and `FalliblePeekable` are now deallocating their fields
+  in the correct order.
+
 ## [0.4.2] - 2025-11-18
 
 ### Fixed
