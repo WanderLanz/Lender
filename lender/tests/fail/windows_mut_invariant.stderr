@@ -1,0 +1,31 @@
+error: lifetime may not live long enough
+  --> tests/fail/windows_mut_invariant.rs:18:5
+   |
+18 |     lender::covariance_check!();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |     |
+   |     lifetime `'short` defined here
+   |     lifetime `'long` defined here
+   |     associated function was supposed to return data with lifetime `'long` but it is returning data with lifetime `'short`
+   |
+   = help: consider adding the following bound: `'short: 'long`
+   = note: requirement occurs because of a mutable reference to `[Cell<Option<&String>>]`
+   = note: mutable references are invariant over their type parameter
+   = help: see <https://doc.rust-lang.org/nomicon/subtyping.html> for more information about variance
+   = note: this error originates in the macro `lender::covariance_check` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: lifetime may not live long enough
+  --> tests/fail/windows_mut_invariant.rs:24:13
+   |
+20 |     fn next(&mut self) -> Option<Lend<'_, Self>> {
+   |             ---------
+   |             |
+   |             let's call the lifetime of this reference `'1`
+   |             has type `&mut InvariantWindowsMut<'2>`
+...
+24 |             Some(unsafe { &mut *(window as *mut _) })
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ method was supposed to return data with lifetime `'2` but it is returning data with lifetime `'1`
+   |
+   = note: requirement occurs because of a mutable reference to `[Cell<Option<&String>>]`
+   = note: mutable references are invariant over their type parameter
+   = help: see <https://doc.rust-lang.org/nomicon/subtyping.html> for more information about variance

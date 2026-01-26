@@ -53,6 +53,7 @@ impl<St, F> Lender for FromFn<St, F>
 where
     F: for<'all> FnMutHKAOpt<'all, &'all mut St>,
 {
+    crate::covariance_inherited!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         (self.f)(&mut self.state)
@@ -96,6 +97,7 @@ where
     F: for<'all> FnMutHKAResOpt<'all, &'all mut St, E>,
 {
     type Error = E;
+    crate::fallible_covariance_inherited!();
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {

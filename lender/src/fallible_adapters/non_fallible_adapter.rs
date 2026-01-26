@@ -90,6 +90,7 @@ impl<'this, L> Lender for NonFallibleAdapter<'this, L>
 where
     L: FallibleLender,
 {
+    crate::covariance_inherited!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         if self.error.is_some() {

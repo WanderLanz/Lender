@@ -49,6 +49,7 @@ impl<L> Lender for Chunky<L>
 where
     L: Lender,
 {
+    crate::covariance_inherited!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         if self.len > 0 {

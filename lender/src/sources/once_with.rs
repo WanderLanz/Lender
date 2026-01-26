@@ -46,6 +46,7 @@ impl<St, F> Lender for OnceWith<St, F>
 where
     F: for<'all> FnOnceHKA<'all, &'all mut St>,
 {
+    crate::covariance_inherited!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.f.take().map(|f| f(&mut self.state))
@@ -124,6 +125,7 @@ where
     F: for<'all> FnOnceHKARes<'all, &'all mut St, E>,
 {
     type Error = E;
+    crate::fallible_covariance_inherited!();
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {

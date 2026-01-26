@@ -52,6 +52,7 @@ impl<I: Iterator> Lending<'_> for FromIter<I> {
 }
 
 impl<I: Iterator> Lender for FromIter<I> {
+    crate::covariance_inherited!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.iter.next()
@@ -144,6 +145,7 @@ where
     L: ?Sized + for<'all> Lending<'all> + 'a,
     I: Iterator<Item = Lend<'a, L>>,
 {
+
     LendIter { iter, _marker: core::marker::PhantomData }
 }
 
@@ -174,9 +176,10 @@ where
     L: ?Sized + for<'all> Lending<'all> + 'a,
     I: Iterator<Item = Lend<'a, L>>,
 {
+    crate::covariance_inherited!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
-        // SAFETY: 'a: 'lend
+        // SAFETY: 'a: 'lend, and caller must ensure Lend<'a, L> is covariant in 'a
         unsafe { core::mem::transmute::<Option<Lend<'a, L>>, Option<Lend<'_, L>>>(self.iter.next()) }
     }
     #[inline]
@@ -191,7 +194,7 @@ where
     I: DoubleEndedIterator<Item = Lend<'a, L>>,
 {
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
-        // SAFETY: 'a: 'lend
+        // SAFETY: 'a: 'lend, and caller must ensure Lend<'a, L> is covariant in 'a
         unsafe { core::mem::transmute::<Option<Lend<'a, L>>, Option<Lend<'_, L>>>(self.iter.next_back()) }
     }
 }
@@ -244,6 +247,7 @@ impl<I: FallibleIterator> FallibleLending<'_> for FromFallibleIter<I> {
 
 impl<I: FallibleIterator> FallibleLender for FromFallibleIter<I> {
     type Error = I::Error;
+    crate::fallible_covariance_inherited!();
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.iter.next()
@@ -293,6 +297,7 @@ pub struct FromIntoFallibleIter<I> {
 
 impl<I: IntoFallibleIterator> IntoFallibleLender for FromIntoFallibleIter<I> {
     type Error = I::Error;
+
     type FallibleLender = FromFallibleIter<I::IntoFallibleIter>;
 
     fn into_fallible_lender(self) -> <Self as IntoFallibleLender>::FallibleLender {
@@ -366,6 +371,7 @@ where
     I: FallibleIterator<Item = FallibleLend<'a, L>>,
 {
     type Error = I::Error;
+    crate::fallible_covariance_inherited!();
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {

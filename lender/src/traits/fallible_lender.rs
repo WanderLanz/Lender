@@ -39,6 +39,21 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// The error type.
     type Error;
 
+    /// Internal method for compile-time covariance checking.
+    ///
+    /// Users should invoke [`fallible_covariance_check!`](crate::fallible_covariance_check) or
+    /// [`fallible_covariance_inherited!`](crate::fallible_covariance_inherited) in their
+    /// `FallibleLender` impl to implement this method.
+    ///
+    /// # Safety
+    ///
+    /// This method must be implemented such that the `Lend` type is covariant.
+    /// Using `unsafe` tricks like `transmute` to bypass this check can lead to
+    /// undefined behavior.
+    unsafe fn _covariance_check<'long: 'short, 'short>(
+        lend: <Self as FallibleLending<'long>>::Lend,
+    ) -> <Self as FallibleLending<'short>>::Lend;
+
     /// Yield the next lend, if any, of the lender.
     /// Returns Ok(None) when iteration is finished.
     /// The behavior of calling this method after a previous call has returned
@@ -1220,6 +1235,7 @@ impl<'lend, L: FallibleLender> FallibleLending<'lend> for &mut L {
 
 impl<L: FallibleLender> FallibleLender for &mut L {
     type Error = L::Error;
+    crate::fallible_covariance_inherited!();
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         (**self).next()

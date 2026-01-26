@@ -39,6 +39,7 @@ where
     F: for<'all> FnMutHKA<'all, Lend<'all, L>>,
     L: Lender,
 {
+    crate::covariance_inherited!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.lender.next().map(&mut self.f)
@@ -96,6 +97,7 @@ where
     L: FallibleLender,
 {
     type Error = L::Error;
+    crate::fallible_covariance_inherited!();
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {

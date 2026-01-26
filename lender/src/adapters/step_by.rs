@@ -33,6 +33,7 @@ impl<L> Lender for StepBy<L>
 where
     L: Lender,
 {
+    crate::covariance_inherited!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         if self.first_take {
@@ -221,6 +222,7 @@ where
     L: FallibleLender,
 {
     type Error = L::Error;
+    crate::fallible_covariance_inherited!();
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {

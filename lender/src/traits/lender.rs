@@ -38,6 +38,22 @@ pub type Lend<'lend, L> = <L as Lending<'lend>>::Lend;
 /// For more about the concept of iterators
 /// generally, please see [`core::iter`].
 pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
+    /// Internal method for compile-time covariance checking.
+    ///
+    /// Users should invoke [`covariance_check!`](crate::covariance_check) in their
+    /// `Lender` impl to implement this method. The macro expands to `{ lend }`,
+    /// which only compiles if the `Lend` type is covariant in its lifetime.
+    ///
+    /// # Safety
+    ///
+    /// This method must be implemented as `{ lend }` to ensure the `Lend` type
+    /// is covariant. Using `unsafe` tricks like `transmute` to bypass this check
+    /// can lead to undefined behavior when using adapters like `Peekable`,
+    /// `Intersperse`, `Flatten`, `FlatMap`, or `lend_iter`.
+    unsafe fn _covariance_check<'long: 'short, 'short>(
+        lend: <Self as Lending<'long>>::Lend,
+    ) -> <Self as Lending<'short>>::Lend;
+
     /// Yield the next lend, if any, of the lender.
     ///
     /// Every lend is only guaranteed to be valid one at a time for any kind of lender.
@@ -1254,6 +1270,7 @@ impl<'lend, L: Lender> Lending<'lend> for &mut L {
     type Lend = Lend<'lend, L>;
 }
 impl<L: Lender> Lender for &mut L {
+    crate::covariance_inherited!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         (**self).next()

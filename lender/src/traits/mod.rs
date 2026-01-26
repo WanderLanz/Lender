@@ -64,7 +64,15 @@ pub trait DynLend<'lend> {
 }
 
 /// Use lifetime `'lend` within type `$T` to create an `impl for<'lend> Lending<'lend, Lend = $T>`.
+///
 /// Uses a bug in the borrow checker which allows dyn objects to implement impossible traits.
+///
+/// # Safety Note
+///
+/// When using this with [`lend_iter`](crate::lend_iter), the lend type `$T` **must be covariant
+/// in `'lend`**. Using an invariant type (e.g., `&'lend Cell<&'lend T>`) leads to undefined
+/// behavior. Use [`covariant_lend!`] for compile-time covariance checking.
+///
 /// # Examples
 /// ```rust
 /// use lender::prelude::*;
@@ -75,6 +83,170 @@ pub trait DynLend<'lend> {
 macro_rules! lend {
     ($T:ty) => {
         $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = $T>>
+    };
+}
+
+/// Implement the covariance check method for a [`Lender`] impl with a concrete `Lend` type.
+///
+/// This macro must be invoked inside `impl Lender for T` blocks where the `Lend`
+/// type is concrete (not defined in terms of another lender's `Lend` type).
+/// It expands to the `_covariance_check` method implementation with body `{ lend }`,
+/// which only compiles if the `Lend` type is covariant in its lifetime.
+///
+/// For adapters that delegate to underlying lenders, use [`covariance_inherited!`] instead.
+///
+/// # Examples
+/// ```rust
+/// use lender::prelude::*;
+///
+/// struct RefLender<'a, T>(&'a [T], usize);
+///
+/// impl<'lend, T> Lending<'lend> for RefLender<'_, T> {
+///     type Lend = &'lend T;  // Concrete covariant type
+/// }
+///
+/// impl<T> Lender for RefLender<'_, T> {
+///     covariance_check!();
+///
+///     fn next(&mut self) -> Option<Lend<'_, Self>> {
+///         if self.1 < self.0.len() {
+///             let i = self.1;
+///             self.1 += 1;
+///             Some(&self.0[i])
+///         } else {
+///             None
+///         }
+///     }
+/// }
+/// ```
+///
+/// # Compile-time Error for Invariant Types
+///
+/// If your `Lend` type is invariant (e.g., `&'lend Cell<&'lend T>`), this macro
+/// will cause a compile error, preventing undefined behavior.
+#[macro_export]
+macro_rules! covariance_check {
+    () => {
+        unsafe fn _covariance_check<'long: 'short, 'short>(
+            lend: <Self as $crate::Lending<'long>>::Lend,
+        ) -> <Self as $crate::Lending<'short>>::Lend {
+            lend
+        }
+    };
+}
+
+/// Implement the covariance check method for adapter [`Lender`] impls.
+///
+/// Use this macro for adapters whose `Lend` type is defined in terms of another
+/// lender's `Lend` type (e.g., `type Lend = Lend<'lend, L>`). The covariance is
+/// inherited from the underlying lender, which must implement `_covariance_check`.
+///
+/// For lenders with concrete `Lend` types, use [`covariance_check!`] instead.
+///
+/// # Safety
+///
+/// This macro uses transmute internally. It is safe because the underlying lender `L`
+/// is required to implement `_covariance_check`, which ensures `L`'s `Lend` type is
+/// covariant. Since this adapter's `Lend` type is derived from `L`'s, the covariance
+/// is transitively guaranteed.
+#[macro_export]
+macro_rules! covariance_inherited {
+    () => {
+        unsafe fn _covariance_check<'long: 'short, 'short>(
+            lend: <Self as $crate::Lending<'long>>::Lend,
+        ) -> <Self as $crate::Lending<'short>>::Lend {
+            // SAFETY: Covariance is inherited from the underlying Lender,
+            // which is required to implement _covariance_check, ensuring
+            // their Lend type is covariant.
+            unsafe { core::mem::transmute(lend) }
+        }
+    };
+}
+
+/// Define a lending type with compile-time covariance checking.
+///
+/// This macro creates a struct that implements [`Lending`] and includes a compile-time
+/// assertion that the lend type is covariant in its lifetime. Use this when you need
+/// to ensure type safety with [`lend_iter`](crate::lend_iter).
+///
+/// # Examples
+/// ```rust
+/// use lender::prelude::*;
+///
+/// // Define a covariance-checked lending type
+/// lender::covariant_lend!(RefU32 = &'lend u32);
+///
+/// let data = [1u32, 2, 3];
+/// let mut lender = lender::lend_iter::<'_, RefU32, _>(data.iter());
+/// let item: &u32 = lender.next().unwrap();
+/// ```
+///
+/// # Compile-time Error for Invariant Types
+///
+/// The following will fail to compile because `Cell<Option<&'lend String>>` is
+/// invariant in `'lend`:
+///
+/// ```rust,compile_fail
+/// use std::cell::Cell;
+/// use lender::prelude::*;
+///
+/// // This fails to compile - Cell makes the type invariant!
+/// lender::covariant_lend!(InvariantLend = &'lend Cell<Option<&'lend String>>);
+/// ```
+#[macro_export]
+macro_rules! covariant_lend {
+    ($name:ident = $T:ty) => {
+        /// A lending type with compile-time covariance checking.
+        #[derive(Clone, Copy, Debug, Default)]
+        struct $name;
+
+        impl<'lend> $crate::Lending<'lend> for $name {
+            type Lend = $T;
+        }
+
+        // Covariance check: this const only compiles if $T is covariant in 'lend.
+        // The check works by attempting to assign `Option<Lend<'long>>` to
+        // `Option<Lend<'short>>` when `'long: 'short`. This is only valid for
+        // covariant types.
+        const _: () = {
+            #[allow(dead_code)]
+            fn _covariance_check<'long: 'short, 'short>() {
+                let x: Option<<$name as $crate::Lending<'long>>::Lend> = None;
+                let _: Option<<$name as $crate::Lending<'short>>::Lend> = x;
+            }
+        };
+    };
+}
+
+/// Implement the covariance check method for a [`FallibleLender`] impl with a concrete `Lend` type.
+///
+/// This macro must be invoked inside `impl FallibleLender for T` blocks where the `Lend`
+/// type is concrete. For adapters that delegate to underlying lenders, use
+/// [`fallible_covariance_inherited!`] instead.
+#[macro_export]
+macro_rules! fallible_covariance_check {
+    () => {
+        unsafe fn _covariance_check<'long: 'short, 'short>(
+            lend: <Self as $crate::FallibleLending<'long>>::Lend,
+        ) -> <Self as $crate::FallibleLending<'short>>::Lend {
+            lend
+        }
+    };
+}
+
+/// Implement the covariance check method for adapter [`FallibleLender`] impls.
+///
+/// Use this macro for adapters whose `Lend` type is defined in terms of another
+/// lender's `Lend` type.
+#[macro_export]
+macro_rules! fallible_covariance_inherited {
+    () => {
+        unsafe fn _covariance_check<'long: 'short, 'short>(
+            lend: <Self as $crate::FallibleLending<'long>>::Lend,
+        ) -> <Self as $crate::FallibleLending<'short>>::Lend {
+            // SAFETY: Covariance is inherited from the underlying FallibleLender.
+            unsafe { core::mem::transmute(lend) }
+        }
     };
 }
 

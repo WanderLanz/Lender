@@ -25,6 +25,7 @@ impl<L> Lender for Rev<L>
 where
     L: DoubleEndedLender,
 {
+    crate::covariance_inherited!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.lender.next_back()
@@ -134,6 +135,7 @@ where
     L: DoubleEndedFallibleLender,
 {
     type Error = L::Error;
+    crate::fallible_covariance_inherited!();
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {

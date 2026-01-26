@@ -42,6 +42,7 @@ where
     I: LenderResult<E>,
 {
     type Error = E;
+    crate::fallible_covariance_inherited!();
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, E> {

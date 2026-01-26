@@ -10,6 +10,7 @@ impl<'lend, T> Lending<'lend> for WindowsMut<'_, T> {
     type Lend = &'lend mut [T];
 }
 impl<T> Lender for WindowsMut<'_, T> {
+    covariance_check!();
     fn next(&mut self) -> Option<&mut [T]> {
         let begin = self.begin;
         self.begin = self.begin.saturating_add(1);
@@ -44,6 +45,7 @@ fn lines_str() {
         type Lend = io::Result<&'lend str>;
     }
     impl<B: io::BufRead> Lender for LinesStr<B> {
+        covariance_check!();
         fn next(&mut self) -> Option<io::Result<&str>> {
             self.line.clear();
             match self.buf.read_line(&mut self.line) {
@@ -74,6 +76,7 @@ fn simple_lender() {
         type Lend = &'lend mut T;
     }
     impl<'a, T: 'a> Lender for MyLender<'a, T> {
+        covariance_check!();
         fn next(&mut self) -> Option<Lend<'_, Self>> {
             Some(&mut self.0)
         }
@@ -155,6 +158,7 @@ fn try_collect() {
     }
 
     impl Lender for ErrLender<'_> {
+        covariance_check!();
         fn next(&mut self) -> Option<Lend<'_, Self>> {
             match self.inner {
                 ErrLenderInner::Count(1) => {
@@ -537,6 +541,7 @@ impl<'lend> FallibleLending<'lend> for Wrapper {
 }
 impl FallibleLender for Wrapper {
     type Error = std::convert::Infallible;
+    fallible_covariance_check!();
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         if self.0.is_empty() {
             Ok(None)

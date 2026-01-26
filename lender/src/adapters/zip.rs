@@ -37,6 +37,7 @@ where
     A: Lender,
     B: Lender,
 {
+    crate::covariance_inherited!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         Some((self.a.next()?, self.b.next()?))
@@ -112,6 +113,7 @@ where
     B: FallibleLender<Error = A::Error>,
 {
     type Error = A::Error;
+    crate::fallible_covariance_inherited!();
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {

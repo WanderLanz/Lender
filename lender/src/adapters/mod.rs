@@ -90,6 +90,7 @@ impl<'this, L: Lender> Lender for TryShunt<'this, L>
 where
     for<'all> Lend<'all, L>: Try,
 {
+    crate::covariance_inherited!();
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         if self.residual.is_some() {
             return None;
@@ -185,6 +186,7 @@ where
     for<'all> FallibleLend<'all, L>: TupleLend<'all>,
 {
     type Error = L::Error;
+
     type FallibleLender = FallibleEmpty<L::Error, Self>;
     fn into_fallible_lender(self) -> <Self as IntoFallibleLender>::FallibleLender {
         fallible_empty()
@@ -195,6 +197,7 @@ where
     for<'all> FallibleLend<'all, L>: TupleLend<'all>,
 {
     type Error = L::Error;
+
     type FallibleLender = FallibleEmpty<L::Error, Self>;
     fn into_fallible_lender(self) -> <Self as IntoFallibleLender>::FallibleLender {
         fallible_empty()

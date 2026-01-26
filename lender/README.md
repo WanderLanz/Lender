@@ -223,6 +223,7 @@ impl<'lend, B: io::BufRead> Lending<'lend> for LinesStr<B> {
     type Lend = io::Result<&'lend str>;
 }
 impl<B: io::BufRead> Lender for LinesStr<B> {
+    covariance_check!();
     fn next(&mut self) -> Option<io::Result<&'_ str>> {
         self.line.clear();
         match self.buf.read_line(&mut self.line) {
@@ -274,6 +275,7 @@ impl<'this, 'lend> Lending<'lend> for StrRef<'this> {
     type Lend = &'lend str;
 }
 impl<'this> Lender for StrRef<'this> {
+    covariance_check!();
     fn next(&mut self) -> Option<&'_ str> {
         Some(self.0)
     }
@@ -291,6 +293,7 @@ impl<'this, 'lend> Lending<'lend> for StrRef<'this> {
     type Lend = &'lend str;
 }
 impl<'this> Lender for StrRef<'this> {
+    covariance_check!();
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         Some(self.0)
     }

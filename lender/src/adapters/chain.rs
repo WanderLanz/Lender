@@ -32,6 +32,7 @@ where
     A: Lender,
     B: Lender + for<'all> Lending<'all, Lend = Lend<'all, A>>,
 {
+    crate::covariance_inherited!();
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.a.next().or_else(|| self.b.next())
     }
@@ -200,6 +201,7 @@ where
     B: FallibleLender<Error = A::Error> + for<'all> FallibleLending<'all, Lend = FallibleLend<'all, A>>,
 {
     type Error = A::Error;
+    crate::fallible_covariance_inherited!();
 
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         match self.a.next()? {

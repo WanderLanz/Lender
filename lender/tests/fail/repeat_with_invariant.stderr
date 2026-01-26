@@ -1,0 +1,94 @@
+error[E0582]: binding for associated type `Output` references lifetime `'lend`, which does not appear in the trait input types
+  --> tests/fail/repeat_with_invariant.rs:20:30
+   |
+20 |     F: for<'lend> FnMut() -> &'lend Cell<Option<&'lend String>>,
+   |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0803]: cannot infer an appropriate lifetime for lifetime parameter `'lend` due to conflicting requirements
+  --> tests/fail/repeat_with_invariant.rs:22:5
+   |
+22 |     lender::covariance_check!();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+note: first, the lifetime cannot outlive the lifetime `'short` as defined here...
+  --> tests/fail/repeat_with_invariant.rs:22:5
+   |
+22 |     lender::covariance_check!();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+note: ...so that the types are compatible
+  --> tests/fail/repeat_with_invariant.rs:22:5
+   |
+22 |     lender::covariance_check!();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = note: expected `Lending<'short>`
+              found `Lending<'_>`
+note: but, the lifetime must be valid for the lifetime `'long` as defined here...
+  --> tests/fail/repeat_with_invariant.rs:22:5
+   |
+22 |     lender::covariance_check!();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+note: ...so that the types are compatible
+  --> tests/fail/repeat_with_invariant.rs:22:5
+   |
+22 |     lender::covariance_check!();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = note: expected `Lending<'long>`
+              found `Lending<'_>`
+   = note: this error originates in the macro `lender::covariance_check` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: implementation of `Lending` is not general enough
+  --> tests/fail/repeat_with_invariant.rs:18:20
+   |
+18 | impl<F> Lender for InvariantRepeatWith<F>
+   |                    ^^^^^^^^^^^^^^^^^^^^^^ implementation of `Lending` is not general enough
+   |
+   = note: `InvariantRepeatWith<F>` must implement `Lending<'0>`, for any lifetime `'0`...
+   = note: ...but it actually implements `Lending<'1>`, for some specific lifetime `'1`
+
+error[E0803]: cannot infer an appropriate lifetime for lifetime parameter `'lend` due to conflicting requirements
+  --> tests/fail/repeat_with_invariant.rs:22:5
+   |
+22 |     lender::covariance_check!();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+note: first, the lifetime cannot outlive the lifetime `'short` as defined here...
+  --> tests/fail/repeat_with_invariant.rs:22:5
+   |
+22 |     lender::covariance_check!();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+note: ...so that the types are compatible
+  --> tests/fail/repeat_with_invariant.rs:22:5
+   |
+22 |     lender::covariance_check!();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = note: expected `Lending<'short>`
+              found `Lending<'_>`
+note: but, the lifetime must be valid for the lifetime `'long` as defined here...
+  --> tests/fail/repeat_with_invariant.rs:22:5
+   |
+22 |     lender::covariance_check!();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+note: ...so that the types are compatible
+  --> tests/fail/repeat_with_invariant.rs:22:5
+   |
+22 |     lender::covariance_check!();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = note: expected `Lending<'long>`
+              found `Lending<'_>`
+   = note: this error originates in the macro `lender::covariance_check` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: lifetime may not live long enough
+  --> tests/fail/repeat_with_invariant.rs:22:5
+   |
+22 |     lender::covariance_check!();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |     |
+   |     lifetime `'short` defined here
+   |     lifetime `'long` defined here
+   |     associated function was supposed to return data with lifetime `'long` but it is returning data with lifetime `'short`
+   |
+   = help: consider adding the following bound: `'short: 'long`
+   = note: requirement occurs because of the type `Cell<Option<&String>>`, which makes the generic argument `Option<&String>` invariant
+   = note: the struct `Cell<T>` is invariant over the parameter `T`
+   = help: see <https://doc.rust-lang.org/nomicon/subtyping.html> for more information about variance
+   = note: this error originates in the macro `lender::covariance_check` (in Nightly builds, run with -Z macro-backtrace for more info)
