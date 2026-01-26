@@ -24,14 +24,24 @@ where
     pub fn into_inner(self) -> L {
         *self.lender
     }
-    pub fn peek(&mut self) -> Option<&'_ Lend<'this, L>> {
+    pub fn peek(&mut self) -> Option<&'_ Lend<'_, L>> {
         let lender = &mut self.lender;
-        self.peeked
-            .get_or_insert_with(|| {
-                // SAFETY: The lend is manually guaranteed to be the only one alive
-                unsafe { core::mem::transmute::<Option<Lend<'_, L>>, Option<Lend<'this, L>>>(lender.next()) }
-            })
-            .as_ref()
+        // SAFETY: Two transmutes are used here:
+        // 1. Inner: `Option<Lend<'_, L>>` to `Option<Lend<'this, L>>` - extends the
+        //    lend's lifetime to store it in `self.peeked`. Safe because the lender
+        //    is boxed (stable address) and only one lend is alive at a time.
+        // 2. Outer: `Option<&'_ Lend<'this, L>>` to `Option<&'_ Lend<'_, L>>` - ties
+        //    the lend's lifetime to the borrow of `self`, preventing it from escaping.
+        //    Safe because `L::Lend` is covariant in its lifetime (required by Lender).
+        unsafe {
+            core::mem::transmute::<Option<&'_ Lend<'this, L>>, Option<&'_ Lend<'_, L>>>(
+                self.peeked
+                    .get_or_insert_with(|| {
+                        core::mem::transmute::<Option<Lend<'_, L>>, Option<Lend<'this, L>>>(lender.next())
+                    })
+                    .as_ref(),
+            )
+        }
     }
     pub fn peek_mut(&mut self) -> Option<&'_ mut Lend<'this, L>> {
         let lender = &mut self.lender;

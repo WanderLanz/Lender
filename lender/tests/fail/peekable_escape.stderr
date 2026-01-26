@@ -1,0 +1,12 @@
+error[E0597]: `lending_iter` does not live long enough
+  --> tests/fail/peekable_escape.rs:23:19
+   |
+20 |     let goodbye: &'static str;
+   |                  ------------ type annotation requires that `lending_iter` is borrowed for `'static`
+21 |     {
+22 |         let mut lending_iter = StaticLender(String::from("Goodbye, world!")).peekable();
+   |             ---------------- binding `lending_iter` declared here
+23 |         goodbye = lending_iter.peek().unwrap();
+   |                   ^^^^^^^^^^^^ borrowed value does not live long enough
+24 |     }
+   |     - `lending_iter` dropped here while still borrowed
