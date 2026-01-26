@@ -11,8 +11,9 @@ pub struct Peekable<'this, L>
 where
     L: Lender,
 {
-    lender: Box<L>,
+    // The field order here is relevant as peeked must be dropped before lender.
     peeked: Option<Option<Lend<'this, L>>>,
+    lender: Box<L>,
 }
 impl<'this, L> Peekable<'this, L>
 where
