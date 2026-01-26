@@ -247,6 +247,9 @@ assert_eq!(lines.next().unwrap().unwrap(), "Hello");
 assert_eq!(lines.next().unwrap().unwrap(), "World");
 ```
 
+Note the [`covariance_check!`] macro invocation, which ensures that the lend is
+covariant.
+
 ## Implementing Lender
 
 To implement [`Lender`] first you'll need to implement the [`Lending`] trait for your type.
@@ -281,6 +284,10 @@ impl<'this> Lender for StrRef<'this> {
     }
 }
 ```
+
+Note the [`covariance_check!`] macro invocation, which ensures that the lend is
+covariant. There is an additional [`covariance_inherit!`] macro
+that can be used when the lender wraps another lender to propagate covariance.
 
 The [`Lend`] type alias can be used to avoid specifying twice the type of the lend;
 combined with lifetime elision, it can make your implementations
@@ -367,3 +374,5 @@ but if you see any unsafe code that can be made safe, please let us know!
 [`Result`]: https://doc.rust-lang.org/std/result/enum.Result.html
 [Fallible lenders]: https://docs.rs/lender/latest/lender/trait.FallibleLender.html
 [obtain a fallible lender from a fallible iterator]: https://docs.rs/lender/latest/later/trait.FallibleIteratorExt.html#tymethod.into_fallible_lender
+[`covariance_check!`]: https://docs.rs/lender/latest/lender/macro.covariance_check.html
+[`covariance_inherit!`]: https://docs.rs/lender/latest/lender/macro.covariance_inherit.html
