@@ -16,6 +16,11 @@
 - The return type of `Peekable::peek` is now `Option<&'_ Lend<'_, L>>`, which
   fixes a problem of data escape. Analogously for `FalliblePeekable::peek`.
 
+- The `lend!` macro now covers a set of fixed covariant types. If you need
+  to use more complex types, you can use the `covariant_lend!` macro, which
+  however requires that you define a type name (it cannot be inlined). The
+  same applies to `fallible_lend!` and `covariant_fallible_lend!`.
+
 ## Fixed
 
 - Several possible UBs are no longer possible thanks to the new covariance
