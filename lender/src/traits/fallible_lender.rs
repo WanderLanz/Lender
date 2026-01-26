@@ -66,6 +66,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// general, the implementation must guarantee that the [`Lend`](FallibleLending::Lend)
     /// type is covariant in its lifetime.
     unsafe fn _check_covariance<'long: 'short, 'short>(
+        _: crate::Uncallable,
         lend: <Self as FallibleLending<'long>>::Lend,
     ) -> <Self as FallibleLending<'short>>::Lend;
 

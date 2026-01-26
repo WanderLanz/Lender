@@ -49,6 +49,10 @@ impl<'a, A, B> TupleLend<'a> for &'a mut (A, B) {
     }
 }
 
+/// Uninhabited type used to make `_check_covariance` methods uncallable.
+#[doc(hidden)]
+pub enum Uncallable {}
+
 /// Internal struct used to implement [`lend!`], do not use directly.
 #[doc(hidden)]
 pub struct DynLendShunt<T: ?Sized>(pub T);
@@ -131,6 +135,7 @@ macro_rules! lend {
 macro_rules! check_covariance {
     () => {
         unsafe fn _check_covariance<'long: 'short, 'short>(
+            _: $crate::Uncallable,
             lend: <Self as $crate::Lending<'long>>::Lend,
         ) -> <Self as $crate::Lending<'short>>::Lend {
             lend
@@ -156,6 +161,7 @@ macro_rules! check_covariance {
 macro_rules! inherit_covariance {
     () => {
         unsafe fn _check_covariance<'long: 'short, 'short>(
+            _: $crate::Uncallable,
             lend: <Self as $crate::Lending<'long>>::Lend,
         ) -> <Self as $crate::Lending<'short>>::Lend {
             // SAFETY: Covariance is inherited from the underlying Lender,
@@ -229,6 +235,7 @@ macro_rules! covariant_lend {
 macro_rules! check_covariance_fallible {
     () => {
         unsafe fn _check_covariance<'long: 'short, 'short>(
+            _: $crate::Uncallable,
             lend: <Self as $crate::FallibleLending<'long>>::Lend,
         ) -> <Self as $crate::FallibleLending<'short>>::Lend {
             lend
@@ -243,6 +250,7 @@ macro_rules! check_covariance_fallible {
 macro_rules! inherit_covariance_fallible {
     () => {
         unsafe fn _check_covariance<'long: 'short, 'short>(
+            _: $crate::Uncallable,
             lend: <Self as $crate::FallibleLending<'long>>::Lend,
         ) -> <Self as $crate::FallibleLending<'short>>::Lend {
             // SAFETY: Covariance is inherited from the underlying FallibleLender.
