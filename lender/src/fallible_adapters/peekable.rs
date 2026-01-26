@@ -106,7 +106,7 @@ where
     L: FallibleLender,
 {
     type Error = L::Error;
-    crate::fallible_covariance_inherited!();
+    crate::inherit_covariance_fallible!();
 
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         match self.peeked.take() {
@@ -263,7 +263,7 @@ mod test {
     }
 
     impl Lender for ArrayLender {
-        crate::covariance_check!();
+        crate::check_covariance!();
         fn next(&mut self) -> Option<Lend<'_, Self>> {
             Some(&self.array[0])
         }

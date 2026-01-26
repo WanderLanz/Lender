@@ -11,7 +11,7 @@ impl<'lend, L, St, F> Lending<'lend> for InvariantScan<L, St, F> {
 }
 
 impl<L, St, F> Lender for InvariantScan<L, St, F> {
-    lender::covariance_check!();
+    lender::check_covariance!();
 
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         None
@@ -26,7 +26,7 @@ impl<'lend, L, St, F, E> FallibleLending<'lend> for InvariantFallibleScan<L, St,
 
 impl<L, St, F, E> FallibleLender for InvariantFallibleScan<L, St, F, E> {
     type Error = E;
-    lender::fallible_covariance_check!();
+    lender::check_covariance_fallible!();
 
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         Ok(None)

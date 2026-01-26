@@ -27,7 +27,7 @@ impl<T> Lender for Chunk<'_, T>
 where
     T: Lender,
 {
-    crate::covariance_inherited!();
+    crate::inherit_covariance!();
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         if self.len == 0 {
             None
@@ -54,7 +54,7 @@ where
     T: FallibleLender,
 {
     type Error = T::Error;
-    crate::fallible_covariance_inherited!();
+    crate::inherit_covariance_fallible!();
 
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         if self.len == 0 {

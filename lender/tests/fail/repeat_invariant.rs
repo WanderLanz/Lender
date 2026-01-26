@@ -13,7 +13,7 @@ impl<'lend> Lending<'lend> for InvariantRepeat<'_> {
 }
 
 impl Lender for InvariantRepeat<'_> {
-    lender::covariance_check!();
+    lender::check_covariance!();
 
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         Some(self.value)
@@ -28,7 +28,7 @@ impl<'lend, E> FallibleLending<'lend> for InvariantFallibleRepeat<E> {
 
 impl<E> FallibleLender for InvariantFallibleRepeat<E> {
     type Error = E;
-    lender::fallible_covariance_check!();
+    lender::check_covariance_fallible!();
 
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         Ok(None)

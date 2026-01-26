@@ -15,7 +15,7 @@ impl<'lend> Lending<'lend> for InvariantWindowsMut<'_> {
 }
 
 impl Lender for InvariantWindowsMut<'_> {
-    lender::covariance_check!();
+    lender::check_covariance!();
 
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         if self.pos + self.size <= self.slice.len() {

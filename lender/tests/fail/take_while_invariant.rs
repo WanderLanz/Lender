@@ -11,7 +11,7 @@ impl<'lend, L, P> Lending<'lend> for InvariantTakeWhile<L, P> {
 }
 
 impl<L, P> Lender for InvariantTakeWhile<L, P> {
-    lender::covariance_check!();
+    lender::check_covariance!();
 
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         None
@@ -26,7 +26,7 @@ impl<'lend, L, P, E> FallibleLending<'lend> for InvariantFallibleTakeWhile<L, P,
 
 impl<L, P, E> FallibleLender for InvariantFallibleTakeWhile<L, P, E> {
     type Error = E;
-    lender::fallible_covariance_check!();
+    lender::check_covariance_fallible!();
 
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         Ok(None)

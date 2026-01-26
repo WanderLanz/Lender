@@ -48,7 +48,7 @@ impl<L: Lender> Lender for Flatten<'_, L>
 where
     for<'all> Lend<'all, L>: IntoLender,
 {
-    crate::covariance_inherited!();
+    crate::inherit_covariance!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.inner.next()
@@ -109,7 +109,7 @@ where
     Map<L, F>: Lender,
     for<'all> Lend<'all, Map<L, F>>: IntoLender,
 {
-    crate::covariance_inherited!();
+    crate::inherit_covariance!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.inner.next()
@@ -168,7 +168,7 @@ impl<'this, L: Lender> Lender for FlattenCompat<'this, L>
 where
     for<'all> Lend<'all, L>: IntoLender,
 {
-    crate::covariance_inherited!();
+    crate::inherit_covariance!();
     #[allow(clippy::question_mark)]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         loop {
@@ -216,7 +216,7 @@ mod test {
     }
 
     impl Lender for Parent {
-        crate::covariance_check!();
+        crate::check_covariance!();
         fn next(&mut self) -> Option<Lend<'_, Self>> {
             Some(Child { array_ref: &self.0 })
         }
@@ -231,7 +231,7 @@ mod test {
     }
 
     impl<'a> Lender for Child<'a> {
-        crate::covariance_check!();
+        crate::check_covariance!();
         fn next(&mut self) -> Option<Lend<'_, Self>> {
             Some(self.array_ref)
         }

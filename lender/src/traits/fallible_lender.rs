@@ -40,22 +40,38 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     type Error;
 
     /// Internal method for compile-time covariance checking.
+    /// 
+    /// This method should never be implemented directly. Instead, use the
+    /// provided macros:
     ///
-    /// Users should invoke [`fallible_covariance_check!`](crate::fallible_covariance_check) or
-    /// [`fallible_covariance_inherited!`](crate::fallible_covariance_inherited) in their
-    /// `FallibleLender` impl to implement this method.
+    /// - When implementing source lenders (lenders with concrete
+    ///   [`Lend`](FallibleLending::Lend) types), users should invoke
+    ///   [`check_covariance_fallible!`](crate::check_covariance_fallible) in
+    ///   their [`FallibleLender`] impl. The macro implements the method as `{
+    ///   lend }`, which only compiles if the [`Lend`](FallibleLending::Lend) type
+    ///   is covariant in its lifetime.
+    ///
+    /// - When implementing adapters (lenders whose
+    ///   [`Lend`](FallibleLending::Lend) type is derived from an underlying
+    ///   fallible lender), users should invoke
+    ///   [`inherit_covariance_fallible!`](crate::inherit_covariance_fallible).
+    ///   The macro implements the method as `unsafe { core::mem::transmute(lend)
+    ///   }`, which is safe because the underlying fallible lender's covariance
+    ///   was already verified.
     ///
     /// # Safety
     ///
-    /// This method must be implemented such that the `Lend` type is covariant.
-    /// Using `unsafe` tricks like `transmute` to bypass this check can lead to
-    /// undefined behavior.
-    unsafe fn _covariance_check<'long: 'short, 'short>(
+    /// Source lenders must implement this method as `{ lend }`. Adapters must
+    /// implement this method as `unsafe { core::mem::transmute(lend) }`. In
+    /// general, the implementation must guarantee that the [`Lend`](FallibleLending::Lend)
+    /// type is covariant in its lifetime.
+    unsafe fn _check_covariance<'long: 'short, 'short>(
         lend: <Self as FallibleLending<'long>>::Lend,
     ) -> <Self as FallibleLending<'short>>::Lend;
 
-    /// Yield the next lend, if any, of the lender.
-    /// Returns Ok(None) when iteration is finished.
+    /// Yield the next lend, if any, of the lender, or `Ok(None)` when iteration
+    /// is finished.
+    /// 
     /// The behavior of calling this method after a previous call has returned
     /// Ok(None) or Err is implementation defined.
     ///
@@ -1235,7 +1251,7 @@ impl<'lend, L: FallibleLender> FallibleLending<'lend> for &mut L {
 
 impl<L: FallibleLender> FallibleLender for &mut L {
     type Error = L::Error;
-    crate::fallible_covariance_inherited!();
+    crate::inherit_covariance_fallible!();
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         (**self).next()

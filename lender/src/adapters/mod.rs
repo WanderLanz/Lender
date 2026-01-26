@@ -90,7 +90,7 @@ impl<'this, L: Lender> Lender for TryShunt<'this, L>
 where
     for<'all> Lend<'all, L>: Try,
 {
-    crate::covariance_inherited!();
+    crate::inherit_covariance!();
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         if self.residual.is_some() {
             return None;

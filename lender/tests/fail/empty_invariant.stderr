@@ -1,7 +1,7 @@
 error: lifetime may not live long enough
   --> tests/fail/empty_invariant.rs:14:5
    |
-14 |     lender::covariance_check!();
+14 |     lender::check_covariance!();
    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
    |     |
    |     lifetime `'short` defined here
@@ -12,12 +12,12 @@ error: lifetime may not live long enough
    = note: requirement occurs because of the type `Cell<Option<&String>>`, which makes the generic argument `Option<&String>` invariant
    = note: the struct `Cell<T>` is invariant over the parameter `T`
    = help: see <https://doc.rust-lang.org/nomicon/subtyping.html> for more information about variance
-   = note: this error originates in the macro `lender::covariance_check` (in Nightly builds, run with -Z macro-backtrace for more info)
+   = note: this error originates in the macro `lender::check_covariance` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: lifetime may not live long enough
   --> tests/fail/empty_invariant.rs:29:5
    |
-29 |     lender::fallible_covariance_check!();
+29 |     lender::check_covariance_fallible!();
    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    |     |
    |     lifetime `'short` defined here
@@ -28,4 +28,4 @@ error: lifetime may not live long enough
    = note: requirement occurs because of the type `Cell<Option<&String>>`, which makes the generic argument `Option<&String>` invariant
    = note: the struct `Cell<T>` is invariant over the parameter `T`
    = help: see <https://doc.rust-lang.org/nomicon/subtyping.html> for more information about variance
-   = note: this error originates in the macro `lender::fallible_covariance_check` (in Nightly builds, run with -Z macro-backtrace for more info)
+   = note: this error originates in the macro `lender::check_covariance_fallible` (in Nightly builds, run with -Z macro-backtrace for more info)

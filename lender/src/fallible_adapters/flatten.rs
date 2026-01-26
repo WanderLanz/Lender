@@ -50,7 +50,7 @@ where
     for<'all> FallibleLend<'all, L>: IntoFallibleLender<Error = L::Error>,
 {
     type Error = L::Error;
-    crate::fallible_covariance_inherited!();
+    crate::inherit_covariance_fallible!();
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
@@ -112,7 +112,7 @@ where
     for<'all> FallibleLend<'all, Map<L, F>>: IntoFallibleLender<Error = L::Error>,
 {
     type Error = L::Error;
-    crate::fallible_covariance_inherited!();
+    crate::inherit_covariance_fallible!();
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
@@ -168,7 +168,7 @@ where
     for<'all> FallibleLend<'all, L>: IntoFallibleLender<Error = L::Error>,
 {
     type Error = L::Error;
-    crate::fallible_covariance_inherited!();
+    crate::inherit_covariance_fallible!();
 
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         loop {
@@ -218,7 +218,7 @@ mod test {
     }
 
     impl Lender for Parent {
-        crate::covariance_check!();
+        crate::check_covariance!();
         fn next(&mut self) -> Option<Lend<'_, Self>> {
             Some(Child { array_ref: &self.0 })
         }
@@ -234,7 +234,7 @@ mod test {
 
     impl<'a> FallibleLender for Child<'a> {
         type Error = Infallible;
-        crate::fallible_covariance_check!();
+        crate::check_covariance_fallible!();
 
         fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
             Ok(Some(self.array_ref))

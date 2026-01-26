@@ -223,7 +223,7 @@ impl<'lend, B: io::BufRead> Lending<'lend> for LinesStr<B> {
     type Lend = io::Result<&'lend str>;
 }
 impl<B: io::BufRead> Lender for LinesStr<B> {
-    covariance_check!();
+    check_covariance!();
     fn next(&mut self) -> Option<io::Result<&'_ str>> {
         self.line.clear();
         match self.buf.read_line(&mut self.line) {
@@ -247,7 +247,7 @@ assert_eq!(lines.next().unwrap().unwrap(), "Hello");
 assert_eq!(lines.next().unwrap().unwrap(), "World");
 ```
 
-Note the [`covariance_check!`] macro invocation, which ensures that the lend is
+Note the [`check_covariance!`] macro invocation, which ensures that the lend is
 covariant.
 
 ## Implementing Lender
@@ -278,14 +278,14 @@ impl<'this, 'lend> Lending<'lend> for StrRef<'this> {
     type Lend = &'lend str;
 }
 impl<'this> Lender for StrRef<'this> {
-    covariance_check!();
+    check_covariance!();
     fn next(&mut self) -> Option<&'_ str> {
         Some(self.0)
     }
 }
 ```
 
-Note the [`covariance_check!`] macro invocation, which ensures that the lend is
+Note the [`check_covariance!`] macro invocation, which ensures that the lend is
 covariant. There is an additional [`covariance_inherit!`] macro
 that can be used when the lender wraps another lender to propagate covariance.
 
@@ -300,7 +300,7 @@ impl<'this, 'lend> Lending<'lend> for StrRef<'this> {
     type Lend = &'lend str;
 }
 impl<'this> Lender for StrRef<'this> {
-    covariance_check!();
+    check_covariance!();
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         Some(self.0)
     }
@@ -374,5 +374,5 @@ but if you see any unsafe code that can be made safe, please let us know!
 [`Result`]: https://doc.rust-lang.org/std/result/enum.Result.html
 [Fallible lenders]: https://docs.rs/lender/latest/lender/trait.FallibleLender.html
 [obtain a fallible lender from a fallible iterator]: https://docs.rs/lender/latest/later/trait.FallibleIteratorExt.html#tymethod.into_fallible_lender
-[`covariance_check!`]: https://docs.rs/lender/latest/lender/macro.covariance_check.html
+[`check_covariance!`]: https://docs.rs/lender/latest/lender/macro.check_covariance.html
 [`covariance_inherit!`]: https://docs.rs/lender/latest/lender/macro.covariance_inherit.html

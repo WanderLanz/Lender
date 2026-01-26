@@ -40,7 +40,7 @@ where
     L: ?Sized + for<'all> Lending<'all> + 'a,
     for<'all> Lend<'all, L>: Clone,
 {
-    crate::covariance_inherited!();
+    crate::inherit_covariance!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         // SAFETY: 'a: 'lend
@@ -111,7 +111,7 @@ where
     for<'all> FallibleLend<'all, L>: Clone,
 {
     type Error = E;
-    crate::fallible_covariance_inherited!();
+    crate::inherit_covariance_fallible!();
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {

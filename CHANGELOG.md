@@ -1,6 +1,12 @@
 # Change Log
 
-## [0.4.3]
+## [0.5.0]
+
+### New
+
+- New infrastructure to check covariance of lends. Every implementation must
+  use either the `covariant_lend!` (for sources) or `covariant_inherit!` (for
+  adapters) macro to check covariance of the lend lifetime.
 
 ### Changed
 

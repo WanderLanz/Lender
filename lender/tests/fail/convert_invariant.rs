@@ -12,7 +12,7 @@ impl<'lend, E, I> FallibleLending<'lend> for InvariantConvert<E, I> {
 
 impl<E, I> FallibleLender for InvariantConvert<E, I> {
     type Error = E;
-    lender::fallible_covariance_check!();
+    lender::check_covariance_fallible!();
 
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         Ok(None)

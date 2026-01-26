@@ -52,10 +52,10 @@ pub mod prelude {
     pub use lender_derive::for_;
 
     pub use crate::{
-        covariance_check, covariance_inherited, covariant_lend, fallible_covariance_check, fallible_covariance_inherited,
-        fallible_lend, from_fallible_iter, from_into_fallible_iter, from_into_iter, from_iter, hrc, hrc_mut, hrc_once, lend,
-        DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeLender, ExtendLender, FallibleIteratorExt, FallibleLend,
-        FallibleLender, FallibleLending, FromLender, IntoFallibleIteratorExt, IntoFallibleLender, IntoIteratorExt,
-        IntoLender, IteratorExt, Lend, Lender, Lending, WindowsMutExt,
+        check_covariance, check_covariance_fallible, covariant_lend, fallible_lend, from_fallible_iter,
+        from_into_fallible_iter, from_into_iter, from_iter, hrc, hrc_mut, hrc_once, inherit_covariance,
+        inherit_covariance_fallible, lend, DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeLender, ExtendLender,
+        FallibleIteratorExt, FallibleLend, FallibleLender, FallibleLending, FromLender, IntoFallibleIteratorExt,
+        IntoFallibleLender, IntoIteratorExt, IntoLender, IteratorExt, Lend, Lender, Lending, WindowsMutExt,
     };
 }

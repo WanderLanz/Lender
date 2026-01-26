@@ -11,7 +11,7 @@ impl<'lend, A, B> Lending<'lend> for InvariantZip<A, B> {
 }
 
 impl<A, B> Lender for InvariantZip<A, B> {
-    lender::covariance_check!();
+    lender::check_covariance!();
 
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         None
@@ -26,7 +26,7 @@ impl<'lend, A, B, E> FallibleLending<'lend> for InvariantFallibleZip<A, B, E> {
 
 impl<A, B, E> FallibleLender for InvariantFallibleZip<A, B, E> {
     type Error = E;
-    lender::fallible_covariance_check!();
+    lender::check_covariance_fallible!();
 
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         Ok(None)

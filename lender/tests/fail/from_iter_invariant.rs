@@ -19,7 +19,7 @@ impl<I> Lender for InvariantFromIter<I>
 where
     I: for<'lend> Iterator<Item = &'lend Cell<Option<&'lend String>>>,
 {
-    lender::covariance_check!();
+    lender::check_covariance!();
 
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.iter.next()
@@ -34,7 +34,7 @@ impl<'lend, E> FallibleLending<'lend> for InvariantFromFallibleIter<E> {
 
 impl<E> FallibleLender for InvariantFromFallibleIter<E> {
     type Error = E;
-    lender::fallible_covariance_check!();
+    lender::check_covariance_fallible!();
 
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         Ok(None)

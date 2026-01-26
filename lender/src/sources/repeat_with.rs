@@ -43,7 +43,7 @@ where
     L: ?Sized + for<'all> Lending<'all> + 'a,
     F: FnMut() -> Lend<'a, L>,
 {
-    crate::covariance_inherited!();
+    crate::inherit_covariance!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         // SAFETY: 'a: 'lend
@@ -99,7 +99,7 @@ where
     F: FnMut() -> Result<FallibleLend<'a, L>, E>,
 {
     type Error = E;
-    crate::fallible_covariance_inherited!();
+    crate::inherit_covariance_fallible!();
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {

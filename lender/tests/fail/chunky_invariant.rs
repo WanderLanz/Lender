@@ -14,7 +14,7 @@ impl<'lend, L> Lending<'lend> for InvariantChunky<L> {
 }
 
 impl<L> Lender for InvariantChunky<L> {
-    lender::covariance_check!();
+    lender::check_covariance!();
 
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         None

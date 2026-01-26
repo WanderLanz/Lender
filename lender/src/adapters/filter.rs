@@ -38,7 +38,7 @@ where
     P: FnMut(&Lend<'_, L>) -> bool,
     L: Lender,
 {
-    crate::covariance_inherited!();
+    crate::inherit_covariance!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.lender.find(&mut self.predicate)
@@ -90,7 +90,7 @@ where
     L: FallibleLender,
 {
     type Error = L::Error;
-    crate::fallible_covariance_inherited!();
+    crate::inherit_covariance_fallible!();
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {

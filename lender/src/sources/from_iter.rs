@@ -52,7 +52,7 @@ impl<I: Iterator> Lending<'_> for FromIter<I> {
 }
 
 impl<I: Iterator> Lender for FromIter<I> {
-    crate::covariance_inherited!();
+    crate::check_covariance!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.iter.next()
@@ -145,7 +145,6 @@ where
     L: ?Sized + for<'all> Lending<'all> + 'a,
     I: Iterator<Item = Lend<'a, L>>,
 {
-
     LendIter { iter, _marker: core::marker::PhantomData }
 }
 
@@ -176,7 +175,7 @@ where
     L: ?Sized + for<'all> Lending<'all> + 'a,
     I: Iterator<Item = Lend<'a, L>>,
 {
-    crate::covariance_inherited!();
+    crate::inherit_covariance!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         // SAFETY: 'a: 'lend, and caller must ensure Lend<'a, L> is covariant in 'a
@@ -247,7 +246,7 @@ impl<I: FallibleIterator> FallibleLending<'_> for FromFallibleIter<I> {
 
 impl<I: FallibleIterator> FallibleLender for FromFallibleIter<I> {
     type Error = I::Error;
-    crate::fallible_covariance_inherited!();
+    crate::check_covariance_fallible!();
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.iter.next()
@@ -371,7 +370,7 @@ where
     I: FallibleIterator<Item = FallibleLend<'a, L>>,
 {
     type Error = I::Error;
-    crate::fallible_covariance_inherited!();
+    crate::inherit_covariance_fallible!();
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
