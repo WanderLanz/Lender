@@ -135,9 +135,9 @@ macro_rules! lend {
 macro_rules! check_covariance {
     () => {
         unsafe fn _check_covariance<'long: 'short, 'short>(
+            lend: *const &'short <Self as Lending<'long>>::Lend,
             _: $crate::Uncallable,
-            lend: <Self as $crate::Lending<'long>>::Lend,
-        ) -> <Self as $crate::Lending<'short>>::Lend {
+        ) -> *const &'short <Self as Lending<'short>>::Lend {
             lend
         }
     };
@@ -161,9 +161,9 @@ macro_rules! check_covariance {
 macro_rules! inherit_covariance {
     () => {
         unsafe fn _check_covariance<'long: 'short, 'short>(
+            lend: *const &'short <Self as Lending<'long>>::Lend,
             _: $crate::Uncallable,
-            lend: <Self as $crate::Lending<'long>>::Lend,
-        ) -> <Self as $crate::Lending<'short>>::Lend {
+        ) -> *const &'short <Self as Lending<'short>>::Lend {
             // SAFETY: Covariance is inherited from the underlying Lender,
             // which is required to implement _check_covariance, ensuring
             // their Lend type is covariant.
@@ -235,9 +235,9 @@ macro_rules! covariant_lend {
 macro_rules! check_covariance_fallible {
     () => {
         unsafe fn _check_covariance<'long: 'short, 'short>(
+            lend: *const &'short <Self as FallibleLending<'long>>::Lend,
             _: $crate::Uncallable,
-            lend: <Self as $crate::FallibleLending<'long>>::Lend,
-        ) -> <Self as $crate::FallibleLending<'short>>::Lend {
+        ) -> *const &'short <Self as FallibleLending<'short>>::Lend {
             lend
         }
     };
@@ -250,9 +250,9 @@ macro_rules! check_covariance_fallible {
 macro_rules! inherit_covariance_fallible {
     () => {
         unsafe fn _check_covariance<'long: 'short, 'short>(
+            lend: *const &'short <Self as FallibleLending<'long>>::Lend,
             _: $crate::Uncallable,
-            lend: <Self as $crate::FallibleLending<'long>>::Lend,
-        ) -> <Self as $crate::FallibleLending<'short>>::Lend {
+        ) -> *const &'short <Self as FallibleLending<'short>>::Lend {
             // SAFETY: Covariance is inherited from the underlying FallibleLender.
             unsafe { core::mem::transmute(lend) }
         }
