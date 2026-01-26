@@ -129,8 +129,8 @@ macro_rules! lend {
 ///
 /// # Compile-time Error for Invariant Types
 ///
-/// If your `Lend` type is invariant (e.g., `&'lend Cell<&'lend T>`), this macro
-/// will cause a compile error, preventing undefined behavior.
+/// If your `Lend` type is not covariant (e.g., `&'lend Cell<&'lend T>`), this
+/// macro will cause a compile error, preventing undefined behavior.
 #[macro_export]
 macro_rules! check_covariance {
     () => {
@@ -145,18 +145,20 @@ macro_rules! check_covariance {
 
 /// Implement the covariance check method for adapter [`Lender`] impls.
 ///
-/// Use this macro for adapters whose `Lend` type is defined in terms of another
-/// lender's `Lend` type (e.g., `type Lend = Lend<'lend, L>`). The covariance is
-/// inherited from the underlying lender, which must implement `_check_covariance`.
+/// Use this macro for adapters whose [`Lend`](Lending::Lend) type is defined in
+/// terms of another lender's [`Lend`](Lending::Lend) type (e.g., `type Lend =
+/// Lend<'lend, L>`). The covariance is inherited from the underlying lender.
 ///
-/// For lenders with concrete `Lend` types, use [`check_covariance!`] instead.
+/// For lenders with concrete [`Lend`](Lending::Lend) types, use
+/// [`check_covariance!`] instead. Do not use this macro for concrete types,
+/// at it will lead to undefined behavior.
 ///
 /// # Safety
 ///
-/// This macro uses transmute internally. It is safe because the underlying lender `L`
-/// is required to implement `_check_covariance`, which ensures `L`'s `Lend` type is
-/// covariant. Since this adapter's `Lend` type is derived from `L`'s, the covariance
-/// is transitively guaranteed.
+/// This macro uses transmute internally. It is safe because the
+/// [`Lend`](Lending::Lend) type of the underlying [`Lender`] is covariant.
+/// Since this adapter's [`Lend`](Lending::Lend) type is derived from `L`'s, the
+/// covariance is transitively guaranteed.
 #[macro_export]
 macro_rules! inherit_covariance {
     () => {
@@ -164,9 +166,7 @@ macro_rules! inherit_covariance {
             lend: *const &'short <Self as Lending<'long>>::Lend,
             _: $crate::Uncallable,
         ) -> *const &'short <Self as Lending<'short>>::Lend {
-            // SAFETY: Covariance is inherited from the underlying Lender,
-            // which is required to implement _check_covariance, ensuring
-            // their Lend type is covariant.
+            // SAFETY: Covariance is inherited from the underlying Lender
             unsafe { core::mem::transmute(lend) }
         }
     };

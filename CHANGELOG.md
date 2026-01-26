@@ -5,12 +5,21 @@
 ### New
 
 - New infrastructure to check covariance of lends. Every implementation must
-  use either the `covariant_lend!` (for sources) or `covariant_inherit!` (for
-  adapters) macro to check covariance of the lend lifetime.
+  use either the `check_covariance!`/`check_covariance_fallible!` (for sources)
+  or `inherit_covariance!`/`inherit_covariance_fallible!` (for adapters) macro
+  to check covariance of the lend lifetime.
 
 ### Changed
 
 - `windows_mut` is now double-ended.
+
+- The return type of `Peekable::peek` is now `Option<&'_ Lend<'_, L>>`, which
+  fixes a problem of data escape. Analogously for `FalliblePeekable::peek`.
+
+## Fixed
+
+- Several possible UBs are no longer possible thanks to the new covariance
+  checking infrastructure.
 
 ## [0.4.2] - 2025-11-18
 
