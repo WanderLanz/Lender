@@ -2,7 +2,10 @@ use core::marker::PhantomData;
 
 use stable_try_trait_v2::Try;
 
-use crate::{FallibleLend, FallibleLender, FallibleLending, ImplBound, Lender, Lending, Ref};
+use crate::{
+    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender, FallibleLend, FallibleLender,
+    FallibleLending, FusedFallibleLender, FusedLender, ImplBound, Lender, Lending, Ref,
+};
 
 trait LendingResult<'lend, E, __ImplBound: ImplBound = Ref<'lend, Self>>:
     Lending<'lend, __ImplBound, Lend = Result<Self::Item, E>>
@@ -66,3 +69,29 @@ where
         self.iter.size_hint()
     }
 }
+
+impl<E, I> DoubleEndedFallibleLender for Convert<E, I>
+where
+    I: DoubleEndedLender + LenderResult<E>,
+{
+    #[inline]
+    fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        match self.iter.next_back() {
+            Some(Ok(i)) => Ok(Some(i)),
+            Some(Err(e)) => Err(e),
+            None => Ok(None),
+        }
+    }
+}
+
+impl<E, I> ExactSizeFallibleLender for Convert<E, I>
+where
+    I: ExactSizeLender + LenderResult<E>,
+{
+    #[inline]
+    fn len(&self) -> usize {
+        self.iter.len()
+    }
+}
+
+impl<E, I> FusedFallibleLender for Convert<E, I> where I: FusedLender + LenderResult<E> {}
