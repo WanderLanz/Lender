@@ -38,7 +38,7 @@ where
     L: FallibleLender,
 {
     type Error = E;
-    crate::inherit_covariance_fallible!();
+    crate::inherit_covariance_fallible!(L);
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {

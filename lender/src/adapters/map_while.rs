@@ -39,7 +39,7 @@ where
     P: for<'all> FnMutHKAOpt<'all, Lend<'all, L>>,
     L: Lender,
 {
-    crate::inherit_covariance!();
+    crate::inherit_covariance!(L);
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         (self.predicate)(self.lender.next()?)
@@ -65,7 +65,7 @@ where
     L: FallibleLender,
 {
     type Error = L::Error;
-    crate::inherit_covariance_fallible!();
+    crate::inherit_covariance_fallible!(L);
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {

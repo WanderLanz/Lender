@@ -90,7 +90,14 @@ impl<'this, L> Lender for NonFallibleAdapter<'this, L>
 where
     L: FallibleLender,
 {
-    crate::inherit_covariance!();
+    // SAFETY: The underlying FallibleLender L's covariance has been verified by its own
+    // _check_covariance implementation. This adapter wraps the FallibleLend type unchanged.
+    unsafe fn _check_covariance<'long: 'short, 'short>(
+        lend: *const &'short <Self as Lending<'long>>::Lend,
+        _: crate::Uncallable,
+    ) -> *const &'short <Self as Lending<'short>>::Lend {
+        unsafe { core::mem::transmute(lend) }
+    }
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         if self.error.is_some() {

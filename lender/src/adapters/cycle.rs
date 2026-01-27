@@ -32,7 +32,7 @@ impl<L> Lender for Cycle<L>
 where
     L: Clone + Lender,
 {
-    crate::inherit_covariance!();
+    crate::inherit_covariance!(L);
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         // SAFETY: polonius return
@@ -119,7 +119,7 @@ where
     L: Clone + FallibleLender,
 {
     type Error = L::Error;
-    crate::inherit_covariance_fallible!();
+    crate::inherit_covariance_fallible!(L);
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {

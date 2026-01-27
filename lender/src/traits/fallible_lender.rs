@@ -1251,7 +1251,7 @@ impl<'lend, L: FallibleLender> FallibleLending<'lend> for &mut L {
 
 impl<L: FallibleLender> FallibleLender for &mut L {
     type Error = L::Error;
-    crate::inherit_covariance_fallible!();
+    crate::inherit_covariance_fallible!(L);
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         (**self).next()

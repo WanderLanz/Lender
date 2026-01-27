@@ -62,7 +62,7 @@ impl<'a, L> Lender for Once<'a, L>
 where
     L: ?Sized + for<'all> Lending<'all>,
 {
-    crate::inherit_covariance!();
+    crate::inherit_covariance!(L);
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         // SAFETY: 'a: 'lend
         self.inner.take().map(|v| unsafe { core::mem::transmute::<Lend<'a, Self>, Lend<'_, Self>>(v) })
@@ -144,7 +144,7 @@ where
     L: ?Sized + for<'all> FallibleLending<'all>,
 {
     type Error = E;
-    crate::inherit_covariance_fallible!();
+    crate::inherit_covariance_fallible!(L);
 
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         match self.inner.take() {

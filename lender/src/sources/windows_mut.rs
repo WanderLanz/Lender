@@ -64,7 +64,7 @@ impl<'any, T> Lending<'any> for WindowsMut<'_, T> {
 }
 
 impl<T> Lender for WindowsMut<'_, T> {
-    crate::inherit_covariance!();
+    crate::check_covariance!();
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.position.update_slice(&mut self.slice);
         self.position = WindowPosition::Front;
@@ -116,7 +116,7 @@ impl<'any, T, const WINDOW_SIZE: usize> Lending<'any> for ArrayWindowsMut<'_, T,
 }
 
 impl<T, const WINDOW_SIZE: usize> Lender for ArrayWindowsMut<'_, T, WINDOW_SIZE> {
-    crate::inherit_covariance!();
+    crate::check_covariance!();
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.position.update_slice(&mut self.slice);
         self.position = WindowPosition::Front;

@@ -271,11 +271,6 @@ macro_rules! lend {
 ///     }
 /// }
 /// ```
-///
-/// # Compile-time Error for Invariant Types
-///
-/// If your `Lend` type is not covariant (e.g., `&'lend Cell<&'lend T>`), this
-/// macro will cause a compile error, preventing undefined behavior.
 #[macro_export]
 macro_rules! check_covariance {
     () => {
@@ -292,26 +287,58 @@ macro_rules! check_covariance {
 ///
 /// Use this macro for adapters whose [`Lend`](Lending::Lend) type is defined in
 /// terms of another lender's [`Lend`](Lending::Lend) type (e.g., `type Lend =
-/// Lend<'lend, L>`). The covariance is inherited from the underlying lender.
+/// Lend<'lend, L>`). The macro takes one or more underlying lending types as
+/// parameters and verifies at compile time that each implements [`Lending`] for
+/// all lifetimes, ensuring their [`Lend`](Lending::Lend) types have been
+/// verified for covariance. It then expands to the `_check_covariance` method
+/// implementation with body `{ unsafe { core::mem::transmute(lend) } }`, which
+/// always compiles.
 ///
 /// For lenders with concrete [`Lend`](Lending::Lend) types, use
-/// [`check_covariance!`] instead. Do not use this macro for concrete types,
-/// at it will lead to undefined behavior.
+/// [`check_covariance!`] instead.
+///
+/// Note that the purpose of specifying the underlying lending types is to avoid
+/// the obvious footgun of using this macro with a concrete type, which would
+/// make the covariance check vacuously true and lead to undefined behavior.
+/// Nonetheless, it is still possible to misuse this macro.
+///
+/// In some cases this macro might not work—for example, when the underlying
+/// lending type is fallible. In these cases, it is necessary to implement
+/// the [`_check_covariance`](Lender::_check_covariance) method manually.
+///
+/// # Examples
+///
+/// ```rust,ignore
+/// impl<L: Lender> Lender for MyAdapter<L> {
+///     inherit_covariance!(L);  // Inherits covariance from L
+///     // ...
+/// }
+///
+/// impl<A: Lender, B: Lender> Lender for MyZipAdapter<A, B> {
+///     inherit_covariance!(A, B);  // Inherits covariance from A and B
+///     // ...
+/// }
+/// ```
 ///
 /// # Safety
 ///
 /// This macro uses transmute internally. It is safe because the
-/// [`Lend`](Lending::Lend) type of the underlying [`Lender`] is covariant.
-/// Since this adapter's [`Lend`](Lending::Lend) type is derived from `L`'s, the
-/// covariance is transitively guaranteed.
+/// [`Lend`](Lending::Lend) type of the underlying [`Lending`] types is covariant.
+/// Since this adapter's [`Lend`](Lending::Lend) type is derived from the
+/// underlying types', the covariance is transitively guaranteed.
 #[macro_export]
 macro_rules! inherit_covariance {
-    () => {
+    ($($L:ty),+ $(,)?) => {
         unsafe fn _check_covariance<'long: 'short, 'short>(
             lend: *const &'short <Self as Lending<'long>>::Lend,
             _: $crate::Uncallable,
         ) -> *const &'short <Self as Lending<'short>>::Lend {
-            // SAFETY: Covariance is inherited from the underlying Lender
+            // Compile-time check: each type must implement Lending for all lifetimes,
+            // ensuring its Lend type has already been verified for covariance.
+            fn _assert_lending<L: ?Sized + for<'all> $crate::Lending<'all>>() {}
+            $(_assert_lending::<$L>();)+
+
+            // SAFETY: Covariance is inherited from the underlying Lending types
             unsafe { core::mem::transmute(lend) }
         }
     };
@@ -448,15 +475,24 @@ macro_rules! check_covariance_fallible {
 
 /// Implement the covariance check method for adapter [`FallibleLender`] impls.
 ///
-/// See [`inherit_covariance!`](crate::inherit_covariance!) for details.
+/// This is the fallible counterpart to [`inherit_covariance!`]. It takes one or
+/// more underlying fallible lending types as parameters and verifies at compile
+/// time that each implements [`FallibleLending`] for all lifetimes.
+///
+/// See [`inherit_covariance!`](crate::inherit_covariance!) for more details.
 #[macro_export]
 macro_rules! inherit_covariance_fallible {
-    () => {
+    ($($L:ty),+ $(,)?) => {
         unsafe fn _check_covariance<'long: 'short, 'short>(
             lend: *const &'short <Self as FallibleLending<'long>>::Lend,
             _: $crate::Uncallable,
         ) -> *const &'short <Self as FallibleLending<'short>>::Lend {
-            // SAFETY: Covariance is inherited from the underlying FallibleLender.
+            // Compile-time check: each type must implement FallibleLending for all lifetimes,
+            // ensuring its Lend type has already been verified for covariance.
+            fn _assert_fallible_lending<L: ?Sized + for<'all> $crate::FallibleLending<'all>>() {}
+            $(_assert_fallible_lending::<$L>();)+
+
+            // SAFETY: Covariance is inherited from the underlying FallibleLending types
             unsafe { core::mem::transmute(lend) }
         }
     };

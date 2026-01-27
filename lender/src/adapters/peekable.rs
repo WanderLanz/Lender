@@ -107,7 +107,7 @@ impl<'this, L> Lender for Peekable<'this, L>
 where
     L: Lender,
 {
-    crate::inherit_covariance!();
+    crate::inherit_covariance!(L);
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         match self.peeked.take() {
             // SAFETY: The lend is manually guaranteed to be the only one alive

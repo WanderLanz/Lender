@@ -53,7 +53,16 @@ impl<St, F> Lender for FromFn<St, F>
 where
     F: for<'all> FnMutHKAOpt<'all, &'all mut St>,
 {
-    crate::inherit_covariance!();
+    // SAFETY: The Lend type is the return type of closure F. The covariance
+    // depends on F's return type being covariant in the lifetime parameter.
+    // This is typically ensured by using hrc_mut!() or similar macros that
+    // produce closures with covariant return types.
+    unsafe fn _check_covariance<'long: 'short, 'short>(
+        lend: *const &'short <Self as Lending<'long>>::Lend,
+        _: crate::Uncallable,
+    ) -> *const &'short <Self as Lending<'short>>::Lend {
+        unsafe { core::mem::transmute(lend) }
+    }
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         (self.f)(&mut self.state)
@@ -97,7 +106,14 @@ where
     F: for<'all> FnMutHKAResOpt<'all, &'all mut St, E>,
 {
     type Error = E;
-    crate::inherit_covariance_fallible!();
+    // SAFETY: The Lend type is the return type of closure F. The covariance
+    // depends on F's return type being covariant in the lifetime parameter.
+    unsafe fn _check_covariance<'long: 'short, 'short>(
+        lend: *const &'short <Self as FallibleLending<'long>>::Lend,
+        _: crate::Uncallable,
+    ) -> *const &'short <Self as FallibleLending<'short>>::Lend {
+        unsafe { core::mem::transmute(lend) }
+    }
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {

@@ -40,12 +40,12 @@ pub type Lend<'lend, L> = <L as Lending<'lend>>::Lend;
 pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// Internal method for compile-time covariance checking.
     /// 
-    /// This method should never be implemented directly. Instead, use the
+    /// This method should rarely be implemented directly. Instead, use the
     /// provided macros:
     ///
     /// - When implementing source lenders (lenders with concrete
-    ///   [`Lend`](Lending::Lend) types), users should invoke
-    ///   [`check_covariance!`](crate::check_covariance) in their [`Lender`] impl.
+    ///   [`Lend`](Lending::Lend) types), use
+    ///   [`check_covariance!`](crate::check_covariance) in the [`Lender`] impl.
     ///   The macro implements the method as `{ lend }`, which only compiles if
     ///   the [`Lend`](Lending::Lend) type is covariant in its lifetime.
     ///
@@ -55,6 +55,11 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///   the method as `unsafe { core::mem::transmute(lend) }`, which is safe
     ///   because the underlying lender's covariance was already verified.
     ///
+    /// - In some cases neither macro is applicable—for example, when adapting a
+    ///   [fallible lender](crate::FallibleLender) to a normal
+    ///   [lender](crate::Lender), or vice versa. In these cases, the method must
+    ///   be implemented manually.
+    /// 
     /// # Safety
     ///
     /// Source lenders must implement this method as `{ lend }`. Adapters must
@@ -1281,7 +1286,7 @@ impl<'lend, L: Lender> Lending<'lend> for &mut L {
     type Lend = Lend<'lend, L>;
 }
 impl<L: Lender> Lender for &mut L {
-    crate::inherit_covariance!();
+    crate::inherit_covariance!(L);
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         (**self).next()
