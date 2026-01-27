@@ -7,7 +7,7 @@ use crate::{
 
 /// Creates a lender that yields an element exactly once.
 ///
-/// similar to [`core::iter::once()`].
+/// The [`Lender`] version of [`core::iter::once()`].
 ///
 /// # Examples
 /// ```rust
@@ -25,7 +25,7 @@ pub fn once<'a, L: ?Sized + for<'all> Lending<'all>>(value: Lend<'a, L>) -> Once
 ///
 /// This `struct` is created by the [`once()`] function.
 ///
-/// similar to [`core::iter::Once`].
+/// The [`Lender`] version of [`core::iter::Once`].
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Once<'a, L>
 where
@@ -92,7 +92,7 @@ impl<L> FusedLender for Once<'_, L> where L: ?Sized + for<'all> Lending<'all> {}
 
 /// Creates a fallible lender that yields an element exactly once.
 ///
-/// similar to [`core::iter::once()`].
+/// The [`FallibleLender`] version of [`core::iter::once()`].
 pub fn fallible_once<'a, E, L: ?Sized + for<'all> FallibleLending<'all>>(
     value: Result<FallibleLend<'a, L>, E>,
 ) -> FallibleOnce<'a, E, L> {
@@ -103,7 +103,7 @@ pub fn fallible_once<'a, E, L: ?Sized + for<'all> FallibleLending<'all>>(
 ///
 /// This `struct` is created by the [`fallible_once()`] function.
 ///
-/// similar to [`core::iter::Once`].
+/// The [`FallibleLender`] version of [`core::iter::Once`].
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct FallibleOnce<'a, E, L>
 where

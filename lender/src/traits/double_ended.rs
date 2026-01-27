@@ -5,7 +5,7 @@ use crate::{
     *,
 };
 
-/// Documentation is incomplete. Refer to [`core::iter::DoubleEndedIterator`] for more information
+/// The [`Lender`] version of [`core::iter::DoubleEndedIterator`].
 pub trait DoubleEndedLender: Lender {
     fn next_back(&mut self) -> Option<Lend<'_, Self>>;
     #[inline]

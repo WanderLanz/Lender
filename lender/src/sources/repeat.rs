@@ -2,7 +2,7 @@ use crate::{prelude::*, FusedLender};
 
 /// Creates a new lender that endlessly repeats a single element.
 ///
-/// See [`iter::repeat()`](core::iter::repeat) for more information.
+/// The [`Lender`] version of [`iter::repeat()`](core::iter::repeat).
 /// # Examples
 /// ```rust
 /// # use lender::prelude::*;
@@ -76,7 +76,7 @@ where
 
 /// Creates a new fallible lender that endlessly repeats a single element.
 ///
-/// See [`iter::repeat()`](core::iter::repeat) for more information.
+/// The [`FallibleLender`] version of [`iter::repeat()`](core::iter::repeat).
 pub fn fallible_repeat<'a, E, L>(elt: Result<FallibleLend<'a, L>, E>) -> FallibleRepeat<'a, E, L>
 where
     E: Clone,

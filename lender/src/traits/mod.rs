@@ -242,7 +242,7 @@ macro_rules! lend {
 /// [`Lend`](Lending::Lend) type is concrete (not defined in terms of another
 /// lender's [`Lend`](Lending::Lend) type). It expands to the
 /// `_check_covariance` method implementation with body `{ lend }`, which only
-/// compiles if the `Lend` type is covariant in its lifetime.
+/// compiles if the [`Lend`](Lending::Lend) type is covariant in its lifetime.
 ///
 /// For adapters that delegate to underlying lenders, use
 /// [`inherit_covariance!`](crate::inherit_covariance!) instead.

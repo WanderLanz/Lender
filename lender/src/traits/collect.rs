@@ -17,7 +17,7 @@ pub trait FromLender<L: IntoLender>: Sized {
     fn from_lender(lender: L) -> Self;
 }
 
-/// Documentation is incomplete. Refer to [`core::iter::IntoIterator`] for more information
+/// The [`Lender`] version of [`core::iter::IntoIterator`].
 pub trait IntoLender {
     type Lender: Lender;
     fn into_lender(self) -> <Self as IntoLender>::Lender;
@@ -29,7 +29,7 @@ impl<L: Lender> IntoLender for L {
         self
     }
 }
-/// Documentation is incomplete. Refer to [`core::iter::Extend`] for more information
+/// The [`Lender`] version of [`core::iter::Extend`].
 pub trait ExtendLender<L: IntoLender> {
     fn extend_lender(&mut self, lender: L);
     /// Extends a collection with exactly one element.
@@ -42,7 +42,7 @@ pub trait ExtendLender<L: IntoLender> {
     }
 }
 
-/// Documentation is incomplete. Refer to [`core::iter::IntoIterator`] for more information
+/// The [`FallibleLender`] version of [`core::iter::IntoIterator`].
 pub trait IntoFallibleLender {
     type Error;
     type FallibleLender: FallibleLender<Error = Self::Error>;

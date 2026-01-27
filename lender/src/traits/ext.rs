@@ -17,8 +17,9 @@ impl<I: Iterator> IteratorExt<I> for I {
     }
 }
 
-/// Extension trait adding to [`IntoIterator`] the method [`into_into_lender`](IntoIteratorExt::into_into_lender),
-/// which turns an [`IntoIterator`] into a [`IntoLender`](crate::IntoLender) without allocation.
+/// Extension trait adding to [`IntoIterator`] the method
+/// [`into_into_lender`](IntoIteratorExt::into_into_lender), which turns an [`IntoIterator`] into a
+/// [`IntoLender`](crate::IntoLender) without allocation.
 pub trait IntoIteratorExt<I: IntoIterator> {
     /// Turn this [`IntoIterator`] into a [`IntoLender`](crate::IntoLender) without allocation.
     ///
@@ -32,8 +33,9 @@ impl<I: IntoIterator> IntoIteratorExt<I> for I {
     }
 }
 
-/// Extension trait adding to [`FallibleIterator`] the method [`into_fallible_lender`](FallibleIteratorExt::into_fallible_lender),
-/// which turns a [`FallibleIterator`] into a [`FallibleLender`](crate::FallibleLender) without allocation.
+/// Extension trait adding to [`FallibleIterator`] the method
+/// [`into_fallible_lender`](FallibleIteratorExt::into_fallible_lender), which turns a
+/// [`FallibleIterator`] into a [`FallibleLender`](crate::FallibleLender) without allocation.
 pub trait FallibleIteratorExt<I: FallibleIterator> {
     /// Turn this [`FallibleIterator`] into a [`FallibleLender`](crate::FallibleLender) without allocation.
     ///

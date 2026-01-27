@@ -1,6 +1,6 @@
 use crate::*;
 
-/// Documentation is incomplete. Refer to [`core::iter::ExactSizeIterator`] for more information
+/// The [`Lender`] version of [`core::iter::ExactSizeIterator`].
 pub trait ExactSizeLender: Lender {
     #[inline]
     fn len(&self) -> usize {
@@ -22,7 +22,7 @@ impl<I: ExactSizeLender> ExactSizeLender for &mut I {
     }
 }
 
-/// Documentation is incomplete. Refer to [`core::iter::ExactSizeIterator`] for more information
+/// The [`FallibleLender`] version of [`core::iter::ExactSizeIterator`].
 pub trait ExactSizeFallibleLender: FallibleLender {
     #[inline]
     fn len(&self) -> usize {

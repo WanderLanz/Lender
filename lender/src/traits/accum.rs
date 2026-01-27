@@ -34,12 +34,12 @@ pub trait SumFallibleLender<L: FallibleLender>: Sized {
     fn sum_lender(lender: L) -> Result<Self, L::Error>;
 }
 
-/// Documentation is incomplete. Refer to [`core::iter::Product`] for more information
+/// The [`Lender`] version of [`core::iter::Product`].
 pub trait ProductLender<L: Lender>: Sized {
     fn product_lender(lender: L) -> Self;
 }
 
-/// Documentation is incomplete. Refer to [`core::iter::Product`] for more information
+/// The [`FallibleLender`] version of [`core::iter::Product`].
 pub trait ProductFallibleLender<L: FallibleLender>: Sized {
     fn product_lender(lender: L) -> Result<Self, L::Error>;
 }

@@ -5,9 +5,10 @@ use crate::{prelude::*, FusedLender};
 /// Creates a new lender that repeats elements endlessly by
 /// applying the provided closure, the repeater, `F: FnMut() -> A`.
 ///
-/// The `repeat_with()` function calls the repeater over and over again.
+/// The [`repeat_with()`] function calls the repeater over and over again.
 ///
-/// See [`iter::repeat_with()`](core::iter::repeat_with) for more information.
+/// The [`Lender`] version of [`iter::repeat_with()`](core::iter::repeat_with).
+///
 /// # Examples
 /// ```rust
 /// # use lender::prelude::*;
@@ -65,9 +66,9 @@ where
 /// Creates a new fallible lender that repeats elements endlessly by applying
 /// the provided closure, the repeater, `F: FnMut() -> Result<A, E>`.
 ///
-/// The `fallible_repeat_with()` function calls the repeater over and over again.
+/// The [`fallible_repeat_with()`] function calls the repeater over and over again.
 ///
-/// See [`iter::repeat_with()`](core::iter::repeat_with) for more information.
+/// The [`FallibleLender`] version of [`iter::repeat_with()`](core::iter::repeat_with).
 pub fn fallible_repeat_with<'a, L, E, F>(f: F) -> FallibleRepeatWith<'a, L, E, F>
 where
     L: ?Sized + for<'all> FallibleLending<'all> + 'a,

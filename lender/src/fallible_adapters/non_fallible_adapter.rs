@@ -9,7 +9,7 @@ use crate::{
 // as a lender or iterator.
 // This should never be available to users of this crate, and is only exposed
 // so that it can be used as a bound for methods in `FallibleLender`.
-/// An adapter to use a `FallibleLender` as a lender or iterator over items.
+/// An adapter to use a [`FallibleLender`] as a [`Lender`] or [`Iterator`] over items.
 #[derive(Debug)]
 #[must_use = "iterators/lenders are lazy and do nothing unless consumed"]
 pub struct NonFallibleAdapter<'this, L>

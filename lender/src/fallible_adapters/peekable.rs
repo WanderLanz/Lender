@@ -69,6 +69,7 @@ where
     where
         F: FnOnce(&FallibleLend<'_, L>) -> bool,
     {
+        #[allow(clippy::deref_addrof)]
         let peeked = unsafe { &mut *(&raw mut *self.peeked) };
         match self.next()? {
             Some(v) if f(&v) => Ok(Some(v)),

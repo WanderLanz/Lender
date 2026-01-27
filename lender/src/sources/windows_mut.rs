@@ -1,8 +1,10 @@
 use crate::{DoubleEndedLender, Lend, Lender, Lending};
 
-/// Creates a new lender that returns mutable contiguous overlapping windows of fixed size over a slice.
+/// Creates a new lender that returns mutable contiguous overlapping windows of fixed size over a
+/// slice.
 ///
-/// This is the mutable, lending variant of [`windows`](https://doc.rust-lang.org/stable/std/primitive.slice.html#method.windows).
+/// This is the mutable, lending variant of
+/// [`windows`](https://doc.rust-lang.org/stable/std/primitive.slice.html#method.windows).
 /// The const generic equivalent is [`array_windows_mut`].
 ///
 /// Note that the [`WindowsMutExt`] trait provides a convenient entry point for this function
@@ -81,15 +83,19 @@ impl<T> DoubleEndedLender for WindowsMut<'_, T> {
     }
 }
 
-/// Creates a new lender that returns mutable overlapping array windows of fixed size over a slice.
+/// Creates a new lender that returns mutable overlapping array windows of fixed size over a
+/// slice.
 ///
-/// This is the mutable, lending variant of [`array_windows`](https://doc.rust-lang.org/stable/std/primitive.slice.html#method.windows).
+/// This is the mutable, lending variant of
+/// [`array_windows`](https://doc.rust-lang.org/stable/std/primitive.slice.html#method.windows).
 /// The non-const generic equivalent is [`windows_mut`].
 ///
 /// Note that the [`WindowsMutExt`] trait provides a convenient entry point for this function
 /// as a method on slices and arrays.
 ///
-/// See [`array_windows`](https://doc.rust-lang.org/stable/std/primitive.slice.html#method.array_windows) for more information.
+/// See
+/// [`array_windows`](https://doc.rust-lang.org/stable/std/primitive.slice.html#method.array_windows)
+/// for more information.
 /// # Examples
 /// ```rust
 /// # use lender::prelude::*;
@@ -132,8 +138,9 @@ impl<T, const WINDOW_SIZE: usize> DoubleEndedLender for ArrayWindowsMut<'_, T, W
     }
 }
 
-/// Extension trait adding to slices and arrays the methods [`windows_mut`](WindowsMutExt::windows_mut)
-/// and [`array_windows_mut`](WindowsMutExt::array_windows_mut).
+/// Extension trait adding to slices and arrays the methods
+/// [`windows_mut`](WindowsMutExt::windows_mut) and
+/// [`array_windows_mut`](WindowsMutExt::array_windows_mut).
 pub trait WindowsMutExt<T> {
     fn windows_mut(&mut self, size: usize) -> WindowsMut<'_, T>;
     fn array_windows_mut<const WINDOW_SIZE: usize>(&mut self) -> ArrayWindowsMut<'_, T, WINDOW_SIZE>;

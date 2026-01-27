@@ -1,6 +1,6 @@
 use crate::*;
 
-/// Documentation is incomplete. Refer to [`core::iter::FusedIterator`] for more information
+/// The [`Lender`] version of [`core::iter::FusedIterator`].
 pub trait FusedLender: Lender {}
 impl<L: FusedLender> FusedLender for &mut L {}
 

@@ -122,7 +122,8 @@ impl<I: IntoIterator> From<I> for FromIntoIter<I> {
     }
 }
 
-/// Creates a lender from an iterator `I`, safely shortening the items' lifetimes with the given lending type `L`.
+/// Creates a lender from an iterator `I`, safely shortening the items' lifetimes with the given
+/// lending type `L`.
 ///
 /// If `I::Item` is 'static, behaves like [`from_iter`].
 /// # Examples
@@ -228,10 +229,9 @@ pub fn from_fallible_iter<I: FallibleIterator>(iter: I) -> FromFallibleIter<I> {
     FromFallibleIter { iter }
 }
 
-/// A lender that yields elements from an iterator.
+/// A lender that yields elements from a fallible iterator.
 ///
-/// This `struct` is created by the [`from_iter()`] function.
-///
+/// This `struct` is created by the [`from_fallible_iter()`] function.
 
 #[derive(Clone, Debug)]
 #[repr(transparent)]
@@ -342,12 +342,11 @@ where
     LendFallibleIter { iter, _marker: core::marker::PhantomData }
 }
 
-/// A lender that lends elements from an iterator by shortening their lifetime.
+/// A lender that lends elements from a fallible iterator by shortening their lifetime.
 ///
-/// If `I::Item` is 'static, behaves like [`FromIter`].
+/// If `I::Item` is 'static, behaves like [`FromFallibleIter`].
 ///
-/// This `struct` is created by the [`lend_iter()`] function.
-///
+/// This `struct` is created by the [`lend_fallible_iter()`] function.
 
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]

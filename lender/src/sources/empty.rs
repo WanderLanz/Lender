@@ -7,7 +7,7 @@ use crate::{
 
 /// Creates a lender that yields nothing.
 ///
-/// similar to [`core::iter::empty()`]
+/// The [`Lender`] version of [`core::iter::empty()`].
 ///
 /// # Examples
 /// ```rust
@@ -24,7 +24,7 @@ pub const fn empty<L: ?Sized + for<'all> Lending<'all>>() -> Empty<L> {
 ///
 /// This `struct` is created by the [`empty()`] function.
 ///
-/// similar to [`core::iter::Empty`].
+/// The [`Lender`] version of [`core::iter::Empty`].
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Empty<L: ?Sized>(marker::PhantomData<L>);
 
@@ -87,16 +87,16 @@ impl<L: ?Sized> Default for Empty<L> {
 
 /// Creates a fallible lender that yields nothing.
 ///
-/// similar to [`core::iter::empty()`]
+/// The [`FallibleLender`] version of [`core::iter::empty()`].
 pub const fn fallible_empty<E, L: ?Sized + for<'all> FallibleLending<'all>>() -> FallibleEmpty<E, L> {
     FallibleEmpty(marker::PhantomData)
 }
 
-/// A lender that yields nothing.
+/// A fallible lender that yields nothing.
 ///
-/// This `struct` is created by the [`empty()`] function.
+/// This `struct` is created by the [`fallible_empty()`] function.
 ///
-/// similar to [`core::iter::Empty`].
+/// The [`FallibleLender`] version of [`core::iter::Empty`].
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct FallibleEmpty<E, L: ?Sized>(marker::PhantomData<(E, L)>);
 

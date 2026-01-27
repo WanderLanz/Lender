@@ -6,10 +6,12 @@ use crate::{
     DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeLender, FallibleLend, FallibleLender, FusedLender, Lend, Lender,
 };
 
-/// Iterator adapter for any Lender where multiple Lends can exist at a time,
-/// allowing on-the-fly conversion into an iterator where Lending is no longer needed or inferred.
+/// [`Iterator`] adapter for any [`Lender`] where multiple [`Lend`]s can exist at a
+/// time, allowing on-the-fly conversion into an iterator where [`Lending`](crate::Lending) is no
+/// longer needed or inferred.
 ///
-/// Implementing `Iterator` directly on any `Lender` causes name conflicts, but might be possible in the future with specialization.
+/// Implementing [`Iterator`] directly on any [`Lender`] causes name conflicts, but might be
+/// possible in the future with specialization.
 /// # Example
 /// ```ignore
 /// let mut vec = vec![1u8, 2, 3];

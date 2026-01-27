@@ -19,7 +19,8 @@ use crate::{
 ///
 /// Must be defined for any type that implements [`FallibleLender`].
 ///
-/// It implicitly restricts the lifetime `'lend` used in `FallibleLending<'lend>` to be `where Self: 'lend`.
+/// It implicitly restricts the lifetime `'lend` used in [`FallibleLending<'lend>`](FallibleLending)
+/// to be `where Self: 'lend`.
 pub trait FallibleLending<'lend, __ImplBound: ImplBound = Ref<'lend, Self>> {
     /// The type being lent.
     type Lend: 'lend;
@@ -69,7 +70,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         lend: *const &'short <Self as FallibleLending<'long>>::Lend, _: crate::Uncallable,
     ) -> *const &'short <Self as FallibleLending<'short>>::Lend;
 
-    /// Yield the next lend, if any, of the lender, or `Ok(None)` when iteration
+    /// Yields the next lend, if any, of the lender, or `Ok(None)` when iteration
     /// is finished.
     /// 
     /// The behavior of calling this method after a previous call has returned
@@ -90,8 +91,8 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// ```
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error>;
 
-    /// Take the next `len` lends of the lender with temporary lender `Chunk`.
-    /// This is equivalent to cloning the lender and calling `take(len)` on it.
+    /// Takes the next `len` lends of the lender with temporary lender [`Chunk`].
+    /// This is equivalent to cloning the lender and calling [`take(len)`](FallibleLender::take) on it.
     /// 
     /// # Examples
     ///
@@ -112,9 +113,9 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Chunk::new(self, chunk_size)
     }
 
-    /// Get the estimated minimum and maximum length of the lender.
-    /// Both bounds assume that all remaining calls to next succeed.
-    /// That is, next could return an Err in fewer calls than specified by the lower bound.
+    /// Gets the estimated minimum and maximum length of the lender.
+    /// Both bounds assume that all remaining calls to [`next()`](FallibleLender::next) succeed.
+    /// That is, [`next()`](FallibleLender::next) could return an [`Err`] in fewer calls than specified by the lower bound.
     /// 
     /// # Examples
     ///
@@ -127,7 +128,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) { (0, None) }
 
-    /// Count the number of lends in the lender by consuming it until the
+    /// Counts the number of lends in the lender by consuming it until the
     /// lender yields `Ok(None)` or `Err(_)`.
     ///
     /// # Examples
@@ -164,7 +165,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Ok(last)
     }
 
-    /// Advance the lender by `n` lends. If the lender does not have enough lends, return the number of lends left.
+    /// Advances the lender by `n` lends. If the lender does not have enough lends, returns the number of lends left.
     #[inline]
     fn advance_by(&mut self, n: usize) -> Result<Option<NonZeroUsize>, Self::Error> {
         for i in 0..n {
@@ -176,9 +177,9 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Ok(None)
     }
 
-    /// Yield the nth lend of the lender, if any, by consuming it. If the lender does not have enough lends, returns `None`.
+    /// Yields the nth lend of the lender, if any, by consuming it. If the lender does not have enough lends, returns [`None`].
     ///
-    /// n is zero-indexed.
+    /// `n` is zero-indexed.
     #[inline]
     fn nth(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         for _ in 0..n {
@@ -189,7 +190,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         self.next()
     }
 
-    /// Skip `step - 1` lends between each lend of the lender.
+    /// Skips `step - 1` lends between each lend of the lender.
     ///
     /// # Panics
     ///
@@ -202,7 +203,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         StepBy::new(self, step)
     }
 
-    /// Chain the lender with another lender of the same type.
+    /// Chains the lender with another lender of the same type.
     ///
     /// The resulting lender will first yield all lends from `self`, then all lends from `other`.
     fn chain<U>(self, other: U) -> Chain<Self, <U as IntoFallibleLender>::FallibleLender>
@@ -213,7 +214,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Chain::new(self, other.into_fallible_lender())
     }
 
-    /// Zip the lender with another lender of the same or different type.
+    /// Zips the lender with another lender of the same or different type.
     #[inline]
     fn zip<U: IntoFallibleLender>(self, other: U) -> Zip<Self, <U as IntoFallibleLender>::FallibleLender>
     where
@@ -222,7 +223,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Zip::new(self, other.into_fallible_lender())
     }
 
-    /// Intersperse each lend of this lender with the given separator.
+    /// Intersperses each lend of this lender with the given separator.
     #[inline]
     fn intersperse<'call>(self, separator: FallibleLend<'call, Self>) -> FallibleIntersperse<'call, Self>
     where
@@ -232,7 +233,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         FallibleIntersperse::new(self, separator)
     }
 
-    /// Intersperse each lend of this lender with the separator produced by the given function.
+    /// Intersperses each lend of this lender with the separator produced by the given function.
     #[inline]
     fn intersperse_with<'call, G>(self, separator: G) -> FallibleIntersperseWith<'call, Self, G>
     where
@@ -242,7 +243,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         FallibleIntersperseWith::new(self, separator)
     }
 
-    /// Map each lend of this lender using the given function.
+    /// Maps each lend of this lender using the given function.
     ///
     /// Note that functions passed to this method must be built using the
     /// [`hrc!`](crate::hrc) or [`hrc_mut!`](crate::hrc_mut) macro, which also
@@ -272,7 +273,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Map::new(self, f)
     }
 
-    /// Map the error of this lender using the given function.
+    /// Maps the error of this lender using the given function.
     #[inline]
     fn map_err<E, F>(self, f: F) -> MapErr<E, Self, F>
     where
@@ -282,7 +283,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         MapErr::new(self, f)
     }
 
-    /// Map each lend of this lender into an owned value using the given function.
+    /// Maps each lend of this lender into an owned value using the given function.
     ///
     /// This is a weaker version of [`FallibleLender::map`] that returns a
     /// [`FallibleIterator`](fallible_iterator::FallibleIterator) instead
@@ -298,7 +299,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         MapIntoIter::new(self, f)
     }
 
-    /// Call the given function with each lend of this lender.
+    /// Calls the given function with each lend of this lender.
     #[inline]
     fn for_each<F>(mut self, mut f: F) -> Result<(), Self::Error>
     where
@@ -311,7 +312,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Ok(())
     }
 
-    /// Filter this lender using the given predicate.
+    /// Filters this lender using the given predicate.
     #[inline]
     fn filter<P>(self, predicate: P) -> Filter<Self, P>
     where
@@ -321,7 +322,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Filter::new(self, predicate)
     }
 
-    /// Filter and map this lender using the given function.
+    /// Filters and maps this lender using the given function.
     ///
     /// Note that functions passed to this method must be built using the
     /// [`hrc!`](crate::hrc) or [`hrc_mut!`](crate::hrc_mut) macro, which also
@@ -350,7 +351,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         FilterMap::new(self, f)
     }
 
-    /// Enumerate this lender. Each lend is paired with its zero-based index.
+    /// Enumerates this lender. Each lend is paired with its zero-based index.
     #[inline]
     fn enumerate(self) -> Enumerate<Self>
     where
@@ -359,7 +360,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Enumerate::new(self)
     }
 
-    /// Make this lender peekable, so that it is possible to peek at the next lend without consuming it.
+    /// Makes this lender peekable, so that it is possible to peek at the next lend without consuming it.
     #[inline]
     fn peekable<'call>(self) -> FalliblePeekable<'call, Self>
     where
@@ -368,7 +369,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         FalliblePeekable::new(self)
     }
 
-    /// Skips the first contiguous sequence lends of this lender that satisfy the given predicate.
+    /// Skips the first contiguous sequence of lends of this lender that satisfy the given predicate.
     #[inline]
     fn skip_while<P>(self, predicate: P) -> SkipWhile<Self, P>
     where
@@ -378,7 +379,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         SkipWhile::new(self, predicate)
     }
 
-    /// Take the first contiguous sequence lends of this lender that satisfy the given predicate.
+    /// Takes the first contiguous sequence of lends of this lender that satisfy the given predicate.
     #[inline]
     fn take_while<P>(self, predicate: P) -> TakeWhile<Self, P>
     where
@@ -388,7 +389,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         TakeWhile::new(self, predicate)
     }
 
-    /// Map this lender using the given function while it returns `Some`.
+    /// Maps this lender using the given function while it returns [`Some`].
     ///
     /// Note that functions passed to this method must be built using the
     /// [`hrc!`](crate::hrc) or [`hrc_mut!`](crate::hrc_mut) macro, which also
@@ -427,7 +428,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Skip::new(self, n)
     }
 
-    /// Take the first `n` lends of this lender.
+    /// Takes the first `n` lends of this lender.
     #[inline]
     fn take(self, n: usize) -> Take<Self>
     where
@@ -436,7 +437,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Take::new(self, n)
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::scan`] for more information.
+    /// The [`FallibleLender`] version of [`Iterator::scan`].
     ///
     /// Note that functions passed to this method must be built using the
     /// [`hrc!`](crate::hrc) or [`hrc_mut!`](crate::hrc_mut) macro, which also
@@ -466,7 +467,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Scan::new(self, initial_state, f)
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::flat_map`] for more information.
+    /// The [`FallibleLender`] version of [`Iterator::flat_map`].
     ///
     /// Note that functions passed to this method must be built using the
     /// [`hrc!`](crate::hrc) or [`hrc_mut!`](crate::hrc_mut) macro, which also
@@ -511,7 +512,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         FallibleFlatMap::new(self, f)
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::flatten`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::flatten`].
     #[inline]
     fn flatten<'call>(self) -> FallibleFlatten<'call, Self>
     where
@@ -521,7 +522,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         FallibleFlatten::new(self)
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::fuse`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::fuse`].
     #[inline]
     fn fuse(self) -> Fuse<Self>
     where
@@ -530,7 +531,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Fuse::new(self)
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::inspect`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::inspect`].
     ///
     /// # Examples
     ///
@@ -556,7 +557,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     // not std::iter
-    /// Mutate each lend with the given function.
+    /// Mutates each lend with the given function.
     #[inline]
     fn mutate<F>(self, f: F) -> Mutate<Self, F>
     where
@@ -566,7 +567,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Mutate::new(self, f)
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::by_ref`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::by_ref`].
     fn by_ref(&mut self) -> &mut Self
     where
         Self: Sized,
@@ -619,7 +620,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         }
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::partition`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::partition`].
     fn partition<'this, A, E, F>(mut self, mut f: F) -> Result<(E, E), Self::Error>
     where
         Self: Sized + 'this,
@@ -638,7 +639,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Ok((left, right))
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::is_partitioned`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::is_partitioned`].
     #[inline]
     #[allow(clippy::wrong_self_convention)]
     fn is_partitioned<P>(mut self, mut predicate: P) -> Result<bool, Self::Error>
@@ -649,7 +650,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Ok(self.all(&mut predicate)? || !self.any(predicate)?)
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::try_fold`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::try_fold`].
     #[inline]
     fn try_fold<B, F, R>(&mut self, mut init: B, mut f: F) -> Result<R, Self::Error>
     where
@@ -665,7 +666,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Ok(R::from_output(init))
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::try_for_each`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::try_for_each`].
     #[inline]
     fn try_for_each<F, R>(&mut self, mut f: F) -> Result<R, Self::Error>
     where
@@ -681,7 +682,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Ok(R::from_output(()))
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::fold`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::fold`].
     ///
     /// # Examples
     ///
@@ -715,7 +716,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
             .map(|res| res.0)
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::reduce`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::reduce`].
     #[inline]
     fn reduce<T, F>(mut self, f: F) -> Result<Option<T>, Self::Error>
     where
@@ -729,7 +730,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         self.fold(first, f).map(Some)
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::try_reduce`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::try_reduce`].
     #[inline]
     fn try_reduce<T, F, R>(mut self, f: F) -> Result<ChangeOutputType<R, Option<T>>, Self::Error>
     where
@@ -749,7 +750,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         }
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::all`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::all`].
     ///
     /// # Examples
     ///
@@ -780,7 +781,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Ok(true)
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::any`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::any`].
     ///
     /// # Examples
     ///
@@ -811,7 +812,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Ok(false)
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::find`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::find`].
     ///
     /// # Examples
     ///
@@ -847,7 +848,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Ok(None)
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::find_map`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::find_map`].
     #[allow(clippy::type_complexity)]
     #[inline]
     fn find_map<'a, F>(&'a mut self, mut f: F) -> Result<Option<<F as FnMutHKAResOpt<'a, FallibleLend<'a, Self>, Self::Error>>::B>, Self::Error>
@@ -871,7 +872,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Ok(None)
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::try_find`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::try_find`].
     #[inline]
     fn try_find<F, R>(&mut self, mut f: F) -> Result<ChangeOutputType<R, Option<FallibleLend<'_, Self>>>, Self::Error>
     where
@@ -903,7 +904,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Ok(<ChangeOutputType<R, Option<FallibleLend<'_, Self>>>>::from_output(None))
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::position`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::position`].
     ///
     /// # Examples
     ///
@@ -936,7 +937,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Ok(None)
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::rposition`] for more information.
+    /// The [`FallibleLender`] version of [`Iterator::rposition`].
     #[inline]
     fn rposition<P>(&mut self, mut predicate: P) -> Result<Option<usize>, Self::Error>
     where
@@ -952,7 +953,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         }
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::max`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::max`].
     #[inline]
     fn max<T>(self) -> Result<Option<T>, Self::Error>
     where
@@ -963,7 +964,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         self.max_by(|x, y| Ok(x.partial_cmp(y).unwrap_or(Ordering::Equal)))
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::min`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::min`].
     #[inline]
     fn min<T>(self) -> Result<Option<T>, Self::Error>
     where
@@ -974,7 +975,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         self.min_by(|x, y| Ok(x.partial_cmp(y).unwrap_or(Ordering::Equal)))
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::max_by_key`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::max_by_key`].
     #[inline]
     fn max_by_key<B: Ord, T, F>(self, f: F) -> Result<Option<T>, Self::Error>
     where
@@ -985,7 +986,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         fallible_iterator::FallibleIterator::max_by_key(self.owned(), f)
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::max_by`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::max_by`].
     #[inline]
     fn max_by<T, F>(self, mut compare: F) -> Result<Option<T>, Self::Error>
     where
@@ -1001,7 +1002,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         ))
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::min_by_key`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::min_by_key`].
     #[inline]
     fn min_by_key<B: Ord, T, F>(self, f: F) -> Result<Option<T>, Self::Error>
     where
@@ -1012,7 +1013,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         fallible_iterator::FallibleIterator::min_by_key(self.owned(), f)
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::min_by`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::min_by`].
     #[inline]
     fn min_by<T, F>(self, mut compare: F) -> Result<Option<T>, Self::Error>
     where
@@ -1028,7 +1029,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         ))
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::rev`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::rev`].
     ///
     /// # Examples
     ///
@@ -1049,7 +1050,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Rev::new(self)
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::unzip`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::unzip`].
     #[inline]
     fn unzip<ExtA, ExtB>(self) -> Result<(ExtA, ExtB), Self::Error>
     where
@@ -1064,9 +1065,9 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         fallible_unzip(self)
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::copied`] for more information.
+    /// The [`FallibleLender`] version of [`Iterator::copied`].
     ///
-    /// Turns this FallibleLender into a `FallibleIterator`.
+    /// Turns this [`FallibleLender`] into a [`FallibleIterator`](fallible_iterator::FallibleIterator).
     ///
     /// # Examples
     ///
@@ -1089,9 +1090,9 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Copied::new(self)
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::cloned`] for more information.
+    /// The [`FallibleLender`] version of [`Iterator::cloned`].
     ///
-    /// Turns this FallibleLender into a FallibleIterator.
+    /// Turns this [`FallibleLender`] into a [`FallibleIterator`](fallible_iterator::FallibleIterator).
     fn cloned<T>(self) -> Cloned<Self>
     where
         Self: Sized + for<'all> FallibleLending<'all, Lend = &'all T>,
@@ -1101,7 +1102,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     // not std::iter
-    /// Turns this `FallibleLender` into a `FallibleIterator`.
+    /// Turns this [`FallibleLender`] into a [`FallibleIterator`](fallible_iterator::FallibleIterator).
     #[inline]
     fn owned(self) -> Owned<Self>
     where
@@ -1111,7 +1112,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Owned::new(self)
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::cycle`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::cycle`].
     #[inline]
     fn cycle(self) -> Cycle<Self>
     where
@@ -1120,7 +1121,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Cycle::new(self)
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::sum`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::sum`].
     #[inline]
     fn sum<S>(self) -> Result<S, Self::Error>
     where
@@ -1130,7 +1131,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         S::sum_lender(self)
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::product`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::product`].
     #[inline]
     fn product<P>(self) -> Result<P, Self::Error>
     where
@@ -1140,7 +1141,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         P::product_lender(self)
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::cmp`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::cmp`].
     fn cmp<L>(self, other: L) -> Result<Ordering, Self::Error>
     where
         L: IntoFallibleLender<Error = Self::Error>,
@@ -1151,7 +1152,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         self.cmp_by(other, |x, y| Ok(x.cmp(&y)))
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::cmp_by`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::cmp_by`].
     fn cmp_by<L, F>(self, other: L, mut cmp: F) -> Result<Ordering, Self::Error>
     where
         Self: Sized,
@@ -1167,7 +1168,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         }
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::partial_cmp`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::partial_cmp`].
     fn partial_cmp<L>(self, other: L) -> Result<Option<Ordering>, Self::Error>
     where
         L: IntoFallibleLender<Error = Self::Error>,
@@ -1177,7 +1178,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         self.partial_cmp_by(other, |x, y| Ok(x.partial_cmp(&y)))
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::partial_cmp_by`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::partial_cmp_by`].
     fn partial_cmp_by<L, F>(self, other: L, mut partial_cmp: F) -> Result<Option<Ordering>, Self::Error>
     where
         Self: Sized,
@@ -1193,7 +1194,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         }
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::eq`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::eq`].
     fn eq<L>(self, other: L) -> Result<bool, Self::Error>
     where
         L: IntoFallibleLender<Error = Self::Error>,
@@ -1203,7 +1204,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         self.eq_by(other, |x, y| Ok(x == y))
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::eq_by`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::eq_by`].
     fn eq_by<L, F>(self, other: L, mut eq: F) -> Result<bool, Self::Error>
     where
         Self: Sized,
@@ -1218,7 +1219,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         }
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::ne`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::ne`].
     fn ne<L>(self, other: L) -> Result<bool, Self::Error>
     where
         L: IntoFallibleLender<Error = Self::Error>,
@@ -1228,7 +1229,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         self.eq(other).map(|eq| !eq)
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::lt`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::lt`].
     fn lt<L>(self, other: L) -> Result<bool, Self::Error>
     where
         L: IntoFallibleLender<Error = Self::Error>,
@@ -1238,7 +1239,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Ok(self.partial_cmp(other)? == Some(Ordering::Less))
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::le`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::le`].
     fn le<L>(self, other: L) -> Result<bool, Self::Error>
     where
         L: IntoFallibleLender<Error = Self::Error>,
@@ -1248,7 +1249,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Ok(matches!(self.partial_cmp(other)?, Some(Ordering::Less | Ordering::Equal)))
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::gt`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::gt`].
     fn gt<L>(self, other: L) -> Result<bool, Self::Error>
     where
         L: IntoFallibleLender<Error = Self::Error>,
@@ -1258,7 +1259,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Ok(self.partial_cmp(other)? == Some(Ordering::Greater))
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::ge`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::ge`].
     fn ge<L>(self, other: L) -> Result<bool, Self::Error>
     where
         L: IntoFallibleLender<Error = Self::Error>,
@@ -1268,7 +1269,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Ok(matches!(self.partial_cmp(other)?, Some(Ordering::Greater | Ordering::Equal)))
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::is_sorted`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::is_sorted`].
     #[inline]
     #[allow(clippy::wrong_self_convention)]
     fn is_sorted<T>(self) -> Result<bool, Self::Error>
@@ -1280,7 +1281,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         self.is_sorted_by(|x, y| Ok(PartialOrd::partial_cmp(x, y)))
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::is_sorted_by`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::is_sorted_by`].
     #[inline]
     #[allow(clippy::wrong_self_convention)]
     fn is_sorted_by<T, F>(self, mut compare: F) -> Result<bool, Self::Error>
@@ -1303,7 +1304,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         })
     }
 
-    /// Documentation is incomplete. Refer to [`Iterator::is_sorted_by_key`] for more information
+    /// The [`FallibleLender`] version of [`Iterator::is_sorted_by_key`].
     #[inline]
     #[allow(clippy::wrong_self_convention)]
     fn is_sorted_by_key<F, K>(mut self, mut f: F) -> Result<bool, Self::Error>
@@ -1363,7 +1364,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Chunky::new_fallible(self, chunk_size)
     }
 
-    /// Turns this lender into a `FallibleIterator` where it has already fulfilled the requirements of the `FallibleIterator` trait.
+    /// Turns this [`FallibleLender`] into a [`FallibleIterator`](fallible_iterator::FallibleIterator) where it has already fulfilled the requirements of the [`FallibleIterator`](fallible_iterator::FallibleIterator) trait.
     #[inline]
     fn iter<'this>(self) -> Iter<'this, Self>
     where
