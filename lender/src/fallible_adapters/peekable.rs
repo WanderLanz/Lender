@@ -24,10 +24,7 @@ where
     L: FallibleLender,
 {
     pub(crate) fn new(lender: L) -> Peekable<'this, L> {
-        Peekable {
-            peeked: MaybeDangling::new(None),
-            lender: AliasableBox::from_unique(alloc::boxed::Box::new(lender)),
-        }
+        Peekable { peeked: MaybeDangling::new(None), lender: AliasableBox::from_unique(alloc::boxed::Box::new(lender)) }
     }
     pub fn into_inner(self) -> L {
         *AliasableBox::into_unique(self.lender)
@@ -95,10 +92,7 @@ where
     L: FallibleLender + Clone,
 {
     fn clone(&self) -> Self {
-        Peekable {
-            peeked: MaybeDangling::new(None),
-            lender: AliasableBox::from_unique((*self.lender).clone().into()),
-        }
+        Peekable { peeked: MaybeDangling::new(None), lender: AliasableBox::from_unique((*self.lender).clone().into()) }
     }
 }
 impl<'this, L: fmt::Debug> fmt::Debug for Peekable<'this, L>
