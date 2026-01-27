@@ -2,7 +2,7 @@ use aliasable::boxed::AliasableBox;
 use core::fmt;
 use maybe_dangling::MaybeDangling;
 
-use crate::{FallibleLend, FallibleLender, FallibleLending, IntoFallibleLender, Map};
+use crate::{FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, IntoFallibleLender, Map};
 
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Flatten<'this, L: FallibleLender>
@@ -61,6 +61,11 @@ where
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.inner.size_hint()
     }
+}
+
+impl<L: FusedFallibleLender> FusedFallibleLender for Flatten<'_, L> where
+    for<'all> FallibleLend<'all, L>: IntoFallibleLender<Error = L::Error>
+{
 }
 
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -123,6 +128,13 @@ where
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.inner.size_hint()
     }
+}
+
+impl<L: FusedFallibleLender, F> FusedFallibleLender for FlatMap<'_, L, F>
+where
+    Map<L, F>: FallibleLender<Error = L::Error>,
+    for<'all> FallibleLend<'all, Map<L, F>>: IntoFallibleLender<Error = L::Error>,
+{
 }
 
 pub struct FlattenCompat<'this, L: FallibleLender>
@@ -212,6 +224,11 @@ where
             None,
         )
     }
+}
+
+impl<L: FusedFallibleLender> FusedFallibleLender for FlattenCompat<'_, L> where
+    for<'all> FallibleLend<'all, L>: IntoFallibleLender<Error = L::Error>
+{
 }
 
 #[cfg(test)]

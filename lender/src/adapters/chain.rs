@@ -182,6 +182,7 @@ where
     B: FusedLender + for<'all> Lending<'all, Lend = Lend<'all, A>>,
 {
 }
+
 impl<A: Default, B: Default> Default for Chain<A, B> {
     fn default() -> Self {
         Chain::new(Default::default(), Default::default())

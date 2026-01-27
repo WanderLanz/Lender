@@ -8,11 +8,11 @@ use crate::{
     higher_order::{FnMutHKARes, FnMutHKAResOpt},
     non_fallible_adapter,
     traits::collect::IntoFallibleLender,
-    Chain, Chunk, Cloned, Copied, Cycle, DoubleEndedFallibleLender, Enumerate, ExtendLender, FallibleFlatMap,
-    FallibleFlatten, FallibleIntersperse, FallibleIntersperseWith, FalliblePeekable, FallibleTryShuntAdapter, Filter,
-    FilterMap, FirstShunt, FromLender, Fuse, ImplBound, Inspect, Iter, Map, MapErr, MapIntoIter, MapWhile, Mutate,
-    NonFallibleAdapter, Owned, ProductFallibleLender, Ref, Rev, Scan, SecondShunt, Skip, SkipWhile, StepBy,
-    SumFallibleLender, Take, TakeWhile, TupleLend, Zip,
+    Chain, Chunk, Chunky, Cloned, Copied, Cycle, DoubleEndedFallibleLender, Enumerate, ExactSizeFallibleLender,
+    ExtendLender, FallibleFlatMap, FallibleFlatten, FallibleIntersperse, FallibleIntersperseWith, FalliblePeekable,
+    FallibleTryShuntAdapter, Filter, FilterMap, FirstShunt, FromLender, Fuse, ImplBound, Inspect, Iter, Map, MapErr,
+    MapIntoIter, MapWhile, Mutate, NonFallibleAdapter, Owned, ProductFallibleLender, Ref, Rev, Scan, SecondShunt, Skip,
+    SkipWhile, StepBy, SumFallibleLender, Take, TakeWhile, TupleLend, Zip,
 };
 
 /// A trait for dealing with the 'items' of fallible lending iterators.
@@ -936,6 +936,22 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Ok(None)
     }
 
+    /// Documentation is incomplete. Refer to [`Iterator::rposition`] for more information.
+    #[inline]
+    fn rposition<P>(&mut self, mut predicate: P) -> Result<Option<usize>, Self::Error>
+    where
+        P: FnMut(FallibleLend<'_, Self>) -> Result<bool, Self::Error>,
+        Self: Sized + ExactSizeFallibleLender + DoubleEndedFallibleLender,
+    {
+        match self.try_rfold(self.len(), |i, x| {
+            let i = i - 1;
+            if predicate(x)? { Ok(ControlFlow::Break(i)) } else { Ok(ControlFlow::Continue(i)) }
+        })? {
+            ControlFlow::Continue(_) => Ok(None),
+            ControlFlow::Break(x) => Ok(Some(x)),
+        }
+    }
+
     /// Documentation is incomplete. Refer to [`Iterator::max`] for more information
     #[inline]
     fn max<T>(self) -> Result<Option<T>, Self::Error>
@@ -1308,6 +1324,43 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
             last = curr;
         }
         Ok(true)
+    }
+
+    /// A lending replacement for [`Iterator::array_chunks`].
+    ///
+    /// This method returns a lender that yields lenders returning the next
+    /// `chunk_size` lends.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `chunk_size` is zero.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// # use std::convert::Infallible;
+    /// let data = [1, 2, 3, 4, 5];
+    /// let lender = lender::lend_iter::<lend!(&'lend i32), _>(data.iter()).into_fallible::<Infallible>();
+    /// let mut chunky = lender.chunky(2);
+    /// let mut chunk1 = chunky.next().unwrap().unwrap();
+    /// assert_eq!(chunk1.next().unwrap(), Some(&1));
+    /// assert_eq!(chunk1.next().unwrap(), Some(&2));
+    /// assert_eq!(chunk1.next().unwrap(), None);
+    /// let mut chunk2 = chunky.next().unwrap().unwrap();
+    /// assert_eq!(chunk2.next().unwrap(), Some(&3));
+    /// assert_eq!(chunk2.next().unwrap(), Some(&4));
+    /// assert_eq!(chunk2.next().unwrap(), None);
+    /// let mut chunk3 = chunky.next().unwrap().unwrap();
+    /// assert_eq!(chunk3.next().unwrap(), Some(&5));
+    /// assert_eq!(chunk3.next().unwrap(), None);
+    /// ```
+    #[inline]
+    fn chunky(self, chunk_size: usize) -> Chunky<Self>
+    where
+        Self: Sized + ExactSizeFallibleLender,
+    {
+        Chunky::new_fallible(self, chunk_size)
     }
 
     /// Turn this lender into a `FallibleIterator` where it has already fulfilled the requirements of the `FallibleIterator` trait.

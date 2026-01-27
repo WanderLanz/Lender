@@ -5,10 +5,15 @@
 ### New
 
 - New infrastructure to check covariance of lends. Every implementation must
-  use either the `check_covariance!`/`check_covariance_fallible!` (for sources)
-  or `inherit_covariance!`/`inherit_covariance_fallible!` (for adapters) macro
-  to check covariance of the lend lifetime. Covariance checks have been embedded
-  in the `hrc!`, `hrc_mut!` and `hrc_once` macros. 
+  use either the `check_covariance!`/`check_covariance_fallible!` macros (for
+  sources) to check covariance of the lend lifetime, or the
+  `inherit_covariance!`/`inherit_covariance_fallible!` macros (for adapters) to
+  propagate covariance of underlying lends (without any check). Covariance
+  checks have also been embedded in the `hrc!`, `hrc_mut!` and `hrc_once`
+  macros. 
+
+- Fallible lenders have now feature parity with normal lenders. In particular,
+  `FallibleLender` has now `chunk` and `rposition` methods.
 
 ### Changed
 
@@ -31,6 +36,9 @@
 
 - `Peekable` and `FalliblePeekable` are now deallocating their fields
   in the correct order.
+
+- All implementations propagate correctly fused, double-ended and exact-size 
+  traits.
 
 ## [0.4.2] - 2025-11-18
 

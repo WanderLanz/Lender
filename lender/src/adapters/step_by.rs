@@ -2,7 +2,7 @@ use core::ops::ControlFlow;
 
 use crate::{
     try_trait_v2::Try, DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender, FallibleLend,
-    FallibleLender, FallibleLending, Lend, Lender, Lending,
+    FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender, Lending,
 };
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -211,6 +211,8 @@ where
 }
 impl<L> ExactSizeLender for StepBy<L> where L: ExactSizeLender {}
 
+impl<L> FusedLender for StepBy<L> where L: FusedLender {}
+
 impl<'lend, L> FallibleLending<'lend> for StepBy<L>
 where
     L: FallibleLender,
@@ -400,3 +402,5 @@ where
     }
 }
 impl<L> ExactSizeFallibleLender for StepBy<L> where L: ExactSizeFallibleLender {}
+
+impl<L> FusedFallibleLender for StepBy<L> where L: FusedFallibleLender {}

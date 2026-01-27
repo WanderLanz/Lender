@@ -1,4 +1,9 @@
-use crate::{DoubleEndedFallibleLender, DoubleEndedLender, FallibleLend, FallibleLender, Lend, Lender, Lending};
+use core::iter::FusedIterator;
+
+use crate::{
+    DoubleEndedFallibleLender, DoubleEndedLender, FallibleLend, FallibleLender, FusedFallibleLender, FusedLender, Lend,
+    Lender, Lending,
+};
 
 // The user must check that the lender did not produce an error after use
 // as a lender or iterator.
@@ -135,3 +140,12 @@ where
         }
     }
 }
+
+impl<'this, L> FusedIterator for NonFallibleAdapter<'this, L>
+where
+    L: FusedFallibleLender,
+    for<'all> FallibleLend<'all, L>: 'this,
+{
+}
+
+impl<'this, L> FusedLender for NonFallibleAdapter<'this, L> where L: FusedFallibleLender {}

@@ -2,7 +2,10 @@ use core::{marker::PhantomData, num::NonZeroUsize, ops::ControlFlow};
 
 use stable_try_trait_v2::{FromResidual, Try};
 
-use crate::{DoubleEndedFallibleLender, DoubleEndedLender, FallibleLend, FallibleLender, FallibleLending, Lender, Lending};
+use crate::{
+    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender, FallibleLend,
+    FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lender, Lending,
+};
 
 /// Wrapper for Try types wrapped in outer Result
 #[repr(transparent)]
@@ -120,3 +123,15 @@ where
         self.lender.try_rfold(init, |acc, value| ResTry(f(acc, value))).0
     }
 }
+
+impl<E, L> ExactSizeFallibleLender for IntoFallible<E, L>
+where
+    L: Lender + ExactSizeLender,
+{
+    #[inline]
+    fn len(&self) -> usize {
+        self.lender.len()
+    }
+}
+
+impl<E, L> FusedFallibleLender for IntoFallible<E, L> where L: FusedLender {}

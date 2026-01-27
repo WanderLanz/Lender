@@ -1,6 +1,9 @@
 use core::{fmt, marker::PhantomData};
 
-use crate::{DoubleEndedFallibleLender, FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender};
+use crate::{
+    DoubleEndedFallibleLender, ExactSizeFallibleLender, FallibleLend, FallibleLender, FallibleLending,
+    FusedFallibleLender,
+};
 
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -63,4 +66,15 @@ where
     F: FnMut(L::Error) -> E,
     L: FusedFallibleLender,
 {
+}
+
+impl<E, L, F> ExactSizeFallibleLender for MapErr<E, L, F>
+where
+    F: FnMut(L::Error) -> E,
+    L: ExactSizeFallibleLender,
+{
+    #[inline]
+    fn len(&self) -> usize {
+        self.lender.len()
+    }
 }

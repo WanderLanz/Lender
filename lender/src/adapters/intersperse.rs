@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::{Lend, Lender, Lending, Peekable};
+use crate::{FusedLender, Lend, Lender, Lending, Peekable};
 
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -177,4 +177,18 @@ where
         lo.saturating_sub(next_is_elem as usize).saturating_add(lo),
         hi.and_then(|hi| hi.saturating_sub(next_is_elem as usize).checked_add(hi)),
     )
+}
+
+impl<'this, L> FusedLender for Intersperse<'this, L>
+where
+    for<'all> Lend<'all, L>: Clone,
+    L: FusedLender,
+{
+}
+
+impl<'this, L, G> FusedLender for IntersperseWith<'this, L, G>
+where
+    L: FusedLender,
+    G: FnMut() -> Lend<'this, L>,
+{
 }
