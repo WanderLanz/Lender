@@ -6,8 +6,15 @@ use crate::{
     FusedFallibleLender, FusedLender, Lend, Lender, Lending,
 };
 
-/// Creates an lender that lazily generates a value exactly once by invoking
+/// Creates a lender that lazily generates a value exactly once by invoking
 /// the provided closure.
+///
+/// Note that functions passed to this function must be built using the
+/// [`hrc!`](crate::hrc), [`hrc_mut!`](crate::hrc_mut), or
+/// [`hrc_once!`](crate::hrc_once) macro, which also checks for covariance of
+/// the returned type. Circumventing the macro may result in undefined
+/// behavior if the return type is not covariant.
+///
 /// # Examples
 /// ```rust
 /// # use lender::prelude::*;
@@ -46,10 +53,10 @@ impl<St, F> Lender for OnceWith<St, F>
 where
     F: for<'all> FnOnceHKA<'all, &'all mut St>,
 {
-    // SAFETY: The Lend type is the return type of closure F. The covariance
-    // depends on F's return type being covariant in the lifetime parameter.
-    // This is typically ensured by using hrc_once!() or similar macros that
-    // produce closures with covariant return types.
+    // SAFETY: The Lend type is the closure's return type. Rust cannot verify covariance
+    // of associated types from higher-order trait bounds at compile time. Users must
+    // ensure F returns a covariant type (e.g., by using hrc_once!() macros). Returning an
+    // non-covariant type (like &'lend Cell<&'lend T>) is undefined behavior.
     unsafe fn _check_covariance<'long: 'short, 'short>(
         lend: *const &'short <Self as Lending<'long>>::Lend,
         _: crate::Uncallable,
@@ -92,17 +99,28 @@ where
 
 impl<St, F> FusedLender for OnceWith<St, F> where F: for<'all> FnOnceHKA<'all, &'all mut St> {}
 
-/// Creates an lender that lazily generates a value exactly once by invoking
-/// the provided closure.
+/// Creates a fallible lender that lazily generates a value exactly once by
+/// invoking the provided closure.
+///
+/// Note that functions passed to this function must be built using the
+/// [`hrc!`](crate::hrc), [`hrc_mut!`](crate::hrc_mut), or
+/// [`hrc_once!`](crate::hrc_once) macro, which also checks for covariance of
+/// the returned type. Circumventing the macro may result in undefined
+/// behavior if the return type is not covariant.
+///
 /// # Examples
 /// ```rust
 /// # use lender::prelude::*;
-/// let mut lender = lender::once_with(0u8, hrc_once!(for<'all> |state: &'all mut u8| -> &'all mut u8 {
-///     *state += 1;
-///     state
-/// }));
-/// assert_eq!(lender.next(), Some(&mut 1));
-/// assert_eq!(lender.next(), None);
+/// # use std::io::Error;
+/// let mut lender = lender::fallible_once_with::<_, Error, _>(
+///     0u8,
+///     hrc_once!(for<'all> |state: &'all mut u8| -> Result<&'all mut u8, Error> {
+///         *state += 1;
+///         Ok(state)
+///     })
+/// );
+/// assert_eq!(lender.next().unwrap(), Some(&mut 1));
+/// assert_eq!(lender.next().unwrap(), None);
 /// ```
 pub fn fallible_once_with<St, E, F>(state: St, f: F) -> FallibleOnceWith<St, E, F>
 where
@@ -134,8 +152,10 @@ where
     F: for<'all> FnOnceHKARes<'all, &'all mut St, E>,
 {
     type Error = E;
-    // SAFETY: The Lend type is the return type of closure F. The covariance
-    // depends on F's return type being covariant in the lifetime parameter.
+    // SAFETY: The Lend type is the closure's return type. Rust cannot verify covariance
+    // of associated types from higher-order trait bounds at compile time. Users must
+    // ensure F returns a covariant type (e.g., by using hrc_once!() macros). Returning an
+    // non-covariant type (like &'lend Cell<&'lend T>) is undefined behavior.
     unsafe fn _check_covariance<'long: 'short, 'short>(
         lend: *const &'short <Self as FallibleLending<'long>>::Lend,
         _: crate::Uncallable,

@@ -64,72 +64,161 @@ impl<'b, A, B: 'b, E, F: FnMut(A) -> Result<Option<B>, E>> FnMutHKAResOpt<'b, A,
 /// Not meant to be called directly. A modified version of [`higher-order-closure`](https://crates.io/crates/higher-order-closure)'s `higher_order_closure` macro to use any `Fn` trait.
 #[doc(hidden)]
 #[macro_export]
-macro_rules! __hrc__ {(
-    $F:ident,
-    $(#![
-        with<
-            $($(
-                $lt:lifetime $(: $super_lt:lifetime)?
-            ),+ $(,)?)?
-            $($(
-                $T:ident $(:
-                    $(
-                        ?$Sized:ident $(+)?
-                    )?
-                    $(
-                        $super:lifetime $(+)?
-                    )?
-                    $(
-                        $Trait:path
-                    )?
-                )?
-            ),+ $(,)?)?
-        >
-        $(where
-            $($wc:tt)*
-        )?
-    ])?
-
-    $( for<$($hr:lifetime),* $(,)?> )?
-    $( move $(@$move:tt)?)?
-    | $($arg:tt : $Arg:ty),* $(,)?|
-    $( -> $Ret:ty)?
-    $body:block
-) => (
-    ({
-        fn __funnel__<
-            $(
+macro_rules! __hrc__ {
+    // Case 1: With for<'lifetime> and return type - includes covariance check
+    (
+        $F:ident,
+        $(#![
+            with<
                 $($(
-                    $lt $(: $super_lt)?
-                    ,
-                )+)?
+                    $lt:lifetime $(: $super_lt:lifetime)?
+                ),+ $(,)?)?
                 $($(
-                    $T
-                    $(:
-                        $(?$Sized +)?
-                        $($super +)?
-                        $($Trait)?
+                    $T:ident $(:
+                        $(
+                            ?$Sized:ident $(+)?
+                        )?
+                        $(
+                            $super:lifetime $(+)?
+                        )?
+                        $(
+                            $Trait:path
+                        )?
                     )?
-                    ,
-                )+)?
-            )?
-                __Closure,
+                ),+ $(,)?)?
             >
-        (
-            f: __Closure,
-        ) -> __Closure
-        where
-            __Closure : for<$($($hr ,)*)?> ::core::ops::$F($($Arg),*)$( -> $Ret)?,
-            $($($($wc)*)?)?
-        {
-            f
-        }
+            $(where
+                $($wc:tt)*
+            )?
+        ])?
 
-        __funnel__::<$($($($T ,)+)?)? _>
-    })(
-        $(move $($move)?)? |$($arg),*| $body
-    )
-)}
+        for<$($hr:lifetime),+ $(,)?>
+        $( move $(@$move:tt)?)?
+        | $($arg:tt : $Arg:ty),* $(,)?|
+        -> $Ret:ty
+        $body:block
+    ) => (
+        ({
+            fn __funnel__<
+                $(
+                    $($(
+                        $lt $(: $super_lt)?
+                        ,
+                    )+)?
+                    $($(
+                        $T
+                        $(:
+                            $(?$Sized +)?
+                            $($super +)?
+                            $($Trait)?
+                        )?
+                        ,
+                    )+)?
+                )?
+                    __Closure,
+                >
+            (
+                f: __Closure,
+            ) -> __Closure
+            where
+                __Closure : for<$($hr),+> ::core::ops::$F($($Arg),*) -> $Ret,
+                $($($($wc)*)?)?
+            {
+                // Covariance check: this struct has the same variance as $Ret
+                // with respect to the bound lifetime(s). The PhantomData<&'a ()>
+                // ensures the lifetime is used even if $Ret doesn't contain it.
+                #[allow(dead_code)]
+                struct __CovarCheck<$($hr),+>(
+                    ::core::marker::PhantomData<($Ret, $(&$hr ()),+)>
+                );
+
+                // This function only compiles if __CovarCheck (and thus $Ret)
+                // is covariant in the lifetime parameter(s).
+                // Using `x` directly (not panic!) ensures the type conversion is checked.
+                #[allow(dead_code)]
+                fn __check_covariance<'__long: '__short, '__short>(
+                    x: *const __CovarCheck<'__long>,
+                ) -> *const __CovarCheck<'__short> {
+                    x
+                }
+
+                f
+            }
+
+            __funnel__::<$($($($T ,)+)?)? _>
+        })(
+            $(move $($move)?)? |$($arg),*| $body
+        )
+    );
+
+    // Case 2: Without for<> or without return type - no covariance check needed
+    (
+        $F:ident,
+        $(#![
+            with<
+                $($(
+                    $lt:lifetime $(: $super_lt:lifetime)?
+                ),+ $(,)?)?
+                $($(
+                    $T:ident $(:
+                        $(
+                            ?$Sized:ident $(+)?
+                        )?
+                        $(
+                            $super:lifetime $(+)?
+                        )?
+                        $(
+                            $Trait:path
+                        )?
+                    )?
+                ),+ $(,)?)?
+            >
+            $(where
+                $($wc:tt)*
+            )?
+        ])?
+
+        $( for<$($hr:lifetime),* $(,)?> )?
+        $( move $(@$move:tt)?)?
+        | $($arg:tt : $Arg:ty),* $(,)?|
+        $( -> $Ret:ty)?
+        $body:block
+    ) => (
+        ({
+            fn __funnel__<
+                $(
+                    $($(
+                        $lt $(: $super_lt)?
+                        ,
+                    )+)?
+                    $($(
+                        $T
+                        $(:
+                            $(?$Sized +)?
+                            $($super +)?
+                            $($Trait)?
+                        )?
+                        ,
+                    )+)?
+                )?
+                    __Closure,
+                >
+            (
+                f: __Closure,
+            ) -> __Closure
+            where
+                __Closure : for<$($($hr ,)*)?> ::core::ops::$F($($Arg),*)$( -> $Ret)?,
+                $($($($wc)*)?)?
+            {
+                f
+            }
+
+            __funnel__::<$($($($T ,)+)?)? _>
+        })(
+            $(move $($move)?)? |$($arg),*| $body
+        )
+    );
+}
 
 /// Higher-Rank Closure (FnOnce) macro that replaces the `closure_lifetime_binder` feature for stable.
 ///

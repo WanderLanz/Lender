@@ -308,7 +308,10 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     }
     /// Map each lend of this lender using the given function.
     ///
-    /// Please note that it is likely required that you use the [`hrc_mut!`] macro to create the closure.
+    /// Note that functions passed to this method must be built using the
+    /// [`hrc!`](crate::hrc) or [`hrc_mut!`](crate::hrc_mut) macro, which also
+    /// checks for covariance of the returned type. Circumventing the macro may
+    /// result in undefined behavior if the return type is not covariant.
     ///
     /// # Examples
     ///
@@ -397,6 +400,11 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         Filter::new(self, predicate)
     }
     /// Filter and map this lender using the given function.
+    ///
+    /// Note that functions passed to this method must be built using the
+    /// [`hrc!`](crate::hrc) or [`hrc_mut!`](crate::hrc_mut) macro, which also
+    /// checks for covariance of the returned type. Circumventing the macro may
+    /// result in undefined behavior if the return type is not covariant.
     ///
     /// # Examples
     ///
@@ -505,6 +513,11 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     }
     /// Map this lender using the given function while it returns `Some`.
     ///
+    /// Note that functions passed to this method must be built using the
+    /// [`hrc!`](crate::hrc) or [`hrc_mut!`](crate::hrc_mut) macro, which also
+    /// checks for covariance of the returned type. Circumventing the macro may
+    /// result in undefined behavior if the return type is not covariant.
+    ///
     /// # Examples
     ///
     /// ```rust
@@ -568,6 +581,24 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         Take::new(self, n)
     }
     /// Documentation is incomplete. Refer to [`Iterator::scan`] for more information.
+    ///
+    /// Note that functions passed to this method must be built using the
+    /// [`hrc!`](crate::hrc) or [`hrc_mut!`](crate::hrc_mut) macro, which also
+    /// checks for covariance of the returned type. Circumventing the macro may
+    /// result in undefined behavior if the return type is not covariant.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1u8, 2, 3].iter());
+    /// let mut scanned = lender.scan(0u8, hrc_mut!(for<'all> |args: (&'all mut u8, &'all u8)| -> Option<&'all u8> {
+    ///     *args.0 += *args.1;
+    ///     Some(args.1)
+    /// }));
+    /// assert_eq!(scanned.next(), Some(&1));
+    /// assert_eq!(scanned.next(), Some(&2));
+    /// ```
     #[inline]
     fn scan<St, F>(self, initial_state: St, f: F) -> Scan<Self, St, F>
     where
@@ -576,7 +607,39 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         Scan::new(self, initial_state, f)
     }
-    /// Documentation is incomplete. Refer to [`Iterator::flat_map`] for more information
+    /// Documentation is incomplete. Refer to [`Iterator::flat_map`] for more information.
+    ///
+    /// Note that functions passed to this method must be built using the
+    /// [`hrc!`](crate::hrc) or [`hrc_mut!`](crate::hrc_mut) macro, which also
+    /// checks for covariance of the returned type. Circumventing the macro may
+    /// result in undefined behavior if the return type is not covariant.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// // Define a wrapper that implements Lender
+    /// struct VecLender(Vec<i32>);
+    ///
+    /// impl<'lend> Lending<'lend> for VecLender {
+    ///     type Lend = i32;
+    /// }
+    ///
+    /// impl Lender for VecLender {
+    ///     check_covariance!();
+    ///     fn next(&mut self) -> Option<Lend<'_, Self>> {
+    ///         if self.0.is_empty() { None } else { Some(self.0.remove(0)) }
+    ///     }
+    /// }
+    ///
+    /// let data = vec![1i32, 2, 3];
+    /// let mut flat = data.into_iter().into_lender().flat_map(
+    ///     hrc_mut!(for<'lend> |x: i32| -> VecLender { VecLender(vec![x, x * 10]) })
+    /// );
+    /// assert_eq!(flat.next(), Some(1));
+    /// assert_eq!(flat.next(), Some(10));
+    /// assert_eq!(flat.next(), Some(2));
+    /// ```
     #[inline]
     fn flat_map<'call, F>(self, f: F) -> FlatMap<'call, Self, F>
     where

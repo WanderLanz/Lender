@@ -1,0 +1,18 @@
+error: lifetime may not live long enough
+  --> tests/fail/hrc_invariant.rs:12:30
+   |
+12 |       let _mapped = lender.map(hrc_mut!(for<'lend> |_x: &'lend i32| -> Cell<&'lend i32> {
+   |  ______________________________^
+13 | |         Cell::new(&0)
+14 | |     }));
+   | |      ^
+   | |      |
+   | |      lifetime `'__short` defined here
+   | |______lifetime `'__long` defined here
+   |        function was supposed to return data with lifetime `'__long` but it is returning data with lifetime `'__short`
+   |
+   = help: consider adding the following bound: `'__short: '__long`
+   = note: requirement occurs because of the type `__CovarCheck<'_>`, which makes the generic argument `'_` invariant
+   = note: the struct `__CovarCheck<'lend>` is invariant over the parameter `'lend`
+   = help: see <https://doc.rust-lang.org/nomicon/subtyping.html> for more information about variance
+   = note: this error originates in the macro `$crate::__hrc__` which comes from the expansion of the macro `hrc_mut` (in Nightly builds, run with -Z macro-backtrace for more info)

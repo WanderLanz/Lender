@@ -6,6 +6,12 @@ use crate::{
 };
 
 /// Creates a lender from a state and a closure `F: FnMut(&mut St) -> Option<T>`.
+///
+/// Note that functions passed to this function must be built using the
+/// [`hrc!`](crate::hrc) or [`hrc_mut!`](crate::hrc_mut) macro, which also
+/// checks for covariance of the returned type. Circumventing the macro may
+/// result in undefined behavior if the return type is not covariant.
+///
 /// # Examples
 /// ```rust
 /// # use lender::prelude::*;
@@ -53,10 +59,10 @@ impl<St, F> Lender for FromFn<St, F>
 where
     F: for<'all> FnMutHKAOpt<'all, &'all mut St>,
 {
-    // SAFETY: The Lend type is the return type of closure F. The covariance
-    // depends on F's return type being covariant in the lifetime parameter.
-    // This is typically ensured by using hrc_mut!() or similar macros that
-    // produce closures with covariant return types.
+    // SAFETY: The Lend type is the closure's return type. Rust cannot verify covariance
+    // of associated types from higher-order trait bounds at compile time. Users must
+    // ensure F returns a covariant type (e.g., by using hrc_mut!() macros). Returning an
+    // non-covariant type (like &'lend Cell<&'lend T>) is undefined behavior.
     unsafe fn _check_covariance<'long: 'short, 'short>(
         lend: *const &'short <Self as Lending<'long>>::Lend,
         _: crate::Uncallable,
@@ -70,6 +76,29 @@ where
 }
 
 /// Creates a fallible lender from a state and a closure `F: FnMut(&mut St) -> Result<Option<T>, E>`.
+///
+/// Note that functions passed to this function must be built using the
+/// [`hrc!`](crate::hrc) or [`hrc_mut!`](crate::hrc_mut) macro, which also
+/// checks for covariance of the returned type. Circumventing the macro may
+/// result in undefined behavior if the return type is not covariant.
+///
+/// # Examples
+/// ```rust
+/// # use lender::prelude::*;
+/// # use std::io::Error;
+/// let mut lender = lender::from_fallible_fn::<_, Error, _>(
+///     0u8,
+///     hrc_mut!(for<'all> |state: &'all mut u8| -> Result<Option<&'all mut u8>, Error> {
+///         if *state < 3 {
+///             *state += 1;
+///             Ok(Some(state))
+///         } else {
+///             Ok(None)
+///         }
+///     })
+/// );
+/// assert_eq!(lender.next().unwrap(), Some(&mut 1));
+/// ```
 pub fn from_fallible_fn<St, E, F>(state: St, f: F) -> FromFallibleFn<St, E, F>
 where
     F: for<'all> FnMutHKAResOpt<'all, &'all mut St, E>,
@@ -106,8 +135,10 @@ where
     F: for<'all> FnMutHKAResOpt<'all, &'all mut St, E>,
 {
     type Error = E;
-    // SAFETY: The Lend type is the return type of closure F. The covariance
-    // depends on F's return type being covariant in the lifetime parameter.
+    // SAFETY: The Lend type is the closure's return type. Rust cannot verify covariance
+    // of associated types from higher-order trait bounds at compile time. Users must
+    // ensure F returns a covariant type (e.g., by using hrc_mut!() macros). Returning an
+    // non-covariant type (like &'lend Cell<&'lend T>) is undefined behavior.
     unsafe fn _check_covariance<'long: 'short, 'short>(
         lend: *const &'short <Self as FallibleLending<'long>>::Lend,
         _: crate::Uncallable,
