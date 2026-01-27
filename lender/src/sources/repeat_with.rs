@@ -2,7 +2,7 @@ use core::marker::PhantomData;
 
 use crate::{prelude::*, FusedLender};
 
-/// Creates a new iterator that repeats elements of type `A` endlessly by
+/// Creates a new lender that repeats elements endlessly by
 /// applying the provided closure, the repeater, `F: FnMut() -> A`.
 ///
 /// The `repeat_with()` function calls the repeater over and over again.
@@ -62,9 +62,8 @@ where
 {
 }
 
-/// Creates a new fallible iterator that repeats elements of type `Result<A, E>`
-/// endlessly by applying the provided closure, the repeater,
-/// `F: FnMut() -> Result<A, E>`.
+/// Creates a new fallible lender that repeats elements endlessly by applying
+/// the provided closure, the repeater, `F: FnMut() -> Result<A, E>`.
 ///
 /// The `fallible_repeat_with()` function calls the repeater over and over again.
 ///

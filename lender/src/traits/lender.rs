@@ -264,7 +264,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         Zip::new(self, other.into_lender())
     }
-    /// Intersperse each lend of this lender with the given seperator.
+    /// Intersperse each lend of this lender with the given separator.
     ///
     /// # Examples
     ///
@@ -285,7 +285,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         Intersperse::new(self, separator)
     }
-    /// Intersperse each lend of this lender with the seperator produced by the given function.
+    /// Intersperse each lend of this lender with the separator produced by the given function.
     ///
     /// # Examples
     ///
@@ -470,7 +470,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         Peekable::new(self)
     }
-    /// Skip the first contiguous sequence lends of this lender that satisfy the given predicate.
+    /// Skips the first contiguous sequence lends of this lender that satisfy the given predicate.
     ///
     /// # Examples
     ///
@@ -542,7 +542,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         MapWhile::new(self, predicate)
     }
-    /// Skip the first `n` lends of this lender.
+    /// Skips the first `n` lends of this lender.
     ///
     /// # Examples
     ///
@@ -1062,7 +1062,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         Cloned::new(self)
     }
     // not std::iter
-    /// Turn this Lender into an Iterator.
+    /// Turns this Lender into an Iterator.
     #[inline]
     fn owned(self) -> Owned<Self>
     where
@@ -1268,7 +1268,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         }
         true
     }
-    /// Turn this lender into an Iterator where it has already fulfilled the requirements of the `Iterator` trait.
+    /// Turns this lender into an Iterator where it has already fulfilled the requirements of the `Iterator` trait.
     #[inline]
     fn iter<'this>(self) -> Iter<'this, Self>
     where
@@ -1305,7 +1305,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         Chunky::new(self, chunk_size)
     }
 
-    /// Convert an lender of anything into `FallibleLender` by wrapping
+    /// Converts a lender into a `FallibleLender` by wrapping
     /// into `Result<Lend<'_, Self>, E>` where `E` is an
     /// error that can never actually happen.
     fn into_fallible<E>(self) -> IntoFallible<E, Self> where Self: Sized {

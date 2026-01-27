@@ -7,7 +7,7 @@ use crate::{
 
 /// A lender yielding lenders returning the next `chunk_size` lends.
 ///
-/// This is the closest lendeing approximation to [`core::iter::ArrayChunks`], as
+/// This is the closest lending approximation to [`core::iter::ArrayChunks`], as
 /// we cannot accumulate the lends into an array.
 ///
 /// This struct is created by [`chunky`][Lender::chunky] or

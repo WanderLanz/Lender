@@ -32,7 +32,7 @@ where
     FromFn { state, f }
 }
 
-/// An lender where each iteration calls the provided closure `F: FnMut(&mut St) -> Option<T>`.
+/// A lender where each iteration calls the provided closure `F: FnMut(&mut St) -> Option<T>`.
 ///
 /// This `struct` is created by the [`from_fn()`] function.
 ///

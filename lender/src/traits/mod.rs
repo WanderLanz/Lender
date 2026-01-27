@@ -283,7 +283,7 @@ macro_rules! check_covariance {
     };
 }
 
-/// Implement the covariance check method for adapter [`Lender`] impls.
+/// Skips the covariance check for adapter [`Lender`] impls.
 ///
 /// Use this macro for adapters whose [`Lend`](Lending::Lend) type is defined in
 /// terms of another lender's [`Lend`](Lending::Lend) type (e.g., `type Lend =
@@ -292,7 +292,7 @@ macro_rules! check_covariance {
 /// all lifetimes, ensuring their [`Lend`](Lending::Lend) types have been
 /// verified for covariance. It then expands to the `_check_covariance` method
 /// implementation with body `{ unsafe { core::mem::transmute(lend) } }`, which
-/// always compiles.
+/// skips the covariance check, as it always compiles.
 ///
 /// For lenders with concrete [`Lend`](Lending::Lend) types, use
 /// [`check_covariance!`] instead.
@@ -473,7 +473,7 @@ macro_rules! check_covariance_fallible {
     };
 }
 
-/// Implement the covariance check method for adapter [`FallibleLender`] impls.
+/// Skips the covariance check for adapter [`FallibleLender`] impls.
 ///
 /// This is the fallible counterpart to [`inherit_covariance!`]. It takes one or
 /// more underlying fallible lending types as parameters and verifies at compile

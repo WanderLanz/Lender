@@ -1,6 +1,6 @@
 use crate::{DoubleEndedLender, Lend, Lender, Lending};
 
-/// Create a new lender that returns mutable contiguous overlapping windows of fixed size over a slice.
+/// Creates a new lender that returns mutable contiguous overlapping windows of fixed size over a slice.
 ///
 /// This is the mutable, lending variant of [`windows`](https://doc.rust-lang.org/stable/std/primitive.slice.html#method.windows).
 /// The const generic equivalent is [`array_windows_mut`].
@@ -30,7 +30,7 @@ pub struct WindowsMut<'a, T> {
     position: WindowPosition,
 }
 
-/// Track which position we most recently returned.
+/// Tracks which position was most recently returned.
 #[derive(Clone, Copy)]
 enum WindowPosition {
     Init,
@@ -81,7 +81,7 @@ impl<T> DoubleEndedLender for WindowsMut<'_, T> {
     }
 }
 
-/// Create a new lender that returns mutable overlapping array windows of fixed size over a slice.
+/// Creates a new lender that returns mutable overlapping array windows of fixed size over a slice.
 ///
 /// This is the mutable, lending variant of [`array_windows`](https://doc.rust-lang.org/stable/std/primitive.slice.html#method.windows).
 /// The non-const generic equivalent is [`windows_mut`].

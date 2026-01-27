@@ -222,7 +222,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Zip::new(self, other.into_fallible_lender())
     }
 
-    /// Intersperse each lend of this lender with the given seperator.
+    /// Intersperse each lend of this lender with the given separator.
     #[inline]
     fn intersperse<'call>(self, separator: FallibleLend<'call, Self>) -> FallibleIntersperse<'call, Self>
     where
@@ -232,7 +232,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         FallibleIntersperse::new(self, separator)
     }
 
-    /// Intersperse each lend of this lender with the seperator produced by the given function.
+    /// Intersperse each lend of this lender with the separator produced by the given function.
     #[inline]
     fn intersperse_with<'call, G>(self, separator: G) -> FallibleIntersperseWith<'call, Self, G>
     where
@@ -368,7 +368,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         FalliblePeekable::new(self)
     }
 
-    /// Skip the first contiguous sequence lends of this lender that satisfy the given predicate.
+    /// Skips the first contiguous sequence lends of this lender that satisfy the given predicate.
     #[inline]
     fn skip_while<P>(self, predicate: P) -> SkipWhile<Self, P>
     where
@@ -418,7 +418,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         MapWhile::new(self, predicate)
     }
 
-    /// Skip the first `n` lends of this lender.
+    /// Skips the first `n` lends of this lender.
     #[inline]
     fn skip(self, n: usize) -> Skip<Self>
     where
@@ -1091,7 +1091,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
 
     /// Documentation is incomplete. Refer to [`Iterator::cloned`] for more information.
     ///
-    /// Turns this FallibleLender into a  FallibleIterator.
+    /// Turns this FallibleLender into a FallibleIterator.
     fn cloned<T>(self) -> Cloned<Self>
     where
         Self: Sized + for<'all> FallibleLending<'all, Lend = &'all T>,
@@ -1101,7 +1101,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     // not std::iter
-    /// Turn this `FallibleLender` into a `FallibleIterator`.
+    /// Turns this `FallibleLender` into a `FallibleIterator`.
     #[inline]
     fn owned(self) -> Owned<Self>
     where
@@ -1363,7 +1363,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Chunky::new_fallible(self, chunk_size)
     }
 
-    /// Turn this lender into a `FallibleIterator` where it has already fulfilled the requirements of the `FallibleIterator` trait.
+    /// Turns this lender into a `FallibleIterator` where it has already fulfilled the requirements of the `FallibleIterator` trait.
     #[inline]
     fn iter<'this>(self) -> Iter<'this, Self>
     where

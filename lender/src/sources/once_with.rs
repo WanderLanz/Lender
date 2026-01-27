@@ -32,8 +32,7 @@ where
     OnceWith { state, f: Some(f) }
 }
 
-/// An iterator that yields a single element of type `A` by
-/// applying the provided closure `F: FnOnce() -> A`.
+/// A lender that yields a single element by applying the provided closure.
 ///
 /// This `struct` is created by the [`once_with()`] function.
 ///
@@ -129,10 +128,9 @@ where
     FallibleOnceWith { state, f: Some(f), _marker: PhantomData }
 }
 
-/// An iterator that yields a single element of type `A` by
-/// applying the provided closure `F: FnOnce() -> A`.
+/// A fallible lender that yields a single element by applying the provided closure.
 ///
-/// This `struct` is created by the [`once_with()`] function.
+/// This `struct` is created by the [`fallible_once_with()`] function.
 ///
 pub struct FallibleOnceWith<St, E, F> {
     state: St,
