@@ -116,7 +116,7 @@ where
     L: FallibleLender,
 {
     type Error = L::Error;
-    crate::inherit_covariance_fallible!(L);
+    crate::unsafe_assume_covariance_fallible!();
 
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         match self.peeked.take() {

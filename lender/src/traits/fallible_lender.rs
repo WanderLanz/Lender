@@ -52,21 +52,13 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     ///   lend }`, which only compiles if the [`Lend`](FallibleLending::Lend) type
     ///   is covariant in its lifetime.
     ///
-    /// - When implementing adapters (lenders whose
-    ///   [`Lend`](FallibleLending::Lend) type is derived from an underlying
-    ///   fallible lender), users should invoke
-    ///   [`inherit_covariance_fallible!`](crate::inherit_covariance_fallible).
-    ///   The macro implements the method as `unsafe { core::mem::transmute(lend)
-    ///   }`, which is safe because the underlying fallible lender's covariance
-    ///   was already verified.
-    ///
-    /// # Safety
-    ///
-    /// Source lenders must implement this method as `{ lend }`. Adapters must
-    /// implement this method as `unsafe { core::mem::transmute(lend) }`. In
-    /// general, the implementation must guarantee that the [`Lend`](FallibleLending::Lend)
-    /// type is covariant in its lifetime.
-    unsafe fn _check_covariance<'long: 'short, 'short>(
+    /// - In all other cases (e.g., when implementing adapters), use
+    ///   [`unsafe_assume_covariance_fallible!`](crate::unsafe_assume_covariance_fallible)
+    ///   in the [`FallibleLender`] impl. The macro implements the method as
+    ///   `unsafe { core::mem::transmute(lend) }`, which is a no-op. This is
+    ///   unsafe because it is up to the implementor to guarantee that the
+    ///   [`Lend`](FallibleLending::Lend) type is covariant in its lifetime.
+    fn _check_covariance<'long: 'short, 'short>(
         lend: *const &'short <Self as FallibleLending<'long>>::Lend, _: crate::Uncallable,
     ) -> *const &'short <Self as FallibleLending<'short>>::Lend;
 
@@ -1414,7 +1406,7 @@ impl<'lend, L: FallibleLender> FallibleLending<'lend> for &mut L {
 
 impl<L: FallibleLender> FallibleLender for &mut L {
     type Error = L::Error;
-    crate::inherit_covariance_fallible!(L);
+    crate::unsafe_assume_covariance_fallible!();
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         (**self).next()

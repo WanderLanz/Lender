@@ -54,24 +54,13 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///   The macro implements the method as `{ lend }`, which only compiles if
     ///   the [`Lend`](Lending::Lend) type is covariant in its lifetime.
     ///
-    /// - When implementing adapters (lenders whose [`Lend`](Lending::Lend) type
-    ///   is derived from an underlying lender), users should invoke
-    ///   [`inherit_covariance!`](crate::inherit_covariance). The macro implements
-    ///   the method as `unsafe { core::mem::transmute(lend) }`, which is safe
-    ///   because the underlying lender's covariance was already verified.
-    ///
-    /// - In some cases neither macro is applicable—for example, when adapting a
-    ///   [fallible lender](crate::FallibleLender) to a normal
-    ///   [lender](crate::Lender), or vice versa. In these cases, the method must
-    ///   be implemented manually.
-    /// 
-    /// # Safety
-    ///
-    /// Source lenders must implement this method as `{ lend }`. Adapters must
-    /// implement this method as `unsafe { core::mem::transmute(lend) }`. In
-    /// general, the implementation must guarantee that the [`Lend`](Lending::Lend)
-    /// type is covariant in its lifetime.
-    unsafe fn _check_covariance<'long: 'short, 'short>(
+    /// - In all other cases (e.g., when implementing adapters), use
+    ///   [`unsafe_assume_covariance!`](crate::unsafe_assume_covariance) in the
+    ///   [`Lender`] impl. The macro implements the method as `unsafe {
+    ///   core::mem::transmute(lend) }`, which is a no-op. This is unsafe because
+    ///   it is up to the implementor to guarantee that the [`Lend`](Lending::Lend)
+    ///   type is covariant in its lifetime.
+    fn _check_covariance<'long: 'short, 'short>(
         lend: *const &'short <Self as Lending<'long>>::Lend, _: crate::Uncallable,
     ) -> *const &'short <Self as Lending<'short>>::Lend;
 
@@ -1354,7 +1343,7 @@ impl<'lend, L: Lender> Lending<'lend> for &mut L {
     type Lend = Lend<'lend, L>;
 }
 impl<L: Lender> Lender for &mut L {
-    crate::inherit_covariance!(L);
+    crate::unsafe_assume_covariance!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         (**self).next()

@@ -54,7 +54,7 @@ where
     L: FallibleLender,
 {
     type Error = L::Error;
-    crate::inherit_covariance_fallible!(L);
+    crate::unsafe_assume_covariance_fallible!();
 
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         if self.needs_sep && self.lender.peek()?.is_some() {
@@ -137,7 +137,7 @@ where
     G: FnMut() -> Result<FallibleLend<'this, L>, L::Error>,
 {
     type Error = L::Error;
-    crate::inherit_covariance_fallible!(L);
+    crate::unsafe_assume_covariance_fallible!();
 
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         if self.needs_sep && self.lender.peek()?.is_some() {

@@ -53,8 +53,8 @@ pub mod prelude {
 
     pub use crate::{
         check_covariance, check_covariance_fallible, covariant_lend, fallible_lend, from_fallible_iter,
-        from_into_fallible_iter, from_into_iter, from_iter, hrc, hrc_mut, hrc_once, inherit_covariance,
-        inherit_covariance_fallible, lend, DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender,
+        from_into_fallible_iter, from_into_iter, from_iter, hrc, hrc_mut, hrc_once, lend, unsafe_assume_covariance,
+        unsafe_assume_covariance_fallible, DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender,
         ExactSizeLender, ExtendLender, FallibleIteratorExt, FallibleLend, FallibleLender, FallibleLending, FromLender,
         IntoFallibleIteratorExt, IntoFallibleLender, IntoIteratorExt, IntoLender, IteratorExt, Lend, Lender, Lending,
         WindowsMutExt,

@@ -176,7 +176,7 @@ where
     L: ?Sized + for<'all> Lending<'all> + 'a,
     I: Iterator<Item = Lend<'a, L>>,
 {
-    crate::inherit_covariance!(L);
+    crate::unsafe_assume_covariance!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         // SAFETY: 'a: 'lend, and caller must ensure Lend<'a, L> is covariant in 'a
@@ -369,7 +369,7 @@ where
     I: FallibleIterator<Item = FallibleLend<'a, L>>,
 {
     type Error = I::Error;
-    crate::inherit_covariance_fallible!(L);
+    crate::unsafe_assume_covariance_fallible!();
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {

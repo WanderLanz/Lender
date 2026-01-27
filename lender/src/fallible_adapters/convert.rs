@@ -45,15 +45,7 @@ where
     I: LenderResult<E>,
 {
     type Error = E;
-    // SAFETY: The underlying Lender I's covariance has been verified by its own
-    // _check_covariance implementation. This adapter extracts the Ok value from
-    // Result, preserving the covariance of the underlying type.
-    unsafe fn _check_covariance<'long: 'short, 'short>(
-        lend: *const &'short <Self as FallibleLending<'long>>::Lend,
-        _: crate::Uncallable,
-    ) -> *const &'short <Self as FallibleLending<'short>>::Lend {
-        unsafe { core::mem::transmute(lend) }
-    }
+    crate::unsafe_assume_covariance_fallible!();
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, E> {

@@ -52,16 +52,7 @@ impl<St, F> Lender for OnceWith<St, F>
 where
     F: for<'all> FnOnceHKA<'all, &'all mut St>,
 {
-    // SAFETY: The Lend type is the closure's return type. Rust cannot verify covariance
-    // of associated types from higher-order trait bounds at compile time. Users must
-    // ensure F returns a covariant type (e.g., by using hrc_once!() macros). Returning an
-    // non-covariant type (like &'lend Cell<&'lend T>) is undefined behavior.
-    unsafe fn _check_covariance<'long: 'short, 'short>(
-        lend: *const &'short <Self as Lending<'long>>::Lend,
-        _: crate::Uncallable,
-    ) -> *const &'short <Self as Lending<'short>>::Lend {
-        unsafe { core::mem::transmute(lend) }
-    }
+    crate::unsafe_assume_covariance!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.f.take().map(|f| f(&mut self.state))
@@ -150,16 +141,7 @@ where
     F: for<'all> FnOnceHKARes<'all, &'all mut St, E>,
 {
     type Error = E;
-    // SAFETY: The Lend type is the closure's return type. Rust cannot verify covariance
-    // of associated types from higher-order trait bounds at compile time. Users must
-    // ensure F returns a covariant type (e.g., by using hrc_once!() macros). Returning an
-    // non-covariant type (like &'lend Cell<&'lend T>) is undefined behavior.
-    unsafe fn _check_covariance<'long: 'short, 'short>(
-        lend: *const &'short <Self as FallibleLending<'long>>::Lend,
-        _: crate::Uncallable,
-    ) -> *const &'short <Self as FallibleLending<'short>>::Lend {
-        unsafe { core::mem::transmute(lend) }
-    }
+    crate::unsafe_assume_covariance_fallible!();
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {

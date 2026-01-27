@@ -1,8 +1,7 @@
 use core::{fmt, marker::PhantomData};
 
 use crate::{
-    DoubleEndedFallibleLender, ExactSizeFallibleLender, FallibleLend, FallibleLender, FallibleLending,
-    FusedFallibleLender,
+    DoubleEndedFallibleLender, ExactSizeFallibleLender, FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender,
 };
 
 #[derive(Clone)]
@@ -41,7 +40,7 @@ where
     L: FallibleLender,
 {
     type Error = E;
-    crate::inherit_covariance_fallible!(L);
+    crate::unsafe_assume_covariance_fallible!();
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {

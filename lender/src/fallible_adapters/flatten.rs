@@ -51,7 +51,7 @@ where
     for<'all> FallibleLend<'all, L>: IntoFallibleLender<Error = L::Error>,
 {
     type Error = L::Error;
-    crate::inherit_covariance_fallible!(L);
+    crate::unsafe_assume_covariance_fallible!();
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
@@ -118,7 +118,7 @@ where
     for<'all> FallibleLend<'all, Map<L, F>>: IntoFallibleLender<Error = L::Error>,
 {
     type Error = L::Error;
-    crate::inherit_covariance_fallible!(Map<L, F>);
+    crate::unsafe_assume_covariance_fallible!();
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
@@ -190,7 +190,7 @@ where
     for<'all> FallibleLend<'all, L>: IntoFallibleLender<Error = L::Error>,
 {
     type Error = L::Error;
-    crate::inherit_covariance_fallible!(L);
+    crate::unsafe_assume_covariance_fallible!();
 
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         loop {

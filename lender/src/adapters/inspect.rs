@@ -38,7 +38,7 @@ where
     L: Lender,
     F: FnMut(&Lend<'_, L>),
 {
-    crate::inherit_covariance!(L);
+    crate::unsafe_assume_covariance!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         let next = self.lender.next();
@@ -142,7 +142,7 @@ where
     F: FnMut(&FallibleLend<'_, L>) -> Result<(), L::Error>,
 {
     type Error = L::Error;
-    crate::inherit_covariance_fallible!(L);
+    crate::unsafe_assume_covariance_fallible!();
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {

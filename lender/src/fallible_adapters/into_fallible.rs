@@ -66,14 +66,7 @@ where
     L: Lender,
 {
     type Error = E;
-    // SAFETY: The underlying Lender L's covariance has been verified by its own
-    // _check_covariance implementation. This adapter wraps the Lend type unchanged.
-    unsafe fn _check_covariance<'long: 'short, 'short>(
-        lend: *const &'short <Self as FallibleLending<'long>>::Lend,
-        _: crate::Uncallable,
-    ) -> *const &'short <Self as FallibleLending<'short>>::Lend {
-        unsafe { core::mem::transmute(lend) }
-    }
+    crate::unsafe_assume_covariance_fallible!();
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {

@@ -7,7 +7,7 @@
 - New infrastructure to check covariance of lends. Every implementation must
   use either the `check_covariance!`/`check_covariance_fallible!` macros (for
   sources) to check covariance of the lend lifetime, or the
-  `inherit_covariance!`/`inherit_covariance_fallible!` macros (for adapters) to
+  `unsafe_assume_covariance!`/`unsafe_assume_covariance_fallible!` macros (for adapters) to
   propagate covariance of underlying lends (without any check). Covariance
   checks have also been embedded in the `hrc!`, `hrc_mut!` and `hrc_once`
   macros. 
