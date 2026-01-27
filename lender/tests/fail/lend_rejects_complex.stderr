@@ -1,0 +1,39 @@
+error: lend!() only accepts simple covariant patterns. For complex types, use covariant_lend!(Name = YourType) instead.
+ --> tests/fail/lend_rejects_complex.rs:7:10
+  |
+7 | type A = lender::lend!(&'lend Cell<&'lend String>);
+  |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: this error originates in the macro `lender::lend` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: lend!() only accepts simple covariant patterns. For complex types, use covariant_lend!(Name = YourType) instead.
+  --> tests/fail/lend_rejects_complex.rs:10:10
+   |
+10 | type B = lender::lend!(&'lend Vec<u8>);
+   |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: this error originates in the macro `lender::lend` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: lend!() only accepts simple covariant patterns. For complex types, use covariant_lend!(Name = YourType) instead.
+  --> tests/fail/lend_rejects_complex.rs:13:10
+   |
+13 | type C = lender::lend!(&'lend std::string::String);
+   |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: this error originates in the macro `lender::lend` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: lend!() only accepts simple covariant patterns. For complex types, use covariant_lend!(Name = YourType) instead.
+  --> tests/fail/lend_rejects_complex.rs:16:10
+   |
+16 | type D = lender::lend!((&'lend u8, &'lend i32));
+   |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: this error originates in the macro `lender::lend` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unused import: `std::cell::Cell`
+ --> tests/fail/lend_rejects_complex.rs:4:5
+  |
+4 | use std::cell::Cell;
+  |     ^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default

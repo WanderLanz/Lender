@@ -1,5 +1,6 @@
-use alloc::boxed::Box;
+use aliasable::boxed::AliasableBox;
 use core::fmt;
+use maybe_dangling::MaybeDangling;
 
 use crate::{FallibleLend, FallibleLender, FallibleLending, IntoFallibleLender, Map};
 
@@ -18,7 +19,7 @@ where
         Self { inner: FlattenCompat::new(lender) }
     }
     pub fn into_inner(self) -> L {
-        *self.inner.lender
+        *AliasableBox::into_unique(self.inner.lender)
     }
 }
 impl<L: FallibleLender + Clone> Clone for Flatten<'_, L>
@@ -128,15 +129,21 @@ pub struct FlattenCompat<'this, L: FallibleLender>
 where
     for<'all> FallibleLend<'all, L>: IntoFallibleLender,
 {
-    lender: Box<L>,
-    inner: Option<<FallibleLend<'this, L> as IntoFallibleLender>::FallibleLender>,
+    // MaybeDangling wraps the inner lender to indicate it may reference data
+    // from the outer lender. AliasableBox eliminates noalias retagging that would
+    // invalidate the inner reference when the struct is moved.
+    // Field order ensures outer lender drops last.
+    //
+    // See https://github.com/WanderLanz/Lender/issues/34
+    inner: MaybeDangling<Option<<FallibleLend<'this, L> as IntoFallibleLender>::FallibleLender>>,
+    lender: AliasableBox<L>,
 }
 impl<L: FallibleLender> FlattenCompat<'_, L>
 where
     for<'all> FallibleLend<'all, L>: IntoFallibleLender,
 {
     pub(crate) fn new(lender: L) -> Self {
-        Self { lender: Box::new(lender), inner: None }
+        Self { inner: MaybeDangling::new(None), lender: AliasableBox::from_unique(alloc::boxed::Box::new(lender)) }
     }
 }
 impl<L: FallibleLender + Clone> Clone for FlattenCompat<'_, L>
@@ -145,7 +152,10 @@ where
     for<'all> <FallibleLend<'all, L> as IntoFallibleLender>::FallibleLender: Clone,
 {
     fn clone(&self) -> Self {
-        Self { lender: self.lender.clone(), inner: self.inner.clone() }
+        Self {
+            inner: MaybeDangling::new((*self.inner).clone()),
+            lender: AliasableBox::from_unique((*self.lender).clone().into()),
+        }
     }
 }
 impl<L: FallibleLender + fmt::Debug> fmt::Debug for FlattenCompat<'_, L>
@@ -174,14 +184,14 @@ where
         loop {
             // SAFETY: Polonius return
             #[allow(clippy::deref_addrof)]
-            let reborrow = unsafe { &mut *(&raw mut self.inner) };
+            let reborrow = unsafe { &mut *(&raw mut *self.inner) };
             if let Some(inner) = reborrow {
                 if let Some(x) = inner.next()? {
                     return Ok(Some(x));
                 }
             }
             // SAFETY: inner is manually guaranteed to be the only FallibleLend alive of the inner iterator
-            self.inner = self.lender.next()?.map(|l| unsafe {
+            *self.inner = self.lender.next()?.map(|l| unsafe {
                 core::mem::transmute::<
                     <FallibleLend<'_, L> as IntoFallibleLender>::FallibleLender,
                     <FallibleLend<'this, L> as IntoFallibleLender>::FallibleLender,
@@ -195,7 +205,7 @@ where
     }
     fn size_hint(&self) -> (usize, Option<usize>) {
         (
-            match &self.inner {
+            match &*self.inner {
                 Some(inner) => inner.size_hint().0,
                 None => self.lender.size_hint().0,
             },

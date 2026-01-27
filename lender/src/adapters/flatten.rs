@@ -1,5 +1,6 @@
-use alloc::boxed::Box;
+use aliasable::boxed::AliasableBox;
 use core::fmt;
+use maybe_dangling::MaybeDangling;
 
 use crate::{FusedLender, IntoLender, Lend, Lender, Lending, Map};
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -17,7 +18,7 @@ where
         Self { inner: FlattenCompat::new(lender) }
     }
     pub fn into_inner(self) -> L {
-        *self.inner.lender
+        *AliasableBox::into_unique(self.inner.lender)
     }
 }
 impl<L: Lender + Clone> Clone for Flatten<'_, L>
@@ -129,15 +130,21 @@ pub struct FlattenCompat<'this, L: Lender>
 where
     for<'all> Lend<'all, L>: IntoLender,
 {
-    lender: Box<L>,
-    inner: Option<<Lend<'this, L> as IntoLender>::Lender>,
+    // MaybeDangling wraps the inner lender to indicate it may reference data
+    // from the outer lender. AliasableBox eliminates noalias retagging that would
+    // invalidate the inner reference when the struct is moved.
+    // Field order ensures outer lender drops last.
+    //
+    // See https://github.com/WanderLanz/Lender/issues/34
+    inner: MaybeDangling<Option<<Lend<'this, L> as IntoLender>::Lender>>,
+    lender: AliasableBox<L>,
 }
 impl<L: Lender> FlattenCompat<'_, L>
 where
     for<'all> Lend<'all, L>: IntoLender,
 {
     pub(crate) fn new(lender: L) -> Self {
-        Self { lender: Box::new(lender), inner: None }
+        Self { inner: MaybeDangling::new(None), lender: AliasableBox::from_unique(alloc::boxed::Box::new(lender)) }
     }
 }
 impl<L: Lender + Clone> Clone for FlattenCompat<'_, L>
@@ -146,7 +153,10 @@ where
     for<'all> <Lend<'all, L> as IntoLender>::Lender: Clone,
 {
     fn clone(&self) -> Self {
-        Self { lender: self.lender.clone(), inner: self.inner.clone() }
+        Self {
+            inner: MaybeDangling::new((*self.inner).clone()),
+            lender: AliasableBox::from_unique((*self.lender).clone().into()),
+        }
     }
 }
 impl<L: Lender + fmt::Debug> fmt::Debug for FlattenCompat<'_, L>
@@ -174,7 +184,7 @@ where
         loop {
             // SAFETY: Polonius return
             #[allow(clippy::deref_addrof)]
-            let reborrow = unsafe { &mut *(&raw mut self.inner) };
+            let reborrow = unsafe { &mut *(&raw mut *self.inner) };
             if let Some(inner) = reborrow {
                 if let Some(x) = inner.next() {
                     return Some(x);
@@ -182,7 +192,7 @@ where
             }
 
             // SAFETY: inner is manually guaranteed to be the only lend alive of the inner iterator
-            self.inner = self.lender.next().map(|l| unsafe {
+            *self.inner = self.lender.next().map(|l| unsafe {
                 core::mem::transmute::<<Lend<'_, L> as IntoLender>::Lender, <Lend<'this, L> as IntoLender>::Lender>(
                     l.into_lender(),
                 )
@@ -195,7 +205,7 @@ where
     }
     fn size_hint(&self) -> (usize, Option<usize>) {
         (
-            match &self.inner {
+            match &*self.inner {
                 Some(inner) => inner.size_hint().0,
                 None => self.lender.size_hint().0,
             },

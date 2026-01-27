@@ -21,6 +21,8 @@
   however requires that you define a type name (it cannot be inlined). The
   same applies to `fallible_lend!` and `covariant_fallible_lend!`.
 
+- Thanks to `AliasableBox` and `MaybeDangling` we now pass miri.
+
 ## Fixed
 
 - Several possible UBs are no longer possible thanks to the new covariance
