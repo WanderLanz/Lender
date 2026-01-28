@@ -62,10 +62,10 @@ pub use self::{
     zip::Zip,
 };
 use crate::{
-    empty, fallible_empty,
-    try_trait_v2::{ChangeOutputType, FromResidual, Residual, Try},
     Empty, ExtendLender, FallibleEmpty, FallibleLend, FallibleLender, FallibleLending,
-    IntoFallibleLender, IntoLender, Lend, Lender, Lending, NonFallibleAdapter, TupleLend,
+    IntoFallibleLender, IntoLender, Lend, Lender, Lending, NonFallibleAdapter, TupleLend, empty,
+    fallible_empty,
+    try_trait_v2::{ChangeOutputType, FromResidual, Residual, Try},
 };
 
 // pub use zip::{TrustedRandomAccess, TrustedRandomAccessNoCoerce};

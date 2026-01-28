@@ -1,10 +1,10 @@
 use core::fmt;
 
 use crate::{
-    higher_order::{FnMutHKA, FnMutHKARes},
     DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender,
     FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender,
     Lending,
+    higher_order::{FnMutHKA, FnMutHKARes},
 };
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]

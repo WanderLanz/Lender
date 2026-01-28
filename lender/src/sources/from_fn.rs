@@ -1,8 +1,8 @@
 use core::{fmt, marker::PhantomData};
 
 use crate::{
-    higher_order::{FnMutHKAOpt, FnMutHKAResOpt},
     FallibleLend, FallibleLender, FallibleLending, Lend, Lender, Lending,
+    higher_order::{FnMutHKAOpt, FnMutHKAResOpt},
 };
 
 /// Creates a lender from a state and a closure `F: FnMut(&mut St) -> Option<T>`.

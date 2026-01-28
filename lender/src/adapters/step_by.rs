@@ -1,9 +1,9 @@
 use core::ops::ControlFlow;
 
 use crate::{
-    try_trait_v2::Try, DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender,
-    ExactSizeLender, FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender,
-    FusedLender, Lend, Lender, Lending,
+    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender,
+    FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender,
+    Lending, try_trait_v2::Try,
 };
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -154,11 +154,7 @@ where
     fn next_back_index(&self) -> usize {
         let rem = self.lender.len() % (self.step + 1);
         if self.first_take {
-            if rem == 0 {
-                self.step
-            } else {
-                rem - 1
-            }
+            if rem == 0 { self.step } else { rem - 1 }
         } else {
             rem
         }
@@ -353,11 +349,7 @@ where
     fn next_back_index_fallible(&self) -> usize {
         let rem = self.lender.len() % (self.step + 1);
         if self.first_take {
-            if rem == 0 {
-                self.step
-            } else {
-                rem - 1
-            }
+            if rem == 0 { self.step } else { rem - 1 }
         } else {
             rem
         }

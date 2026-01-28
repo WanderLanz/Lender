@@ -2,20 +2,19 @@ use alloc::borrow::ToOwned;
 use core::{cmp::Ordering, num::NonZeroUsize, ops::ControlFlow};
 
 use stable_try_trait_v2::{
-    internal::NeverShortCircuit, ChangeOutputType, FromResidual, Residual, Try,
+    ChangeOutputType, FromResidual, Residual, Try, internal::NeverShortCircuit,
 };
 
 use crate::{
-    fallible_unzip,
-    higher_order::{FnMutHKARes, FnMutHKAResOpt},
-    non_fallible_adapter,
-    traits::collect::IntoFallibleLender,
     Chain, Chunk, Chunky, Cloned, Copied, Cycle, DoubleEndedFallibleLender, Enumerate,
     ExactSizeFallibleLender, ExtendLender, FallibleFlatMap, FallibleFlatten, FallibleIntersperse,
     FallibleIntersperseWith, FalliblePeekable, FallibleTryShuntAdapter, Filter, FilterMap,
     FirstShunt, FromLender, Fuse, ImplBound, Inspect, Iter, Map, MapErr, MapIntoIter, MapWhile,
     Mutate, NonFallibleAdapter, Owned, ProductFallibleLender, Ref, Rev, Scan, SecondShunt, Skip,
-    SkipWhile, StepBy, SumFallibleLender, Take, TakeWhile, TupleLend, Zip,
+    SkipWhile, StepBy, SumFallibleLender, Take, TakeWhile, TupleLend, Zip, fallible_unzip,
+    higher_order::{FnMutHKARes, FnMutHKAResOpt},
+    non_fallible_adapter,
+    traits::collect::IntoFallibleLender,
 };
 
 /// A trait for dealing with the 'items' of fallible lending iterators.

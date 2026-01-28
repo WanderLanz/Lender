@@ -547,7 +547,7 @@ fn map_err_adapter() {
 
 #[test]
 fn fallible_peekable_adapter() {
-    use lender::{from_fallible_fn, FalliblePeekable};
+    use lender::{FalliblePeekable, from_fallible_fn};
 
     // Test peeking functionality
     let mut peekable: FalliblePeekable<_> =
@@ -1427,7 +1427,7 @@ fn fuse_size_hint_after_exhaustion() {
     fused.next();
     assert_eq!(fused.size_hint(), (0, Some(0)));
     fused.next(); // Returns None, sets flag
-                  // After exhaustion, size_hint should be (0, Some(0))
+    // After exhaustion, size_hint should be (0, Some(0))
     assert_eq!(fused.size_hint(), (0, Some(0)));
 }
 
@@ -2427,13 +2427,8 @@ fn take_while_fold() {
 
 #[test]
 fn filter_map_basic() {
-    let mut fm = VecLender::new(vec![1, 2, 3, 4, 5]).filter_map(|x| {
-        if x % 2 == 0 {
-            Some(x * 10)
-        } else {
-            None
-        }
-    });
+    let mut fm = VecLender::new(vec![1, 2, 3, 4, 5])
+        .filter_map(|x| if x % 2 == 0 { Some(x * 10) } else { None });
 
     assert_eq!(fm.next(), Some(20));
     assert_eq!(fm.next(), Some(40));
@@ -2496,17 +2491,13 @@ fn scan_early_termination() {
         0i32,
         hrc_mut!(for<'all> |args: (&'all mut i32, i32)| -> Option<i32> {
             *args.0 += args.1;
-            if *args.0 > 5 {
-                None
-            } else {
-                Some(*args.0)
-            }
+            if *args.0 > 5 { None } else { Some(*args.0) }
         }),
     );
 
     assert_eq!(scanned.next(), Some(1)); // state = 1
     assert_eq!(scanned.next(), Some(3)); // state = 3
-                                         // x=3: state=6, 6 > 5, return None
+    // x=3: state=6, 6 > 5, return None
     assert_eq!(scanned.next(), None);
 }
 
@@ -2519,13 +2510,7 @@ fn scan_early_termination() {
 #[test]
 fn map_while_basic() {
     let mut mw = VecLender::new(vec![1, 2, 3, 4, 5]).map_while(hrc_mut!(
-        for<'all> |x: i32| -> Option<i32> {
-            if x < 4 {
-                Some(x * 10)
-            } else {
-                None
-            }
-        }
+        for<'all> |x: i32| -> Option<i32> { if x < 4 { Some(x * 10) } else { None } }
     ));
 
     assert_eq!(mw.next(), Some(10));
@@ -2549,11 +2534,7 @@ fn map_while_all_mapped() {
 fn map_while_immediate_none() {
     let mut mw =
         VecLender::new(vec![5, 4, 3]).map_while(hrc_mut!(for<'all> |x: i32| -> Option<i32> {
-            if x < 4 {
-                Some(x)
-            } else {
-                None
-            }
+            if x < 4 { Some(x) } else { None }
         }));
     assert_eq!(mw.next(), None);
 }
@@ -3116,11 +3097,7 @@ fn source_from_fn_basic() {
         0i32,
         hrc_mut!(for<'all> |s: &'all mut i32| -> Option<i32> {
             *s += 1;
-            if *s <= 3 {
-                Some(*s)
-            } else {
-                None
-            }
+            if *s <= 3 { Some(*s) } else { None }
         }),
     );
 
@@ -3336,13 +3313,8 @@ fn lender_try_fold() {
 
 #[test]
 fn lender_try_fold_early_exit() {
-    let result: Result<i32, &str> = VecLender::new(vec![1, 2, 3, 4, 5]).try_fold(0, |acc, x| {
-        if x > 3 {
-            Err("too big")
-        } else {
-            Ok(acc + x)
-        }
-    });
+    let result: Result<i32, &str> = VecLender::new(vec![1, 2, 3, 4, 5])
+        .try_fold(0, |acc, x| if x > 3 { Err("too big") } else { Ok(acc + x) });
     assert_eq!(result, Err("too big"));
 }
 
@@ -4086,11 +4058,7 @@ fn map_while_all_some() {
 fn filter_map_into_inner() {
     let filter_map =
         VecLender::new(vec![1, 2, 3]).filter_map(hrc_mut!(for<'all> |x: i32| -> Option<i32> {
-            if x % 2 == 0 {
-                Some(x * 2)
-            } else {
-                None
-            }
+            if x % 2 == 0 { Some(x * 2) } else { None }
         }));
     let lender = filter_map.into_inner();
     assert_eq!(lender.count(), 3);
@@ -5145,9 +5113,8 @@ fn cycle_fallible_next_coverage() {
 fn filter_map_double_ended_coverage() {
     use lender::DoubleEndedLender;
 
-    let mut fm =
-        VecLender::new(vec![1, 2, 3, 4, 5])
-            .filter_map(|x| if x % 2 == 0 { Some(x * 2) } else { None });
+    let mut fm = VecLender::new(vec![1, 2, 3, 4, 5])
+        .filter_map(|x| if x % 2 == 0 { Some(x * 2) } else { None });
     // Use next_back to exercise the DoubleEndedLender unsafe path
     assert_eq!(fm.next_back(), Some(8)); // 4 * 2
     assert_eq!(fm.next(), Some(4)); // 2 * 2

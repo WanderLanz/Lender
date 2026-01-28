@@ -1,8 +1,8 @@
 use core::{fmt, ops::ControlFlow};
 
 use crate::{
-    try_trait_v2::Try, FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender,
-    FusedLender, Lend, Lender, Lending,
+    FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender,
+    Lending, try_trait_v2::Try,
 };
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]

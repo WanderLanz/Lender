@@ -3,8 +3,8 @@ use core::{fmt, ops::ControlFlow};
 use maybe_dangling::MaybeDangling;
 
 use crate::{
-    try_trait_v2::{FromResidual, Try},
     DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending,
+    try_trait_v2::{FromResidual, Try},
 };
 
 #[must_use = "lenders are lazy and do nothing unless consumed"]

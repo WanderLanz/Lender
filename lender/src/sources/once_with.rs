@@ -1,9 +1,9 @@
 use core::marker::PhantomData;
 
 use crate::{
-    higher_order::{FnOnceHKA, FnOnceHKARes},
     DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeLender, FallibleLend, FallibleLender,
     FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender, Lending,
+    higher_order::{FnOnceHKA, FnOnceHKARes},
 };
 
 /// Creates a lender that lazily generates a value exactly once by invoking

@@ -3,9 +3,9 @@ use core::{fmt, ops::ControlFlow};
 use maybe_dangling::MaybeDangling;
 
 use crate::{
-    try_trait_v2::{FromResidual, Try},
     DoubleEndedFallibleLender, ExactSizeFallibleLender, FallibleLend, FallibleLender,
     FallibleLending, FusedFallibleLender,
+    try_trait_v2::{FromResidual, Try},
 };
 
 #[must_use = "lenders are lazy and do nothing unless consumed"]

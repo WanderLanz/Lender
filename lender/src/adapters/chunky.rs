@@ -1,8 +1,8 @@
 use core::ops::ControlFlow;
 
 use crate::{
-    try_trait_v2::Try, Chunk, ExactSizeFallibleLender, ExactSizeLender, FallibleLend,
-    FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender, Lending,
+    Chunk, ExactSizeFallibleLender, ExactSizeLender, FallibleLend, FallibleLender, FallibleLending,
+    FusedFallibleLender, FusedLender, Lend, Lender, Lending, try_trait_v2::Try,
 };
 
 /// A lender yielding lenders ([`Chunk`]s) returning the next `chunk_size` lends.

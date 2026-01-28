@@ -1,6 +1,6 @@
 use core::marker::PhantomData;
 
-use crate::{prelude::*, FusedFallibleLender, FusedLender};
+use crate::{FusedFallibleLender, FusedLender, prelude::*};
 
 /// Creates a new lender that repeats elements endlessly by
 /// applying the provided closure, the repeater, `F: FnMut() -> A`.

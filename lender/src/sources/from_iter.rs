@@ -3,8 +3,8 @@ use core::iter::FusedIterator;
 use fallible_iterator::{DoubleEndedFallibleIterator, FallibleIterator, IntoFallibleIterator};
 
 use crate::{
-    prelude::*, DoubleEndedFallibleLender, FallibleLend, FallibleLender, FallibleLending,
-    FusedLender, IntoFallibleLender,
+    DoubleEndedFallibleLender, FallibleLend, FallibleLender, FallibleLending, FusedLender,
+    IntoFallibleLender, prelude::*,
 };
 
 /// Creates a lender from an iterator.

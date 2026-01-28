@@ -1,4 +1,4 @@
-use crate::{prelude::*, FusedFallibleLender, FusedLender};
+use crate::{FusedFallibleLender, FusedLender, prelude::*};
 
 /// Creates a new lender that endlessly repeats a single element.
 ///

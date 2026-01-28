@@ -10,10 +10,10 @@
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{
+    Block, Expr, Pat,
     parse::{Parse, ParseStream, Result},
     parse_macro_input,
     token::In,
-    Block, Expr, Pat,
 };
 
 struct ForLenderInfo {

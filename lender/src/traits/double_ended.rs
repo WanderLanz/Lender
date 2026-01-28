@@ -1,7 +1,7 @@
 use core::{num::NonZeroUsize, ops::ControlFlow};
 
 use crate::{
-    try_trait_v2::{internal::NeverShortCircuit, FromResidual, Try},
+    try_trait_v2::{FromResidual, Try, internal::NeverShortCircuit},
     *,
 };
 

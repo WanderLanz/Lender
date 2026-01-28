@@ -1,9 +1,9 @@
 use core::{num::NonZeroUsize, ops::ControlFlow};
 
 use crate::{
-    try_trait_v2::{FromResidual, Try},
     FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender,
     Lending,
+    try_trait_v2::{FromResidual, Try},
 };
 
 #[derive(Clone, Debug)]

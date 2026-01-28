@@ -1,10 +1,10 @@
 use core::ops::ControlFlow;
 
 use crate::{
-    try_trait_v2::{FromResidual, Try},
     DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender,
     FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender,
     Lending,
+    try_trait_v2::{FromResidual, Try},
 };
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -75,11 +75,7 @@ where
 
     #[inline]
     fn count(self) -> usize {
-        if !self.flag {
-            self.lender.count()
-        } else {
-            0
-        }
+        if !self.flag { self.lender.count() } else { 0 }
     }
 
     #[inline]
@@ -214,11 +210,7 @@ where
     L: ExactSizeLender,
 {
     fn len(&self) -> usize {
-        if !self.flag {
-            self.lender.len()
-        } else {
-            0
-        }
+        if !self.flag { self.lender.len() } else { 0 }
     }
 
     fn is_empty(&self) -> bool {
@@ -460,11 +452,7 @@ where
     L: ExactSizeFallibleLender,
 {
     fn len(&self) -> usize {
-        if self.flag {
-            0
-        } else {
-            self.lender.len()
-        }
+        if self.flag { 0 } else { self.lender.len() }
     }
 
     fn is_empty(&self) -> bool {

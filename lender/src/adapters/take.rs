@@ -1,9 +1,9 @@
 use core::num::NonZeroUsize;
 
 use crate::{
-    try_trait_v2::Try, DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender,
-    ExactSizeLender, FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender,
-    FusedLender, Lend, Lender, Lending,
+    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender,
+    FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender,
+    Lending, try_trait_v2::Try,
 };
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
