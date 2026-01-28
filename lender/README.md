@@ -358,7 +358,6 @@ about Rust and the lending iterator problem. Thank you to everyone!
 - Everyone who's contributed to Rust for making such a great language and
   iterator library.
 
-<!-- markdownlint-disable MD026 -->
 ## Unsafe & Transmutes
 
 Many patterns in lenders require polonius-emulating unsafe code,

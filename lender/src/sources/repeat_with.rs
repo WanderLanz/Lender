@@ -1,6 +1,6 @@
 use core::marker::PhantomData;
 
-use crate::{prelude::*, FusedLender};
+use crate::{prelude::*, FusedFallibleLender, FusedLender};
 
 /// Creates a new lender that repeats elements endlessly by
 /// applying the provided closure, the repeater, `F: FnMut() -> A`.
@@ -116,4 +116,11 @@ where
     fn advance_by(&mut self, _n: usize) -> Result<Result<(), core::num::NonZeroUsize>, Self::Error> {
         Ok(Ok(()))
     }
+}
+
+impl<'a, L, E, F> FusedFallibleLender for FallibleRepeatWith<'a, L, E, F>
+where
+    L: ?Sized + for<'all> FallibleLending<'all> + 'a,
+    F: FnMut() -> Result<FallibleLend<'a, L>, E>,
+{
 }
