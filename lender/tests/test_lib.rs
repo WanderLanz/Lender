@@ -4866,7 +4866,6 @@ fn intersperse_with_coverage() {
     assert_eq!(results, vec![1, 0, 2, 0, 3]);
 }
 
-
 // Cycle fallible next (covers unsafe reborrow at line 129)
 #[test]
 fn cycle_fallible_next_coverage() {

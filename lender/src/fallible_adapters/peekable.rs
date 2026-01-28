@@ -72,9 +72,9 @@ where
         // Get the next value by inlining the logic of next() to avoid borrow conflicts
         let v = match self.peeked.take() {
             // SAFETY: The lend is manually guaranteed to be the only one alive
-            Some(peeked) => {
-                unsafe { core::mem::transmute::<Option<FallibleLend<'this, L>>, Option<FallibleLend<'_, L>>>(peeked) }
-            }
+            Some(peeked) => unsafe {
+                core::mem::transmute::<Option<FallibleLend<'this, L>>, Option<FallibleLend<'_, L>>>(peeked)
+            },
             None => self.lender.next()?,
         };
         match v {
