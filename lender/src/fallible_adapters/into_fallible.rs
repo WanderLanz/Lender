@@ -3,8 +3,8 @@ use core::{marker::PhantomData, num::NonZeroUsize, ops::ControlFlow};
 use stable_try_trait_v2::{FromResidual, Try};
 
 use crate::{
-    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender, FallibleLend,
-    FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lender, Lending,
+    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender, FallibleLend, FallibleLender,
+    FallibleLending, FusedFallibleLender, FusedLender, Lender, Lending,
 };
 
 /// Wrapper for Try types wrapped in outer Result

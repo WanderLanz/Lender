@@ -1,4 +1,6 @@
-use crate::{DoubleEndedLender, Lend, Lender, Lending};
+use core::num::NonZero;
+
+use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending};
 
 /// Creates a new lender that returns mutable contiguous overlapping windows of fixed size over a
 /// slice.
@@ -9,6 +11,10 @@ use crate::{DoubleEndedLender, Lend, Lender, Lending};
 ///
 /// Note that the [`WindowsMutExt`] trait provides a convenient entry point for this function
 /// as a method on slices and arrays.
+///
+/// # Panics
+///
+/// Panics if `size` is zero.
 ///
 /// # Examples
 /// ```rust
@@ -22,13 +28,14 @@ use crate::{DoubleEndedLender, Lend, Lender, Lending};
 /// assert_eq!(lender.next(), Some(&mut [0, 1][..]));
 /// ```
 pub fn windows_mut<T>(slice: &mut [T], size: usize) -> WindowsMut<'_, T> {
+    let size = NonZero::new(size).expect("window size must be non-zero");
     WindowsMut { slice, size, position: WindowPosition::Init }
 }
 
 /// This struct is returned by [`windows_mut`].
 pub struct WindowsMut<'a, T> {
     slice: &'a mut [T],
-    size: usize,
+    size: NonZero<usize>,
     position: WindowPosition,
 }
 
@@ -70,7 +77,7 @@ impl<T> Lender for WindowsMut<'_, T> {
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.position.update_slice(&mut self.slice);
         self.position = WindowPosition::Front;
-        self.slice.get_mut(..self.size)
+        self.slice.get_mut(..self.size.get())
     }
 }
 
@@ -78,10 +85,26 @@ impl<T> DoubleEndedLender for WindowsMut<'_, T> {
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         self.position.update_slice(&mut self.slice);
         self.position = WindowPosition::Back;
-        let index = self.slice.len().checked_sub(self.size)?;
+        let index = self.slice.len().checked_sub(self.size.get())?;
         self.slice.get_mut(index..)
     }
 }
+
+impl<T> ExactSizeLender for WindowsMut<'_, T> {
+    #[inline]
+    fn len(&self) -> usize {
+        let base = self.slice.len().saturating_sub(self.size.get() - 1);
+        // If position is Front or Back, a window was returned but the slice
+        // hasn't been updated yet (update happens on the next call).
+        // We need to subtract 1 to reflect the consumed window.
+        match self.position {
+            WindowPosition::Init => base,
+            WindowPosition::Front | WindowPosition::Back => base.saturating_sub(1),
+        }
+    }
+}
+
+impl<T> FusedLender for WindowsMut<'_, T> {}
 
 /// Creates a new lender that returns mutable overlapping array windows of fixed size over a
 /// slice.
@@ -96,6 +119,11 @@ impl<T> DoubleEndedLender for WindowsMut<'_, T> {
 /// See
 /// [`array_windows`](https://doc.rust-lang.org/stable/std/primitive.slice.html#method.array_windows)
 /// for more information.
+///
+/// # Panics
+///
+/// Panics if `WINDOW_SIZE` is zero.
+///
 /// # Examples
 /// ```rust
 /// # use lender::prelude::*;
@@ -108,6 +136,7 @@ impl<T> DoubleEndedLender for WindowsMut<'_, T> {
 /// assert_eq!(lender.next(), Some(&mut [0, 1]));
 /// ```
 pub fn array_windows_mut<T, const WINDOW_SIZE: usize>(slice: &mut [T]) -> ArrayWindowsMut<'_, T, WINDOW_SIZE> {
+    assert!(WINDOW_SIZE != 0, "window size must be non-zero");
     ArrayWindowsMut { slice, position: WindowPosition::Init }
 }
 
@@ -138,6 +167,22 @@ impl<T, const WINDOW_SIZE: usize> DoubleEndedLender for ArrayWindowsMut<'_, T, W
     }
 }
 
+impl<T, const WINDOW_SIZE: usize> ExactSizeLender for ArrayWindowsMut<'_, T, WINDOW_SIZE> {
+    #[inline]
+    fn len(&self) -> usize {
+        let base = self.slice.len().saturating_sub(WINDOW_SIZE - 1);
+        // If position is Front or Back, a window was returned but the slice
+        // hasn't been updated yet (update happens on the next call).
+        // We need to subtract 1 to reflect the consumed window.
+        match self.position {
+            WindowPosition::Init => base,
+            WindowPosition::Front | WindowPosition::Back => base.saturating_sub(1),
+        }
+    }
+}
+
+impl<T, const WINDOW_SIZE: usize> FusedLender for ArrayWindowsMut<'_, T, WINDOW_SIZE> {}
+
 /// Extension trait adding to slices and arrays the methods
 /// [`windows_mut`](WindowsMutExt::windows_mut) and
 /// [`array_windows_mut`](WindowsMutExt::array_windows_mut).
@@ -148,10 +193,18 @@ pub trait WindowsMutExt<T> {
 
 impl<T> WindowsMutExt<T> for [T] {
     /// This method is a convenient entry point for [`windows_mut`].
+    ///
+    /// # Panics
+    ///
+    /// Panics if `size` is zero.
     fn windows_mut(&mut self, size: usize) -> WindowsMut<'_, T> {
         windows_mut(self, size)
     }
     /// This method is a convenient entry point for [`array_windows_mut`].
+    ///
+    /// # Panics
+    ///
+    /// Panics if `WINDOW_SIZE` is zero.
     fn array_windows_mut<const WINDOW_SIZE: usize>(&mut self) -> ArrayWindowsMut<'_, T, WINDOW_SIZE> {
         array_windows_mut(self)
     }
@@ -159,10 +212,18 @@ impl<T> WindowsMutExt<T> for [T] {
 
 impl<T, const N: usize> WindowsMutExt<T> for [T; N] {
     /// This method is a convenient entry point for [`windows_mut`].
+    ///
+    /// # Panics
+    ///
+    /// Panics if `size` is zero.
     fn windows_mut(&mut self, size: usize) -> WindowsMut<'_, T> {
         windows_mut(self, size)
     }
     /// This method is a convenient entry point for [`array_windows_mut`].
+    ///
+    /// # Panics
+    ///
+    /// Panics if `WINDOW_SIZE` is zero.
     fn array_windows_mut<const WINDOW_SIZE: usize>(&mut self) -> ArrayWindowsMut<'_, T, WINDOW_SIZE> {
         array_windows_mut(self)
     }
@@ -230,4 +291,73 @@ fn test_windows_mut_back() {
     assert_eq!(lender.next(), Some(&mut [1, 2][..]));
     assert_eq!(lender.next_back(), None);
     assert_eq!(lender.next(), None);
+}
+
+#[test]
+fn test_windows_mut_exact_size() {
+    use crate::ExactSizeLender;
+
+    let mut s = [0, 1, 2, 3, 4];
+    let mut lender = windows_mut(&mut s, 2);
+    assert_eq!(lender.len(), 4);
+    lender.next();
+    assert_eq!(lender.len(), 3);
+    lender.next();
+    assert_eq!(lender.len(), 2);
+    lender.next();
+    assert_eq!(lender.len(), 1);
+    lender.next();
+    assert_eq!(lender.len(), 0);
+    lender.next(); // returns None
+    assert_eq!(lender.len(), 0);
+
+    // Edge cases
+    let mut empty: [i32; 0] = [];
+    assert_eq!(windows_mut(&mut empty, 2).len(), 0);
+
+    let mut single = [1];
+    assert_eq!(windows_mut(&mut single, 2).len(), 0);
+    assert_eq!(windows_mut(&mut single, 1).len(), 1);
+}
+
+#[test]
+#[should_panic(expected = "window size must be non-zero")]
+fn test_windows_mut_zero_size_panics() {
+    let mut arr = [1, 2, 3];
+    windows_mut(&mut arr, 0);
+}
+
+#[test]
+fn test_array_windows_mut_exact_size() {
+    use crate::ExactSizeLender;
+
+    let mut s = [0, 1, 2, 3, 4];
+    let mut lender = array_windows_mut::<_, 2>(&mut s);
+    assert_eq!(lender.len(), 4);
+    lender.next();
+    assert_eq!(lender.len(), 3);
+    lender.next();
+    assert_eq!(lender.len(), 2);
+
+    // Edge cases
+    let mut single = [1];
+    assert_eq!(array_windows_mut::<_, 2>(&mut single).len(), 0);
+    assert_eq!(array_windows_mut::<_, 1>(&mut single).len(), 1);
+}
+
+#[test]
+fn test_windows_mut_exact_size_mixed() {
+    use crate::ExactSizeLender;
+
+    let mut s = [0, 1, 2, 3, 4];
+    let mut lender = windows_mut(&mut s, 2);
+    assert_eq!(lender.len(), 4);
+    lender.next_back();
+    assert_eq!(lender.len(), 3);
+    lender.next();
+    assert_eq!(lender.len(), 2);
+    lender.next_back();
+    assert_eq!(lender.len(), 1);
+    lender.next();
+    assert_eq!(lender.len(), 0);
 }

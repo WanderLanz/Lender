@@ -21,6 +21,9 @@
 
 - `windows_mut` is now double-ended.
 
+- Windows and array windows must have a non-zero length, as in `Iterator`,
+  and they implemented `FusedLender` and `ExactSizeLender`.
+
 - The return type of `Peekable::peek` is now `Option<&'_ Lend<'_, L>>`, which
   fixes a problem of data escape. Analogously for `FalliblePeekable::peek`.
 
