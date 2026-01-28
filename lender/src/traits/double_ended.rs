@@ -85,23 +85,19 @@ pub trait DoubleEndedFallibleLender: FallibleLender {
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error>;
 
     #[inline]
-    fn advance_back_by(&mut self, n: usize) -> Result<Option<NonZeroUsize>, Self::Error> {
+    fn advance_back_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         for i in 0..n {
             if self.next_back()?.is_none() {
                 // SAFETY: `i` is always less than `n`.
-                return Ok(Some(unsafe { NonZeroUsize::new_unchecked(n - i) }));
+                return Ok(Err(unsafe { NonZeroUsize::new_unchecked(n - i) }));
             }
         }
-        Ok(None)
+        Ok(Ok(()))
     }
 
     #[inline]
     fn nth_back(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
-        for _ in 0..n {
-            if self.next_back()?.is_none() {
-                return Ok(None);
-            }
-        }
+        self.advance_back_by(n)?.ok();
         self.next_back()
     }
 
@@ -149,7 +145,7 @@ impl<L: DoubleEndedFallibleLender> DoubleEndedFallibleLender for &mut L {
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         (**self).next_back()
     }
-    fn advance_back_by(&mut self, n: usize) -> Result<Option<NonZeroUsize>, Self::Error> {
+    fn advance_back_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         (**self).advance_back_by(n)
     }
     fn nth_back(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {

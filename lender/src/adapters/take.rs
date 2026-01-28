@@ -218,15 +218,15 @@ where
         (lower, upper)
     }
     #[inline]
-    fn advance_by(&mut self, n: usize) -> Result<Option<NonZeroUsize>, Self::Error> {
+    fn advance_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         let min = self.n.min(n);
         let rem = match self.lender.advance_by(min)? {
-            None => 0,
-            Some(rem) => rem.get(),
+            Ok(()) => 0,
+            Err(rem) => rem.get(),
         };
         let advanced = min - rem;
         self.n -= advanced;
-        Ok(NonZeroUsize::new(n - advanced))
+        Ok(NonZeroUsize::new(n - advanced).map_or(Ok(()), Err))
     }
 }
 impl<L> DoubleEndedFallibleLender for Take<L>
@@ -293,17 +293,17 @@ where
         }
     }
     #[inline]
-    fn advance_back_by(&mut self, n: usize) -> Result<Option<NonZeroUsize>, Self::Error> {
+    fn advance_back_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         let trim_inner = self.lender.len().saturating_sub(self.n);
         let advance_by = trim_inner.saturating_add(n);
         let remainder = match self.lender.advance_back_by(advance_by)? {
-            None => 0,
-            Some(rem) => rem.get(),
+            Ok(()) => 0,
+            Err(rem) => rem.get(),
         };
         let advanced_by_inner = advance_by - remainder;
         let advanced_by = advanced_by_inner - trim_inner;
         self.n -= advanced_by;
-        Ok(NonZeroUsize::new(n - advanced_by))
+        Ok(NonZeroUsize::new(n - advanced_by).map_or(Ok(()), Err))
     }
 }
 impl<L> ExactSizeFallibleLender for Take<L> where L: ExactSizeFallibleLender {}

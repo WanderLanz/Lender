@@ -148,7 +148,7 @@ where
         self.lender.size_hint()
     }
     #[inline]
-    fn advance_by(&mut self, n: usize) -> Result<Option<core::num::NonZeroUsize>, Self::Error> {
+    fn advance_by(&mut self, n: usize) -> Result<Result<(), core::num::NonZeroUsize>, Self::Error> {
         self.lender.advance_back_by(n)
     }
     #[inline]
@@ -188,7 +188,7 @@ where
         self.lender.next()
     }
     #[inline]
-    fn advance_back_by(&mut self, n: usize) -> Result<Option<core::num::NonZeroUsize>, Self::Error> {
+    fn advance_back_by(&mut self, n: usize) -> Result<Result<(), core::num::NonZeroUsize>, Self::Error> {
         self.lender.advance_by(n)
     }
     #[inline]

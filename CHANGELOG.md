@@ -15,6 +15,8 @@
 - Fallible lenders have now feature parity with normal lenders. In particular,
   `FallibleLender` has now `chunk` and `rposition` methods.
 
+- Added missing `FromFallibleLender`/`ExtendFallibleLender` traits.
+
 ### Changed
 
 - `windows_mut` is now double-ended.
@@ -29,7 +31,10 @@
 
 - Thanks to `AliasableBox` and `MaybeDangling` we now pass miri.
 
-## Fixed
+- `FallibleLender::advance_by`/`FallibleLender::advance_back_by` have now a 
+  signature aligned with `Lender::advance_by`/`Lender::advance_back_by`.
+
+### Fixed
 
 - Several possible UBs are no longer possible thanks to the new covariance
   checking infrastructure.

@@ -223,11 +223,11 @@ where
         })
     }
     #[inline]
-    fn advance_by(&mut self, n: usize) -> Result<Option<NonZeroUsize>, Self::Error> {
+    fn advance_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         let remaining = self.lender.advance_by(n)?;
         let advanced = match remaining {
-            None => n,
-            Some(rem) => n - rem.get(),
+            Ok(()) => n,
+            Err(rem) => n - rem.get(),
         };
         self.count += advanced;
         Ok(remaining)
@@ -281,7 +281,7 @@ where
         })
     }
     #[inline]
-    fn advance_back_by(&mut self, n: usize) -> Result<Option<core::num::NonZeroUsize>, Self::Error> {
+    fn advance_back_by(&mut self, n: usize) -> Result<Result<(), core::num::NonZeroUsize>, Self::Error> {
         self.lender.advance_back_by(n)
     }
 }

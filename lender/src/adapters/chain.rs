@@ -241,20 +241,20 @@ where
         Ok(acc)
     }
     #[inline]
-    fn advance_by(&mut self, n: usize) -> Result<Option<NonZeroUsize>, Self::Error> {
+    fn advance_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         match self.a.advance_by(n)? {
-            None => Ok(None),
-            Some(k) => self.b.advance_by(k.get()),
+            Ok(()) => Ok(Ok(())),
+            Err(k) => self.b.advance_by(k.get()),
         }
     }
     #[inline]
     fn nth(&mut self, mut n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         n = match self.a.advance_by(n)? {
-            None => match self.a.next()? {
+            Ok(()) => match self.a.next()? {
                 None => 0,
                 x => return Ok(x),
             },
-            Some(k) => k.get(),
+            Err(k) => k.get(),
         };
         self.b.nth(n)
     }
@@ -305,20 +305,20 @@ where
     }
 
     #[inline]
-    fn advance_back_by(&mut self, n: usize) -> Result<Option<NonZeroUsize>, Self::Error> {
+    fn advance_back_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         match self.b.advance_back_by(n)? {
-            None => Ok(None),
-            Some(k) => self.a.advance_back_by(k.get()),
+            Ok(()) => Ok(Ok(())),
+            Err(k) => self.a.advance_back_by(k.get()),
         }
     }
     #[inline]
     fn nth_back(&mut self, mut n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         n = match self.b.advance_back_by(n)? {
-            None => match self.b.next_back()? {
+            Ok(()) => match self.b.next_back()? {
                 None => 0,
                 x => return Ok(x),
             },
-            Some(k) => k.get(),
+            Err(k) => k.get(),
         };
         self.a.nth_back(n)
     }

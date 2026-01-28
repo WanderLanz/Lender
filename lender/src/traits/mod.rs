@@ -9,7 +9,7 @@ mod marker;
 
 pub use self::{
     accum::{ProductFallibleLender, ProductLender, SumFallibleLender, SumLender},
-    collect::{ExtendLender, FromLender, IntoFallibleLender, IntoLender},
+    collect::{ExtendFallibleLender, ExtendLender, FromFallibleLender, FromLender, IntoFallibleLender, IntoLender},
     double_ended::{DoubleEndedFallibleLender, DoubleEndedLender},
     exact_size::{ExactSizeFallibleLender, ExactSizeLender},
     ext::{FallibleIteratorExt, IntoFallibleIteratorExt, IntoIteratorExt, IteratorExt},

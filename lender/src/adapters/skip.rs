@@ -282,13 +282,13 @@ where
         self.lender.fold(init, f)
     }
     #[inline]
-    fn advance_by(&mut self, mut n: usize) -> Result<Option<NonZeroUsize>, Self::Error> {
+    fn advance_by(&mut self, mut n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         let skip_inner = self.n;
         let skip_and_advance = skip_inner.saturating_add(n);
 
         let remainder = match self.lender.advance_by(skip_and_advance)? {
-            None => 0,
-            Some(n) => n.get(),
+            Ok(()) => 0,
+            Err(rem) => rem.get(),
         };
         let advanced_inner = skip_and_advance - remainder;
         n -= advanced_inner.saturating_sub(skip_inner);
@@ -296,12 +296,12 @@ where
 
         if remainder == 0 && n > 0 {
             n = match self.lender.advance_by(n)? {
-                None => 0,
-                Some(n) => n.get(),
+                Ok(()) => 0,
+                Err(rem) => rem.get(),
             }
         }
 
-        Ok(NonZeroUsize::new(n))
+        Ok(NonZeroUsize::new(n).map_or(Ok(()), Err))
     }
 }
 impl<L> ExactSizeFallibleLender for Skip<L> where L: ExactSizeFallibleLender {}
@@ -357,11 +357,11 @@ where
         }
     }
     #[inline]
-    fn advance_back_by(&mut self, n: usize) -> Result<Option<NonZeroUsize>, Self::Error> {
+    fn advance_back_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         let min = core::cmp::min(self.len(), n);
         let rem = self.lender.advance_back_by(min)?;
-        assert!(rem.is_none(), "ExactSizeFallibleLender contract violation");
-        Ok(NonZeroUsize::new(n - min))
+        assert!(rem.is_ok(), "ExactSizeFallibleLender contract violation");
+        Ok(NonZeroUsize::new(n - min).map_or(Ok(()), Err))
     }
 }
 impl<L> FusedFallibleLender for Skip<L> where L: FusedFallibleLender {}

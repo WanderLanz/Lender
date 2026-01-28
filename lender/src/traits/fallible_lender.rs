@@ -42,7 +42,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
 
     /// Internal method for compile-time covariance checking.
     /// 
-    /// This method should never be implemented directly. Instead, use the
+    /// This method should rarely be implemented directly. Instead, use the
     /// provided macros:
     ///
     /// - When implementing source lenders (lenders with concrete
@@ -159,14 +159,14 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
 
     /// Advances the lender by `n` lends. If the lender does not have enough lends, returns the number of lends left.
     #[inline]
-    fn advance_by(&mut self, n: usize) -> Result<Option<NonZeroUsize>, Self::Error> {
+    fn advance_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         for i in 0..n {
             if self.next()?.is_none() {
                 // SAFETY: `i` is always less than `n`.
-                return Ok(Some(unsafe { NonZeroUsize::new_unchecked(n - i) }));
+                return Ok(Err(unsafe { NonZeroUsize::new_unchecked(n - i) }));
             }
         }
-        Ok(None)
+        Ok(Ok(()))
     }
 
     /// Yields the nth lend of the lender, if any, by consuming it. If the lender does not have enough lends, returns [`None`].
@@ -174,11 +174,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// `n` is zero-indexed.
     #[inline]
     fn nth(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
-        for _ in 0..n {
-            if self.next()?.is_none() {
-                return Ok(None)
-            }
-        }
+        self.advance_by(n)?.ok();
         self.next()
     }
 
@@ -1417,7 +1413,7 @@ impl<L: FallibleLender> FallibleLender for &mut L {
         (**self).size_hint()
     }
     #[inline]
-    fn advance_by(&mut self, n: usize) -> Result<Option<NonZeroUsize>, Self::Error> {
+    fn advance_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         (**self).advance_by(n)
     }
 }

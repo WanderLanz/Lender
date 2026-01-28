@@ -178,22 +178,22 @@ where
         }
     }
     #[inline]
-    fn advance_by(&mut self, n: usize) -> Result<Option<NonZeroUsize>, Self::Error> {
+    fn advance_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         let mut n = match self.lender.advance_by(n)? {
-            None => return Ok(None),
-            Some(rem) => rem.get(),
+            Ok(()) => return Ok(Ok(())),
+            Err(rem) => rem.get(),
         };
 
         while n > 0 {
             self.lender = self.orig.clone();
             n = match self.lender.advance_by(n)? {
-                None => return Ok(None),
-                e @ Some(rem) if rem.get() == n => return Ok(e),
-                Some(rem) => rem.get(),
+                Ok(()) => return Ok(Ok(())),
+                Err(rem) if rem.get() == n => return Ok(Err(rem)),
+                Err(rem) => rem.get(),
             };
         }
 
-        Ok(NonZeroUsize::new(n))
+        Ok(Ok(()))
     }
 }
 impl<L> FusedFallibleLender for Cycle<L> where L: Clone + FusedFallibleLender {}

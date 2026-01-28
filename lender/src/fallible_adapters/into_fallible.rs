@@ -104,8 +104,8 @@ where
     }
 
     #[inline]
-    fn advance_back_by(&mut self, n: usize) -> Result<Option<NonZeroUsize>, Self::Error> {
-        Ok(self.lender.advance_back_by(n).err())
+    fn advance_back_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
+        Ok(self.lender.advance_back_by(n))
     }
 
     #[inline]

@@ -125,7 +125,7 @@ where
         })
     }
     #[inline]
-    fn advance_by(&mut self, _n: usize) -> Result<Option<core::num::NonZeroUsize>, Self::Error> {
-        Ok(None)
+    fn advance_by(&mut self, _n: usize) -> Result<Result<(), core::num::NonZeroUsize>, Self::Error> {
+        Ok(Ok(()))
     }
 }

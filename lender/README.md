@@ -286,7 +286,7 @@ impl<'this> Lender for StrRef<'this> {
 ```
 
 Note the [`check_covariance!`] macro invocation, which ensures that the lend is
-covariant. There is an additional [`covariance_inherit!`] macro
+covariant. There is an additional [`unsafe_assume_covariance!`] macro
 that can be used when the lender wraps another lender to propagate covariance.
 
 The [`Lend`] type alias can be used to avoid specifying twice the type of the lend;
@@ -373,6 +373,6 @@ but if you see any unsafe code that can be made safe, please let us know!
 [fallible iterators]: https://crates.io/crates/fallible-iterator/
 [`Result`]: https://doc.rust-lang.org/std/result/enum.Result.html
 [Fallible lenders]: https://docs.rs/lender/latest/lender/trait.FallibleLender.html
-[obtain a fallible lender from a fallible iterator]: https://docs.rs/lender/latest/later/trait.FallibleIteratorExt.html#tymethod.into_fallible_lender
+[obtain a fallible lender from a fallible iterator]: https://docs.rs/lender/latest/lender/trait.FallibleIteratorExt.html#tymethod.into_fallible_lender
 [`check_covariance!`]: https://docs.rs/lender/latest/lender/macro.check_covariance.html
-[`covariance_inherit!`]: https://docs.rs/lender/latest/lender/macro.covariance_inherit.html
+[`unsafe_assume_covariance!`]: https://docs.rs/lender/latest/lender/macro.unsafe_assume_covariance.html
