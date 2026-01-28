@@ -986,8 +986,8 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     {
         self.reduce(move |x, y| Ok(
             match compare(&x, &y)? {
-                Ordering::Less => y.to_owned(),
-                _ => x,
+                Ordering::Greater => x,
+                _ => y.to_owned(),
             }
         ))
     }

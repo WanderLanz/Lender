@@ -86,17 +86,6 @@ where
 }
 
 impl<L: FusedLender, F> FusedLender for Map<L, F> where F: for<'all> FnMutHKA<'all, Lend<'all, L>> {}
-// impl<I, L, F> IntoIterator for Map<L, F>
-// where
-//     L: Lender,
-//     F: for<'all> HKAFnMut<'all, Lend<'all, L>, B = I>,
-//     I: 'static,
-// {
-//     type Item = I;
-//     type IntoIter = Iter<Self>;
-//     #[inline]
-//     fn into_iter(self) -> Iter<Self> { Iter::new(self) }
-// }
 
 impl<'lend, L, F> FallibleLending<'lend> for Map<L, F>
 where

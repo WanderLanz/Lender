@@ -1,8 +1,9 @@
 use core::fmt;
 
 use crate::{
-    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeLender, FallibleLend, FallibleLender,
-    FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender, Lending,
+    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender,
+    FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender,
+    Lending,
 };
 
 /// Creates a lender that yields an element exactly once.
@@ -197,6 +198,13 @@ where
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.next()
     }
+}
+
+impl<'a, E, L> ExactSizeFallibleLender for FallibleOnce<'a, E, L>
+where
+    E: 'a,
+    L: ?Sized + for<'all> FallibleLending<'all>,
+{
 }
 
 impl<'a, E, L> FusedFallibleLender for FallibleOnce<'a, E, L>

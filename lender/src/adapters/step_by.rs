@@ -29,7 +29,7 @@ impl<L> StepBy<L> {
     }
 
     pub fn into_parts(self) -> (L, usize) {
-        (self.lender, self.step)
+        (self.lender, self.step + 1)
     }
 }
 

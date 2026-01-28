@@ -104,7 +104,7 @@ where
     }
 }
 
-// An lender where each iteration calls the provided closure `F: FnMut(&mut St) -> Result<Option<T>, E>`.
+// A lender where each iteration calls the provided closure `F: FnMut(&mut St) -> Result<Option<T>, E>`.
 ///
 /// This `struct` is created by the [`from_fallible_fn()`] function.
 ///

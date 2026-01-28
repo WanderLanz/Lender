@@ -1,8 +1,9 @@
 use core::{fmt, marker};
 
 use crate::{
-    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeLender, FallibleLend, FallibleLender,
-    FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender, Lending,
+    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender,
+    FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender,
+    Lending,
 };
 
 /// Creates a lender that yields nothing.
@@ -106,7 +107,7 @@ pub struct FallibleEmpty<E, L: ?Sized>(marker::PhantomData<(E, L)>);
 
 impl<E, L: ?Sized> fmt::Debug for FallibleEmpty<E, L> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("EmptyFallible").finish()
+        f.debug_struct("FallibleEmpty").finish()
     }
 }
 
@@ -141,6 +142,11 @@ where
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         Ok(None)
     }
+}
+
+impl<E, L> ExactSizeFallibleLender for FallibleEmpty<E, L> where
+    L: ?Sized + for<'all> FallibleLending<'all>
+{
 }
 
 impl<E, L> FusedFallibleLender for FallibleEmpty<E, L> where

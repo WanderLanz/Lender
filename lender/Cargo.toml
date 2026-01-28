@@ -17,7 +17,7 @@ rust-version = "1.85"
 [dependencies]
 aliasable = "0.1.3"
 fallible-iterator = "0.3.0"
-lender-derive = { version = "0.1.2", optional = true }
+lender-derive = { path = "../lender-derive", version = "0.1.3", optional = true }
 maybe-dangling = "0.1.2"
 stable_try_trait_v2 = { path = "../stable_try_trait_v2", version = "1.75" }
 

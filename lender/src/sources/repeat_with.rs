@@ -66,6 +66,22 @@ where
     }
 }
 
+impl<'a, L, F> DoubleEndedLender for RepeatWith<'a, L, F>
+where
+    L: ?Sized + for<'all> Lending<'all> + 'a,
+    F: FnMut() -> Lend<'a, L>,
+{
+    #[inline]
+    fn next_back(&mut self) -> Option<Lend<'_, Self>> {
+        self.next()
+    }
+
+    #[inline]
+    fn advance_back_by(&mut self, _n: usize) -> Result<(), core::num::NonZeroUsize> {
+        Ok(())
+    }
+}
+
 impl<'a, L, F> FusedLender for RepeatWith<'a, L, F>
 where
     L: ?Sized + for<'all> Lending<'all> + 'a,
@@ -132,6 +148,25 @@ where
 
     #[inline]
     fn advance_by(
+        &mut self,
+        _n: usize,
+    ) -> Result<Result<(), core::num::NonZeroUsize>, Self::Error> {
+        Ok(Ok(()))
+    }
+}
+
+impl<'a, L, E, F> DoubleEndedFallibleLender for FallibleRepeatWith<'a, L, E, F>
+where
+    L: ?Sized + for<'all> FallibleLending<'all> + 'a,
+    F: FnMut() -> Result<FallibleLend<'a, L>, E>,
+{
+    #[inline]
+    fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        self.next()
+    }
+
+    #[inline]
+    fn advance_back_by(
         &mut self,
         _n: usize,
     ) -> Result<Result<(), core::num::NonZeroUsize>, Self::Error> {

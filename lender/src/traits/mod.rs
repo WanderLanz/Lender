@@ -428,7 +428,7 @@ impl<'lend, T: ?Sized + for<'all> DynFallibleLend<'all>> FallibleLending<'lend>
     type Lend = <T as DynFallibleLend<'lend>>::Lend;
 }
 
-/// Internal trait used to implement [`lend!`], do not use directly.
+/// Internal trait used to implement [`fallible_lend!`], do not use directly.
 #[doc(hidden)]
 pub trait DynFallibleLend<'lend> {
     type Lend;

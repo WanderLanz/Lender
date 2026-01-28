@@ -324,6 +324,11 @@ fn fallible_empty() {
     // Test with reference type
     let mut empty_ref = fallible_empty::<String, fallible_lend!(&'lend str)>();
     assert!(empty_ref.next().unwrap().is_none());
+
+    // FallibleEmpty should implement ExactSizeFallibleLender
+    let empty_exact = fallible_empty::<String, fallible_lend!(i32)>();
+    assert_eq!(lender::ExactSizeFallibleLender::len(&empty_exact), 0);
+    assert!(lender::ExactSizeFallibleLender::is_empty(&empty_exact));
 }
 
 #[test]
@@ -364,6 +369,11 @@ fn fallible_once() {
     let count_err: Result<usize, String> =
         fallible_once::<String, fallible_lend!(i32)>(Err("error".to_string())).count();
     assert!(count_err.is_err());
+
+    // FallibleOnce should implement ExactSizeFallibleLender
+    let once_exact = fallible_once::<String, fallible_lend!(i32)>(Ok(42));
+    assert_eq!(lender::ExactSizeFallibleLender::len(&once_exact), 1);
+    assert!(!lender::ExactSizeFallibleLender::is_empty(&once_exact));
 }
 
 #[test]
@@ -417,6 +427,12 @@ fn fallible_repeat() {
     // size_hint should indicate infinite iterator
     let repeat_hint = fallible_repeat::<String, fallible_lend!(i32)>(Ok(42));
     assert_eq!(repeat_hint.size_hint(), (usize::MAX, None));
+
+    // FallibleRepeat should be double-ended (infinite both ways)
+    let mut repeat_de = fallible_repeat::<String, fallible_lend!(i32)>(Ok(7));
+    assert_eq!(repeat_de.next_back().unwrap(), Some(7));
+    assert_eq!(repeat_de.next_back().unwrap(), Some(7));
+    assert_eq!(repeat_de.next().unwrap(), Some(7));
 }
 
 #[test]
@@ -475,6 +491,13 @@ fn fallible_repeat_with() {
     let repeat_with_hint =
         fallible_repeat_with::<'_, fallible_lend!(i32), String, _>(|| Ok(1));
     assert_eq!(repeat_with_hint.size_hint(), (usize::MAX, None));
+
+    // FallibleRepeatWith should be double-ended (infinite both ways)
+    let mut repeat_with_de =
+        fallible_repeat_with::<'_, fallible_lend!(i32), String, _>(|| Ok(99));
+    assert_eq!(repeat_with_de.next_back().unwrap(), Some(99));
+    assert_eq!(repeat_with_de.next_back().unwrap(), Some(99));
+    assert_eq!(repeat_with_de.next().unwrap(), Some(99));
 }
 
 #[test]
@@ -1700,6 +1723,19 @@ fn step_by_into_inner() {
     assert_eq!(inner.data, vec![1, 2, 3]);
 }
 
+#[test]
+fn step_by_into_parts() {
+    // into_parts should return the original step value (not the internal step - 1)
+    let stepped = VecLender::new(vec![1, 2, 3]).step_by(3);
+    let (inner, step) = stepped.into_parts();
+    assert_eq!(inner.data, vec![1, 2, 3]);
+    assert_eq!(step, 3);
+
+    let stepped2 = VecLender::new(vec![1]).step_by(1);
+    let (_, step2) = stepped2.into_parts();
+    assert_eq!(step2, 1);
+}
+
 // ============================================================================
 // Peekable adapter tests (Lender)
 // Semantics: peek() returns a reference to the next element without consuming it.
@@ -2115,6 +2151,40 @@ fn lender_min_by() {
     assert_eq!(
         VecLender::new(vec![3, -1, 1]).min_by(|a, b| a.abs().cmp(&b.abs())),
         Some(-1)
+    );
+}
+
+#[test]
+fn fallible_lender_max_by() {
+    use lender::FallibleLender;
+
+    let fallible: lender::IntoFallible<(), _> = VecLender::new(vec![1, 5, 3]).into_fallible();
+    assert_eq!(fallible.max_by(|a, b| Ok(a.cmp(b))), Ok(Some(5)));
+
+    // Per Iterator::max_by docs: "If several elements are equally maximum, the last element is returned."
+    // Use abs() comparison so that -3 and 3 are equal; last should win.
+    let fallible2: lender::IntoFallible<(), _> =
+        VecLender::new(vec![-3, 1, 3]).into_fallible();
+    assert_eq!(
+        fallible2.max_by(|a, b| Ok(a.abs().cmp(&b.abs()))),
+        Ok(Some(3))
+    );
+}
+
+#[test]
+fn fallible_lender_min_by() {
+    use lender::FallibleLender;
+
+    let fallible: lender::IntoFallible<(), _> = VecLender::new(vec![3, 1, 5]).into_fallible();
+    assert_eq!(fallible.min_by(|a, b| Ok(a.cmp(b))), Ok(Some(1)));
+
+    // Per Iterator::min_by docs: "If several elements are equally minimum, the first element is returned."
+    // Use abs() comparison so that -1 and 1 are equal; first should win.
+    let fallible2: lender::IntoFallible<(), _> =
+        VecLender::new(vec![3, -1, 1]).into_fallible();
+    assert_eq!(
+        fallible2.min_by(|a, b| Ok(a.abs().cmp(&b.abs()))),
+        Ok(Some(-1))
     );
 }
 
@@ -3127,6 +3197,17 @@ fn source_repeat_with_basic() {
 fn source_repeat_with_size_hint() {
     let repeat_with = lender::repeat_with::<lend!(i32), _>(|| 42);
     assert_eq!(repeat_with.size_hint(), (usize::MAX, None));
+}
+
+#[test]
+fn source_repeat_with_double_ended() {
+    use lender::DoubleEndedLender;
+
+    let mut repeat_with = lender::repeat_with::<lend!(i32), _>(|| 42);
+    // RepeatWith is double-ended (infinite both ways)
+    assert_eq!(repeat_with.next_back(), Some(42));
+    assert_eq!(repeat_with.next_back(), Some(42));
+    assert_eq!(repeat_with.next(), Some(42));
 }
 
 #[test]

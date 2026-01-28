@@ -148,6 +148,26 @@ where
     }
 }
 
+impl<'a, E, L> DoubleEndedFallibleLender for FallibleRepeat<'a, E, L>
+where
+    E: Clone + 'a,
+    L: ?Sized + for<'all> FallibleLending<'all> + 'a,
+    for<'all> FallibleLend<'all, L>: Clone,
+{
+    #[inline]
+    fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        self.next()
+    }
+
+    #[inline]
+    fn advance_back_by(
+        &mut self,
+        _n: usize,
+    ) -> Result<Result<(), core::num::NonZeroUsize>, Self::Error> {
+        Ok(Ok(()))
+    }
+}
+
 impl<'a, E, L> FusedFallibleLender for FallibleRepeat<'a, E, L>
 where
     E: Clone + 'a,

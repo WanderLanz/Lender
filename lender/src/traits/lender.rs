@@ -79,7 +79,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(lender.next(), None);
     /// ```
     fn next(&mut self) -> Option<Lend<'_, Self>>;
-    /// Takes the next `len` lends of the lender with temporary lender [`Chunk`]. This is equivalent to cloning the lender and calling [`take(len)`](Lender::take) on it.
+    /// Takes the next `chunk_size` lends of the lender with temporary lender [`Chunk`]. This is equivalent to cloning the lender and calling [`take(chunk_size)`](Lender::take) on it.
     ///
     /// # Examples
     ///
@@ -464,7 +464,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         Peekable::new(self)
     }
-    /// Skips the first contiguous sequence lends of this lender that satisfy the given predicate.
+    /// Skips the first contiguous sequence of lends of this lender that satisfy the given predicate.
     ///
     /// # Examples
     ///
