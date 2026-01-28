@@ -29,6 +29,7 @@ impl<E, L, F> MapErr<E, L, F> {
         (self.lender, self.f)
     }
 }
+
 impl<E, L: fmt::Debug, F> fmt::Debug for MapErr<E, L, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("MapErr")
@@ -43,6 +44,7 @@ where
 {
     type Lend = FallibleLend<'lend, L>;
 }
+
 impl<E, L, F> FallibleLender for MapErr<E, L, F>
 where
     F: FnMut(L::Error) -> E,
@@ -62,6 +64,7 @@ where
         self.lender.size_hint()
     }
 }
+
 impl<E, L: DoubleEndedFallibleLender, F> DoubleEndedFallibleLender for MapErr<E, L, F>
 where
     F: FnMut(L::Error) -> E,
@@ -71,6 +74,7 @@ where
         self.lender.next_back().map_err(&mut self.f)
     }
 }
+
 impl<E, L, F> FusedFallibleLender for MapErr<E, L, F>
 where
     F: FnMut(L::Error) -> E,

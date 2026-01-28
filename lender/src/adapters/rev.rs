@@ -17,12 +17,14 @@ impl<L> Rev<L> {
         self.lender
     }
 }
+
 impl<'lend, L> Lending<'lend> for Rev<L>
 where
     L: Lender,
 {
     type Lend = Lend<'lend, L>;
 }
+
 impl<L> Lender for Rev<L>
 where
     L: DoubleEndedLender,
@@ -75,6 +77,7 @@ where
         self.lender.rfind(predicate)
     }
 }
+
 impl<L> DoubleEndedLender for Rev<L>
 where
     L: DoubleEndedLender,
@@ -119,6 +122,7 @@ where
         self.lender.find(predicate)
     }
 }
+
 impl<L> ExactSizeLender for Rev<L>
 where
     L: DoubleEndedLender + ExactSizeLender,
@@ -128,7 +132,9 @@ where
         self.lender.len()
     }
 }
+
 impl<L> FusedLender for Rev<L> where L: DoubleEndedLender + FusedLender {}
+
 impl<L> Default for Rev<L>
 where
     L: Default,
@@ -144,6 +150,7 @@ where
 {
     type Lend = FallibleLend<'lend, L>;
 }
+
 impl<L> FallibleLender for Rev<L>
 where
     L: DoubleEndedFallibleLender,
@@ -198,6 +205,7 @@ where
         self.lender.rfind(predicate)
     }
 }
+
 impl<L> DoubleEndedFallibleLender for Rev<L>
 where
     L: DoubleEndedFallibleLender,
@@ -245,6 +253,7 @@ where
         self.lender.find(predicate)
     }
 }
+
 impl<L> ExactSizeFallibleLender for Rev<L>
 where
     L: ExactSizeFallibleLender + DoubleEndedFallibleLender,

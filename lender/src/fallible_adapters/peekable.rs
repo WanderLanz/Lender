@@ -20,6 +20,7 @@ where
     peeked: MaybeDangling<Option<Option<FallibleLend<'this, L>>>>,
     lender: AliasableBox<L>,
 }
+
 impl<'this, L> Peekable<'this, L>
 where
     L: FallibleLender,
@@ -115,6 +116,7 @@ where
         self.next_if(|v| t == v)
     }
 }
+
 impl<L> Clone for Peekable<'_, L>
 where
     L: FallibleLender + Clone,
@@ -126,6 +128,7 @@ where
         }
     }
 }
+
 impl<'this, L: fmt::Debug> fmt::Debug for Peekable<'this, L>
 where
     L: FallibleLender + fmt::Debug,
@@ -138,12 +141,14 @@ where
             .finish()
     }
 }
+
 impl<'lend, L> FallibleLending<'lend> for Peekable<'_, L>
 where
     L: FallibleLender,
 {
     type Lend = FallibleLend<'lend, L>;
 }
+
 impl<'this, L> FallibleLender for Peekable<'this, L>
 where
     L: FallibleLender,

@@ -1339,6 +1339,7 @@ where
         ControlFlow::Break(x) => x,
     }
 }
+
 impl<'lend, L: Lender> Lending<'lend> for &mut L {
     type Lend = Lend<'lend, L>;
 }

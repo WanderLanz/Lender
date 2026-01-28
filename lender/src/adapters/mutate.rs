@@ -24,6 +24,7 @@ impl<L, F> Mutate<L, F> {
         (self.lender, self.f)
     }
 }
+
 impl<L: fmt::Debug, F> fmt::Debug for Mutate<L, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Mutate")
@@ -31,6 +32,7 @@ impl<L: fmt::Debug, F> fmt::Debug for Mutate<L, F> {
             .finish()
     }
 }
+
 impl<'lend, L, F> Lending<'lend> for Mutate<L, F>
 where
     L: Lender,
@@ -38,6 +40,7 @@ where
 {
     type Lend = Lend<'lend, L>;
 }
+
 impl<L, F> Lender for Mutate<L, F>
 where
     L: Lender,
@@ -85,6 +88,7 @@ where
         })
     }
 }
+
 impl<L, F> DoubleEndedLender for Mutate<L, F>
 where
     L: DoubleEndedLender,
@@ -125,6 +129,7 @@ where
         })
     }
 }
+
 impl<L: ExactSizeLender, F> ExactSizeLender for Mutate<L, F>
 where
     F: FnMut(&mut Lend<'_, L>),
@@ -148,6 +153,7 @@ where
 {
     type Lend = FallibleLend<'lend, L>;
 }
+
 impl<L, F> FallibleLender for Mutate<L, F>
 where
     L: FallibleLender,
@@ -197,6 +203,7 @@ where
         })
     }
 }
+
 impl<L, F> DoubleEndedFallibleLender for Mutate<L, F>
 where
     L: DoubleEndedFallibleLender,
@@ -237,6 +244,7 @@ where
         })
     }
 }
+
 impl<L: ExactSizeFallibleLender, F> ExactSizeFallibleLender for Mutate<L, F>
 where
     F: FnMut(&mut FallibleLend<'_, L>) -> Result<(), L::Error>,

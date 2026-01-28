@@ -13,6 +13,7 @@ where
     separator: FallibleLend<'this, L>,
     needs_sep: bool,
 }
+
 impl<'this, L> Intersperse<'this, L>
 where
     for<'all> FallibleLend<'all, L>: Clone,
@@ -34,6 +35,7 @@ where
         (self.lender.into_inner(), self.separator)
     }
 }
+
 impl<L: fmt::Debug> fmt::Debug for Intersperse<'_, L>
 where
     for<'all> FallibleLend<'all, L>: Clone + fmt::Debug,
@@ -47,6 +49,7 @@ where
             .finish()
     }
 }
+
 impl<'lend, L> FallibleLending<'lend> for Intersperse<'_, L>
 where
     for<'all> FallibleLend<'all, L>: Clone,
@@ -54,6 +57,7 @@ where
 {
     type Lend = FallibleLend<'lend, L>;
 }
+
 impl<'this, L> FallibleLender for Intersperse<'this, L>
 where
     for<'all> FallibleLend<'all, L>: Clone,
@@ -115,6 +119,7 @@ where
     lender: FalliblePeekable<'this, L>,
     needs_sep: bool,
 }
+
 impl<'this, L, G> IntersperseWith<'this, L, G>
 where
     L: FallibleLender,
@@ -128,6 +133,7 @@ where
         }
     }
 }
+
 impl<L: fmt::Debug, G: fmt::Debug> fmt::Debug for IntersperseWith<'_, L, G>
 where
     L: FallibleLender,
@@ -141,6 +147,7 @@ where
             .finish()
     }
 }
+
 impl<'lend, 'this, L, G> FallibleLending<'lend> for IntersperseWith<'this, L, G>
 where
     L: FallibleLender,
@@ -148,6 +155,7 @@ where
 {
     type Lend = FallibleLend<'lend, L>;
 }
+
 impl<'this, L, G> FallibleLender for IntersperseWith<'this, L, G>
 where
     L: FallibleLender,

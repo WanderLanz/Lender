@@ -106,6 +106,7 @@ where
 {
     type Lend = FallibleLend<'lend, L>;
 }
+
 impl<'this, L> Lender for NonFallibleAdapter<'this, L>
 where
     L: FallibleLender,

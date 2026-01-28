@@ -24,12 +24,14 @@ impl<L> Skip<L> {
         (self.lender, self.n)
     }
 }
+
 impl<'lend, L> Lending<'lend> for Skip<L>
 where
     L: Lender,
 {
     type Lend = Lend<'lend, L>;
 }
+
 impl<L> Lender for Skip<L>
 where
     L: Lender,
@@ -141,7 +143,9 @@ where
         NonZeroUsize::new(n).map_or(Ok(()), Err)
     }
 }
+
 impl<L> ExactSizeLender for Skip<L> where L: ExactSizeLender {}
+
 impl<L> DoubleEndedLender for Skip<L>
 where
     L: DoubleEndedLender + ExactSizeLender,
@@ -203,6 +207,7 @@ where
         NonZeroUsize::new(n - min).map_or(Ok(()), Err)
     }
 }
+
 impl<L> FusedLender for Skip<L> where L: FusedLender {}
 
 impl<'lend, L> FallibleLending<'lend> for Skip<L>
@@ -211,6 +216,7 @@ where
 {
     type Lend = FallibleLend<'lend, L>;
 }
+
 impl<L> FallibleLender for Skip<L>
 where
     L: FallibleLender,
@@ -324,7 +330,9 @@ where
         Ok(NonZeroUsize::new(n).map_or(Ok(()), Err))
     }
 }
+
 impl<L> ExactSizeFallibleLender for Skip<L> where L: ExactSizeFallibleLender {}
+
 impl<L> DoubleEndedFallibleLender for Skip<L>
 where
     L: DoubleEndedFallibleLender + ExactSizeFallibleLender,

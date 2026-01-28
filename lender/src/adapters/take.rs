@@ -5,6 +5,7 @@ use crate::{
     FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender,
     Lending, try_trait_v2::Try,
 };
+
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Take<L> {
@@ -24,12 +25,14 @@ impl<L> Take<L> {
         (self.lender, self.n)
     }
 }
+
 impl<'lend, L> Lending<'lend> for Take<L>
 where
     L: Lender,
 {
     type Lend = Lend<'lend, L>;
 }
+
 impl<L> Lender for Take<L>
 where
     L: Lender,
@@ -90,6 +93,7 @@ where
         NonZeroUsize::new(n - advanced).map_or(Ok(()), Err)
     }
 }
+
 impl<L> DoubleEndedLender for Take<L>
 where
     L: DoubleEndedLender + ExactSizeLender,

@@ -28,6 +28,7 @@ impl<L, P> SkipWhile<L, P> {
         (self.lender, self.predicate)
     }
 }
+
 impl<L: fmt::Debug, P> fmt::Debug for SkipWhile<L, P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("SkipWhile")
@@ -35,6 +36,7 @@ impl<L: fmt::Debug, P> fmt::Debug for SkipWhile<L, P> {
             .finish()
     }
 }
+
 impl<'lend, L, P> Lending<'lend> for SkipWhile<L, P>
 where
     P: FnMut(&Lend<'lend, L>) -> bool,
@@ -42,6 +44,7 @@ where
 {
     type Lend = Lend<'lend, L>;
 }
+
 impl<L, P> Lender for SkipWhile<L, P>
 where
     P: FnMut(&Lend<'_, L>) -> bool,
@@ -105,6 +108,7 @@ where
         self.lender.fold(init, f)
     }
 }
+
 impl<L, P> FusedLender for SkipWhile<L, P>
 where
     P: FnMut(&Lend<'_, L>) -> bool,
@@ -119,6 +123,7 @@ where
 {
     type Lend = FallibleLend<'lend, L>;
 }
+
 impl<L, P> FallibleLender for SkipWhile<L, P>
 where
     P: FnMut(&FallibleLend<'_, L>) -> Result<bool, L::Error>,
@@ -184,6 +189,7 @@ where
         self.lender.fold(init, f)
     }
 }
+
 impl<L, P> FusedFallibleLender for SkipWhile<L, P>
 where
     P: FnMut(&FallibleLend<'_, L>) -> Result<bool, L::Error>,

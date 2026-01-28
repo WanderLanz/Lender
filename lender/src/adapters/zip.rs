@@ -68,6 +68,7 @@ impl<A, B> Zip<A, B> {
         (self.a, self.b)
     }
 }
+
 impl<'lend, A, B> Lending<'lend> for Zip<A, B>
 where
     A: Lender,
@@ -75,6 +76,7 @@ where
 {
     type Lend = (Lend<'lend, A>, Lend<'lend, B>);
 }
+
 impl<A, B> Lender for Zip<A, B>
 where
     A: Lender,
@@ -104,6 +106,7 @@ where
         (lower, upper)
     }
 }
+
 impl<A, B> DoubleEndedLender for Zip<A, B>
 where
     A: DoubleEndedLender + ExactSizeLender,
@@ -132,12 +135,14 @@ where
         }
     }
 }
+
 impl<A, B> ExactSizeLender for Zip<A, B>
 where
     A: ExactSizeLender,
     B: ExactSizeLender,
 {
 }
+
 impl<A, B> FusedLender for Zip<A, B>
 where
     A: FusedLender,
@@ -152,6 +157,7 @@ where
 {
     type Lend = (FallibleLend<'lend, A>, FallibleLend<'lend, B>);
 }
+
 impl<A, B> FallibleLender for Zip<A, B>
 where
     A: FallibleLender,
@@ -189,6 +195,7 @@ where
         (lower, upper)
     }
 }
+
 impl<A, B> DoubleEndedFallibleLender for Zip<A, B>
 where
     A: DoubleEndedFallibleLender + ExactSizeFallibleLender,
@@ -217,12 +224,14 @@ where
         }
     }
 }
+
 impl<A, B> ExactSizeFallibleLender for Zip<A, B>
 where
     A: ExactSizeFallibleLender,
     B: ExactSizeFallibleLender<Error = A::Error>,
 {
 }
+
 impl<A, B> FusedFallibleLender for Zip<A, B>
 where
     A: FusedFallibleLender,

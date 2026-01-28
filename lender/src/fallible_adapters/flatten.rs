@@ -27,6 +27,7 @@ where
         *AliasableBox::into_unique(self.inner.lender)
     }
 }
+
 impl<L: FallibleLender + Clone> Clone for Flatten<'_, L>
 where
     for<'all> FallibleLend<'all, L>: IntoFallibleLender,
@@ -38,6 +39,7 @@ where
         }
     }
 }
+
 impl<L: FallibleLender + fmt::Debug> fmt::Debug for Flatten<'_, L>
 where
     for<'all> FallibleLend<'all, L>: IntoFallibleLender,
@@ -49,12 +51,14 @@ where
             .finish()
     }
 }
+
 impl<'lend, 'this, L: FallibleLender> FallibleLending<'lend> for Flatten<'this, L>
 where
     for<'all> FallibleLend<'all, L>: IntoFallibleLender,
 {
     type Lend = FallibleLend<'lend, <FallibleLend<'this, L> as IntoFallibleLender>::FallibleLender>;
 }
+
 impl<L: FallibleLender> FallibleLender for Flatten<'_, L>
 where
     for<'all> FallibleLend<'all, L>: IntoFallibleLender<Error = L::Error>,
@@ -98,6 +102,7 @@ where
         }
     }
 }
+
 impl<L: FallibleLender + Clone, F: Clone> Clone for FlatMap<'_, L, F>
 where
     Map<L, F>: FallibleLender + Clone,
@@ -110,6 +115,7 @@ where
         }
     }
 }
+
 impl<L: FallibleLender + fmt::Debug, F> fmt::Debug for FlatMap<'_, L, F>
 where
     Map<L, F>: FallibleLender + Clone,
@@ -122,6 +128,7 @@ where
             .finish()
     }
 }
+
 impl<'lend, 'this, L: FallibleLender, F> FallibleLending<'lend> for FlatMap<'this, L, F>
 where
     Map<L, F>: FallibleLender,
@@ -130,6 +137,7 @@ where
     type Lend =
         FallibleLend<'lend, <FallibleLend<'this, Map<L, F>> as IntoFallibleLender>::FallibleLender>;
 }
+
 impl<L: FallibleLender, F> FallibleLender for FlatMap<'_, L, F>
 where
     Map<L, F>: FallibleLender<Error = L::Error>,
@@ -170,6 +178,7 @@ where
     inner: MaybeDangling<Option<<FallibleLend<'this, L> as IntoFallibleLender>::FallibleLender>>,
     lender: AliasableBox<L>,
 }
+
 impl<L: FallibleLender> FlattenCompat<'_, L>
 where
     for<'all> FallibleLend<'all, L>: IntoFallibleLender,
@@ -181,6 +190,7 @@ where
         }
     }
 }
+
 impl<L: FallibleLender + Clone> Clone for FlattenCompat<'_, L>
 where
     for<'all> FallibleLend<'all, L>: IntoFallibleLender,
@@ -193,6 +203,7 @@ where
         }
     }
 }
+
 impl<L: FallibleLender + fmt::Debug> fmt::Debug for FlattenCompat<'_, L>
 where
     for<'all> FallibleLend<'all, L>: IntoFallibleLender,
@@ -205,12 +216,14 @@ where
             .finish()
     }
 }
+
 impl<'lend, 'this, L: FallibleLender> FallibleLending<'lend> for FlattenCompat<'this, L>
 where
     for<'all> FallibleLend<'all, L>: IntoFallibleLender,
 {
     type Lend = FallibleLend<'lend, <FallibleLend<'this, L> as IntoFallibleLender>::FallibleLender>;
 }
+
 impl<'this, L: FallibleLender> FallibleLender for FlattenCompat<'this, L>
 where
     for<'all> FallibleLend<'all, L>: IntoFallibleLender<Error = L::Error>,

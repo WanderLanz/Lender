@@ -23,6 +23,7 @@ impl<L, P> Filter<L, P> {
         (self.lender, self.predicate)
     }
 }
+
 impl<I: fmt::Debug, P> fmt::Debug for Filter<I, P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Filter")
@@ -30,6 +31,7 @@ impl<I: fmt::Debug, P> fmt::Debug for Filter<I, P> {
             .finish()
     }
 }
+
 impl<'lend, L, P> Lending<'lend> for Filter<L, P>
 where
     P: FnMut(&Lend<'lend, L>) -> bool,
@@ -37,6 +39,7 @@ where
 {
     type Lend = Lend<'lend, L>;
 }
+
 impl<L, P> Lender for Filter<L, P>
 where
     P: FnMut(&Lend<'_, L>) -> bool,
@@ -69,6 +72,7 @@ where
         self.lender.map(f::<Self, _>(self.predicate)).iter().sum()
     }
 }
+
 impl<L, P> DoubleEndedLender for Filter<L, P>
 where
     P: FnMut(&Lend<'_, L>) -> bool,
@@ -79,6 +83,7 @@ where
         self.lender.rfind(&mut self.predicate)
     }
 }
+
 impl<L, P> FusedLender for Filter<L, P>
 where
     P: FnMut(&Lend<'_, L>) -> bool,
@@ -93,6 +98,7 @@ where
 {
     type Lend = FallibleLend<'lend, L>;
 }
+
 impl<L, P> FallibleLender for Filter<L, P>
 where
     P: FnMut(&FallibleLend<'_, L>) -> Result<bool, L::Error>,
@@ -135,6 +141,7 @@ where
         .map_err(|(_, err)| err)
     }
 }
+
 impl<L, P> DoubleEndedFallibleLender for Filter<L, P>
 where
     P: FnMut(&FallibleLend<'_, L>) -> Result<bool, L::Error>,
@@ -145,6 +152,7 @@ where
         self.lender.rfind(&mut self.predicate)
     }
 }
+
 impl<L, P> FusedFallibleLender for Filter<L, P>
 where
     P: FnMut(&FallibleLend<'_, L>) -> Result<bool, L::Error>,

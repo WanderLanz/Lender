@@ -103,6 +103,7 @@ where
         self.next_if(|v| t == v)
     }
 }
+
 impl<L> Clone for Peekable<'_, L>
 where
     L: Lender + Clone,
@@ -114,6 +115,7 @@ where
         }
     }
 }
+
 impl<'this, L: fmt::Debug> fmt::Debug for Peekable<'this, L>
 where
     L: Lender + fmt::Debug,
@@ -126,12 +128,14 @@ where
             .finish()
     }
 }
+
 impl<'lend, L> Lending<'lend> for Peekable<'_, L>
 where
     L: Lender,
 {
     type Lend = Lend<'lend, L>;
 }
+
 impl<'this, L> Lender for Peekable<'this, L>
 where
     L: Lender,
@@ -234,6 +238,7 @@ where
         lender.fold(acc, f)
     }
 }
+
 impl<'this, L: DoubleEndedLender> DoubleEndedLender for Peekable<'this, L> {
     #[inline]
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
@@ -284,6 +289,7 @@ impl<'this, L: DoubleEndedLender> DoubleEndedLender for Peekable<'this, L> {
         }
     }
 }
+
 impl<L: ExactSizeLender> ExactSizeLender for Peekable<'_, L> {}
 
 impl<L: FusedLender> FusedLender for Peekable<'_, L> {}

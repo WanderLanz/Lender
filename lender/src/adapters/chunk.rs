@@ -22,12 +22,14 @@ impl<'s, T> Chunk<'s, T> {
         (self.lender, self.len)
     }
 }
+
 impl<'lend, T> Lending<'lend> for Chunk<'_, T>
 where
     T: Lender,
 {
     type Lend = Lend<'lend, T>;
 }
+
 impl<T> Lender for Chunk<'_, T>
 where
     T: Lender,
@@ -48,6 +50,7 @@ where
         (lower.min(self.len), upper.map(|x| x.min(self.len)))
     }
 }
+
 impl<L> FusedLender for Chunk<'_, L> where L: FusedLender {}
 
 impl<'lend, T> FallibleLending<'lend> for Chunk<'_, T>
@@ -56,6 +59,7 @@ where
 {
     type Lend = FallibleLend<'lend, T>;
 }
+
 impl<T> FallibleLender for Chunk<'_, T>
 where
     T: FallibleLender,
@@ -78,4 +82,5 @@ where
         (lower.min(self.len), upper.map(|x| x.min(self.len)))
     }
 }
+
 impl<L> FusedFallibleLender for Chunk<'_, L> where L: FusedFallibleLender {}

@@ -48,6 +48,7 @@ impl<'this, L: 'this> Iter<'this, L> {
         self.lender
     }
 }
+
 impl<'this, L: 'this> Iterator for Iter<'this, L>
 where
     L: Lender,
@@ -67,6 +68,7 @@ where
         self.lender.size_hint()
     }
 }
+
 impl<'this, L: 'this> DoubleEndedIterator for Iter<'this, L>
 where
     L: DoubleEndedLender,
@@ -82,6 +84,7 @@ where
         }
     }
 }
+
 impl<'this, L: 'this> ExactSizeIterator for Iter<'this, L>
 where
     L: ExactSizeLender,
@@ -92,6 +95,7 @@ where
         self.lender.len()
     }
 }
+
 impl<'this, L: 'this> FusedIterator for Iter<'this, L>
 where
     L: FusedLender,
@@ -123,6 +127,7 @@ where
         self.lender.size_hint()
     }
 }
+
 impl<'this, L: 'this> DoubleEndedFallibleIterator for Iter<'this, L>
 where
     L: DoubleEndedFallibleLender,

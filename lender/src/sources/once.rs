@@ -33,6 +33,7 @@ where
 {
     inner: Option<Lend<'a, L>>,
 }
+
 impl<'a, L> Clone for Once<'a, L>
 where
     L: ?Sized + for<'all> Lending<'all>,
@@ -44,6 +45,7 @@ where
         }
     }
 }
+
 impl<'a, L> fmt::Debug for Once<'a, L>
 where
     L: ?Sized + for<'all> Lending<'all>,
@@ -53,6 +55,7 @@ where
         f.debug_struct("Once").field("inner", &self.inner).finish()
     }
 }
+
 impl<'lend, L> Lending<'lend> for Once<'_, L>
 where
     L: ?Sized + for<'all> Lending<'all>,
@@ -117,6 +120,7 @@ where
 {
     inner: Option<Result<FallibleLend<'a, L>, E>>,
 }
+
 impl<'a, E, L> Clone for FallibleOnce<'a, E, L>
 where
     L: ?Sized + for<'all> FallibleLending<'all>,
@@ -129,6 +133,7 @@ where
         }
     }
 }
+
 impl<'a, E, L> fmt::Debug for FallibleOnce<'a, E, L>
 where
     L: ?Sized + for<'all> FallibleLending<'all>,
@@ -141,6 +146,7 @@ where
             .finish()
     }
 }
+
 impl<'lend, E, L> FallibleLending<'lend> for FallibleOnce<'_, E, L>
 where
     L: ?Sized + for<'all> FallibleLending<'all>,

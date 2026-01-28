@@ -21,6 +21,7 @@ impl<L> Cloned<L> {
         self.lender
     }
 }
+
 impl<T, L> Iterator for Cloned<L>
 where
     L: Lender,
@@ -38,6 +39,7 @@ where
         self.lender.size_hint()
     }
 }
+
 impl<T, L> DoubleEndedIterator for Cloned<L>
 where
     L: DoubleEndedLender,
@@ -49,6 +51,7 @@ where
         self.lender.next_back().cloned()
     }
 }
+
 impl<T, L> ExactSizeIterator for Cloned<L>
 where
     L: ExactSizeLender,
@@ -60,6 +63,7 @@ where
         self.lender.len()
     }
 }
+
 impl<T, L> FusedIterator for Cloned<L>
 where
     L: FusedLender,
@@ -67,6 +71,7 @@ where
     L: for<'all> Lending<'all, Lend = &'all T>,
 {
 }
+
 impl<L> Default for Cloned<L>
 where
     L: Default,
@@ -95,6 +100,7 @@ where
         self.lender.size_hint()
     }
 }
+
 impl<T, L> DoubleEndedFallibleIterator for Cloned<L>
 where
     L: DoubleEndedFallibleLender,

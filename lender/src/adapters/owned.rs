@@ -22,6 +22,7 @@ impl<L> Owned<L> {
         self.lender
     }
 }
+
 impl<T, L> Iterator for Owned<L>
 where
     L: Lender,
@@ -38,6 +39,7 @@ where
         self.lender.size_hint()
     }
 }
+
 impl<T, L> DoubleEndedIterator for Owned<L>
 where
     L: DoubleEndedLender,
@@ -48,6 +50,7 @@ where
         self.lender.next_back().map(|ref x| x.to_owned())
     }
 }
+
 impl<T, L> ExactSizeIterator for Owned<L>
 where
     L: ExactSizeLender,
@@ -57,12 +60,14 @@ where
         self.lender.len()
     }
 }
+
 impl<T, L> FusedIterator for Owned<L>
 where
     L: FusedLender,
     for<'all> Lend<'all, L>: ToOwned<Owned = T>,
 {
 }
+
 impl<L> Default for Owned<L>
 where
     L: Default,
@@ -90,6 +95,7 @@ where
         self.lender.size_hint()
     }
 }
+
 impl<T, L> DoubleEndedFallibleIterator for Owned<L>
 where
     L: DoubleEndedFallibleLender,

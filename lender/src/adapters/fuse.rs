@@ -24,13 +24,16 @@ impl<L> Fuse<L> {
         self.lender
     }
 }
+
 impl<L> FusedLender for Fuse<L> where L: Lender {}
+
 impl<'lend, L> Lending<'lend> for Fuse<L>
 where
     L: Lender,
 {
     type Lend = Lend<'lend, L>;
 }
+
 impl<L> Lender for Fuse<L>
 where
     L: Lender,
@@ -133,6 +136,7 @@ where
         None
     }
 }
+
 impl<L> DoubleEndedLender for Fuse<L>
 where
     L: DoubleEndedLender,
@@ -205,6 +209,7 @@ where
         None
     }
 }
+
 impl<L> ExactSizeLender for Fuse<L>
 where
     L: ExactSizeLender,
@@ -221,6 +226,7 @@ where
         }
     }
 }
+
 impl<L: Default> Default for Fuse<L> {
     fn default() -> Self {
         Self::new(L::default())
@@ -233,6 +239,7 @@ where
 {
     type Lend = FallibleLend<'lend, L>;
 }
+
 impl<L> FallibleLender for Fuse<L>
 where
     L: FallibleLender,
@@ -363,6 +370,7 @@ where
         Ok(None)
     }
 }
+
 impl<L> DoubleEndedFallibleLender for Fuse<L>
 where
     L: DoubleEndedFallibleLender,
@@ -447,6 +455,7 @@ where
         Ok(None)
     }
 }
+
 impl<L> ExactSizeFallibleLender for Fuse<L>
 where
     L: ExactSizeFallibleLender,
@@ -459,4 +468,5 @@ where
         self.flag || self.lender.is_empty()
     }
 }
+
 impl<L> FusedFallibleLender for Fuse<L> where L: FallibleLender {}

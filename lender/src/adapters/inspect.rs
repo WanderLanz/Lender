@@ -24,6 +24,7 @@ impl<L, F> Inspect<L, F> {
         (self.lender, self.f)
     }
 }
+
 impl<I: fmt::Debug, F> fmt::Debug for Inspect<I, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Inspect")
@@ -31,6 +32,7 @@ impl<I: fmt::Debug, F> fmt::Debug for Inspect<I, F> {
             .finish()
     }
 }
+
 impl<'lend, L, F> Lending<'lend> for Inspect<L, F>
 where
     L: Lender,
@@ -38,6 +40,7 @@ where
 {
     type Lend = Lend<'lend, L>;
 }
+
 impl<L, F> Lender for Inspect<L, F>
 where
     L: Lender,
@@ -85,6 +88,7 @@ where
         })
     }
 }
+
 impl<L, F> DoubleEndedLender for Inspect<L, F>
 where
     L: DoubleEndedLender,
@@ -125,6 +129,7 @@ where
         })
     }
 }
+
 impl<L: ExactSizeLender, F> ExactSizeLender for Inspect<L, F>
 where
     F: FnMut(&Lend<'_, L>),
@@ -139,6 +144,7 @@ where
         self.lender.is_empty()
     }
 }
+
 impl<L: FusedLender, F> FusedLender for Inspect<L, F> where F: FnMut(&Lend<'_, L>) {}
 
 impl<'lend, L, F> FallibleLending<'lend> for Inspect<L, F>
@@ -148,6 +154,7 @@ where
 {
     type Lend = FallibleLend<'lend, L>;
 }
+
 impl<L, F> FallibleLender for Inspect<L, F>
 where
     L: FallibleLender,
@@ -197,6 +204,7 @@ where
         })
     }
 }
+
 impl<L, F> DoubleEndedFallibleLender for Inspect<L, F>
 where
     L: DoubleEndedFallibleLender,
@@ -237,6 +245,7 @@ where
         })
     }
 }
+
 impl<L: ExactSizeFallibleLender, F> ExactSizeFallibleLender for Inspect<L, F>
 where
     F: FnMut(&FallibleLend<'_, L>) -> Result<(), L::Error>,
@@ -251,6 +260,7 @@ where
         self.lender.is_empty()
     }
 }
+
 impl<L: FusedFallibleLender, F> FusedFallibleLender for Inspect<L, F> where
     F: FnMut(&FallibleLend<'_, L>) -> Result<(), L::Error>
 {

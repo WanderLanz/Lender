@@ -21,6 +21,7 @@ impl<L> Copied<L> {
         self.lender
     }
 }
+
 impl<T, L> Iterator for Copied<L>
 where
     L: Lender,
@@ -38,6 +39,7 @@ where
         self.lender.size_hint()
     }
 }
+
 impl<T, L> DoubleEndedIterator for Copied<L>
 where
     L: DoubleEndedLender,
@@ -49,6 +51,7 @@ where
         self.lender.next_back().copied()
     }
 }
+
 impl<T, L> ExactSizeIterator for Copied<L>
 where
     L: ExactSizeLender,
@@ -60,6 +63,7 @@ where
         self.lender.len()
     }
 }
+
 impl<T, L> FusedIterator for Copied<L>
 where
     L: FusedLender,
@@ -67,6 +71,7 @@ where
     L: for<'all> Lending<'all, Lend = &'all T>,
 {
 }
+
 impl<L> Default for Copied<L>
 where
     L: Default,
@@ -95,6 +100,7 @@ where
         self.lender.size_hint()
     }
 }
+
 impl<T, L> DoubleEndedFallibleIterator for Copied<L>
 where
     L: DoubleEndedFallibleLender,

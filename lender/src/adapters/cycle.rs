@@ -27,12 +27,14 @@ where
         (self.orig, self.lender)
     }
 }
+
 impl<'lend, L> Lending<'lend> for Cycle<L>
 where
     L: Clone + Lender,
 {
     type Lend = Lend<'lend, L>;
 }
+
 impl<L> Lender for Cycle<L>
 where
     L: Clone + Lender,
@@ -115,6 +117,7 @@ where
         NonZeroUsize::new(n).map_or(Ok(()), Err)
     }
 }
+
 impl<L> FusedLender for Cycle<L> where L: Clone + FusedLender {}
 
 impl<'lend, L> FallibleLending<'lend> for Cycle<L>
@@ -123,6 +126,7 @@ where
 {
     type Lend = FallibleLend<'lend, L>;
 }
+
 impl<L> FallibleLender for Cycle<L>
 where
     L: Clone + FallibleLender,
@@ -207,4 +211,5 @@ where
         Ok(Ok(()))
     }
 }
+
 impl<L> FusedFallibleLender for Cycle<L> where L: Clone + FusedFallibleLender {}

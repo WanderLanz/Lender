@@ -65,6 +65,7 @@ where
 {
     type Lend = L::Lend;
 }
+
 impl<E, L> FallibleLender for IntoFallible<E, L>
 where
     L: Lender,
@@ -94,6 +95,7 @@ where
             .0
     }
 }
+
 impl<E, L: Lender> From<L> for IntoFallible<E, L> {
     fn from(lender: L) -> Self {
         Self::new(lender)

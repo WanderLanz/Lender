@@ -24,6 +24,7 @@ where
         *AliasableBox::into_unique(self.inner.lender)
     }
 }
+
 impl<L: Lender + Clone> Clone for Flatten<'_, L>
 where
     for<'all> Lend<'all, L>: IntoLender,
@@ -35,6 +36,7 @@ where
         }
     }
 }
+
 impl<L: Lender + fmt::Debug> fmt::Debug for Flatten<'_, L>
 where
     for<'all> Lend<'all, L>: IntoLender,
@@ -46,12 +48,14 @@ where
             .finish()
     }
 }
+
 impl<'lend, 'this, L: Lender> Lending<'lend> for Flatten<'this, L>
 where
     for<'all> Lend<'all, L>: IntoLender,
 {
     type Lend = Lend<'lend, <Lend<'this, L> as IntoLender>::Lender>;
 }
+
 impl<L: Lender> Lender for Flatten<'_, L>
 where
     for<'all> Lend<'all, L>: IntoLender,
@@ -68,6 +72,7 @@ where
         self.inner.size_hint()
     }
 }
+
 impl<L: FusedLender> FusedLender for Flatten<'_, L> where for<'all> Lend<'all, L>: IntoLender {}
 
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -89,6 +94,7 @@ where
         }
     }
 }
+
 impl<L: Lender + Clone, F: Clone> Clone for FlatMap<'_, L, F>
 where
     Map<L, F>: Lender + Clone,
@@ -101,6 +107,7 @@ where
         }
     }
 }
+
 impl<L: Lender + fmt::Debug, F> fmt::Debug for FlatMap<'_, L, F>
 where
     Map<L, F>: Lender + Clone,
@@ -113,6 +120,7 @@ where
             .finish()
     }
 }
+
 impl<'lend, 'this, L: Lender, F> Lending<'lend> for FlatMap<'this, L, F>
 where
     Map<L, F>: Lender,
@@ -120,6 +128,7 @@ where
 {
     type Lend = Lend<'lend, <Lend<'this, Map<L, F>> as IntoLender>::Lender>;
 }
+
 impl<L: Lender, F> Lender for FlatMap<'_, L, F>
 where
     Map<L, F>: Lender,
@@ -137,6 +146,7 @@ where
         self.inner.size_hint()
     }
 }
+
 impl<L: FusedLender, F> FusedLender for FlatMap<'_, L, F>
 where
     Map<L, F>: Lender,
@@ -167,6 +177,7 @@ where
         }
     }
 }
+
 impl<L: Lender + Clone> Clone for FlattenCompat<'_, L>
 where
     for<'all> Lend<'all, L>: IntoLender,
@@ -179,6 +190,7 @@ where
         }
     }
 }
+
 impl<L: Lender + fmt::Debug> fmt::Debug for FlattenCompat<'_, L>
 where
     for<'all> Lend<'all, L>: IntoLender,
@@ -191,12 +203,14 @@ where
             .finish()
     }
 }
+
 impl<'lend, 'this, L: Lender> Lending<'lend> for FlattenCompat<'this, L>
 where
     for<'all> Lend<'all, L>: IntoLender,
 {
     type Lend = Lend<'lend, <Lend<'this, L> as IntoLender>::Lender>;
 }
+
 impl<'this, L: Lender> Lender for FlattenCompat<'this, L>
 where
     for<'all> Lend<'all, L>: IntoLender,
@@ -239,6 +253,7 @@ where
         )
     }
 }
+
 impl<L: FusedLender> FusedLender for FlattenCompat<'_, L> where for<'all> Lend<'all, L>: IntoLender {}
 
 #[cfg(test)]

@@ -24,6 +24,7 @@ impl<A, B> Chain<A, B> {
         (self.a.into_inner(), self.b.into_inner())
     }
 }
+
 impl<'lend, A, B> Lending<'lend> for Chain<A, B>
 where
     A: Lender,
@@ -31,6 +32,7 @@ where
 {
     type Lend = Lend<'lend, A>;
 }
+
 impl<A, B> Lender for Chain<A, B>
 where
     A: Lender,
@@ -126,6 +128,7 @@ where
         (lower, upper)
     }
 }
+
 impl<A, B> DoubleEndedLender for Chain<A, B>
 where
     A: DoubleEndedLender,
@@ -194,6 +197,7 @@ where
         acc
     }
 }
+
 impl<A, B> FusedLender for Chain<A, B>
 where
     A: FusedLender,
@@ -215,6 +219,7 @@ where
 {
     type Lend = FallibleLend<'lend, A>;
 }
+
 impl<A, B> FallibleLender for Chain<A, B>
 where
     A: FallibleLender,
@@ -318,6 +323,7 @@ where
         (lower, upper)
     }
 }
+
 impl<A, B> DoubleEndedFallibleLender for Chain<A, B>
 where
     A: DoubleEndedFallibleLender,
@@ -391,6 +397,7 @@ where
         Ok(acc)
     }
 }
+
 impl<A, B> FusedFallibleLender for Chain<A, B>
 where
     A: FusedFallibleLender,

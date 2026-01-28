@@ -34,6 +34,7 @@ where
         (self.lender.into_inner(), self.separator)
     }
 }
+
 impl<L: fmt::Debug> fmt::Debug for Intersperse<'_, L>
 where
     for<'all> Lend<'all, L>: Clone + fmt::Debug,
@@ -47,6 +48,7 @@ where
             .finish()
     }
 }
+
 impl<'lend, L> Lending<'lend> for Intersperse<'_, L>
 where
     for<'all> Lend<'all, L>: Clone,
@@ -54,6 +56,7 @@ where
 {
     type Lend = Lend<'lend, L>;
 }
+
 impl<'this, L> Lender for Intersperse<'this, L>
 where
     for<'all> Lend<'all, L>: Clone,
@@ -122,6 +125,7 @@ where
         }
     }
 }
+
 impl<L: fmt::Debug, G: fmt::Debug> fmt::Debug for IntersperseWith<'_, L, G>
 where
     L: Lender,
@@ -135,6 +139,7 @@ where
             .finish()
     }
 }
+
 impl<'lend, 'this, L, G> Lending<'lend> for IntersperseWith<'this, L, G>
 where
     L: Lender,
@@ -142,6 +147,7 @@ where
 {
     type Lend = Lend<'lend, L>;
 }
+
 impl<'this, L, G> Lender for IntersperseWith<'this, L, G>
 where
     L: Lender,

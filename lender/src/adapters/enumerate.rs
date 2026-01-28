@@ -20,12 +20,14 @@ impl<L> Enumerate<L> {
         self.lender
     }
 }
+
 impl<'lend, L> Lending<'lend> for Enumerate<L>
 where
     L: Lender,
 {
     type Lend = (usize, Lend<'lend, L>);
 }
+
 impl<L> Lender for Enumerate<L>
 where
     L: Lender,
@@ -99,6 +101,7 @@ where
         remaining
     }
 }
+
 impl<L> DoubleEndedLender for Enumerate<L>
 where
     L: ExactSizeLender + DoubleEndedLender,
@@ -149,6 +152,7 @@ where
         self.lender.advance_back_by(n)
     }
 }
+
 impl<L> ExactSizeLender for Enumerate<L>
 where
     L: ExactSizeLender,
@@ -163,7 +167,9 @@ where
         self.lender.is_empty()
     }
 }
+
 impl<L> FusedLender for Enumerate<L> where L: FusedLender {}
+
 impl<L: Default> Default for Enumerate<L> {
     fn default() -> Self {
         Enumerate::new(Default::default())
@@ -176,6 +182,7 @@ where
 {
     type Lend = (usize, FallibleLend<'lend, L>);
 }
+
 impl<L> FallibleLender for Enumerate<L>
 where
     L: FallibleLender,
@@ -254,6 +261,7 @@ where
         Ok(remaining)
     }
 }
+
 impl<L> DoubleEndedFallibleLender for Enumerate<L>
 where
     L: ExactSizeFallibleLender + DoubleEndedFallibleLender,
@@ -313,6 +321,7 @@ where
         self.lender.advance_back_by(n)
     }
 }
+
 impl<L> ExactSizeFallibleLender for Enumerate<L>
 where
     L: ExactSizeFallibleLender,
@@ -327,4 +336,5 @@ where
         self.lender.is_empty()
     }
 }
+
 impl<L> FusedFallibleLender for Enumerate<L> where L: FusedFallibleLender {}

@@ -24,6 +24,7 @@ impl<L, St, F> Scan<L, St, F> {
         (self.lender, self.state, self.f)
     }
 }
+
 impl<L: fmt::Debug, St: fmt::Debug, F> fmt::Debug for Scan<L, St, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Scan")
@@ -32,6 +33,7 @@ impl<L: fmt::Debug, St: fmt::Debug, F> fmt::Debug for Scan<L, St, F> {
             .finish()
     }
 }
+
 impl<'lend, B, L, St, F> Lending<'lend> for Scan<L, St, F>
 where
     F: FnMut((&'lend mut St, Lend<'lend, L>)) -> Option<B>,
@@ -40,6 +42,7 @@ where
 {
     type Lend = B;
 }
+
 impl<L, St, F> Lender for Scan<L, St, F>
 where
     for<'all> F: FnMutHKAOpt<'all, (&'all mut St, Lend<'all, L>)>,
@@ -67,6 +70,7 @@ where
 {
     type Lend = B;
 }
+
 impl<L, St, F> FallibleLender for Scan<L, St, F>
 where
     for<'all> F: FnMutHKAResOpt<'all, (&'all mut St, FallibleLend<'all, L>), L::Error>,

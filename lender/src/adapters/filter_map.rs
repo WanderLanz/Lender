@@ -24,6 +24,7 @@ impl<L, F> FilterMap<L, F> {
         (self.lender, self.f)
     }
 }
+
 impl<L: fmt::Debug, F> fmt::Debug for FilterMap<L, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("FilterMap")
@@ -31,6 +32,7 @@ impl<L: fmt::Debug, F> fmt::Debug for FilterMap<L, F> {
             .finish()
     }
 }
+
 impl<'lend, B, L, F> Lending<'lend> for FilterMap<L, F>
 where
     F: FnMut(Lend<'lend, L>) -> Option<B>,
@@ -63,6 +65,7 @@ where
         (0, upper)
     }
 }
+
 impl<L, F> DoubleEndedLender for FilterMap<L, F>
 where
     for<'all> F: FnMutHKAOpt<'all, Lend<'all, L>>,
@@ -78,6 +81,7 @@ where
         None
     }
 }
+
 impl<L, F> FusedLender for FilterMap<L, F>
 where
     for<'all> F: FnMutHKAOpt<'all, Lend<'all, L>>,
@@ -123,6 +127,7 @@ where
         (0, upper)
     }
 }
+
 impl<L, F> DoubleEndedFallibleLender for FilterMap<L, F>
 where
     for<'all> F: FnMutHKAResOpt<'all, FallibleLend<'all, L>, L::Error>,
@@ -142,6 +147,7 @@ where
         Ok(None)
     }
 }
+
 impl<L, F> FusedFallibleLender for FilterMap<L, F>
 where
     for<'all> F: FnMutHKAResOpt<'all, FallibleLend<'all, L>, L::Error>,

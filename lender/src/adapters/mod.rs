@@ -61,6 +61,7 @@ pub use self::{
     take_while::TakeWhile,
     zip::Zip,
 };
+
 use crate::{
     Empty, ExtendLender, FallibleEmpty, FallibleLend, FallibleLender, FallibleLending,
     IntoFallibleLender, IntoLender, Lend, Lender, Lending, NonFallibleAdapter, TupleLend, empty,
@@ -83,12 +84,14 @@ where
     lender: L,
     residual: &'this mut Option<<Lend<'this, L> as Try>::Residual>,
 }
+
 impl<'lend, L: Lender> Lending<'lend> for TryShunt<'_, L>
 where
     for<'all> Lend<'all, L>: Try,
 {
     type Lend = <Lend<'lend, L> as Try>::Output;
 }
+
 impl<'this, L: Lender> Lender for TryShunt<'this, L>
 where
     for<'all> Lend<'all, L>: Try,
@@ -147,6 +150,7 @@ where
 /// Private adapter. Marks a [`Lender`], where [`Lend`] implements [`TupleLend`], as a
 /// [`Lender`] of `<Lend as TupleLend>::First`.
 pub struct FirstShunt<L>(PhantomData<L>);
+
 #[doc(hidden)]
 /// Private adapter. Marks a [`Lender`], where [`Lend`] implements [`TupleLend`], as a
 /// [`Lender`] of `<Lend as TupleLend>::Second`.
@@ -157,12 +161,14 @@ where
 {
     type Lend = <Lend<'lend, L> as TupleLend<'lend>>::First;
 }
+
 impl<'lend, L: Lender> Lending<'lend> for SecondShunt<L>
 where
     for<'all> Lend<'all, L>: TupleLend<'all>,
 {
     type Lend = <Lend<'lend, L> as TupleLend<'lend>>::Second;
 }
+
 impl<L: Lender> IntoLender for FirstShunt<L>
 where
     for<'all> Lend<'all, L>: TupleLend<'all>,
@@ -172,6 +178,7 @@ where
         empty()
     }
 }
+
 impl<L: Lender> IntoLender for SecondShunt<L>
 where
     for<'all> Lend<'all, L>: TupleLend<'all>,
@@ -181,18 +188,21 @@ where
         empty()
     }
 }
+
 impl<'lend, L: FallibleLender> FallibleLending<'lend> for FirstShunt<L>
 where
     for<'all> FallibleLend<'all, L>: TupleLend<'all>,
 {
     type Lend = <FallibleLend<'lend, L> as TupleLend<'lend>>::First;
 }
+
 impl<'lend, L: FallibleLender> FallibleLending<'lend> for SecondShunt<L>
 where
     for<'all> FallibleLend<'all, L>: TupleLend<'all>,
 {
     type Lend = <FallibleLend<'lend, L> as TupleLend<'lend>>::Second;
 }
+
 impl<L: FallibleLender> IntoFallibleLender for FirstShunt<L>
 where
     for<'all> FallibleLend<'all, L>: TupleLend<'all>,
@@ -204,6 +214,7 @@ where
         fallible_empty()
     }
 }
+
 impl<L: FallibleLender> IntoFallibleLender for SecondShunt<L>
 where
     for<'all> FallibleLend<'all, L>: TupleLend<'all>,

@@ -30,12 +30,14 @@ impl<L> StepBy<L> {
         (self.lender, self.step)
     }
 }
+
 impl<'lend, L> Lending<'lend> for StepBy<L>
 where
     L: Lender,
 {
     type Lend = Lend<'lend, L>;
 }
+
 impl<L> Lender for StepBy<L>
 where
     L: Lender,
@@ -147,6 +149,7 @@ where
         acc
     }
 }
+
 impl<L> StepBy<L>
 where
     L: ExactSizeLender,
@@ -160,6 +163,7 @@ where
         }
     }
 }
+
 impl<L> DoubleEndedLender for StepBy<L>
 where
     L: DoubleEndedLender + ExactSizeLender,
@@ -219,6 +223,7 @@ where
         acc
     }
 }
+
 impl<L> ExactSizeLender for StepBy<L> where L: ExactSizeLender {}
 
 impl<L> FusedLender for StepBy<L> where L: FusedLender {}
@@ -229,6 +234,7 @@ where
 {
     type Lend = FallibleLend<'lend, L>;
 }
+
 impl<L> FallibleLender for StepBy<L>
 where
     L: FallibleLender,
@@ -342,6 +348,7 @@ where
         Ok(acc)
     }
 }
+
 impl<L> StepBy<L>
 where
     L: ExactSizeFallibleLender,
@@ -355,6 +362,7 @@ where
         }
     }
 }
+
 impl<L> DoubleEndedFallibleLender for StepBy<L>
 where
     L: DoubleEndedFallibleLender + ExactSizeFallibleLender,
@@ -414,6 +422,7 @@ where
         Ok(acc)
     }
 }
+
 impl<L> ExactSizeFallibleLender for StepBy<L> where L: ExactSizeFallibleLender {}
 
 impl<L> FusedFallibleLender for StepBy<L> where L: FusedFallibleLender {}

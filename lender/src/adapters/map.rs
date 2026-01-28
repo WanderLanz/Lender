@@ -25,11 +25,13 @@ impl<L, F> Map<L, F> {
         (self.lender, self.f)
     }
 }
+
 impl<L: fmt::Debug, F> fmt::Debug for Map<L, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Map").field("lender", &self.lender).finish()
     }
 }
+
 impl<'lend, L, F> Lending<'lend> for Map<L, F>
 where
     F: for<'all> FnMutHKA<'all, Lend<'all, L>>,
@@ -37,6 +39,7 @@ where
 {
     type Lend = <F as FnMutHKA<'lend, Lend<'lend, L>>>::B;
 }
+
 impl<L, F> Lender for Map<L, F>
 where
     F: for<'all> FnMutHKA<'all, Lend<'all, L>>,
@@ -54,6 +57,7 @@ where
         self.lender.size_hint()
     }
 }
+
 impl<L: DoubleEndedLender, F> DoubleEndedLender for Map<L, F>
 where
     F: for<'all> FnMutHKA<'all, Lend<'all, L>>,
@@ -63,6 +67,7 @@ where
         self.lender.next_back().map(&mut self.f)
     }
 }
+
 impl<L: ExactSizeLender, F> ExactSizeLender for Map<L, F>
 where
     F: for<'all> FnMutHKA<'all, Lend<'all, L>>,
@@ -77,6 +82,7 @@ where
         self.lender.is_empty()
     }
 }
+
 impl<L: FusedLender, F> FusedLender for Map<L, F> where F: for<'all> FnMutHKA<'all, Lend<'all, L>> {}
 // impl<I, L, F> IntoIterator for Map<L, F>
 // where
@@ -97,6 +103,7 @@ where
 {
     type Lend = <F as FnMutHKARes<'lend, FallibleLend<'lend, L>, L::Error>>::B;
 }
+
 impl<L, F> FallibleLender for Map<L, F>
 where
     F: for<'all> FnMutHKARes<'all, FallibleLend<'all, L>, L::Error>,
@@ -116,6 +123,7 @@ where
         self.lender.size_hint()
     }
 }
+
 impl<L: DoubleEndedFallibleLender, F> DoubleEndedFallibleLender for Map<L, F>
 where
     F: for<'all> FnMutHKARes<'all, FallibleLend<'all, L>, L::Error>,
@@ -125,6 +133,7 @@ where
         self.lender.next_back()?.map(&mut self.f).transpose()
     }
 }
+
 impl<L: ExactSizeFallibleLender, F> ExactSizeFallibleLender for Map<L, F>
 where
     F: for<'all> FnMutHKARes<'all, FallibleLend<'all, L>, L::Error>,
@@ -139,6 +148,7 @@ where
         self.lender.is_empty()
     }
 }
+
 impl<L: FusedFallibleLender, F> FusedFallibleLender for Map<L, F> where
     F: for<'all> FnMutHKARes<'all, FallibleLend<'all, L>, L::Error>
 {

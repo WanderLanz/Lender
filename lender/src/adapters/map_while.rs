@@ -23,6 +23,7 @@ impl<L, P> MapWhile<L, P> {
         (self.lender, self.predicate)
     }
 }
+
 impl<L: fmt::Debug, P> fmt::Debug for MapWhile<L, P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("MapWhile")
@@ -30,6 +31,7 @@ impl<L: fmt::Debug, P> fmt::Debug for MapWhile<L, P> {
             .finish()
     }
 }
+
 impl<'lend, B, L, P> Lending<'lend> for MapWhile<L, P>
 where
     P: FnMut(Lend<'lend, L>) -> Option<B>,
@@ -38,6 +40,7 @@ where
 {
     type Lend = B;
 }
+
 impl<L, P> Lender for MapWhile<L, P>
 where
     P: for<'all> FnMutHKAOpt<'all, Lend<'all, L>>,
@@ -65,6 +68,7 @@ where
 {
     type Lend = B;
 }
+
 impl<L, P> FallibleLender for MapWhile<L, P>
 where
     P: for<'all> FnMutHKAResOpt<'all, FallibleLend<'all, L>, L::Error>,

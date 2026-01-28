@@ -4,6 +4,7 @@ use crate::{
     FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender,
     Lending,
 };
+
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct TakeWhile<L, P> {
@@ -28,6 +29,7 @@ impl<L, P> TakeWhile<L, P> {
         (self.lender, self.predicate)
     }
 }
+
 impl<L: fmt::Debug, P> fmt::Debug for TakeWhile<L, P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("TakeWhile")
@@ -36,6 +38,7 @@ impl<L: fmt::Debug, P> fmt::Debug for TakeWhile<L, P> {
             .finish()
     }
 }
+
 impl<'lend, L, P> Lending<'lend> for TakeWhile<L, P>
 where
     P: FnMut(&Lend<'lend, L>) -> bool,
@@ -43,6 +46,7 @@ where
 {
     type Lend = Lend<'lend, L>;
 }
+
 impl<L, P> Lender for TakeWhile<L, P>
 where
     P: FnMut(&Lend<'_, L>) -> bool,
@@ -72,6 +76,7 @@ where
         }
     }
 }
+
 impl<L, P> FusedLender for TakeWhile<L, P>
 where
     P: FnMut(&Lend<'_, L>) -> bool,
@@ -86,6 +91,7 @@ where
 {
     type Lend = FallibleLend<'lend, L>;
 }
+
 impl<L, P> FallibleLender for TakeWhile<L, P>
 where
     P: FnMut(&FallibleLend<'_, L>) -> Result<bool, L::Error>,
@@ -120,6 +126,7 @@ where
         }
     }
 }
+
 impl<L, P> FusedFallibleLender for TakeWhile<L, P>
 where
     P: FnMut(&FallibleLend<'_, L>) -> Result<bool, L::Error>,
