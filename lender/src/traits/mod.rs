@@ -67,6 +67,61 @@ pub trait DynLend<'lend> {
     type Lend;
 }
 
+/// Internal macro used by [`lend!`] and [`fallible_lend!`] to avoid duplication.
+/// Do not use directly.
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __lend_impl {
+    // Identifier (no lifetime - trivially covariant)
+    ($Shunt:ident, $Trait:ident, $T:ident) => {
+        $crate::$Shunt<dyn for<'lend> $crate::$Trait<'lend, Lend = $T>>
+    };
+    // Reference to identifier
+    ($Shunt:ident, $Trait:ident, &$lt:lifetime $T:ident) => {
+        $crate::$Shunt<dyn for<'lend> $crate::$Trait<'lend, Lend = &$lt $T>>
+    };
+    // Mutable reference to identifier
+    ($Shunt:ident, $Trait:ident, &$lt:lifetime mut $T:ident) => {
+        $crate::$Shunt<dyn for<'lend> $crate::$Trait<'lend, Lend = &$lt mut $T>>
+    };
+    // Reference to slice
+    ($Shunt:ident, $Trait:ident, &$lt:lifetime [$T:ident]) => {
+        $crate::$Shunt<dyn for<'lend> $crate::$Trait<'lend, Lend = &$lt [$T]>>
+    };
+    // Mutable reference to slice
+    ($Shunt:ident, $Trait:ident, &$lt:lifetime mut [$T:ident]) => {
+        $crate::$Shunt<dyn for<'lend> $crate::$Trait<'lend, Lend = &$lt mut [$T]>>
+    };
+    // Double reference (& &'lend T)
+    ($Shunt:ident, $Trait:ident, & &$lt:lifetime $T:ident) => {
+        $crate::$Shunt<dyn for<'lend> $crate::$Trait<'lend, Lend = & &$lt $T>>
+    };
+    // Double reference (&&'lend T - no space)
+    ($Shunt:ident, $Trait:ident, &&$lt:lifetime $T:ident) => {
+        $crate::$Shunt<dyn for<'lend> $crate::$Trait<'lend, Lend = &&$lt $T>>
+    };
+    // Double mutable reference
+    ($Shunt:ident, $Trait:ident, & &$lt:lifetime mut $T:ident) => {
+        $crate::$Shunt<dyn for<'lend> $crate::$Trait<'lend, Lend = & &$lt mut $T>>
+    };
+    // Double mutable reference (no space)
+    ($Shunt:ident, $Trait:ident, &&$lt:lifetime mut $T:ident) => {
+        $crate::$Shunt<dyn for<'lend> $crate::$Trait<'lend, Lend = &&$lt mut $T>>
+    };
+    // Reference to tuple (variadic)
+    ($Shunt:ident, $Trait:ident, &$lt:lifetime ($($T:ident),+)) => {
+        $crate::$Shunt<dyn for<'lend> $crate::$Trait<'lend, Lend = &$lt ($($T),+)>>
+    };
+    // Mutable reference to tuple (variadic)
+    ($Shunt:ident, $Trait:ident, &$lt:lifetime mut ($($T:ident),+)) => {
+        $crate::$Shunt<dyn for<'lend> $crate::$Trait<'lend, Lend = &$lt mut ($($T),+)>>
+    };
+    // Tuple (variadic)
+    ($Shunt:ident, $Trait:ident, ($($T:ident),+)) => {
+        $crate::$Shunt<dyn for<'lend> $crate::$Trait<'lend, Lend = ($($T),+)>>
+    };
+}
+
 /// Use lifetime `'lend` within type `$T` to create an `impl for<'lend>
 /// Lending<'lend, Lend = $T>`.
 ///
@@ -78,8 +133,8 @@ pub trait DynLend<'lend> {
 /// - References: `&'lend T`, `&'lend mut T`
 /// - Slices: `&'lend [T]`, `&'lend mut [T]`
 /// - Double references: `& &'lend T`, `&&'lend T`
-/// - Tuples of identifiers: `(T1, T2)`, `(T1, T2, T3)`, etc. (up to 10 elements)
-/// - References to tuples: `&'lend (T1, T2)`, `&'lend mut (T1, T2)`, etc.
+/// - Tuples of identifiers: `(T0,)`, `(T0, T1)`, `(T0, T1, T2)`, etc. (any number of elements)
+/// - References to tuples: `&'lend (T0,)`, `&'lend (T0, T1)`, `&'lend mut (T0,)`, `&'lend mut (T0, T1)`, etc.
 ///
 /// For types that are not covered by this macro, please use
 /// [`covariant_lend!`](crate::covariant_lend!), which performs a compile-time
@@ -93,139 +148,23 @@ pub trait DynLend<'lend> {
 /// ```
 #[macro_export]
 macro_rules! lend {
-    // Identifier (no lifetime - trivially covariant)
-    ($T:ident) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = $T>>
-    };
-    // Reference to identifier
-    (&$lt:lifetime $T:ident) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = &$lt $T>>
-    };
-    // Mutable reference to identifier
-    (&$lt:lifetime mut $T:ident) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = &$lt mut $T>>
-    };
-    // Reference to slice
-    (&$lt:lifetime [$T:ident]) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = &$lt [$T]>>
-    };
-    // Mutable reference to slice
-    (&$lt:lifetime mut [$T:ident]) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = &$lt mut [$T]>>
-    };
-    // Double reference (& &'lend T)
-    (& &$lt:lifetime $T:ident) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = & &$lt $T>>
-    };
-    // Double reference (&&'lend T - no space)
-    (&&$lt:lifetime $T:ident) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = &&$lt $T>>
-    };
-    // Double mutable reference
-    (& &$lt:lifetime mut $T:ident) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = & &$lt mut $T>>
-    };
-    // Double mutable reference (no space)
-    (&&$lt:lifetime mut $T:ident) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = &&$lt mut $T>>
-    };
-
-    // References to tuples of identifiers (1 to 10 elements)
-    (&$lt:lifetime ($T1:ident,)) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = &$lt ($T1,)>>
-    };
-    (&$lt:lifetime ($T1:ident, $T2:ident)) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = &$lt ($T1, $T2)>>
-    };
-    (&$lt:lifetime ($T1:ident, $T2:ident, $T3:ident)) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = &$lt ($T1, $T2, $T3)>>
-    };
-    (&$lt:lifetime ($T1:ident, $T2:ident, $T3:ident, $T4:ident)) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = &$lt ($T1, $T2, $T3, $T4)>>
-    };
-    (&$lt:lifetime ($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident)) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = &$lt ($T1, $T2, $T3, $T4, $T5)>>
-    };
-    (&$lt:lifetime ($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident, $T6:ident)) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = &$lt ($T1, $T2, $T3, $T4, $T5, $T6)>>
-    };
-    (&$lt:lifetime ($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident, $T6:ident, $T7:ident)) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = &$lt ($T1, $T2, $T3, $T4, $T5, $T6, $T7)>>
-    };
-    (&$lt:lifetime ($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident, $T6:ident, $T7:ident, $T8:ident)) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = &$lt ($T1, $T2, $T3, $T4, $T5, $T6, $T7, $T8)>>
-    };
-    (&$lt:lifetime ($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident, $T6:ident, $T7:ident, $T8:ident, $T9:ident)) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = &$lt ($T1, $T2, $T3, $T4, $T5, $T6, $T7, $T8, $T9)>>
-    };
-    (&$lt:lifetime ($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident, $T6:ident, $T7:ident, $T8:ident, $T9:ident, $T10:ident)) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = &$lt ($T1, $T2, $T3, $T4, $T5, $T6, $T7, $T8, $T9, $T10)>>
-    };
-
-    // Mutable references to tuples of identifiers (1 to 10 elements)
-    (&$lt:lifetime mut ($T1:ident,)) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = &$lt mut ($T1,)>>
-    };
-    (&$lt:lifetime mut ($T1:ident, $T2:ident)) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = &$lt mut ($T1, $T2)>>
-    };
-    (&$lt:lifetime mut ($T1:ident, $T2:ident, $T3:ident)) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = &$lt mut ($T1, $T2, $T3)>>
-    };
-    (&$lt:lifetime mut ($T1:ident, $T2:ident, $T3:ident, $T4:ident)) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = &$lt mut ($T1, $T2, $T3, $T4)>>
-    };
-    (&$lt:lifetime mut ($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident)) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = &$lt mut ($T1, $T2, $T3, $T4, $T5)>>
-    };
-    (&$lt:lifetime mut ($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident, $T6:ident)) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = &$lt mut ($T1, $T2, $T3, $T4, $T5, $T6)>>
-    };
-    (&$lt:lifetime mut ($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident, $T6:ident, $T7:ident)) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = &$lt mut ($T1, $T2, $T3, $T4, $T5, $T6, $T7)>>
-    };
-    (&$lt:lifetime mut ($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident, $T6:ident, $T7:ident, $T8:ident)) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = &$lt mut ($T1, $T2, $T3, $T4, $T5, $T6, $T7, $T8)>>
-    };
-    (&$lt:lifetime mut ($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident, $T6:ident, $T7:ident, $T8:ident, $T9:ident)) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = &$lt mut ($T1, $T2, $T3, $T4, $T5, $T6, $T7, $T8, $T9)>>
-    };
-    (&$lt:lifetime mut ($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident, $T6:ident, $T7:ident, $T8:ident, $T9:ident, $T10:ident)) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = &$lt mut ($T1, $T2, $T3, $T4, $T5, $T6, $T7, $T8, $T9, $T10)>>
-    };
-
-    // Tuples of identifiers (1 to 10 elements)
-    (($T1:ident,)) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = ($T1,)>>
-    };
-    (($T1:ident, $T2:ident)) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = ($T1, $T2)>>
-    };
-    (($T1:ident, $T2:ident, $T3:ident)) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = ($T1, $T2, $T3)>>
-    };
-    (($T1:ident, $T2:ident, $T3:ident, $T4:ident)) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = ($T1, $T2, $T3, $T4)>>
-    };
-    (($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident)) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = ($T1, $T2, $T3, $T4, $T5)>>
-    };
-    (($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident, $T6:ident)) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = ($T1, $T2, $T3, $T4, $T5, $T6)>>
-    };
-    (($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident, $T6:ident, $T7:ident)) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = ($T1, $T2, $T3, $T4, $T5, $T6, $T7)>>
-    };
-    (($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident, $T6:ident, $T7:ident, $T8:ident)) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = ($T1, $T2, $T3, $T4, $T5, $T6, $T7, $T8)>>
-    };
-    (($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident, $T6:ident, $T7:ident, $T8:ident, $T9:ident)) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = ($T1, $T2, $T3, $T4, $T5, $T6, $T7, $T8, $T9)>>
-    };
-    (($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident, $T6:ident, $T7:ident, $T8:ident, $T9:ident, $T10:ident)) => {
-        $crate::DynLendShunt<dyn for<'lend> $crate::DynLend<'lend, Lend = ($T1, $T2, $T3, $T4, $T5, $T6, $T7, $T8, $T9, $T10)>>
-    };
-
+    // Identifier
+    ($T:ident) => { $crate::__lend_impl!(DynLendShunt, DynLend, $T) };
+    // Reference patterns
+    (&$lt:lifetime $T:ident) => { $crate::__lend_impl!(DynLendShunt, DynLend, &$lt $T) };
+    (&$lt:lifetime mut $T:ident) => { $crate::__lend_impl!(DynLendShunt, DynLend, &$lt mut $T) };
+    (&$lt:lifetime [$T:ident]) => { $crate::__lend_impl!(DynLendShunt, DynLend, &$lt [$T]) };
+    (&$lt:lifetime mut [$T:ident]) => { $crate::__lend_impl!(DynLendShunt, DynLend, &$lt mut [$T]) };
+    // Double references
+    (& &$lt:lifetime $T:ident) => { $crate::__lend_impl!(DynLendShunt, DynLend, & &$lt $T) };
+    (&&$lt:lifetime $T:ident) => { $crate::__lend_impl!(DynLendShunt, DynLend, &&$lt $T) };
+    (& &$lt:lifetime mut $T:ident) => { $crate::__lend_impl!(DynLendShunt, DynLend, & &$lt mut $T) };
+    (&&$lt:lifetime mut $T:ident) => { $crate::__lend_impl!(DynLendShunt, DynLend, &&$lt mut $T) };
+    // References to tuples
+    (&$lt:lifetime ($($T:ident),+ $(,)?)) => { $crate::__lend_impl!(DynLendShunt, DynLend, &$lt ($($T),+)) };
+    (&$lt:lifetime mut ($($T:ident),+ $(,)?)) => { $crate::__lend_impl!(DynLendShunt, DynLend, &$lt mut ($($T),+)) };
+    // Tuples
+    (($($T:ident),+ $(,)?)) => { $crate::__lend_impl!(DynLendShunt, DynLend, ($($T),+)) };
     // Fallback - reject with helpful error
     ($($tt:tt)*) => {
         compile_error!(concat!(
@@ -496,8 +435,8 @@ pub trait DynFallibleLend<'lend> {
 /// - References: `&'lend T`, `&'lend mut T`
 /// - Slices: `&'lend [T]`, `&'lend mut [T]`
 /// - Double references: `& &'lend T`, `&&'lend T`
-/// - Tuples of identifiers: `(T1, T2)`, `(T1, T2, T3)`, etc. (up to 10 elements)
-/// - References to tuples: `&'lend (T1, T2)`, `&'lend mut (T1, T2)`, etc.
+/// - Tuples of identifiers: `(T0,)`, `(T0, T1)`, `(T0, T1, T2)`, etc. (any number of elements)
+/// - References to tuples: `&'lend (T0,)`, `&'lend (T0, T1)`, `&'lend mut (T0,)`, `&'lend mut (T0, T1)`, etc.
 ///
 /// For types that are not covered by this macro, please use
 /// [`covariant_lend_fallible!`](crate::covariant_lend_fallible!), which
@@ -514,144 +453,28 @@ pub trait DynFallibleLend<'lend> {
 /// ```
 #[macro_export]
 macro_rules! fallible_lend {
-    // Identifier (no lifetime - trivially covariant)
-    ($T:ident) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = $T>>
-    };
-    // Reference to identifier
-    (&$lt:lifetime $T:ident) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = &$lt $T>>
-    };
-    // Mutable reference to identifier
-    (&$lt:lifetime mut $T:ident) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = &$lt mut $T>>
-    };
-    // Reference to slice
-    (&$lt:lifetime [$T:ident]) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = &$lt [$T]>>
-    };
-    // Mutable reference to slice
-    (&$lt:lifetime mut [$T:ident]) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = &$lt mut [$T]>>
-    };
-    // Double reference (& &'lend T)
-    (& &$lt:lifetime $T:ident) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = & &$lt $T>>
-    };
-    // Double reference (&&'lend T - no space)
-    (&&$lt:lifetime $T:ident) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = &&$lt $T>>
-    };
-    // Double mutable reference
-    (& &$lt:lifetime mut $T:ident) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = & &$lt mut $T>>
-    };
-    // Double mutable reference (no space)
-    (&&$lt:lifetime mut $T:ident) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = &&$lt mut $T>>
-    };
-
-    // References to tuples of identifiers (1 to 10 elements)
-    (&$lt:lifetime ($T1:ident,)) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = &$lt ($T1,)>>
-    };
-    (&$lt:lifetime ($T1:ident, $T2:ident)) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = &$lt ($T1, $T2)>>
-    };
-    (&$lt:lifetime ($T1:ident, $T2:ident, $T3:ident)) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = &$lt ($T1, $T2, $T3)>>
-    };
-    (&$lt:lifetime ($T1:ident, $T2:ident, $T3:ident, $T4:ident)) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = &$lt ($T1, $T2, $T3, $T4)>>
-    };
-    (&$lt:lifetime ($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident)) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = &$lt ($T1, $T2, $T3, $T4, $T5)>>
-    };
-    (&$lt:lifetime ($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident, $T6:ident)) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = &$lt ($T1, $T2, $T3, $T4, $T5, $T6)>>
-    };
-    (&$lt:lifetime ($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident, $T6:ident, $T7:ident)) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = &$lt ($T1, $T2, $T3, $T4, $T5, $T6, $T7)>>
-    };
-    (&$lt:lifetime ($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident, $T6:ident, $T7:ident, $T8:ident)) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = &$lt ($T1, $T2, $T3, $T4, $T5, $T6, $T7, $T8)>>
-    };
-    (&$lt:lifetime ($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident, $T6:ident, $T7:ident, $T8:ident, $T9:ident)) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = &$lt ($T1, $T2, $T3, $T4, $T5, $T6, $T7, $T8, $T9)>>
-    };
-    (&$lt:lifetime ($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident, $T6:ident, $T7:ident, $T8:ident, $T9:ident, $T10:ident)) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = &$lt ($T1, $T2, $T3, $T4, $T5, $T6, $T7, $T8, $T9, $T10)>>
-    };
-
-    // Mutable references to tuples of identifiers (1 to 10 elements)
-    (&$lt:lifetime mut ($T1:ident,)) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = &$lt mut ($T1,)>>
-    };
-    (&$lt:lifetime mut ($T1:ident, $T2:ident)) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = &$lt mut ($T1, $T2)>>
-    };
-    (&$lt:lifetime mut ($T1:ident, $T2:ident, $T3:ident)) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = &$lt mut ($T1, $T2, $T3)>>
-    };
-    (&$lt:lifetime mut ($T1:ident, $T2:ident, $T3:ident, $T4:ident)) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = &$lt mut ($T1, $T2, $T3, $T4)>>
-    };
-    (&$lt:lifetime mut ($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident)) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = &$lt mut ($T1, $T2, $T3, $T4, $T5)>>
-    };
-    (&$lt:lifetime mut ($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident, $T6:ident)) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = &$lt mut ($T1, $T2, $T3, $T4, $T5, $T6)>>
-    };
-    (&$lt:lifetime mut ($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident, $T6:ident, $T7:ident)) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = &$lt mut ($T1, $T2, $T3, $T4, $T5, $T6, $T7)>>
-    };
-    (&$lt:lifetime mut ($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident, $T6:ident, $T7:ident, $T8:ident)) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = &$lt mut ($T1, $T2, $T3, $T4, $T5, $T6, $T7, $T8)>>
-    };
-    (&$lt:lifetime mut ($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident, $T6:ident, $T7:ident, $T8:ident, $T9:ident)) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = &$lt mut ($T1, $T2, $T3, $T4, $T5, $T6, $T7, $T8, $T9)>>
-    };
-    (&$lt:lifetime mut ($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident, $T6:ident, $T7:ident, $T8:ident, $T9:ident, $T10:ident)) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = &$lt mut ($T1, $T2, $T3, $T4, $T5, $T6, $T7, $T8, $T9, $T10)>>
-    };
-
-    // Tuples of identifiers (1 to 10 elements)
-    (($T1:ident,)) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = ($T1,)>>
-    };
-    (($T1:ident, $T2:ident)) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = ($T1, $T2)>>
-    };
-    (($T1:ident, $T2:ident, $T3:ident)) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = ($T1, $T2, $T3)>>
-    };
-    (($T1:ident, $T2:ident, $T3:ident, $T4:ident)) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = ($T1, $T2, $T3, $T4)>>
-    };
-    (($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident)) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = ($T1, $T2, $T3, $T4, $T5)>>
-    };
-    (($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident, $T6:ident)) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = ($T1, $T2, $T3, $T4, $T5, $T6)>>
-    };
-    (($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident, $T6:ident, $T7:ident)) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = ($T1, $T2, $T3, $T4, $T5, $T6, $T7)>>
-    };
-    (($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident, $T6:ident, $T7:ident, $T8:ident)) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = ($T1, $T2, $T3, $T4, $T5, $T6, $T7, $T8)>>
-    };
-    (($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident, $T6:ident, $T7:ident, $T8:ident, $T9:ident)) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = ($T1, $T2, $T3, $T4, $T5, $T6, $T7, $T8, $T9)>>
-    };
-    (($T1:ident, $T2:ident, $T3:ident, $T4:ident, $T5:ident, $T6:ident, $T7:ident, $T8:ident, $T9:ident, $T10:ident)) => {
-        $crate::DynFallibleLendShunt<dyn for<'lend> $crate::DynFallibleLend<'lend, Lend = ($T1, $T2, $T3, $T4, $T5, $T6, $T7, $T8, $T9, $T10)>>
-    };
-
+    // Identifier
+    ($T:ident) => { $crate::__lend_impl!(DynFallibleLendShunt, DynFallibleLend, $T) };
+    // Reference patterns
+    (&$lt:lifetime $T:ident) => { $crate::__lend_impl!(DynFallibleLendShunt, DynFallibleLend, &$lt $T) };
+    (&$lt:lifetime mut $T:ident) => { $crate::__lend_impl!(DynFallibleLendShunt, DynFallibleLend, &$lt mut $T) };
+    (&$lt:lifetime [$T:ident]) => { $crate::__lend_impl!(DynFallibleLendShunt, DynFallibleLend, &$lt [$T]) };
+    (&$lt:lifetime mut [$T:ident]) => { $crate::__lend_impl!(DynFallibleLendShunt, DynFallibleLend, &$lt mut [$T]) };
+    // Double references
+    (& &$lt:lifetime $T:ident) => { $crate::__lend_impl!(DynFallibleLendShunt, DynFallibleLend, & &$lt $T) };
+    (&&$lt:lifetime $T:ident) => { $crate::__lend_impl!(DynFallibleLendShunt, DynFallibleLend, &&$lt $T) };
+    (& &$lt:lifetime mut $T:ident) => { $crate::__lend_impl!(DynFallibleLendShunt, DynFallibleLend, & &$lt mut $T) };
+    (&&$lt:lifetime mut $T:ident) => { $crate::__lend_impl!(DynFallibleLendShunt, DynFallibleLend, &&$lt mut $T) };
+    // References to tuples
+    (&$lt:lifetime ($($T:ident),+ $(,)?)) => { $crate::__lend_impl!(DynFallibleLendShunt, DynFallibleLend, &$lt ($($T),+)) };
+    (&$lt:lifetime mut ($($T:ident),+ $(,)?)) => { $crate::__lend_impl!(DynFallibleLendShunt, DynFallibleLend, &$lt mut ($($T),+)) };
+    // Tuples
+    (($($T:ident),+ $(,)?)) => { $crate::__lend_impl!(DynFallibleLendShunt, DynFallibleLend, ($($T),+)) };
     // Fallback - reject with helpful error
     ($($tt:tt)*) => {
         compile_error!(concat!(
             "fallible_lend!() only accepts simple covariant patterns. ",
-            "For complex types, use covariant_lend!(Name = YourType) instead."
+            "For complex types, use covariant_lend_fallible!(Name = YourType) instead."
         ))
     };
 }
