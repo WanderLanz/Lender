@@ -2,7 +2,8 @@ use core::{num::NonZeroUsize, ops::ControlFlow};
 
 use crate::{
     try_trait_v2::{FromResidual, Try},
-    FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender, Lending,
+    FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender,
+    Lending,
 };
 
 #[derive(Clone, Debug)]
@@ -16,8 +17,12 @@ where
     L: Clone,
 {
     pub(crate) fn new(lender: L) -> Cycle<L> {
-        Cycle { orig: lender.clone(), lender }
+        Cycle {
+            orig: lender.clone(),
+            lender,
+        }
     }
+
     pub fn into_inner(self) -> (L, L) {
         (self.orig, self.lender)
     }
@@ -44,6 +49,7 @@ where
         self.lender = self.orig.clone();
         self.lender.next()
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         match self.orig.size_hint() {
@@ -52,6 +58,7 @@ where
             _ => (usize::MAX, None),
         }
     }
+
     #[inline]
     fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> R
     where
@@ -88,6 +95,7 @@ where
             };
         }
     }
+
     #[inline]
     fn advance_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {
         let mut n = match self.lender.advance_by(n) {
@@ -133,6 +141,7 @@ where
         self.lender = self.orig.clone();
         self.lender.next()
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         match self.orig.size_hint() {
@@ -141,6 +150,7 @@ where
             _ => (usize::MAX, None),
         }
     }
+
     #[inline]
     fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> Result<R, Self::Error>
     where
@@ -177,6 +187,7 @@ where
             };
         }
     }
+
     #[inline]
     fn advance_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         let mut n = match self.lender.advance_by(n)? {

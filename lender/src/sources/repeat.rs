@@ -47,6 +47,7 @@ where
         // SAFETY: 'a: 'lend
         Some(unsafe { core::mem::transmute::<Lend<'a, Self>, Lend<'_, Self>>(self.elt.clone()) })
     }
+
     #[inline]
     fn advance_by(&mut self, _n: usize) -> Result<(), core::num::NonZeroUsize> {
         Ok(())
@@ -62,6 +63,7 @@ where
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         self.next()
     }
+
     #[inline]
     fn advance_back_by(&mut self, _n: usize) -> Result<(), core::num::NonZeroUsize> {
         Ok(())
@@ -120,12 +122,18 @@ where
         self.elt.clone().map(|value| {
             Some(
                 // SAFETY: 'a: 'lend
-                unsafe { core::mem::transmute::<FallibleLend<'a, Self>, FallibleLend<'_, Self>>(value) },
+                unsafe {
+                    core::mem::transmute::<FallibleLend<'a, Self>, FallibleLend<'_, Self>>(value)
+                },
             )
         })
     }
+
     #[inline]
-    fn advance_by(&mut self, _n: usize) -> Result<Result<(), core::num::NonZeroUsize>, Self::Error> {
+    fn advance_by(
+        &mut self,
+        _n: usize,
+    ) -> Result<Result<(), core::num::NonZeroUsize>, Self::Error> {
         Ok(Ok(()))
     }
 }

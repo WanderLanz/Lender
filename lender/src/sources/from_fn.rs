@@ -44,7 +44,9 @@ pub struct FromFn<St, F> {
 
 impl<St: fmt::Debug, F> fmt::Debug for FromFn<St, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("FromFn").field("state", &self.state).finish()
+        f.debug_struct("FromFn")
+            .field("state", &self.state)
+            .finish()
     }
 }
 
@@ -95,7 +97,11 @@ pub fn from_fallible_fn<St, E, F>(state: St, f: F) -> FromFallibleFn<St, E, F>
 where
     F: for<'all> FnMutHKAResOpt<'all, &'all mut St, E>,
 {
-    FromFallibleFn { state, f, _marker: PhantomData }
+    FromFallibleFn {
+        state,
+        f,
+        _marker: PhantomData,
+    }
 }
 
 // An lender where each iteration calls the provided closure `F: FnMut(&mut St) -> Result<Option<T>, E>`.
@@ -111,7 +117,9 @@ pub struct FromFallibleFn<St, E, F> {
 
 impl<St: fmt::Debug, E, F> fmt::Debug for FromFallibleFn<St, E, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("FromFallibleFn").field("state", &self.state).finish()
+        f.debug_struct("FromFallibleFn")
+            .field("state", &self.state)
+            .finish()
     }
 }
 

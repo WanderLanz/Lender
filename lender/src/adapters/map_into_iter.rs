@@ -3,7 +3,8 @@ use core::{iter::FusedIterator, marker::PhantomData};
 use fallible_iterator::{DoubleEndedFallibleIterator, FallibleIterator};
 
 use crate::{
-    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeLender, FallibleLend, FallibleLender, FusedLender, Lend, Lender,
+    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeLender, FallibleLend, FallibleLender,
+    FusedLender, Lend, Lender,
 };
 
 #[derive(Clone, Debug)]
@@ -15,11 +16,17 @@ pub struct MapIntoIter<L, O, F> {
 
 impl<L, O, F> MapIntoIter<L, O, F> {
     pub(crate) fn new(lender: L, f: F) -> MapIntoIter<L, O, F> {
-        MapIntoIter { lender, f, _marker: PhantomData }
+        MapIntoIter {
+            lender,
+            f,
+            _marker: PhantomData,
+        }
     }
+
     pub fn into_inner(self) -> L {
         self.lender
     }
+
     pub fn into_parts(self) -> (L, F) {
         (self.lender, self.f)
     }
@@ -31,13 +38,16 @@ impl<L: Lender, O, F: FnMut(Lend<'_, L>) -> O> Iterator for MapIntoIter<L, O, F>
     fn next(&mut self) -> Option<O> {
         self.lender.next().map(&mut self.f)
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
 }
 
-impl<L: DoubleEndedLender, O, F: FnMut(Lend<'_, L>) -> O> DoubleEndedIterator for MapIntoIter<L, O, F> {
+impl<L: DoubleEndedLender, O, F: FnMut(Lend<'_, L>) -> O> DoubleEndedIterator
+    for MapIntoIter<L, O, F>
+{
     #[inline]
     fn next_back(&mut self) -> Option<O> {
         self.lender.next_back().map(&mut self.f)
@@ -64,6 +74,7 @@ where
     fn next(&mut self) -> Result<Option<O>, Self::Error> {
         self.lender.next()?.map(&mut self.f).transpose()
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()

@@ -1,8 +1,8 @@
 use core::{fmt, ops::ControlFlow};
 
 use crate::{
-    try_trait_v2::Try, FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender,
-    Lending,
+    try_trait_v2::Try, FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender,
+    FusedLender, Lend, Lender, Lending,
 };
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -13,18 +13,26 @@ pub struct SkipWhile<L, P> {
 }
 impl<L, P> SkipWhile<L, P> {
     pub(crate) fn new(lender: L, predicate: P) -> SkipWhile<L, P> {
-        SkipWhile { lender, flag: false, predicate }
+        SkipWhile {
+            lender,
+            flag: false,
+            predicate,
+        }
     }
+
     pub fn into_inner(self) -> L {
         self.lender
     }
+
     pub fn into_parts(self) -> (L, P) {
         (self.lender, self.predicate)
     }
 }
 impl<L: fmt::Debug, P> fmt::Debug for SkipWhile<L, P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("SkipWhile").field("lender", &self.lender).finish()
+        f.debug_struct("SkipWhile")
+            .field("lender", &self.lender)
+            .finish()
     }
 }
 impl<'lend, L, P> Lending<'lend> for SkipWhile<L, P>
@@ -54,11 +62,13 @@ where
             }
         })
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (_, upper) = self.lender.size_hint();
         (0, upper)
     }
+
     #[inline]
     fn try_fold<B, F, R>(&mut self, mut init: B, mut f: F) -> R
     where
@@ -79,6 +89,7 @@ where
         }
         self.lender.try_fold(init, f)
     }
+
     #[inline]
     fn fold<B, F>(mut self, mut init: B, mut f: F) -> B
     where
@@ -130,11 +141,13 @@ where
             }
         })
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (_, upper) = self.lender.size_hint();
         (0, upper)
     }
+
     #[inline]
     fn try_fold<B, F, R>(&mut self, mut init: B, mut f: F) -> Result<R, Self::Error>
     where
@@ -155,6 +168,7 @@ where
         }
         self.lender.try_fold(init, f)
     }
+
     #[inline]
     fn fold<B, F>(mut self, mut init: B, mut f: F) -> Result<B, Self::Error>
     where

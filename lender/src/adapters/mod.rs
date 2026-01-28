@@ -64,8 +64,8 @@ pub use self::{
 use crate::{
     empty, fallible_empty,
     try_trait_v2::{ChangeOutputType, FromResidual, Residual, Try},
-    Empty, ExtendLender, FallibleEmpty, FallibleLend, FallibleLender, FallibleLending, IntoFallibleLender, IntoLender, Lend,
-    Lender, Lending, NonFallibleAdapter, TupleLend,
+    Empty, ExtendLender, FallibleEmpty, FallibleLend, FallibleLender, FallibleLending,
+    IntoFallibleLender, IntoLender, Lend, Lender, Lending, NonFallibleAdapter, TupleLend,
 };
 
 // pub use zip::{TrustedRandomAccess, TrustedRandomAccessNoCoerce};
@@ -105,18 +105,23 @@ where
                 ControlFlow::Break(x) => {
                     // SAFETY: residual is manually guaranteed to be the only lend alive
                     *self.residual = Some(unsafe {
-                        core::mem::transmute::<<Lend<'_, L> as Try>::Residual, <Lend<'this, L> as Try>::Residual>(x)
+                        core::mem::transmute::<
+                            <Lend<'_, L> as Try>::Residual,
+                            <Lend<'this, L> as Try>::Residual,
+                        >(x)
                     });
                 }
             }
         }
         None
     }
+
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (_, upper) = self.lender.size_hint();
         (0, upper)
     }
 }
+
 pub(crate) fn try_process<'a, L, F, U>(lender: L, mut f: F) -> ChangeOutputType<Lend<'a, L>, U>
 where
     L: Lender + 'a,
@@ -127,7 +132,10 @@ where
     let mut residual = None;
     // SAFETY: residual is manually guaranteed to be the only lend alive after `f`.
     let reborrow = unsafe { &mut *(&mut residual as *mut _) };
-    let shunt = TryShunt { lender, residual: reborrow };
+    let shunt = TryShunt {
+        lender,
+        residual: reborrow,
+    };
     let value = f(shunt);
     match residual {
         Some(r) => FromResidual::from_residual(r),
@@ -234,10 +242,14 @@ pub(crate) fn fallible_unzip<L, ExtA, ExtB>(mut lender: L) -> Result<(ExtA, ExtB
 where
     L: Sized + FallibleLender,
     for<'all> FallibleLend<'all, L>: TupleLend<'all>,
-    ExtA:
-        Default + for<'this> ExtendLender<NonFallibleAdapter<'this, <FirstShunt<L> as IntoFallibleLender>::FallibleLender>>,
-    ExtB:
-        Default + for<'this> ExtendLender<NonFallibleAdapter<'this, <SecondShunt<L> as IntoFallibleLender>::FallibleLender>>,
+    ExtA: Default
+        + for<'this> ExtendLender<
+            NonFallibleAdapter<'this, <FirstShunt<L> as IntoFallibleLender>::FallibleLender>,
+        >,
+    ExtB: Default
+        + for<'this> ExtendLender<
+            NonFallibleAdapter<'this, <SecondShunt<L> as IntoFallibleLender>::FallibleLender>,
+        >,
 {
     let mut a = ExtA::default();
     let mut b = ExtB::default();

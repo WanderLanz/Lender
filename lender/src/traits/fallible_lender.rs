@@ -1,17 +1,20 @@
 use alloc::borrow::ToOwned;
 use core::{cmp::Ordering, num::NonZeroUsize, ops::ControlFlow};
 
-use stable_try_trait_v2::{internal::NeverShortCircuit, ChangeOutputType, FromResidual, Residual, Try};
+use stable_try_trait_v2::{
+    internal::NeverShortCircuit, ChangeOutputType, FromResidual, Residual, Try,
+};
 
 use crate::{
     fallible_unzip,
     higher_order::{FnMutHKARes, FnMutHKAResOpt},
     non_fallible_adapter,
     traits::collect::IntoFallibleLender,
-    Chain, Chunk, Chunky, Cloned, Copied, Cycle, DoubleEndedFallibleLender, Enumerate, ExactSizeFallibleLender,
-    ExtendLender, FallibleFlatMap, FallibleFlatten, FallibleIntersperse, FallibleIntersperseWith, FalliblePeekable,
-    FallibleTryShuntAdapter, Filter, FilterMap, FirstShunt, FromLender, Fuse, ImplBound, Inspect, Iter, Map, MapErr,
-    MapIntoIter, MapWhile, Mutate, NonFallibleAdapter, Owned, ProductFallibleLender, Ref, Rev, Scan, SecondShunt, Skip,
+    Chain, Chunk, Chunky, Cloned, Copied, Cycle, DoubleEndedFallibleLender, Enumerate,
+    ExactSizeFallibleLender, ExtendLender, FallibleFlatMap, FallibleFlatten, FallibleIntersperse,
+    FallibleIntersperseWith, FalliblePeekable, FallibleTryShuntAdapter, Filter, FilterMap,
+    FirstShunt, FromLender, Fuse, ImplBound, Inspect, Iter, Map, MapErr, MapIntoIter, MapWhile,
+    Mutate, NonFallibleAdapter, Owned, ProductFallibleLender, Ref, Rev, Scan, SecondShunt, Skip,
     SkipWhile, StepBy, SumFallibleLender, Take, TakeWhile, TupleLend, Zip,
 };
 
@@ -1364,11 +1367,16 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
 }
 
 #[inline]
-pub(crate) fn lender_compare<A, B, F, T>(mut a: A, mut b: B, mut f: F) -> Result<ControlFlow<T, Ordering>, A::Error>
+pub(crate) fn lender_compare<A, B, F, T>(
+    mut a: A,
+    mut b: B,
+    mut f: F,
+) -> Result<ControlFlow<T, Ordering>, A::Error>
 where
     A: FallibleLender,
     B: FallibleLender<Error = A::Error>,
-    for<'all> F: FnMut(FallibleLend<'all, A>, FallibleLend<'all, B>) -> Result<ControlFlow<T>, A::Error>,
+    for<'all> F:
+        FnMut(FallibleLend<'all, A>, FallibleLend<'all, B>) -> Result<ControlFlow<T>, A::Error>,
 {
     let mut ctl = ControlFlow::Continue(());
     while let Some(x) = a.next()? {

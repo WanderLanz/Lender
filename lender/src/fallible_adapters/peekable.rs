@@ -4,7 +4,8 @@ use maybe_dangling::MaybeDangling;
 
 use crate::{
     try_trait_v2::{FromResidual, Try},
-    DoubleEndedFallibleLender, ExactSizeFallibleLender, FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender,
+    DoubleEndedFallibleLender, ExactSizeFallibleLender, FallibleLend, FallibleLender,
+    FallibleLending, FusedFallibleLender,
 };
 
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -24,11 +25,16 @@ where
     L: FallibleLender,
 {
     pub(crate) fn new(lender: L) -> Peekable<'this, L> {
-        Peekable { peeked: MaybeDangling::new(None), lender: AliasableBox::from_unique(alloc::boxed::Box::new(lender)) }
+        Peekable {
+            peeked: MaybeDangling::new(None),
+            lender: AliasableBox::from_unique(alloc::boxed::Box::new(lender)),
+        }
     }
+
     pub fn into_inner(self) -> L {
         *AliasableBox::into_unique(self.lender)
     }
+
     pub fn peek(&mut self) -> Result<Option<&'_ FallibleLend<'_, L>>, L::Error> {
         let lender = &mut self.lender;
         if self.peeked.is_none() {
@@ -36,7 +42,9 @@ where
             // Safe because the lender is boxed (stable address) and only one lend
             // is alive at a time.
             *self.peeked = Some(unsafe {
-                core::mem::transmute::<Option<FallibleLend<'_, L>>, Option<FallibleLend<'this, L>>>(lender.next()?)
+                core::mem::transmute::<Option<FallibleLend<'_, L>>, Option<FallibleLend<'this, L>>>(
+                    lender.next()?,
+                )
             });
         }
         // SAFETY: Ties the lend's lifetime to the borrow of `self`, preventing it
@@ -44,18 +52,23 @@ where
         // (required by FallibleLender). The `unwrap_unchecked` is safe because
         // `self.peeked` was set to `Some` above if it was `None`.
         Ok(unsafe {
-            core::mem::transmute::<Option<&'_ FallibleLend<'this, L>>, Option<&'_ FallibleLend<'_, L>>>(
-                self.peeked.as_mut().unwrap_unchecked().as_ref(),
-            )
+            core::mem::transmute::<
+                Option<&'_ FallibleLend<'this, L>>,
+                Option<&'_ FallibleLend<'_, L>>,
+            >(self.peeked.as_mut().unwrap_unchecked().as_ref())
         })
     }
+
     pub fn peek_mut(&mut self) -> Result<Option<&'_ mut FallibleLend<'this, L>>, L::Error> {
         let lender = &mut self.lender;
         if self.peeked.is_none() {
             *self.peeked = Some(
                 // SAFETY: The lend is manually guaranteed to be the only one alive
                 unsafe {
-                    core::mem::transmute::<Option<FallibleLend<'_, L>>, Option<FallibleLend<'this, L>>>(lender.next()?)
+                    core::mem::transmute::<
+                        Option<FallibleLend<'_, L>>,
+                        Option<FallibleLend<'this, L>>,
+                    >(lender.next()?)
                 },
             );
         }
@@ -65,6 +78,7 @@ where
             unsafe { self.peeked.as_mut().unwrap_unchecked().as_mut() },
         )
     }
+
     pub fn next_if<F>(&mut self, f: F) -> Result<Option<FallibleLend<'_, L>>, L::Error>
     where
         F: FnOnce(&FallibleLend<'_, L>) -> bool,
@@ -73,7 +87,9 @@ where
         let v = match self.peeked.take() {
             // SAFETY: The lend is manually guaranteed to be the only one alive
             Some(peeked) => unsafe {
-                core::mem::transmute::<Option<FallibleLend<'this, L>>, Option<FallibleLend<'_, L>>>(peeked)
+                core::mem::transmute::<Option<FallibleLend<'this, L>>, Option<FallibleLend<'_, L>>>(
+                    peeked,
+                )
             },
             None => self.lender.next()?,
         };
@@ -81,12 +97,17 @@ where
             Some(v) if f(&v) => Ok(Some(v)),
             v => {
                 // SAFETY: The lend is manually guaranteed to be the only one alive
-                *self.peeked =
-                    Some(unsafe { core::mem::transmute::<Option<FallibleLend<'_, L>>, Option<FallibleLend<'this, L>>>(v) });
+                *self.peeked = Some(unsafe {
+                    core::mem::transmute::<
+                        Option<FallibleLend<'_, L>>,
+                        Option<FallibleLend<'this, L>>,
+                    >(v)
+                });
                 Ok(None)
             }
         }
     }
+
     pub fn next_if_eq<'a, T>(&'a mut self, t: &T) -> Result<Option<FallibleLend<'a, L>>, L::Error>
     where
         T: for<'all> PartialEq<FallibleLend<'all, L>>,
@@ -99,7 +120,10 @@ where
     L: FallibleLender + Clone,
 {
     fn clone(&self) -> Self {
-        Peekable { peeked: MaybeDangling::new(None), lender: AliasableBox::from_unique((*self.lender).clone().into()) }
+        Peekable {
+            peeked: MaybeDangling::new(None),
+            lender: AliasableBox::from_unique((*self.lender).clone().into()),
+        }
     }
 }
 impl<'this, L: fmt::Debug> fmt::Debug for Peekable<'this, L>
@@ -108,7 +132,10 @@ where
     FallibleLend<'this, L>: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Peekable").field("lender", &self.lender).field("peeked", &self.peeked).finish()
+        f.debug_struct("Peekable")
+            .field("lender", &self.lender)
+            .field("peeked", &self.peeked)
+            .finish()
     }
 }
 impl<'lend, L> FallibleLending<'lend> for Peekable<'_, L>
@@ -129,11 +156,17 @@ where
         match self.peeked.take() {
             Some(peeked) => Ok(
                 // SAFETY: The lend is manually guaranteed to be the only one alive
-                unsafe { core::mem::transmute::<Option<FallibleLend<'this, Self>>, Option<FallibleLend<'_, Self>>>(peeked) },
+                unsafe {
+                    core::mem::transmute::<
+                        Option<FallibleLend<'this, Self>>,
+                        Option<FallibleLend<'_, Self>>,
+                    >(peeked)
+                },
             ),
             None => self.lender.next(),
         }
     }
+
     #[inline]
     fn count(mut self) -> Result<usize, Self::Error> {
         let lender = *AliasableBox::into_unique(self.lender);
@@ -143,18 +176,23 @@ where
             None => lender.count(),
         }
     }
+
     #[inline]
     fn nth(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         match self.peeked.take() {
             Some(None) => Ok(None),
             Some(v @ Some(_)) if n == 0 => Ok(unsafe {
                 // SAFETY: The lend is manually guaranteed to be the only one alive
-                core::mem::transmute::<Option<FallibleLend<'this, Self>>, Option<FallibleLend<'_, Self>>>(v)
+                core::mem::transmute::<
+                    Option<FallibleLend<'this, Self>>,
+                    Option<FallibleLend<'_, Self>>,
+                >(v)
             }),
             Some(Some(_)) => self.lender.nth(n - 1),
             None => self.lender.nth(n),
         }
     }
+
     #[inline]
     fn last<'a>(&'a mut self) -> Result<Option<FallibleLend<'a, Self>>, Self::Error>
     where
@@ -164,11 +202,17 @@ where
             Some(None) => return Ok(None),
             Some(v) =>
             // SAFETY: 'this: 'call
-            unsafe { core::mem::transmute::<Option<FallibleLend<'this, Self>>, Option<FallibleLend<'a, Self>>>(v) },
+            unsafe {
+                core::mem::transmute::<
+                    Option<FallibleLend<'this, Self>>,
+                    Option<FallibleLend<'a, Self>>,
+                >(v)
+            },
             None => None,
         };
         Ok(self.lender.last()?.or(peek_opt))
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let peek_len = match *self.peeked {
@@ -177,8 +221,12 @@ where
             None => 0,
         };
         let (l, r) = self.lender.size_hint();
-        (l.saturating_add(peek_len), r.and_then(|r| r.checked_add(peek_len)))
+        (
+            l.saturating_add(peek_len),
+            r.and_then(|r| r.checked_add(peek_len)),
+        )
     }
+
     #[inline]
     fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> Result<R, Self::Error>
     where
@@ -196,6 +244,7 @@ where
         };
         self.lender.try_fold(acc, f)
     }
+
     #[inline]
     fn fold<B, F>(mut self, init: B, mut f: F) -> Result<B, Self::Error>
     where
@@ -211,6 +260,7 @@ where
         lender.fold(acc, f)
     }
 }
+
 impl<'this, L: DoubleEndedFallibleLender> DoubleEndedFallibleLender for Peekable<'this, L> {
     #[inline]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
@@ -220,7 +270,10 @@ impl<'this, L: DoubleEndedFallibleLender> DoubleEndedFallibleLender for Peekable
                 None => Ok(
                     // SAFETY: The lend is manually guaranteed to be the only one alive
                     unsafe {
-                        core::mem::transmute::<Option<FallibleLend<'this, Self>>, Option<FallibleLend<'_, Self>>>(v.take())
+                        core::mem::transmute::<
+                            Option<FallibleLend<'this, Self>>,
+                            Option<FallibleLend<'_, Self>>,
+                        >(v.take())
                     },
                 ),
             },
@@ -228,6 +281,7 @@ impl<'this, L: DoubleEndedFallibleLender> DoubleEndedFallibleLender for Peekable
             None => self.lender.next_back(),
         }
     }
+
     #[inline]
     fn try_rfold<B, F, R>(&mut self, init: B, mut f: F) -> Result<R, Self::Error>
     where
@@ -247,6 +301,7 @@ impl<'this, L: DoubleEndedFallibleLender> DoubleEndedFallibleLender for Peekable
             },
         }
     }
+
     #[inline]
     fn rfold<B, F>(mut self, init: B, mut f: F) -> Result<B, Self::Error>
     where
@@ -296,10 +351,15 @@ mod test {
     // previous location.
     #[test]
     fn test_peekable() -> Result<(), Infallible> {
-        let lender = ArrayLender { array: [-1, 1, 2, 3] };
+        let lender = ArrayLender {
+            array: [-1, 1, 2, 3],
+        };
         let mut peekable = lender.into_fallible().peekable();
         assert_eq!(**peekable.peek()?.unwrap(), -1);
-        assert_eq!(peekable.peeked.unwrap().unwrap() as *const _, &peekable.lender.lender.array[0] as *const _);
+        assert_eq!(
+            peekable.peeked.unwrap().unwrap() as *const _,
+            &peekable.lender.lender.array[0] as *const _
+        );
         moved_peekable(peekable);
         Ok(())
     }
@@ -307,6 +367,9 @@ mod test {
     fn moved_peekable(peekable: Peekable<IntoFallible<Infallible, ArrayLender>>) {
         let peeked = peekable.peeked.unwrap().unwrap() as *const _;
         let array = &peekable.lender.lender.array[0] as *const _;
-        assert_eq!(peeked, array, "Peeked element pointer should point to the first element of the array");
+        assert_eq!(
+            peeked, array,
+            "Peeked element pointer should point to the first element of the array"
+        );
     }
 }

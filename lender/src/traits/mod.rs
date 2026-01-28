@@ -9,7 +9,10 @@ mod marker;
 
 pub use self::{
     accum::{ProductFallibleLender, ProductLender, SumFallibleLender, SumLender},
-    collect::{ExtendFallibleLender, ExtendLender, FromFallibleLender, FromLender, IntoFallibleLender, IntoLender},
+    collect::{
+        ExtendFallibleLender, ExtendLender, FromFallibleLender, FromLender, IntoFallibleLender,
+        IntoLender,
+    },
     double_ended::{DoubleEndedFallibleLender, DoubleEndedLender},
     exact_size::{ExactSizeFallibleLender, ExactSizeLender},
     ext::{FallibleIteratorExt, IntoFallibleIteratorExt, IntoIteratorExt, IteratorExt},
@@ -416,7 +419,9 @@ macro_rules! unsafe_assume_covariance_fallible {
 #[doc(hidden)]
 pub struct DynFallibleLendShunt<T: ?Sized>(pub T);
 
-impl<'lend, T: ?Sized + for<'all> DynFallibleLend<'all>> FallibleLending<'lend> for DynFallibleLendShunt<T> {
+impl<'lend, T: ?Sized + for<'all> DynFallibleLend<'all>> FallibleLending<'lend>
+    for DynFallibleLendShunt<T>
+{
     type Lend = <T as DynFallibleLend<'lend>>::Lend;
 }
 

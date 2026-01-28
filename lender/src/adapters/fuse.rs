@@ -2,8 +2,9 @@ use core::ops::ControlFlow;
 
 use crate::{
     try_trait_v2::{FromResidual, Try},
-    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender, FallibleLend, FallibleLender,
-    FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender, Lending,
+    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender,
+    FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender,
+    Lending,
 };
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -13,8 +14,12 @@ pub struct Fuse<L> {
 }
 impl<L> Fuse<L> {
     pub(crate) fn new(lender: L) -> Fuse<L> {
-        Fuse { lender, flag: false }
+        Fuse {
+            lender,
+            flag: false,
+        }
     }
+
     pub fn into_inner(self) -> L {
         self.lender
     }
@@ -42,6 +47,7 @@ where
         }
         None
     }
+
     #[inline]
     fn nth(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         if !self.flag {
@@ -52,6 +58,7 @@ where
         }
         None
     }
+
     #[inline]
     fn last(&mut self) -> Option<Lend<'_, Self>>
     where
@@ -65,6 +72,7 @@ where
         }
         None
     }
+
     #[inline]
     fn count(self) -> usize {
         if !self.flag {
@@ -73,6 +81,7 @@ where
             0
         }
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         if !self.flag {
@@ -81,6 +90,7 @@ where
             (0, Some(0))
         }
     }
+
     #[inline]
     fn try_fold<Acc, F, R>(&mut self, mut acc: Acc, mut f: F) -> R
     where
@@ -97,6 +107,7 @@ where
         }
         Try::from_output(acc)
     }
+
     #[inline]
     fn fold<B, F>(mut self, init: B, mut f: F) -> B
     where
@@ -110,6 +121,7 @@ where
         }
         acc
     }
+
     #[inline]
     fn find<P>(&mut self, mut predicate: P) -> Option<Lend<'_, Self>>
     where
@@ -139,6 +151,7 @@ where
         }
         None
     }
+
     #[inline]
     fn nth_back(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         if !self.flag {
@@ -149,6 +162,7 @@ where
         }
         None
     }
+
     #[inline]
     fn try_rfold<Acc, F, R>(&mut self, mut acc: Acc, mut f: F) -> R
     where
@@ -165,6 +179,7 @@ where
         }
         Try::from_output(acc)
     }
+
     #[inline]
     fn rfold<B, F>(mut self, init: B, mut f: F) -> B
     where
@@ -178,6 +193,7 @@ where
         }
         acc
     }
+
     #[inline]
     fn rfind<P>(&mut self, mut predicate: P) -> Option<Lend<'_, Self>>
     where
@@ -204,6 +220,7 @@ where
             0
         }
     }
+
     fn is_empty(&self) -> bool {
         if !self.flag {
             self.lender.is_empty()
@@ -246,6 +263,7 @@ where
             }
         }
     }
+
     #[inline]
     fn nth(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         if self.flag {
@@ -260,6 +278,7 @@ where
             }
         }
     }
+
     #[inline]
     fn last(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error>
     where
@@ -277,6 +296,7 @@ where
             }
         }
     }
+
     #[inline]
     fn count(self) -> Result<usize, Self::Error> {
         if !self.flag {
@@ -285,6 +305,7 @@ where
             Ok(0)
         }
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         if !self.flag {
@@ -293,6 +314,7 @@ where
             (0, Some(0))
         }
     }
+
     #[inline]
     fn try_fold<Acc, F, R>(&mut self, mut acc: Acc, mut f: F) -> Result<R, Self::Error>
     where
@@ -300,7 +322,12 @@ where
         R: Try<Output = Acc>,
     {
         if !self.flag {
-            acc = match self.lender.try_fold(acc, &mut f).inspect_err(|_| self.flag = true)?.branch() {
+            acc = match self
+                .lender
+                .try_fold(acc, &mut f)
+                .inspect_err(|_| self.flag = true)?
+                .branch()
+            {
                 ControlFlow::Continue(x) => x,
                 ControlFlow::Break(x) => return Ok(FromResidual::from_residual(x)),
             };
@@ -308,6 +335,7 @@ where
         }
         Ok(Try::from_output(acc))
     }
+
     #[inline]
     fn fold<B, F>(mut self, init: B, mut f: F) -> Result<B, Self::Error>
     where
@@ -316,18 +344,26 @@ where
     {
         let mut acc = init;
         if !self.flag {
-            acc = self.lender.fold(acc, &mut f).inspect_err(|_| self.flag = true)?;
+            acc = self
+                .lender
+                .fold(acc, &mut f)
+                .inspect_err(|_| self.flag = true)?;
             self.flag = true;
         }
         Ok(acc)
     }
+
     #[inline]
     fn find<P>(&mut self, mut predicate: P) -> Result<Option<FallibleLend<'_, Self>>, Self::Error>
     where
         P: FnMut(&FallibleLend<'_, Self>) -> Result<bool, Self::Error>,
     {
         if !self.flag {
-            if let x @ Some(_) = self.lender.find(&mut predicate).inspect_err(|_| self.flag = true)? {
+            if let x @ Some(_) = self
+                .lender
+                .find(&mut predicate)
+                .inspect_err(|_| self.flag = true)?
+            {
                 return Ok(x);
             }
             self.flag = true;
@@ -349,6 +385,7 @@ where
         }
         Ok(None)
     }
+
     #[inline]
     fn nth_back(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         if !self.flag {
@@ -359,6 +396,7 @@ where
         }
         Ok(None)
     }
+
     #[inline]
     fn try_rfold<Acc, F, R>(&mut self, mut acc: Acc, mut f: F) -> Result<R, Self::Error>
     where
@@ -367,7 +405,12 @@ where
         R: Try<Output = Acc>,
     {
         if !self.flag {
-            acc = match self.lender.try_rfold(acc, &mut f).inspect_err(|_| self.flag = true)?.branch() {
+            acc = match self
+                .lender
+                .try_rfold(acc, &mut f)
+                .inspect_err(|_| self.flag = true)?
+                .branch()
+            {
                 ControlFlow::Continue(x) => x,
                 ControlFlow::Break(x) => return Ok(FromResidual::from_residual(x)),
             };
@@ -375,6 +418,7 @@ where
         }
         Ok(Try::from_output(acc))
     }
+
     #[inline]
     fn rfold<B, F>(mut self, init: B, mut f: F) -> Result<B, Self::Error>
     where
@@ -383,11 +427,15 @@ where
     {
         let mut acc = init;
         if !self.flag {
-            acc = self.lender.rfold(acc, &mut f).inspect_err(|_| self.flag = true)?;
+            acc = self
+                .lender
+                .rfold(acc, &mut f)
+                .inspect_err(|_| self.flag = true)?;
             self.flag = true;
         }
         Ok(acc)
     }
+
     #[inline]
     fn rfind<P>(&mut self, mut predicate: P) -> Result<Option<FallibleLend<'_, Self>>, Self::Error>
     where
@@ -395,7 +443,11 @@ where
         P: FnMut(&FallibleLend<'_, Self>) -> Result<bool, Self::Error>,
     {
         if !self.flag {
-            if let x @ Some(_) = self.lender.rfind(&mut predicate).inspect_err(|_| self.flag = true)? {
+            if let x @ Some(_) = self
+                .lender
+                .rfind(&mut predicate)
+                .inspect_err(|_| self.flag = true)?
+            {
                 return Ok(x);
             }
             self.flag = true;
@@ -414,6 +466,7 @@ where
             self.lender.len()
         }
     }
+
     fn is_empty(&self) -> bool {
         self.flag || self.lender.is_empty()
     }

@@ -8,6 +8,7 @@ use crate::{
 /// The [`Lender`] version of [`core::iter::DoubleEndedIterator`].
 pub trait DoubleEndedLender: Lender {
     fn next_back(&mut self) -> Option<Lend<'_, Self>>;
+
     #[inline]
     fn advance_back_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {
         for i in 0..n {
@@ -18,6 +19,7 @@ pub trait DoubleEndedLender: Lender {
         }
         Ok(())
     }
+
     #[inline]
     fn nth_back(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         if self.advance_back_by(n).is_err() {
@@ -25,6 +27,7 @@ pub trait DoubleEndedLender: Lender {
         }
         self.next_back()
     }
+
     #[inline]
     fn try_rfold<B, F, R>(&mut self, init: B, mut f: F) -> R
     where
@@ -41,6 +44,7 @@ pub trait DoubleEndedLender: Lender {
         }
         Try::from_output(accum)
     }
+
     #[inline]
     fn rfold<B, F>(mut self, init: B, mut f: F) -> B
     where
@@ -53,6 +57,7 @@ pub trait DoubleEndedLender: Lender {
         }
         accum
     }
+
     #[inline]
     fn rfind<P>(&mut self, mut predicate: P) -> Option<Lend<'_, Self>>
     where
@@ -73,9 +78,11 @@ impl<L: DoubleEndedLender> DoubleEndedLender for &mut L {
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         (**self).next_back()
     }
+
     fn advance_back_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {
         (**self).advance_back_by(n)
     }
+
     fn nth_back(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         (**self).nth_back(n)
     }
@@ -122,7 +129,8 @@ pub trait DoubleEndedFallibleLender: FallibleLender {
         Self: Sized,
         F: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
     {
-        self.try_rfold(init, |acc, item| f(acc, item).map(NeverShortCircuit)).map(|res| res.0)
+        self.try_rfold(init, |acc, item| f(acc, item).map(NeverShortCircuit))
+            .map(|res| res.0)
     }
 
     #[inline]
@@ -134,7 +142,9 @@ pub trait DoubleEndedFallibleLender: FallibleLender {
         while let Some(x) = self.next_back()? {
             if predicate(&x)? {
                 // SAFETY: polonius return
-                return Ok(Some(unsafe { core::mem::transmute::<FallibleLend<'_, Self>, FallibleLend<'_, Self>>(x) }));
+                return Ok(Some(unsafe {
+                    core::mem::transmute::<FallibleLend<'_, Self>, FallibleLend<'_, Self>>(x)
+                }));
             }
         }
         Ok(None)
@@ -145,9 +155,11 @@ impl<L: DoubleEndedFallibleLender> DoubleEndedFallibleLender for &mut L {
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         (**self).next_back()
     }
+
     fn advance_back_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         (**self).advance_back_by(n)
     }
+
     fn nth_back(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         (**self).nth_back(n)
     }

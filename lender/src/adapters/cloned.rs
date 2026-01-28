@@ -3,8 +3,8 @@ use core::iter::FusedIterator;
 use fallible_iterator::{DoubleEndedFallibleIterator, FallibleIterator};
 
 use crate::{
-    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeLender, FallibleLender, FallibleLending, FusedLender, Lender,
-    Lending,
+    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeLender, FallibleLender, FallibleLending,
+    FusedLender, Lender, Lending,
 };
 
 #[derive(Clone, Debug)]
@@ -16,6 +16,7 @@ impl<L> Cloned<L> {
     pub(crate) fn new(lender: L) -> Cloned<L> {
         Cloned { lender }
     }
+
     pub fn into_inner(self) -> L {
         self.lender
     }
@@ -31,6 +32,7 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         self.lender.next().cloned()
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
@@ -86,6 +88,7 @@ where
     fn next(&mut self) -> Result<Option<Self::Item>, Self::Error> {
         self.lender.next().map(Option::<&T>::cloned)
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()

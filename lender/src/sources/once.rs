@@ -1,8 +1,8 @@
 use core::fmt;
 
 use crate::{
-    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeLender, FallibleLend, FallibleLender, FallibleLending,
-    FusedFallibleLender, FusedLender, Lend, Lender, Lending,
+    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeLender, FallibleLend, FallibleLender,
+    FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender, Lending,
 };
 
 /// Creates a lender that yields an element exactly once.
@@ -39,7 +39,9 @@ where
     Lend<'a, L>: Clone,
 {
     fn clone(&self) -> Self {
-        Once { inner: self.inner.clone() }
+        Once {
+            inner: self.inner.clone(),
+        }
     }
 }
 impl<'a, L> fmt::Debug for Once<'a, L>
@@ -66,8 +68,11 @@ where
     crate::unsafe_assume_covariance!();
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         // SAFETY: 'a: 'lend
-        self.inner.take().map(|v| unsafe { core::mem::transmute::<Lend<'a, Self>, Lend<'_, Self>>(v) })
+        self.inner
+            .take()
+            .map(|v| unsafe { core::mem::transmute::<Lend<'a, Self>, Lend<'_, Self>>(v) })
     }
+
     fn size_hint(&self) -> (usize, Option<usize>) {
         if self.inner.is_some() {
             (1, Some(1))
@@ -119,7 +124,9 @@ where
     FallibleLend<'a, L>: Clone,
 {
     fn clone(&self) -> Self {
-        FallibleOnce { inner: self.inner.clone() }
+        FallibleOnce {
+            inner: self.inner.clone(),
+        }
     }
 }
 impl<'a, E, L> fmt::Debug for FallibleOnce<'a, E, L>
@@ -129,7 +136,9 @@ where
     FallibleLend<'a, L>: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("FallibleOnce").field("inner", &self.inner).finish()
+        f.debug_struct("FallibleOnce")
+            .field("inner", &self.inner)
+            .finish()
     }
 }
 impl<'lend, E, L> FallibleLending<'lend> for FallibleOnce<'_, E, L>
@@ -154,11 +163,16 @@ where
             Some(inner) => inner.map(|value| {
                 Some(
                     // SAFETY: 'a: 'lend
-                    unsafe { core::mem::transmute::<FallibleLend<'a, Self>, FallibleLend<'_, Self>>(value) },
+                    unsafe {
+                        core::mem::transmute::<FallibleLend<'a, Self>, FallibleLend<'_, Self>>(
+                            value,
+                        )
+                    },
                 )
             }),
         }
     }
+
     fn size_hint(&self) -> (usize, Option<usize>) {
         if self.inner.is_some() {
             (1, Some(1))

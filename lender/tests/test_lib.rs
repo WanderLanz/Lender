@@ -14,7 +14,11 @@ struct VecLender {
 impl VecLender {
     fn new(data: Vec<i32>) -> Self {
         let len = data.len();
-        Self { data, front: 0, back: len }
+        Self {
+            data,
+            front: 0,
+            back: len,
+        }
     }
 }
 
@@ -83,13 +87,25 @@ fn windows_mut() {
     // Fibonacci sequence
     let mut data = vec![0u32; 3 * 3];
     data[1] = 1;
-    WindowsMut { slice: &mut data, begin: 0, len: 3 }
-        .for_each(hrc_mut!(for<'lend> |w: &'lend mut [u32]| { w[2] = w[0] + w[1] }));
+    WindowsMut {
+        slice: &mut data,
+        begin: 0,
+        len: 3,
+    }
+    .for_each(hrc_mut!(for<'lend> |w: &'lend mut [u32]| {
+        w[2] = w[0] + w[1]
+    }));
     assert_eq!(data, [0, 1, 1, 2, 3, 5, 8, 13, 21]);
-    WindowsMut { slice: &mut data, begin: 0, len: 3 }
-        .filter(|x| x[0] > 0)
-        .map(hrc_mut!(for<'lend> |x: &'lend mut [u32]| -> &'lend mut u32 { &mut x[0] }))
-        .for_each(hrc_mut!(for<'lend> |x: &'lend mut u32| { *x += 1 }));
+    WindowsMut {
+        slice: &mut data,
+        begin: 0,
+        len: 3,
+    }
+    .filter(|x| x[0] > 0)
+    .map(hrc_mut!(
+        for<'lend> |x: &'lend mut [u32]| -> &'lend mut u32 { &mut x[0] }
+    ))
+    .for_each(hrc_mut!(for<'lend> |x: &'lend mut u32| { *x += 1 }));
     assert_eq!(data, [0, 2, 2, 3, 4, 6, 9, 13, 21]);
 }
 
@@ -124,7 +140,10 @@ fn lines_str() {
     }
 
     let buf = io::BufReader::with_capacity(10, "Hello\nWorld\n".as_bytes());
-    let mut lines = LinesStr { buf, line: String::new() };
+    let mut lines = LinesStr {
+        buf,
+        line: String::new(),
+    };
     assert_eq!(lines.next().unwrap().unwrap(), "Hello");
     assert_eq!(lines.next().unwrap().unwrap(), "World");
 }
@@ -145,14 +164,22 @@ fn simple_lender() {
     let mut bar: MyLender<'_, u32> = MyLender(&mut x);
     let _ = bar.next();
     let _ = bar.next();
-    let mut bar = bar.into_lender().mutate(|y| **y += 1).map(|x: &mut u32| *x + 1).iter();
+    let mut bar = bar
+        .into_lender()
+        .mutate(|y| **y += 1)
+        .map(|x: &mut u32| *x + 1)
+        .iter();
     let _ = bar.find_map(|x| if x > 0 { Some(vec![1, 2, 3]) } else { None });
 }
 
 #[test]
 fn from_lender() {
     let mut vec = vec![1u32, 2, 3, 4, 5];
-    let windows = WindowsMut { slice: &mut vec, begin: 0, len: 3 };
+    let windows = WindowsMut {
+        slice: &mut vec,
+        begin: 0,
+        len: 3,
+    };
     let vec = MyVec::<Vec<u32>>::from_lender(windows);
     assert_eq!(vec.0, vec![&[1, 2, 3][..], &[2, 3, 4][..], &[3, 4, 5][..]]);
 
@@ -209,7 +236,10 @@ fn try_collect() {
 
     impl<'a> ErrLender<'a> {
         fn new(dst: &'a mut String) -> Self {
-            Self { inner: ErrLenderInner::default(), dst }
+            Self {
+                inner: ErrLenderInner::default(),
+                dst,
+            }
         }
     }
 
@@ -225,7 +255,10 @@ fn try_collect() {
                     let err = ERR_MSG.to_owned();
                     self.inner = ErrLenderInner::Err(err);
                     match &self.inner {
-                        ErrLenderInner::Err(err) => Some(Err(WriteOnDrop { src: err.as_str(), dst: self.dst })),
+                        ErrLenderInner::Err(err) => Some(Err(WriteOnDrop {
+                            src: err.as_str(),
+                            dst: self.dst,
+                        })),
                         ErrLenderInner::Count(_) => unreachable!(),
                     }
                 }
@@ -280,7 +313,8 @@ fn fallible_empty() {
     }
 
     // Test fold operation
-    let sum: Result<i32, String> = fallible_empty::<String, fallible_lend!(i32)>().fold(0, |acc, _x: i32| Ok(acc + 1));
+    let sum: Result<i32, String> =
+        fallible_empty::<String, fallible_lend!(i32)>().fold(0, |acc, _x: i32| Ok(acc + 1));
     assert_eq!(sum, Ok(0)); // Should never iterate so result is 0
 
     // Test count
@@ -312,12 +346,14 @@ fn fallible_once() {
     assert!(once_err.next().unwrap().is_none());
 
     // Test fold with Ok
-    let sum: Result<i32, String> = fallible_once::<String, fallible_lend!(i32)>(Ok(10)).fold(0, |acc, x| Ok(acc + x));
+    let sum: Result<i32, String> =
+        fallible_once::<String, fallible_lend!(i32)>(Ok(10)).fold(0, |acc, x| Ok(acc + x));
     assert_eq!(sum, Ok(10));
 
     // Test fold with Err
     let sum_err: Result<i32, String> =
-        fallible_once::<String, fallible_lend!(i32)>(Err("error".to_string())).fold(0, |acc, x: i32| Ok(acc + x));
+        fallible_once::<String, fallible_lend!(i32)>(Err("error".to_string()))
+            .fold(0, |acc, x: i32| Ok(acc + x));
     assert!(sum_err.is_err());
 
     // Test count with Ok
@@ -325,7 +361,8 @@ fn fallible_once() {
     assert_eq!(count, Ok(1));
 
     // Test count with Err
-    let count_err: Result<usize, String> = fallible_once::<String, fallible_lend!(i32)>(Err("error".to_string())).count();
+    let count_err: Result<usize, String> =
+        fallible_once::<String, fallible_lend!(i32)>(Err("error".to_string())).count();
     assert!(count_err.is_err());
 }
 
@@ -357,19 +394,23 @@ fn fallible_repeat() {
 
     // Test take with Ok - manually collect
     let mut collected = Vec::new();
-    let result = fallible_repeat::<String, fallible_lend!(i32)>(Ok(5)).take(3).for_each(|x| {
-        collected.push(x);
-        Ok(())
-    });
+    let result = fallible_repeat::<String, fallible_lend!(i32)>(Ok(5))
+        .take(3)
+        .for_each(|x| {
+            collected.push(x);
+            Ok(())
+        });
     assert!(result.is_ok());
     assert_eq!(collected, vec![5, 5, 5]);
 
     // Test take with Err - should fail on first item
     let mut collected_err = Vec::new();
-    let result_err = fallible_repeat::<String, fallible_lend!(i32)>(Err("error".to_string())).take(3).for_each(|x| {
-        collected_err.push(x);
-        Ok(())
-    });
+    let result_err = fallible_repeat::<String, fallible_lend!(i32)>(Err("error".to_string()))
+        .take(3)
+        .for_each(|x| {
+            collected_err.push(x);
+            Ok(())
+        });
     assert!(result_err.is_err());
     assert!(collected_err.is_empty()); // Should not have collected anything
 }
@@ -379,14 +420,19 @@ fn fallible_once_with() {
     use lender::{fallible_once_with, hrc_once};
 
     // Test with Ok value from closure
-    let mut once_with = fallible_once_with(42, hrc_once!(move |x: &mut i32| -> Result<i32, String> { Ok(*x) }));
+    let mut once_with = fallible_once_with(
+        42,
+        hrc_once!(move |x: &mut i32| -> Result<i32, String> { Ok(*x) }),
+    );
     assert_eq!(once_with.next().unwrap(), Some(42));
     assert!(once_with.next().unwrap().is_none());
     assert!(once_with.next().unwrap().is_none()); // Should be fused
 
     // Test with Err value from closure
-    let mut once_with_err =
-        fallible_once_with(42, hrc_once!(move |_x: &mut i32| -> Result<i32, String> { Err("error".to_string()) }));
+    let mut once_with_err = fallible_once_with(
+        42,
+        hrc_once!(move |_x: &mut i32| -> Result<i32, String> { Err("error".to_string()) }),
+    );
     match once_with_err.next() {
         Err(e) => assert_eq!(e, "error"),
         Ok(_) => panic!("Expected error"),
@@ -409,7 +455,8 @@ fn fallible_repeat_with() {
     assert_eq!(repeat_with.next().unwrap(), Some(3));
 
     // Test with closure that returns Err
-    let mut repeat_with_err = fallible_repeat_with::<'_, fallible_lend!(i32), String, _>(|| Err("error".to_string()));
+    let mut repeat_with_err =
+        fallible_repeat_with::<'_, fallible_lend!(i32), String, _>(|| Err("error".to_string()));
     match repeat_with_err.next() {
         Err(e) => assert_eq!(e, "error"),
         Ok(_) => panic!("Expected error"),
@@ -472,7 +519,11 @@ fn into_fallible_adapter() {
 
     // Test with fold
     let data2 = vec![10, 20, 30];
-    let sum: Result<i32, String> = data2.into_iter().into_lender().into_fallible::<String>().fold(0, |acc, x| Ok(acc + x));
+    let sum: Result<i32, String> = data2
+        .into_iter()
+        .into_lender()
+        .into_fallible::<String>()
+        .fold(0, |acc, x| Ok(acc + x));
     assert_eq!(sum, Ok(60));
 }
 
@@ -481,15 +532,16 @@ fn map_err_adapter() {
     use lender::{fallible_lend, fallible_once};
 
     // Test mapping error type
-    let mut mapped = fallible_once::<i32, fallible_lend!(u32)>(Err(42)).map_err(|e: i32| format!("Error: {}", e));
+    let mut mapped = fallible_once::<i32, fallible_lend!(u32)>(Err(42))
+        .map_err(|e: i32| format!("Error: {}", e));
     match mapped.next() {
         Err(e) => assert_eq!(e, "Error: 42"),
         Ok(_) => panic!("Expected error"),
     }
 
     // Test with Ok value (error mapper shouldn't be called)
-    let mut mapped_ok =
-        fallible_once::<String, fallible_lend!(i32)>(Ok(100)).map_err(|_e: String| panic!("Should not be called"));
+    let mut mapped_ok = fallible_once::<String, fallible_lend!(i32)>(Ok(100))
+        .map_err(|_e: String| panic!("Should not be called"));
     assert_eq!(mapped_ok.next().unwrap(), Some(100));
 }
 
@@ -498,15 +550,16 @@ fn fallible_peekable_adapter() {
     use lender::{from_fallible_fn, FalliblePeekable};
 
     // Test peeking functionality
-    let mut peekable: FalliblePeekable<_> = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
-        *state += 1;
-        if *state <= 3 {
-            Ok(Some(*state))
-        } else {
-            Ok(None)
-        }
-    })
-    .peekable();
+    let mut peekable: FalliblePeekable<_> =
+        from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
+            *state += 1;
+            if *state <= 3 {
+                Ok(Some(*state))
+            } else {
+                Ok(None)
+            }
+        })
+        .peekable();
 
     // Peek multiple times - should see same value
     assert_eq!(peekable.peek().unwrap(), Some(&1));
@@ -587,7 +640,10 @@ fn map_adapters() {
         .into_iter()
         .into_lender()
         .into_fallible::<std::convert::Infallible>()
-        .map(hrc_mut!(for<'lend> |x: i32| -> Result<i32, std::convert::Infallible> { Ok(x * 2) }));
+        .map(hrc_mut!(for<'lend> |x: i32| -> Result<
+            i32,
+            std::convert::Infallible,
+        > { Ok(x * 2) }));
 
     assert_eq!(iter.next().unwrap(), Some(2));
     assert_eq!(iter.next().unwrap(), Some(4));
@@ -613,7 +669,11 @@ impl FallibleLender for Wrapper {
 
 #[test]
 fn flatten_adapters() {
-    let data = vec![Wrapper(vec![1, 2, 3]), Wrapper(vec![1, 2, 3]), Wrapper(vec![1, 2, 3])];
+    let data = vec![
+        Wrapper(vec![1, 2, 3]),
+        Wrapper(vec![1, 2, 3]),
+        Wrapper(vec![1, 2, 3]),
+    ];
 
     let mut iter = data.into_iter().into_lender().into_fallible().flatten();
 
@@ -636,7 +696,10 @@ fn flat_map_adapters() {
         .into_iter()
         .into_lender()
         .into_fallible()
-        .flat_map(hrc_mut!(for<'lend> |x: i32| -> Result<Wrapper, std::convert::Infallible> { Ok(Wrapper(vec![x; 2])) }));
+        .flat_map(hrc_mut!(for<'lend> |x: i32| -> Result<
+            Wrapper,
+            std::convert::Infallible,
+        > { Ok(Wrapper(vec![x; 2])) }));
 
     assert_eq!(iter.next().unwrap(), Some(1));
     assert_eq!(iter.next().unwrap(), Some(1));
@@ -656,7 +719,11 @@ struct VecFallibleLender {
 impl VecFallibleLender {
     fn new(data: Vec<i32>) -> Self {
         let len = data.len();
-        Self { data, front: 0, back: len }
+        Self {
+            data,
+            front: 0,
+            back: len,
+        }
     }
 }
 
@@ -764,7 +831,10 @@ fn fallible_trait_adapters_map() {
     fn assert_fused<L: FusedFallibleLender>(_: &L) {}
 
     let lender = VecFallibleLender::new(vec![1, 2, 3]);
-    let mapped = lender.map(hrc_mut!(for<'lend> |x: i32| -> Result<i32, std::convert::Infallible> { Ok(x * 2) }));
+    let mapped = lender.map(hrc_mut!(for<'lend> |x: i32| -> Result<
+        i32,
+        std::convert::Infallible,
+    > { Ok(x * 2) }));
 
     assert_exact_size(&mapped);
     assert_fused(&mapped);
@@ -861,7 +931,8 @@ fn fallible_trait_adapters_zip() {
     assert_double_ended(&zipped);
 
     // Test zip with double-ended iteration
-    let mut zipped = VecFallibleLender::new(vec![1, 2, 3]).zip(VecFallibleLender::new(vec![10, 20, 30]));
+    let mut zipped =
+        VecFallibleLender::new(vec![1, 2, 3]).zip(VecFallibleLender::new(vec![10, 20, 30]));
     assert_eq!(zipped.next_back().unwrap(), Some((3, 30)));
     assert_eq!(zipped.next_back().unwrap(), Some((2, 20)));
     assert_eq!(zipped.next_back().unwrap(), Some((1, 10)));
@@ -1159,7 +1230,9 @@ fn chain_size_hint() {
 #[test]
 fn chain_fold() {
     // fold should process all elements from both lenders
-    let sum = VecLender::new(vec![1, 2, 3]).chain(VecLender::new(vec![4, 5, 6])).fold(0, |acc, x| acc + x);
+    let sum = VecLender::new(vec![1, 2, 3])
+        .chain(VecLender::new(vec![4, 5, 6]))
+        .fold(0, |acc, x| acc + x);
     assert_eq!(sum, 21); // 1+2+3+4+5+6
 }
 
@@ -1167,7 +1240,9 @@ fn chain_fold() {
 fn chain_rfold() {
     // rfold should process elements in reverse order (second lender first, from back)
     let mut order = Vec::new();
-    VecLender::new(vec![1, 2, 3]).chain(VecLender::new(vec![4, 5, 6])).rfold((), |(), x| order.push(x));
+    VecLender::new(vec![1, 2, 3])
+        .chain(VecLender::new(vec![4, 5, 6]))
+        .rfold((), |(), x| order.push(x));
     // Should be: 6, 5, 4, 3, 2, 1
     assert_eq!(order, vec![6, 5, 4, 3, 2, 1]);
 }
@@ -1197,7 +1272,11 @@ struct UnfusedLender {
 
 impl UnfusedLender {
     fn new(values: Vec<i32>) -> Self {
-        Self { values, index: 0, skip_next: false }
+        Self {
+            values,
+            index: 0,
+            skip_next: false,
+        }
     }
 }
 
@@ -1354,14 +1433,18 @@ fn fuse_size_hint_after_exhaustion() {
 
 #[test]
 fn fuse_fold() {
-    let sum = VecLender::new(vec![1, 2, 3, 4]).fuse().fold(0, |acc, x| acc + x);
+    let sum = VecLender::new(vec![1, 2, 3, 4])
+        .fuse()
+        .fold(0, |acc, x| acc + x);
     assert_eq!(sum, 10);
 }
 
 #[test]
 fn fuse_rfold() {
     let mut order = Vec::new();
-    VecLender::new(vec![1, 2, 3]).fuse().rfold((), |(), x| order.push(x));
+    VecLender::new(vec![1, 2, 3])
+        .fuse()
+        .rfold((), |(), x| order.push(x));
     assert_eq!(order, vec![3, 2, 1]);
 }
 
@@ -1565,7 +1648,9 @@ fn step_by_size_hint_after_iteration() {
 
 #[test]
 fn step_by_fold() {
-    let sum = VecLender::new(vec![1, 2, 3, 4, 5, 6]).step_by(2).fold(0, |acc, x| acc + x);
+    let sum = VecLender::new(vec![1, 2, 3, 4, 5, 6])
+        .step_by(2)
+        .fold(0, |acc, x| acc + x);
     // Positions 0,2,4 -> values 1,3,5 -> sum = 9
     assert_eq!(sum, 9);
 }
@@ -1573,7 +1658,9 @@ fn step_by_fold() {
 #[test]
 fn step_by_rfold() {
     let mut order = Vec::new();
-    VecLender::new(vec![1, 2, 3, 4, 5, 6]).step_by(2).rfold((), |(), x| order.push(x));
+    VecLender::new(vec![1, 2, 3, 4, 5, 6])
+        .step_by(2)
+        .rfold((), |(), x| order.push(x));
     // Positions 0,2,4 -> values 1,3,5, reversed -> [5, 3, 1]
     assert_eq!(order, vec![5, 3, 1]);
 }
@@ -1702,7 +1789,9 @@ fn peekable_last() {
 
 #[test]
 fn peekable_fold() {
-    let sum = VecLender::new(vec![1, 2, 3, 4]).peekable().fold(0, |acc, x| acc + x);
+    let sum = VecLender::new(vec![1, 2, 3, 4])
+        .peekable()
+        .fold(0, |acc, x| acc + x);
     assert_eq!(sum, 10);
 }
 
@@ -1841,16 +1930,20 @@ fn enumerate_nth_back() {
 
 #[test]
 fn enumerate_fold() {
-    let sum_of_indices = VecLender::new(vec![10, 20, 30]).enumerate().fold(0, |acc, (i, _)| acc + i);
+    let sum_of_indices = VecLender::new(vec![10, 20, 30])
+        .enumerate()
+        .fold(0, |acc, (i, _)| acc + i);
     assert_eq!(sum_of_indices, 3); // 0 + 1 + 2
 }
 
 #[test]
 fn enumerate_rfold() {
     let mut order = Vec::new();
-    VecLender::new(vec![10, 20, 30]).enumerate().rfold((), |(), (i, v)| {
-        order.push((i, v));
-    });
+    VecLender::new(vec![10, 20, 30])
+        .enumerate()
+        .rfold((), |(), (i, v)| {
+            order.push((i, v));
+        });
     // Should be reversed: (2,30), (1,20), (0,10)
     assert_eq!(order, vec![(2, 30), (1, 20), (0, 10)]);
 }
@@ -1969,23 +2062,35 @@ fn lender_min() {
 #[test]
 fn lender_max_by_key() {
     // max_by_key returns element with maximum key
-    assert_eq!(VecLender::new(vec![-3, 0, 1, 5, -2]).max_by_key(|&x| x.abs()), Some(5));
+    assert_eq!(
+        VecLender::new(vec![-3, 0, 1, 5, -2]).max_by_key(|&x| x.abs()),
+        Some(5)
+    );
 }
 
 #[test]
 fn lender_min_by_key() {
     // min_by_key returns element with minimum key
-    assert_eq!(VecLender::new(vec![-3, 0, 1, 5, -2]).min_by_key(|&x| x.abs()), Some(0));
+    assert_eq!(
+        VecLender::new(vec![-3, 0, 1, 5, -2]).min_by_key(|&x| x.abs()),
+        Some(0)
+    );
 }
 
 #[test]
 fn lender_max_by() {
-    assert_eq!(VecLender::new(vec![1, 5, 3]).max_by(|a, b| a.cmp(b)), Some(5));
+    assert_eq!(
+        VecLender::new(vec![1, 5, 3]).max_by(|a, b| a.cmp(b)),
+        Some(5)
+    );
 }
 
 #[test]
 fn lender_min_by() {
-    assert_eq!(VecLender::new(vec![3, 1, 5]).min_by(|a, b| a.cmp(b)), Some(1));
+    assert_eq!(
+        VecLender::new(vec![3, 1, 5]).min_by(|a, b| a.cmp(b)),
+        Some(1)
+    );
 }
 
 // Note: sum() and product() require SumLender/ProductLender trait implementations
@@ -2040,7 +2145,10 @@ fn double_ended_lender_advance_back_by() {
     assert_eq!(lender.next_back(), Some(3));
 
     // advance_back_by past remaining
-    assert_eq!(lender.advance_back_by(5), Err(NonZeroUsize::new(3).unwrap()));
+    assert_eq!(
+        lender.advance_back_by(5),
+        Err(NonZeroUsize::new(3).unwrap())
+    );
 }
 
 #[test]
@@ -2255,7 +2363,9 @@ fn skip_while_empty() {
 
 #[test]
 fn skip_while_fold() {
-    let sum = VecLender::new(vec![1, 2, 3, 4, 5]).skip_while(|&x| x < 3).fold(0, |acc, x| acc + x);
+    let sum = VecLender::new(vec![1, 2, 3, 4, 5])
+        .skip_while(|&x| x < 3)
+        .fold(0, |acc, x| acc + x);
     // 3 + 4 + 5 = 12
     assert_eq!(sum, 12);
 }
@@ -2303,7 +2413,9 @@ fn take_while_empty() {
 
 #[test]
 fn take_while_fold() {
-    let sum = VecLender::new(vec![1, 2, 3, 4, 5]).take_while(|&x| x < 4).fold(0, |acc, x| acc + x);
+    let sum = VecLender::new(vec![1, 2, 3, 4, 5])
+        .take_while(|&x| x < 4)
+        .fold(0, |acc, x| acc + x);
     // 1 + 2 + 3 = 6
     assert_eq!(sum, 6);
 }
@@ -2315,7 +2427,13 @@ fn take_while_fold() {
 
 #[test]
 fn filter_map_basic() {
-    let mut fm = VecLender::new(vec![1, 2, 3, 4, 5]).filter_map(|x| if x % 2 == 0 { Some(x * 10) } else { None });
+    let mut fm = VecLender::new(vec![1, 2, 3, 4, 5]).filter_map(|x| {
+        if x % 2 == 0 {
+            Some(x * 10)
+        } else {
+            None
+        }
+    });
 
     assert_eq!(fm.next(), Some(20));
     assert_eq!(fm.next(), Some(40));
@@ -2324,7 +2442,8 @@ fn filter_map_basic() {
 
 #[test]
 fn filter_map_all_none() {
-    let mut fm = VecLender::new(vec![1, 3, 5]).filter_map(|x| if x % 2 == 0 { Some(x * 10) } else { None });
+    let mut fm =
+        VecLender::new(vec![1, 3, 5]).filter_map(|x| if x % 2 == 0 { Some(x * 10) } else { None });
     assert_eq!(fm.next(), None);
 }
 
@@ -2399,13 +2518,15 @@ fn scan_early_termination() {
 
 #[test]
 fn map_while_basic() {
-    let mut mw = VecLender::new(vec![1, 2, 3, 4, 5]).map_while(hrc_mut!(for<'all> |x: i32| -> Option<i32> {
-        if x < 4 {
-            Some(x * 10)
-        } else {
-            None
+    let mut mw = VecLender::new(vec![1, 2, 3, 4, 5]).map_while(hrc_mut!(
+        for<'all> |x: i32| -> Option<i32> {
+            if x < 4 {
+                Some(x * 10)
+            } else {
+                None
+            }
         }
-    }));
+    ));
 
     assert_eq!(mw.next(), Some(10));
     assert_eq!(mw.next(), Some(20));
@@ -2415,7 +2536,8 @@ fn map_while_basic() {
 
 #[test]
 fn map_while_all_mapped() {
-    let mut mw = VecLender::new(vec![1, 2, 3]).map_while(hrc_mut!(for<'all> |x: i32| -> Option<i32> { Some(x * 2) }));
+    let mut mw = VecLender::new(vec![1, 2, 3])
+        .map_while(hrc_mut!(for<'all> |x: i32| -> Option<i32> { Some(x * 2) }));
 
     assert_eq!(mw.next(), Some(2));
     assert_eq!(mw.next(), Some(4));
@@ -2425,13 +2547,14 @@ fn map_while_all_mapped() {
 
 #[test]
 fn map_while_immediate_none() {
-    let mut mw = VecLender::new(vec![5, 4, 3]).map_while(hrc_mut!(for<'all> |x: i32| -> Option<i32> {
-        if x < 4 {
-            Some(x)
-        } else {
-            None
-        }
-    }));
+    let mut mw =
+        VecLender::new(vec![5, 4, 3]).map_while(hrc_mut!(for<'all> |x: i32| -> Option<i32> {
+            if x < 4 {
+                Some(x)
+            } else {
+                None
+            }
+        }));
     assert_eq!(mw.next(), None);
 }
 
@@ -2468,7 +2591,9 @@ fn intersperse_empty() {
 
 #[test]
 fn intersperse_fold() {
-    let sum = VecLender::new(vec![1, 2, 3]).intersperse(10).fold(0, |acc, x| acc + x);
+    let sum = VecLender::new(vec![1, 2, 3])
+        .intersperse(10)
+        .fold(0, |acc, x| acc + x);
     // 1 + 10 + 2 + 10 + 3 = 26
     assert_eq!(sum, 26);
 }
@@ -2544,7 +2669,9 @@ fn map_basic() {
 
 #[test]
 fn map_fold() {
-    let sum = VecLender::new(vec![1, 2, 3]).map(|x| x * 10).fold(0, |acc, x| acc + x);
+    let sum = VecLender::new(vec![1, 2, 3])
+        .map(|x| x * 10)
+        .fold(0, |acc, x| acc + x);
     assert_eq!(sum, 60);
 }
 
@@ -2573,7 +2700,9 @@ fn skip_nth() {
 
 #[test]
 fn skip_fold() {
-    let sum = VecLender::new(vec![1, 2, 3, 4, 5]).skip(2).fold(0, |acc, x| acc + x);
+    let sum = VecLender::new(vec![1, 2, 3, 4, 5])
+        .skip(2)
+        .fold(0, |acc, x| acc + x);
     // 3 + 4 + 5 = 12
     assert_eq!(sum, 12);
 }
@@ -2589,7 +2718,9 @@ fn take_nth() {
 
 #[test]
 fn take_fold() {
-    let sum = VecLender::new(vec![1, 2, 3, 4, 5]).take(3).fold(0, |acc, x| acc + x);
+    let sum = VecLender::new(vec![1, 2, 3, 4, 5])
+        .take(3)
+        .fold(0, |acc, x| acc + x);
     // 1 + 2 + 3 = 6
     assert_eq!(sum, 6);
 }
@@ -2601,14 +2732,18 @@ fn take_fold() {
 #[test]
 fn rev_fold() {
     let mut order = Vec::new();
-    VecLender::new(vec![1, 2, 3]).rev().fold((), |(), x| order.push(x));
+    VecLender::new(vec![1, 2, 3])
+        .rev()
+        .fold((), |(), x| order.push(x));
     assert_eq!(order, vec![3, 2, 1]);
 }
 
 #[test]
 fn rev_rfold() {
     let mut order = Vec::new();
-    VecLender::new(vec![1, 2, 3]).rev().rfold((), |(), x| order.push(x));
+    VecLender::new(vec![1, 2, 3])
+        .rev()
+        .rfold((), |(), x| order.push(x));
     // rfold on Rev goes forward on original
     assert_eq!(order, vec![1, 2, 3]);
 }
@@ -2633,7 +2768,9 @@ fn rev_nth_back() {
 
 #[test]
 fn zip_fold() {
-    let sum = VecLender::new(vec![1, 2, 3]).zip(VecLender::new(vec![10, 20, 30])).fold(0, |acc, (a, b)| acc + a + b);
+    let sum = VecLender::new(vec![1, 2, 3])
+        .zip(VecLender::new(vec![10, 20, 30]))
+        .fold(0, |acc, (a, b)| acc + a + b);
     // (1+10) + (2+20) + (3+30) = 66
     assert_eq!(sum, 66);
 }
@@ -2652,7 +2789,9 @@ fn zip_nth() {
 #[test]
 fn inspect_fold() {
     let mut inspected = Vec::new();
-    let sum = VecLender::new(vec![1, 2, 3]).inspect(|&x| inspected.push(x)).fold(0, |acc, x| acc + x);
+    let sum = VecLender::new(vec![1, 2, 3])
+        .inspect(|&x| inspected.push(x))
+        .fold(0, |acc, x| acc + x);
 
     assert_eq!(sum, 6);
     assert_eq!(inspected, vec![1, 2, 3]);
@@ -2674,7 +2813,9 @@ fn inspect_double_ended() {
 
 #[test]
 fn filter_fold() {
-    let sum = VecLender::new(vec![1, 2, 3, 4, 5, 6]).filter(|&x| x % 2 == 0).fold(0, |acc, x| acc + x);
+    let sum = VecLender::new(vec![1, 2, 3, 4, 5, 6])
+        .filter(|&x| x % 2 == 0)
+        .fold(0, |acc, x| acc + x);
     // 2 + 4 + 6 = 12
     assert_eq!(sum, 12);
 }
@@ -2695,7 +2836,9 @@ fn filter_double_ended() {
 
 #[test]
 fn mutate_fold() {
-    let sum = VecLender::new(vec![1, 2, 3]).mutate(|x| *x *= 10).fold(0, |acc, x| acc + x);
+    let sum = VecLender::new(vec![1, 2, 3])
+        .mutate(|x| *x *= 10)
+        .fold(0, |acc, x| acc + x);
     assert_eq!(sum, 60);
 }
 
@@ -2780,7 +2923,9 @@ fn chunky_count() {
 #[test]
 fn chunky_fold() {
     // Count number of chunks
-    let num_chunks = VecLender::new(vec![1, 2, 3, 4, 5]).chunky(2).fold(0, |acc, _chunk| acc + 1);
+    let num_chunks = VecLender::new(vec![1, 2, 3, 4, 5])
+        .chunky(2)
+        .fold(0, |acc, _chunk| acc + 1);
     assert_eq!(num_chunks, 3);
 }
 
@@ -2808,14 +2953,17 @@ fn chunky_try_fold() {
     // Test try_fold - if we only consume part of each chunk, the unconsumed
     // elements are lost and the next chunk starts from the current position.
     // This tests the "partial consumption" case.
-    let result: Option<i32> = VecLender::new(vec![1, 2, 3, 4, 5, 6]).chunky(2).try_fold(0, |acc, mut chunk| {
-        // Only consume one element from each chunk
-        if let Some(first) = chunk.next() {
-            Some(acc + first)
-        } else {
-            Some(acc)
-        }
-    });
+    let result: Option<i32> =
+        VecLender::new(vec![1, 2, 3, 4, 5, 6])
+            .chunky(2)
+            .try_fold(0, |acc, mut chunk| {
+                // Only consume one element from each chunk
+                if let Some(first) = chunk.next() {
+                    Some(acc + first)
+                } else {
+                    Some(acc)
+                }
+            });
     // Since we only consume 1 element per chunk iteration:
     // - Iteration 1: chunk.next() gets 1
     // - Iteration 2: chunk.next() gets 2 (not 3, because we didn't consume element 2)
@@ -2828,11 +2976,14 @@ fn chunky_try_fold() {
 #[test]
 fn chunky_try_fold_full_consumption() {
     // When each chunk is fully consumed, we get the expected chunked results
-    let result: Option<i32> = VecLender::new(vec![1, 2, 3, 4, 5, 6]).chunky(2).try_fold(0, |acc, chunk| {
-        // Consume all elements in the chunk
-        let chunk_sum = chunk.fold(0, |a, x| a + x);
-        Some(acc + chunk_sum)
-    });
+    let result: Option<i32> =
+        VecLender::new(vec![1, 2, 3, 4, 5, 6])
+            .chunky(2)
+            .try_fold(0, |acc, chunk| {
+                // Consume all elements in the chunk
+                let chunk_sum = chunk.fold(0, |a, x| a + x);
+                Some(acc + chunk_sum)
+            });
     // Chunks: [1,2], [3,4], [5,6] with full consumption
     // Sums: 3, 7, 11 -> total: 21
     assert_eq!(result, Some(21));
@@ -2932,7 +3083,9 @@ fn source_repeat_basic() {
 
 #[test]
 fn source_repeat_take() {
-    let sum = lender::repeat::<lend!(i32)>(5).take(4).fold(0, |acc, x| acc + x);
+    let sum = lender::repeat::<lend!(i32)>(5)
+        .take(4)
+        .fold(0, |acc, x| acc + x);
     assert_eq!(sum, 20); // 5 * 4
 }
 
@@ -3101,9 +3254,11 @@ fn flatten_empty_outer() {
 #[test]
 fn enumerate_rfold_additional() {
     let mut indices = Vec::new();
-    VecLender::new(vec![10, 20, 30]).enumerate().rfold((), |(), (i, _v)| {
-        indices.push(i);
-    });
+    VecLender::new(vec![10, 20, 30])
+        .enumerate()
+        .rfold((), |(), (i, _v)| {
+            indices.push(i);
+        });
     // Should process in reverse: (2,30), (1,20), (0,10)
     assert_eq!(indices, vec![2, 1, 0]);
 }
@@ -3111,9 +3266,11 @@ fn enumerate_rfold_additional() {
 #[test]
 fn skip_rfold() {
     let mut values = Vec::new();
-    VecLender::new(vec![1, 2, 3, 4, 5]).skip(2).rfold((), |(), x| {
-        values.push(x);
-    });
+    VecLender::new(vec![1, 2, 3, 4, 5])
+        .skip(2)
+        .rfold((), |(), x| {
+            values.push(x);
+        });
     // skip(2) leaves [3, 4, 5], rfold processes: 5, 4, 3
     assert_eq!(values, vec![5, 4, 3]);
 }
@@ -3121,9 +3278,11 @@ fn skip_rfold() {
 #[test]
 fn take_rfold() {
     let mut values = Vec::new();
-    VecLender::new(vec![1, 2, 3, 4, 5]).take(3).rfold((), |(), x| {
-        values.push(x);
-    });
+    VecLender::new(vec![1, 2, 3, 4, 5])
+        .take(3)
+        .rfold((), |(), x| {
+            values.push(x);
+        });
     // take(3) gives [1, 2, 3], rfold processes: 3, 2, 1
     assert_eq!(values, vec![3, 2, 1]);
 }
@@ -3131,9 +3290,11 @@ fn take_rfold() {
 #[test]
 fn zip_rfold() {
     let mut values = Vec::new();
-    VecLender::new(vec![1, 2, 3]).zip(VecLender::new(vec![10, 20, 30])).rfold((), |(), (a, b)| {
-        values.push((a, b));
-    });
+    VecLender::new(vec![1, 2, 3])
+        .zip(VecLender::new(vec![10, 20, 30]))
+        .rfold((), |(), (a, b)| {
+            values.push((a, b));
+        });
     assert_eq!(values, vec![(3, 30), (2, 20), (1, 10)]);
 }
 
@@ -3175,8 +3336,13 @@ fn lender_try_fold() {
 
 #[test]
 fn lender_try_fold_early_exit() {
-    let result: Result<i32, &str> =
-        VecLender::new(vec![1, 2, 3, 4, 5]).try_fold(0, |acc, x| if x > 3 { Err("too big") } else { Ok(acc + x) });
+    let result: Result<i32, &str> = VecLender::new(vec![1, 2, 3, 4, 5]).try_fold(0, |acc, x| {
+        if x > 3 {
+            Err("too big")
+        } else {
+            Ok(acc + x)
+        }
+    });
     assert_eq!(result, Err("too big"));
 }
 
@@ -3234,10 +3400,12 @@ fn map_size_hint() {
 #[test]
 fn inspect_double_ended_fold() {
     let mut inspected = Vec::new();
-    let values: Vec<i32> = VecLender::new(vec![1, 2, 3]).inspect(|&x| inspected.push(x)).rfold(Vec::new(), |mut acc, x| {
-        acc.push(x);
-        acc
-    });
+    let values: Vec<i32> = VecLender::new(vec![1, 2, 3])
+        .inspect(|&x| inspected.push(x))
+        .rfold(Vec::new(), |mut acc, x| {
+            acc.push(x);
+            acc
+        });
     assert_eq!(values, vec![3, 2, 1]);
     assert_eq!(inspected, vec![3, 2, 1]);
 }
@@ -3366,13 +3534,17 @@ fn rev_double_rev() {
 
 #[test]
 fn rev_try_fold_additional() {
-    let result: Option<i32> = VecLender::new(vec![1, 2, 3]).rev().try_fold(0, |acc, x| Some(acc + x));
+    let result: Option<i32> = VecLender::new(vec![1, 2, 3])
+        .rev()
+        .try_fold(0, |acc, x| Some(acc + x));
     assert_eq!(result, Some(6));
 }
 
 #[test]
 fn rev_try_rfold_additional() {
-    let result: Option<i32> = VecLender::new(vec![1, 2, 3]).rev().try_rfold(0, |acc, x| Some(acc + x));
+    let result: Option<i32> = VecLender::new(vec![1, 2, 3])
+        .rev()
+        .try_rfold(0, |acc, x| Some(acc + x));
     assert_eq!(result, Some(6));
 }
 
@@ -3390,7 +3562,9 @@ fn mutate_size_hint_additional() {
 #[test]
 fn mutate_try_fold_additional() {
     let mut data = vec![1, 2, 3];
-    let result: Option<i32> = lender::from_iter(data.iter_mut()).mutate(|x| **x *= 2).try_fold(0, |acc, x| Some(acc + *x));
+    let result: Option<i32> = lender::from_iter(data.iter_mut())
+        .mutate(|x| **x *= 2)
+        .try_fold(0, |acc, x| Some(acc + *x));
     assert_eq!(result, Some(12));
 }
 
@@ -3407,15 +3581,17 @@ fn zip_size_hint_additional() {
 
 #[test]
 fn zip_try_fold_additional() {
-    let result: Option<i32> =
-        VecLender::new(vec![1, 2, 3]).zip(VecLender::new(vec![4, 5, 6])).try_fold(0, |acc, (a, b)| Some(acc + a + b));
+    let result: Option<i32> = VecLender::new(vec![1, 2, 3])
+        .zip(VecLender::new(vec![4, 5, 6]))
+        .try_fold(0, |acc, (a, b)| Some(acc + a + b));
     assert_eq!(result, Some(21)); // (1+4) + (2+5) + (3+6) = 5 + 7 + 9 = 21
 }
 
 #[test]
 fn zip_try_rfold_additional() {
-    let result: Option<i32> =
-        VecLender::new(vec![1, 2, 3]).zip(VecLender::new(vec![4, 5, 6])).try_rfold(0, |acc, (a, b)| Some(acc + a + b));
+    let result: Option<i32> = VecLender::new(vec![1, 2, 3])
+        .zip(VecLender::new(vec![4, 5, 6]))
+        .try_rfold(0, |acc, (a, b)| Some(acc + a + b));
     assert_eq!(result, Some(21));
 }
 
@@ -3599,7 +3775,10 @@ fn cycle_size_hint_additional() {
 #[test]
 fn cycle_try_fold_additional() {
     // Take first 5 elements from cycling [1, 2]
-    let result: Option<i32> = VecLender::new(vec![1, 2]).cycle().take(5).try_fold(0, |acc, x| Some(acc + x));
+    let result: Option<i32> = VecLender::new(vec![1, 2])
+        .cycle()
+        .take(5)
+        .try_fold(0, |acc, x| Some(acc + x));
     // 1 + 2 + 1 + 2 + 1 = 7
     assert_eq!(result, Some(7));
 }
@@ -3644,14 +3823,17 @@ fn fuse_after_none() {
 
 #[test]
 fn filter_fold_additional() {
-    let sum = VecLender::new(vec![1, 2, 3, 4, 5, 6]).filter(|&x| x % 2 == 0).fold(0, |acc, x| acc + x);
+    let sum = VecLender::new(vec![1, 2, 3, 4, 5, 6])
+        .filter(|&x| x % 2 == 0)
+        .fold(0, |acc, x| acc + x);
     assert_eq!(sum, 12); // 2 + 4 + 6
 }
 
 #[test]
 fn filter_try_fold_additional() {
-    let result: Option<i32> =
-        VecLender::new(vec![1, 2, 3, 4, 5]).filter(|&x| x % 2 == 1).try_fold(0, |acc, x| Some(acc + x));
+    let result: Option<i32> = VecLender::new(vec![1, 2, 3, 4, 5])
+        .filter(|&x| x % 2 == 1)
+        .try_fold(0, |acc, x| Some(acc + x));
     assert_eq!(result, Some(9)); // 1 + 3 + 5
 }
 
@@ -3659,10 +3841,12 @@ fn filter_try_fold_additional() {
 fn filter_rfold_additional() {
     use lender::DoubleEndedLender;
 
-    let values: Vec<i32> = VecLender::new(vec![1, 2, 3, 4, 5, 6]).filter(|&x| x % 2 == 0).rfold(Vec::new(), |mut acc, x| {
-        acc.push(x);
-        acc
-    });
+    let values: Vec<i32> = VecLender::new(vec![1, 2, 3, 4, 5, 6])
+        .filter(|&x| x % 2 == 0)
+        .rfold(Vec::new(), |mut acc, x| {
+            acc.push(x);
+            acc
+        });
     assert_eq!(values, vec![6, 4, 2]);
 }
 
@@ -3672,22 +3856,29 @@ fn filter_rfold_additional() {
 
 #[test]
 fn map_fold_additional() {
-    let sum = VecLender::new(vec![1, 2, 3]).map(|x| x * 2).fold(0, |acc, x| acc + x);
+    let sum = VecLender::new(vec![1, 2, 3])
+        .map(|x| x * 2)
+        .fold(0, |acc, x| acc + x);
     assert_eq!(sum, 12); // 2 + 4 + 6
 }
 
 #[test]
 fn map_try_fold_additional() {
-    let result: Option<i32> = VecLender::new(vec![1, 2, 3]).map(|x| x * 2).try_fold(0, |acc, x| Some(acc + x));
+    let result: Option<i32> = VecLender::new(vec![1, 2, 3])
+        .map(|x| x * 2)
+        .try_fold(0, |acc, x| Some(acc + x));
     assert_eq!(result, Some(12));
 }
 
 #[test]
 fn map_rfold_additional() {
-    let values: Vec<i32> = VecLender::new(vec![1, 2, 3]).map(|x| x * 2).rfold(Vec::new(), |mut acc, x| {
-        acc.push(x);
-        acc
-    });
+    let values: Vec<i32> =
+        VecLender::new(vec![1, 2, 3])
+            .map(|x| x * 2)
+            .rfold(Vec::new(), |mut acc, x| {
+                acc.push(x);
+                acc
+            });
     assert_eq!(values, vec![6, 4, 2]);
 }
 
@@ -3697,14 +3888,18 @@ fn map_rfold_additional() {
 
 #[test]
 fn step_by_fold_additional() {
-    let sum = VecLender::new(vec![1, 2, 3, 4, 5]).step_by(2).fold(0, |acc, x| acc + x);
+    let sum = VecLender::new(vec![1, 2, 3, 4, 5])
+        .step_by(2)
+        .fold(0, |acc, x| acc + x);
     // Elements: 1, 3, 5
     assert_eq!(sum, 9);
 }
 
 #[test]
 fn step_by_try_fold_additional() {
-    let result: Option<i32> = VecLender::new(vec![1, 2, 3, 4, 5]).step_by(2).try_fold(0, |acc, x| Some(acc + x));
+    let result: Option<i32> = VecLender::new(vec![1, 2, 3, 4, 5])
+        .step_by(2)
+        .try_fold(0, |acc, x| Some(acc + x));
     assert_eq!(result, Some(9));
 }
 
@@ -3808,16 +4003,20 @@ fn iter_adapter_into_inner() {
 
 #[test]
 fn scan_into_inner() {
-    let scan = VecLender::new(vec![1, 2, 3])
-        .scan(0i32, hrc_mut!(for<'all> |args: (&'all mut i32, i32)| -> Option<i32> { Some(*args.0 + args.1) }));
+    let scan = VecLender::new(vec![1, 2, 3]).scan(
+        0i32,
+        hrc_mut!(for<'all> |args: (&'all mut i32, i32)| -> Option<i32> { Some(*args.0 + args.1) }),
+    );
     let lender = scan.into_inner();
     assert_eq!(lender.count(), 3);
 }
 
 #[test]
 fn scan_into_parts() {
-    let scan = VecLender::new(vec![1, 2, 3])
-        .scan(10i32, hrc_mut!(for<'all> |args: (&'all mut i32, i32)| -> Option<i32> { Some(*args.0 + args.1) }));
+    let scan = VecLender::new(vec![1, 2, 3]).scan(
+        10i32,
+        hrc_mut!(for<'all> |args: (&'all mut i32, i32)| -> Option<i32> { Some(*args.0 + args.1) }),
+    );
     let (lender, state, _f) = scan.into_parts();
     assert_eq!(lender.count(), 3);
     assert_eq!(state, 10); // Initial state
@@ -3825,8 +4024,10 @@ fn scan_into_parts() {
 
 #[test]
 fn scan_size_hint_additional() {
-    let scan = VecLender::new(vec![1, 2, 3, 4, 5])
-        .scan(0i32, hrc_mut!(for<'all> |args: (&'all mut i32, i32)| -> Option<i32> { Some(args.1) }));
+    let scan = VecLender::new(vec![1, 2, 3, 4, 5]).scan(
+        0i32,
+        hrc_mut!(for<'all> |args: (&'all mut i32, i32)| -> Option<i32> { Some(args.1) }),
+    );
     // Scan can terminate early, so lower bound is 0
     let (lower, upper) = scan.size_hint();
     assert_eq!(lower, 0);
@@ -3841,21 +4042,24 @@ fn scan_size_hint_additional() {
 
 #[test]
 fn map_while_into_inner() {
-    let map_while = VecLender::new(vec![1, 2, 3]).map_while(hrc_mut!(for<'all> |x: i32| -> Option<i32> { Some(x * 2) }));
+    let map_while = VecLender::new(vec![1, 2, 3])
+        .map_while(hrc_mut!(for<'all> |x: i32| -> Option<i32> { Some(x * 2) }));
     let lender = map_while.into_inner();
     assert_eq!(lender.count(), 3);
 }
 
 #[test]
 fn map_while_into_parts() {
-    let map_while = VecLender::new(vec![1, 2, 3]).map_while(hrc_mut!(for<'all> |x: i32| -> Option<i32> { Some(x * 2) }));
+    let map_while = VecLender::new(vec![1, 2, 3])
+        .map_while(hrc_mut!(for<'all> |x: i32| -> Option<i32> { Some(x * 2) }));
     let (lender, _predicate) = map_while.into_parts();
     assert_eq!(lender.count(), 3);
 }
 
 #[test]
 fn map_while_size_hint_additional() {
-    let map_while = VecLender::new(vec![1, 2, 3, 4, 5]).map_while(hrc_mut!(for<'all> |x: i32| -> Option<i32> { Some(x) }));
+    let map_while = VecLender::new(vec![1, 2, 3, 4, 5])
+        .map_while(hrc_mut!(for<'all> |x: i32| -> Option<i32> { Some(x) }));
     // MapWhile can terminate early, so lower bound is 0
     let (lower, upper) = map_while.size_hint();
     assert_eq!(lower, 0);
@@ -3880,20 +4084,22 @@ fn map_while_all_some() {
 
 #[test]
 fn filter_map_into_inner() {
-    let filter_map = VecLender::new(vec![1, 2, 3]).filter_map(hrc_mut!(for<'all> |x: i32| -> Option<i32> {
-        if x % 2 == 0 {
-            Some(x * 2)
-        } else {
-            None
-        }
-    }));
+    let filter_map =
+        VecLender::new(vec![1, 2, 3]).filter_map(hrc_mut!(for<'all> |x: i32| -> Option<i32> {
+            if x % 2 == 0 {
+                Some(x * 2)
+            } else {
+                None
+            }
+        }));
     let lender = filter_map.into_inner();
     assert_eq!(lender.count(), 3);
 }
 
 #[test]
 fn filter_map_into_parts() {
-    let filter_map = VecLender::new(vec![1, 2, 3]).filter_map(hrc_mut!(for<'all> |x: i32| -> Option<i32> { Some(x) }));
+    let filter_map = VecLender::new(vec![1, 2, 3])
+        .filter_map(hrc_mut!(for<'all> |x: i32| -> Option<i32> { Some(x) }));
     let (lender, _f) = filter_map.into_parts();
     assert_eq!(lender.count(), 3);
 }
@@ -3918,14 +4124,18 @@ fn skip_while_into_parts() {
 
 #[test]
 fn skip_while_fold_additional() {
-    let sum = VecLender::new(vec![1, 2, 3, 4, 5]).skip_while(|&x| x < 3).fold(0, |acc, x| acc + x);
+    let sum = VecLender::new(vec![1, 2, 3, 4, 5])
+        .skip_while(|&x| x < 3)
+        .fold(0, |acc, x| acc + x);
     // Skips 1, 2; sums 3 + 4 + 5 = 12
     assert_eq!(sum, 12);
 }
 
 #[test]
 fn skip_while_try_fold_additional() {
-    let result: Option<i32> = VecLender::new(vec![1, 2, 3, 4, 5]).skip_while(|&x| x < 3).try_fold(0, |acc, x| Some(acc + x));
+    let result: Option<i32> = VecLender::new(vec![1, 2, 3, 4, 5])
+        .skip_while(|&x| x < 3)
+        .try_fold(0, |acc, x| Some(acc + x));
     assert_eq!(result, Some(12));
 }
 
@@ -3949,7 +4159,9 @@ fn take_while_into_parts() {
 
 #[test]
 fn take_while_try_fold_additional() {
-    let result: Option<i32> = VecLender::new(vec![1, 2, 3, 4, 5]).take_while(|&x| x < 4).try_fold(0, |acc, x| Some(acc + x));
+    let result: Option<i32> = VecLender::new(vec![1, 2, 3, 4, 5])
+        .take_while(|&x| x < 4)
+        .try_fold(0, |acc, x| Some(acc + x));
     // Takes 1, 2, 3 (until 4 fails condition)
     assert_eq!(result, Some(6));
 }
@@ -3975,14 +4187,18 @@ fn skip_into_parts() {
 
 #[test]
 fn skip_fold_additional() {
-    let sum = VecLender::new(vec![1, 2, 3, 4, 5]).skip(2).fold(0, |acc, x| acc + x);
+    let sum = VecLender::new(vec![1, 2, 3, 4, 5])
+        .skip(2)
+        .fold(0, |acc, x| acc + x);
     // Skips 1, 2; sums 3 + 4 + 5 = 12
     assert_eq!(sum, 12);
 }
 
 #[test]
 fn skip_try_fold_additional() {
-    let result: Option<i32> = VecLender::new(vec![1, 2, 3, 4, 5]).skip(2).try_fold(0, |acc, x| Some(acc + x));
+    let result: Option<i32> = VecLender::new(vec![1, 2, 3, 4, 5])
+        .skip(2)
+        .try_fold(0, |acc, x| Some(acc + x));
     assert_eq!(result, Some(12));
 }
 
@@ -3997,10 +4213,13 @@ fn skip_nth_additional() {
 fn skip_rfold_additional() {
     use lender::DoubleEndedLender;
 
-    let values: Vec<i32> = VecLender::new(vec![1, 2, 3, 4, 5]).skip(2).rfold(Vec::new(), |mut acc, x| {
-        acc.push(x);
-        acc
-    });
+    let values: Vec<i32> =
+        VecLender::new(vec![1, 2, 3, 4, 5])
+            .skip(2)
+            .rfold(Vec::new(), |mut acc, x| {
+                acc.push(x);
+                acc
+            });
     // Skips 1, 2; rfolds 5, 4, 3
     assert_eq!(values, vec![5, 4, 3]);
 }
@@ -4026,14 +4245,18 @@ fn take_into_parts() {
 
 #[test]
 fn take_try_fold_additional() {
-    let result: Option<i32> = VecLender::new(vec![1, 2, 3, 4, 5]).take(3).try_fold(0, |acc, x| Some(acc + x));
+    let result: Option<i32> = VecLender::new(vec![1, 2, 3, 4, 5])
+        .take(3)
+        .try_fold(0, |acc, x| Some(acc + x));
     // Takes 1, 2, 3
     assert_eq!(result, Some(6));
 }
 
 #[test]
 fn take_try_rfold_additional() {
-    let result: Option<i32> = VecLender::new(vec![1, 2, 3, 4, 5]).take(3).try_rfold(0, |acc, x| Some(acc + x));
+    let result: Option<i32> = VecLender::new(vec![1, 2, 3, 4, 5])
+        .take(3)
+        .try_rfold(0, |acc, x| Some(acc + x));
     assert_eq!(result, Some(6));
 }
 
@@ -4058,8 +4281,9 @@ fn inspect_into_parts() {
 #[test]
 fn inspect_try_fold_additional() {
     let mut inspected = Vec::new();
-    let result: Option<i32> =
-        VecLender::new(vec![1, 2, 3]).inspect(|&x| inspected.push(x)).try_fold(0, |acc, x| Some(acc + x));
+    let result: Option<i32> = VecLender::new(vec![1, 2, 3])
+        .inspect(|&x| inspected.push(x))
+        .try_fold(0, |acc, x| Some(acc + x));
     assert_eq!(result, Some(6));
     assert_eq!(inspected, vec![1, 2, 3]);
 }
@@ -4069,8 +4293,9 @@ fn inspect_try_rfold_additional() {
     use lender::DoubleEndedLender;
 
     let mut inspected = Vec::new();
-    let result: Option<i32> =
-        VecLender::new(vec![1, 2, 3]).inspect(|&x| inspected.push(x)).try_rfold(0, |acc, x| Some(acc + x));
+    let result: Option<i32> = VecLender::new(vec![1, 2, 3])
+        .inspect(|&x| inspected.push(x))
+        .try_rfold(0, |acc, x| Some(acc + x));
     assert_eq!(result, Some(6));
     assert_eq!(inspected, vec![3, 2, 1]); // Reverse order
 }
@@ -4090,14 +4315,18 @@ fn enumerate_into_inner() {
 
 #[test]
 fn enumerate_try_fold_additional() {
-    let result: Option<usize> = VecLender::new(vec![10, 20, 30]).enumerate().try_fold(0, |acc, (i, _)| Some(acc + i));
+    let result: Option<usize> = VecLender::new(vec![10, 20, 30])
+        .enumerate()
+        .try_fold(0, |acc, (i, _)| Some(acc + i));
     // Indices: 0, 1, 2 -> sum = 3
     assert_eq!(result, Some(3));
 }
 
 #[test]
 fn enumerate_try_rfold_additional() {
-    let result: Option<usize> = VecLender::new(vec![10, 20, 30]).enumerate().try_rfold(0, |acc, (i, _)| Some(acc + i));
+    let result: Option<usize> = VecLender::new(vec![10, 20, 30])
+        .enumerate()
+        .try_rfold(0, |acc, (i, _)| Some(acc + i));
     assert_eq!(result, Some(3));
 }
 
@@ -4121,7 +4350,9 @@ fn map_into_parts_additional() {
 
 #[test]
 fn map_try_rfold_additional() {
-    let result: Option<i32> = VecLender::new(vec![1, 2, 3]).map(|x| x * 2).try_rfold(0, |acc, x| Some(acc + x));
+    let result: Option<i32> = VecLender::new(vec![1, 2, 3])
+        .map(|x| x * 2)
+        .try_rfold(0, |acc, x| Some(acc + x));
     assert_eq!(result, Some(12)); // 6 + 4 + 2 = 12
 }
 
@@ -4145,8 +4376,9 @@ fn filter_into_parts_additional() {
 
 #[test]
 fn filter_try_rfold_additional() {
-    let result: Option<i32> =
-        VecLender::new(vec![1, 2, 3, 4, 5, 6]).filter(|&x| x % 2 == 0).try_rfold(0, |acc, x| Some(acc + x));
+    let result: Option<i32> = VecLender::new(vec![1, 2, 3, 4, 5, 6])
+        .filter(|&x| x % 2 == 0)
+        .try_rfold(0, |acc, x| Some(acc + x));
     // Even numbers in reverse: 6, 4, 2
     assert_eq!(result, Some(12));
 }
@@ -4155,13 +4387,17 @@ fn filter_try_rfold_additional() {
 
 #[test]
 fn peekable_fold_additional() {
-    let sum = VecLender::new(vec![1, 2, 3]).peekable().fold(0, |acc, x| acc + x);
+    let sum = VecLender::new(vec![1, 2, 3])
+        .peekable()
+        .fold(0, |acc, x| acc + x);
     assert_eq!(sum, 6);
 }
 
 #[test]
 fn peekable_try_fold_additional() {
-    let result: Option<i32> = VecLender::new(vec![1, 2, 3]).peekable().try_fold(0, |acc, x| Some(acc + x));
+    let result: Option<i32> = VecLender::new(vec![1, 2, 3])
+        .peekable()
+        .try_fold(0, |acc, x| Some(acc + x));
     assert_eq!(result, Some(6));
 }
 
@@ -4189,7 +4425,9 @@ fn intersperse_into_inner() {
 
 #[test]
 fn intersperse_try_fold_additional() {
-    let result: Option<i32> = VecLender::new(vec![1, 2, 3]).intersperse(10).try_fold(0, |acc, x| Some(acc + x));
+    let result: Option<i32> = VecLender::new(vec![1, 2, 3])
+        .intersperse(10)
+        .try_fold(0, |acc, x| Some(acc + x));
     // 1 + 10 + 2 + 10 + 3 = 26
     assert_eq!(result, Some(26));
 }
@@ -4240,16 +4478,18 @@ fn from_iter_fold_additional() {
 fn from_iter_rfold_additional() {
     use lender::DoubleEndedLender;
 
-    let values: Vec<i32> = lender::from_iter(vec![1, 2, 3].into_iter()).rfold(Vec::new(), |mut acc, x| {
-        acc.push(x);
-        acc
-    });
+    let values: Vec<i32> =
+        lender::from_iter(vec![1, 2, 3].into_iter()).rfold(Vec::new(), |mut acc, x| {
+            acc.push(x);
+            acc
+        });
     assert_eq!(values, vec![3, 2, 1]);
 }
 
 #[test]
 fn from_iter_try_fold_additional() {
-    let result: Option<i32> = lender::from_iter(vec![1, 2, 3].into_iter()).try_fold(0, |acc, x| Some(acc + x));
+    let result: Option<i32> =
+        lender::from_iter(vec![1, 2, 3].into_iter()).try_fold(0, |acc, x| Some(acc + x));
     assert_eq!(result, Some(6));
 }
 
@@ -4257,7 +4497,8 @@ fn from_iter_try_fold_additional() {
 fn from_iter_try_rfold_additional() {
     use lender::DoubleEndedLender;
 
-    let result: Option<i32> = lender::from_iter(vec![1, 2, 3].into_iter()).try_rfold(0, |acc, x| Some(acc + x));
+    let result: Option<i32> =
+        lender::from_iter(vec![1, 2, 3].into_iter()).try_rfold(0, |acc, x| Some(acc + x));
     assert_eq!(result, Some(6));
 }
 
@@ -4291,17 +4532,19 @@ fn lend_iter_rfold_additional() {
     use lender::DoubleEndedLender;
 
     let data = vec![1, 2, 3];
-    let values: Vec<i32> = lender::lend_iter::<lend!(&'lend i32), _>(data.iter()).rfold(Vec::new(), |mut acc, &x| {
-        acc.push(x);
-        acc
-    });
+    let values: Vec<i32> =
+        lender::lend_iter::<lend!(&'lend i32), _>(data.iter()).rfold(Vec::new(), |mut acc, &x| {
+            acc.push(x);
+            acc
+        });
     assert_eq!(values, vec![3, 2, 1]);
 }
 
 #[test]
 fn lend_iter_try_fold_additional() {
     let data = vec![1, 2, 3];
-    let result: Option<i32> = lender::lend_iter::<lend!(&'lend i32), _>(data.iter()).try_fold(0, |acc, &x| Some(acc + x));
+    let result: Option<i32> =
+        lender::lend_iter::<lend!(&'lend i32), _>(data.iter()).try_fold(0, |acc, &x| Some(acc + x));
     assert_eq!(result, Some(6));
 }
 
@@ -4320,7 +4563,8 @@ fn lend_iter_nth_additional() {
 fn fallible_lender_next_chunk() {
     use lender::FallibleLender;
 
-    let mut fallible: lender::IntoFallible<(), _> = VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
+    let mut fallible: lender::IntoFallible<(), _> =
+        VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
     let mut chunk = fallible.next_chunk(2);
     assert_eq!(chunk.next(), Ok(Some(1)));
     assert_eq!(chunk.next(), Ok(Some(2)));
@@ -4347,7 +4591,8 @@ fn fallible_lender_last() {
 fn fallible_lender_advance_by() {
     use lender::FallibleLender;
 
-    let mut fallible: lender::IntoFallible<(), _> = VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
+    let mut fallible: lender::IntoFallible<(), _> =
+        VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
     assert_eq!(fallible.advance_by(2), Ok(Ok(())));
     assert_eq!(fallible.next(), Ok(Some(3)));
 }
@@ -4356,7 +4601,8 @@ fn fallible_lender_advance_by() {
 fn fallible_lender_nth() {
     use lender::FallibleLender;
 
-    let mut fallible: lender::IntoFallible<(), _> = VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
+    let mut fallible: lender::IntoFallible<(), _> =
+        VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
     assert_eq!(fallible.nth(2), Ok(Some(3)));
 }
 
@@ -4415,7 +4661,8 @@ fn fallible_lender_map() {
 fn fallible_lender_filter() {
     use lender::FallibleLender;
 
-    let fallible: lender::IntoFallible<(), _> = VecLender::new(vec![1, 2, 3, 4, 5, 6]).into_fallible();
+    let fallible: lender::IntoFallible<(), _> =
+        VecLender::new(vec![1, 2, 3, 4, 5, 6]).into_fallible();
     let mut filtered = fallible.filter(|&x| Ok(x % 2 == 0));
     assert_eq!(filtered.next(), Ok(Some(2)));
     assert_eq!(filtered.next(), Ok(Some(4)));
@@ -4560,7 +4807,8 @@ fn fallible_lender_any() {
 fn fallible_lender_find() {
     use lender::FallibleLender;
 
-    let mut fallible: lender::IntoFallible<(), _> = VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
+    let mut fallible: lender::IntoFallible<(), _> =
+        VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
     assert_eq!(fallible.find(|&x| Ok(x > 3)), Ok(Some(4)));
 }
 
@@ -4568,7 +4816,8 @@ fn fallible_lender_find() {
 fn fallible_lender_position() {
     use lender::FallibleLender;
 
-    let mut fallible: lender::IntoFallible<(), _> = VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
+    let mut fallible: lender::IntoFallible<(), _> =
+        VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
     assert_eq!(fallible.position(|x| Ok(x == 3)), Ok(Some(2)));
 }
 
@@ -4576,7 +4825,8 @@ fn fallible_lender_position() {
 fn fallible_lender_chunky() {
     use lender::FallibleLender;
 
-    let fallible: lender::IntoFallible<(), _> = VecLender::new(vec![1, 2, 3, 4, 5, 6]).into_fallible();
+    let fallible: lender::IntoFallible<(), _> =
+        VecLender::new(vec![1, 2, 3, 4, 5, 6]).into_fallible();
     let mut chunky = fallible.chunky(2);
 
     let mut chunk1 = chunky.next().unwrap().unwrap();
@@ -4645,7 +4895,8 @@ fn double_ended_rfold() {
 fn double_ended_fallible_advance_back_by() {
     use lender::DoubleEndedFallibleLender;
 
-    let mut fallible: lender::IntoFallible<(), _> = VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
+    let mut fallible: lender::IntoFallible<(), _> =
+        VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
     assert_eq!(fallible.advance_back_by(2), Ok(Ok(())));
     assert_eq!(fallible.next_back(), Ok(Some(3)));
 }
@@ -4654,7 +4905,8 @@ fn double_ended_fallible_advance_back_by() {
 fn double_ended_fallible_nth_back() {
     use lender::DoubleEndedFallibleLender;
 
-    let mut fallible: lender::IntoFallible<(), _> = VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
+    let mut fallible: lender::IntoFallible<(), _> =
+        VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
     assert_eq!(fallible.nth_back(2), Ok(Some(3)));
 }
 
@@ -4839,8 +5091,14 @@ fn iter_double_ended_fallible_iterator_next_back() {
 
     let fallible: lender::IntoFallible<(), _> = VecLender::new(vec![1, 2, 3]).into_fallible();
     let mut iter = fallible.iter();
-    assert_eq!(DoubleEndedFallibleIterator::next_back(&mut iter), Ok(Some(3)));
-    assert_eq!(DoubleEndedFallibleIterator::next_back(&mut iter), Ok(Some(2)));
+    assert_eq!(
+        DoubleEndedFallibleIterator::next_back(&mut iter),
+        Ok(Some(3))
+    );
+    assert_eq!(
+        DoubleEndedFallibleIterator::next_back(&mut iter),
+        Ok(Some(2))
+    );
 }
 
 // Intersperse with separator clone (covers unsafe at line 62)
@@ -4887,7 +5145,9 @@ fn cycle_fallible_next_coverage() {
 fn filter_map_double_ended_coverage() {
     use lender::DoubleEndedLender;
 
-    let mut fm = VecLender::new(vec![1, 2, 3, 4, 5]).filter_map(|x| if x % 2 == 0 { Some(x * 2) } else { None });
+    let mut fm =
+        VecLender::new(vec![1, 2, 3, 4, 5])
+            .filter_map(|x| if x % 2 == 0 { Some(x * 2) } else { None });
     // Use next_back to exercise the DoubleEndedLender unsafe path
     assert_eq!(fm.next_back(), Some(8)); // 4 * 2
     assert_eq!(fm.next(), Some(4)); // 2 * 2

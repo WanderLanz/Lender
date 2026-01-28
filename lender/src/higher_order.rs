@@ -37,7 +37,9 @@ impl<'b, A, B: 'b, F: FnMut(A) -> Option<B>> FnMutHKAOpt<'b, A> for F {
 
 /// Higher-Kinded Associated Output [`FnOnce`], where `Output` ([`Result<B, E>`](Result))
 /// has output type `B` with lifetime `'b`.
-pub trait FnOnceHKARes<'b, A, E>: FnOnce(A) -> Result<<Self as FnOnceHKARes<'b, A, E>>::B, E> {
+pub trait FnOnceHKARes<'b, A, E>:
+    FnOnce(A) -> Result<<Self as FnOnceHKARes<'b, A, E>>::B, E>
+{
     type B: 'b;
 }
 impl<'b, A, B: 'b, E, F: FnOnce(A) -> Result<B, E>> FnOnceHKARes<'b, A, E> for F {
@@ -55,7 +57,9 @@ impl<'b, A, B: 'b, E, F: FnMut(A) -> Result<B, E>> FnMutHKARes<'b, A, E> for F {
 
 /// Higher-Kinded Associated Output [`FnMut`], where `Output` (`Result<Option<B>, E>`)
 /// has output type `B` with lifetime `'b`.
-pub trait FnMutHKAResOpt<'b, A, E>: FnMut(A) -> Result<Option<<Self as FnMutHKAResOpt<'b, A, E>>::B>, E> {
+pub trait FnMutHKAResOpt<'b, A, E>:
+    FnMut(A) -> Result<Option<<Self as FnMutHKAResOpt<'b, A, E>>::B>, E>
+{
     type B: 'b;
 }
 impl<'b, A, B: 'b, E, F: FnMut(A) -> Result<Option<B>, E>> FnMutHKAResOpt<'b, A, E> for F {

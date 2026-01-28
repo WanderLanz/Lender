@@ -26,11 +26,16 @@ where
     L: Lender,
 {
     pub(crate) fn new(lender: L) -> Peekable<'this, L> {
-        Peekable { peeked: MaybeDangling::new(None), lender: AliasableBox::from_unique(alloc::boxed::Box::new(lender)) }
+        Peekable {
+            peeked: MaybeDangling::new(None),
+            lender: AliasableBox::from_unique(alloc::boxed::Box::new(lender)),
+        }
     }
+
     pub fn into_inner(self) -> L {
         *AliasableBox::into_unique(self.lender)
     }
+
     pub fn peek(&mut self) -> Option<&'_ Lend<'_, L>> {
         let lender = &mut self.lender;
         // SAFETY: Two transmutes are used here:
@@ -44,21 +49,29 @@ where
             core::mem::transmute::<Option<&'_ Lend<'this, L>>, Option<&'_ Lend<'_, L>>>(
                 self.peeked
                     .get_or_insert_with(|| {
-                        core::mem::transmute::<Option<Lend<'_, L>>, Option<Lend<'this, L>>>(lender.next())
+                        core::mem::transmute::<Option<Lend<'_, L>>, Option<Lend<'this, L>>>(
+                            lender.next(),
+                        )
                     })
                     .as_ref(),
             )
         }
     }
+
     pub fn peek_mut(&mut self) -> Option<&'_ mut Lend<'this, L>> {
         let lender = &mut self.lender;
         self.peeked
             .get_or_insert_with(|| {
                 // SAFETY: The lend is manually guaranteed to be the only one alive
-                unsafe { core::mem::transmute::<Option<Lend<'_, L>>, Option<Lend<'this, L>>>(lender.next()) }
+                unsafe {
+                    core::mem::transmute::<Option<Lend<'_, L>>, Option<Lend<'this, L>>>(
+                        lender.next(),
+                    )
+                }
             })
             .as_mut()
     }
+
     pub fn next_if<F>(&mut self, f: F) -> Option<Lend<'_, L>>
     where
         F: FnOnce(&Lend<'_, L>) -> bool,
@@ -66,18 +79,23 @@ where
         // Get the next value by inlining the logic of next() to avoid borrow conflicts
         let v = match self.peeked.take() {
             // SAFETY: The lend is manually guaranteed to be the only one alive
-            Some(peeked) => unsafe { core::mem::transmute::<Option<Lend<'this, L>>, Option<Lend<'_, L>>>(peeked) },
+            Some(peeked) => unsafe {
+                core::mem::transmute::<Option<Lend<'this, L>>, Option<Lend<'_, L>>>(peeked)
+            },
             None => self.lender.next(),
         };
         match v {
             Some(v) if f(&v) => Some(v),
             v => {
                 // SAFETY: The lend is manually guaranteed to be the only one alive
-                *self.peeked = Some(unsafe { core::mem::transmute::<Option<Lend<'_, L>>, Option<Lend<'this, L>>>(v) });
+                *self.peeked = Some(unsafe {
+                    core::mem::transmute::<Option<Lend<'_, L>>, Option<Lend<'this, L>>>(v)
+                });
                 None
             }
         }
     }
+
     pub fn next_if_eq<'a, T>(&'a mut self, t: &T) -> Option<Lend<'a, L>>
     where
         T: for<'all> PartialEq<Lend<'all, L>>,
@@ -90,7 +108,10 @@ where
     L: Lender + Clone,
 {
     fn clone(&self) -> Self {
-        Peekable { peeked: MaybeDangling::new(None), lender: AliasableBox::from_unique((*self.lender).clone().into()) }
+        Peekable {
+            peeked: MaybeDangling::new(None),
+            lender: AliasableBox::from_unique((*self.lender).clone().into()),
+        }
     }
 }
 impl<'this, L: fmt::Debug> fmt::Debug for Peekable<'this, L>
@@ -99,7 +120,10 @@ where
     Lend<'this, L>: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Peekable").field("lender", &self.lender).field("peeked", &self.peeked).finish()
+        f.debug_struct("Peekable")
+            .field("lender", &self.lender)
+            .field("peeked", &self.peeked)
+            .finish()
     }
 }
 impl<'lend, L> Lending<'lend> for Peekable<'_, L>
@@ -117,10 +141,13 @@ where
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         match self.peeked.take() {
             // SAFETY: The lend is manually guaranteed to be the only one alive
-            Some(peeked) => unsafe { core::mem::transmute::<Option<Lend<'this, Self>>, Option<Lend<'_, Self>>>(peeked) },
+            Some(peeked) => unsafe {
+                core::mem::transmute::<Option<Lend<'this, Self>>, Option<Lend<'_, Self>>>(peeked)
+            },
             None => self.lender.next(),
         }
     }
+
     #[inline]
     fn count(mut self) -> usize {
         let lender = *AliasableBox::into_unique(self.lender);
@@ -130,6 +157,7 @@ where
             None => lender.count(),
         }
     }
+
     #[inline]
     fn nth(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         match self.peeked.take() {
@@ -142,6 +170,7 @@ where
             None => self.lender.nth(n),
         }
     }
+
     #[inline]
     fn last<'a>(&'a mut self) -> Option<Lend<'a, Self>>
     where
@@ -150,11 +179,14 @@ where
         let peek_opt = match self.peeked.take() {
             Some(None) => return None,
             // SAFETY: 'this: 'call
-            Some(v) => unsafe { core::mem::transmute::<Option<Lend<'this, Self>>, Option<Lend<'a, Self>>>(v) },
+            Some(v) => unsafe {
+                core::mem::transmute::<Option<Lend<'this, Self>>, Option<Lend<'a, Self>>>(v)
+            },
             None => None,
         };
         self.lender.last().or(peek_opt)
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let peek_len = match *self.peeked {
@@ -163,8 +195,12 @@ where
             None => 0,
         };
         let (l, r) = self.lender.size_hint();
-        (l.saturating_add(peek_len), r.and_then(|r| r.checked_add(peek_len)))
+        (
+            l.saturating_add(peek_len),
+            r.and_then(|r| r.checked_add(peek_len)),
+        )
     }
+
     #[inline]
     fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> R
     where
@@ -182,6 +218,7 @@ where
         };
         self.lender.try_fold(acc, f)
     }
+
     #[inline]
     fn fold<B, F>(mut self, init: B, mut f: F) -> B
     where
@@ -202,14 +239,14 @@ impl<'this, L: DoubleEndedLender> DoubleEndedLender for Peekable<'this, L> {
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         match self.peeked.as_mut() {
             // SAFETY: The lend is manually guaranteed to be the only one alive
-            Some(v @ Some(_)) => self
-                .lender
-                .next_back()
-                .or_else(|| unsafe { core::mem::transmute::<Option<Lend<'this, Self>>, Option<Lend<'_, Self>>>(v.take()) }),
+            Some(v @ Some(_)) => self.lender.next_back().or_else(|| unsafe {
+                core::mem::transmute::<Option<Lend<'this, Self>>, Option<Lend<'_, Self>>>(v.take())
+            }),
             Some(None) => None,
             None => self.lender.next_back(),
         }
     }
+
     #[inline]
     fn try_rfold<B, F, R>(&mut self, init: B, mut f: F) -> R
     where
@@ -229,6 +266,7 @@ impl<'this, L: DoubleEndedLender> DoubleEndedLender for Peekable<'this, L> {
             },
         }
     }
+
     #[inline]
     fn rfold<B, F>(mut self, init: B, mut f: F) -> B
     where
@@ -275,16 +313,24 @@ mod test {
     // previous location.
     #[test]
     fn test_peekable() {
-        let lender = ArrayLender { array: [-1, 1, 2, 3] };
+        let lender = ArrayLender {
+            array: [-1, 1, 2, 3],
+        };
         let mut peekable = lender.peekable();
         assert_eq!(**peekable.peek().unwrap(), -1);
-        assert_eq!(peekable.peeked.unwrap().unwrap() as *const _, &peekable.lender.array[0] as *const _);
+        assert_eq!(
+            peekable.peeked.unwrap().unwrap() as *const _,
+            &peekable.lender.array[0] as *const _
+        );
         moved_peekable(peekable);
     }
 
     fn moved_peekable(peekable: Peekable<ArrayLender>) {
         let peeked = peekable.peeked.unwrap().unwrap() as *const _;
         let array = &peekable.lender.array[0] as *const _;
-        assert_eq!(peeked, array, "Peeked element pointer should point to the first element of the array");
+        assert_eq!(
+            peeked, array,
+            "Peeked element pointer should point to the first element of the array"
+        );
     }
 }

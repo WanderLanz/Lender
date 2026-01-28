@@ -3,7 +3,8 @@ use core::iter::FusedIterator;
 use fallible_iterator::{DoubleEndedFallibleIterator, FallibleIterator, IntoFallibleIterator};
 
 use crate::{
-    prelude::*, DoubleEndedFallibleLender, FallibleLend, FallibleLender, FallibleLending, FusedLender, IntoFallibleLender,
+    prelude::*, DoubleEndedFallibleLender, FallibleLend, FallibleLender, FallibleLending,
+    FusedLender, IntoFallibleLender,
 };
 
 /// Creates a lender from an iterator.
@@ -57,6 +58,7 @@ impl<I: Iterator> Lender for FromIter<I> {
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.iter.next()
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
@@ -146,7 +148,10 @@ where
     L: ?Sized + for<'all> Lending<'all> + 'a,
     I: Iterator<Item = Lend<'a, L>>,
 {
-    LendIter { iter, _marker: core::marker::PhantomData }
+    LendIter {
+        iter,
+        _marker: core::marker::PhantomData,
+    }
 }
 
 /// A lender that lends elements from an iterator by shortening their lifetime.
@@ -181,8 +186,11 @@ where
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         // SAFETY: 'a: 'lend, and caller must ensure Lend<'a, L> is covariant in 'a
-        unsafe { core::mem::transmute::<Option<Lend<'a, L>>, Option<Lend<'_, L>>>(self.iter.next()) }
+        unsafe {
+            core::mem::transmute::<Option<Lend<'a, L>>, Option<Lend<'_, L>>>(self.iter.next())
+        }
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
@@ -196,7 +204,9 @@ where
 {
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         // SAFETY: 'a: 'lend, and caller must ensure Lend<'a, L> is covariant in 'a
-        unsafe { core::mem::transmute::<Option<Lend<'a, L>>, Option<Lend<'_, L>>>(self.iter.next_back()) }
+        unsafe {
+            core::mem::transmute::<Option<Lend<'a, L>>, Option<Lend<'_, L>>>(self.iter.next_back())
+        }
     }
 }
 
@@ -252,6 +262,7 @@ impl<I: FallibleIterator> FallibleLender for FromFallibleIter<I> {
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.iter.next()
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
@@ -340,7 +351,10 @@ where
     L: ?Sized + for<'all> FallibleLending<'all> + 'a,
     I: FallibleIterator<Item = FallibleLend<'a, L>>,
 {
-    LendFallibleIter { iter, _marker: core::marker::PhantomData }
+    LendFallibleIter {
+        iter,
+        _marker: core::marker::PhantomData,
+    }
 }
 
 /// A lender that lends elements from a fallible iterator by shortening their lifetime.
@@ -378,9 +392,14 @@ where
         let next = self.iter.next()?;
         Ok(
             // SAFETY: 'a: 'lend
-            unsafe { core::mem::transmute::<Option<FallibleLend<'a, L>>, Option<FallibleLend<'_, L>>>(next) },
+            unsafe {
+                core::mem::transmute::<Option<FallibleLend<'a, L>>, Option<FallibleLend<'_, L>>>(
+                    next,
+                )
+            },
         )
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
@@ -396,7 +415,11 @@ where
         let next = self.iter.next_back()?;
         Ok(
             // SAFETY: 'a: 'lend
-            unsafe { core::mem::transmute::<Option<FallibleLend<'a, L>>, Option<FallibleLend<'_, L>>>(next) },
+            unsafe {
+                core::mem::transmute::<Option<FallibleLend<'a, L>>, Option<FallibleLend<'_, L>>>(
+                    next,
+                )
+            },
         )
     }
 }

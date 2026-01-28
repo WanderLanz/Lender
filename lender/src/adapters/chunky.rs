@@ -1,8 +1,8 @@
 use core::ops::ControlFlow;
 
 use crate::{
-    try_trait_v2::Try, Chunk, ExactSizeFallibleLender, ExactSizeLender, FallibleLend, FallibleLender, FallibleLending,
-    FusedFallibleLender, FusedLender, Lend, Lender, Lending,
+    try_trait_v2::Try, Chunk, ExactSizeFallibleLender, ExactSizeLender, FallibleLend,
+    FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender, Lending,
 };
 
 /// A lender yielding lenders ([`Chunk`]s) returning the next `chunk_size` lends.
@@ -83,7 +83,11 @@ where
         if rem > 0 {
             len += 1;
         }
-        Self { lender, chunk_size, len }
+        Self {
+            lender,
+            chunk_size,
+            len,
+        }
     }
 }
 
@@ -99,7 +103,11 @@ where
         if rem > 0 {
             len += 1;
         }
-        Self { lender, chunk_size, len }
+        Self {
+            lender,
+            chunk_size,
+            len,
+        }
     }
 }
 
@@ -107,6 +115,7 @@ impl<L> Chunky<L> {
     pub fn into_inner(self) -> L {
         self.lender
     }
+
     pub fn into_parts(self) -> (L, usize) {
         (self.lender, self.chunk_size)
     }

@@ -1,8 +1,8 @@
 use core::fmt;
 
 use crate::{
-    DoubleEndedFallibleLender, DoubleEndedLender, FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender,
-    FusedLender, Lend, Lender, Lending,
+    DoubleEndedFallibleLender, DoubleEndedLender, FallibleLend, FallibleLender, FallibleLending,
+    FusedFallibleLender, FusedLender, Lend, Lender, Lending,
 };
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -14,16 +14,20 @@ impl<L, P> Filter<L, P> {
     pub(crate) fn new(lender: L, predicate: P) -> Filter<L, P> {
         Filter { lender, predicate }
     }
+
     pub fn into_inner(self) -> L {
         self.lender
     }
+
     pub fn into_parts(self) -> (L, P) {
         (self.lender, self.predicate)
     }
 }
 impl<I: fmt::Debug, P> fmt::Debug for Filter<I, P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Filter").field("lender", &self.lender).finish()
+        f.debug_struct("Filter")
+            .field("lender", &self.lender)
+            .finish()
     }
 }
 impl<'lend, L, P> Lending<'lend> for Filter<L, P>
@@ -44,18 +48,22 @@ where
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.lender.find(&mut self.predicate)
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (_, upper) = self.lender.size_hint();
         (0, upper)
     }
+
     #[inline]
     fn count(self) -> usize
     where
         Self: Sized,
     {
         #[inline]
-        fn f<L: for<'all> Lending<'all>, F: FnMut(&Lend<'_, L>) -> bool>(mut f: F) -> impl FnMut(Lend<'_, L>) -> usize {
+        fn f<L: for<'all> Lending<'all>, F: FnMut(&Lend<'_, L>) -> bool>(
+            mut f: F,
+        ) -> impl FnMut(Lend<'_, L>) -> usize {
             move |x| (f)(&x) as usize
         }
         self.lender.map(f::<Self, _>(self.predicate)).iter().sum()
@@ -98,25 +106,33 @@ where
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.lender.find(&mut self.predicate)
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (_, upper) = self.lender.size_hint();
         (0, upper)
     }
+
     #[inline]
     fn count(self) -> Result<usize, Self::Error>
     where
         Self: Sized,
     {
         #[inline]
-        fn f<E, L: for<'all> FallibleLending<'all>, F: FnMut(&FallibleLend<'_, L>) -> Result<bool, E>>(
+        fn f<
+            E,
+            L: for<'all> FallibleLending<'all>,
+            F: FnMut(&FallibleLend<'_, L>) -> Result<bool, E>,
+        >(
             mut f: F,
         ) -> impl FnMut(FallibleLend<'_, L>) -> Result<usize, E> {
             move |x| (f)(&x).map(|res| res as usize)
         }
         let lender = self.lender.map(f::<_, Self, _>(self.predicate));
-        crate::fallible_adapters::non_fallible_adapter::process(lender, |iter| core::iter::Iterator::sum(iter))
-            .map_err(|(_, err)| err)
+        crate::fallible_adapters::non_fallible_adapter::process(lender, |iter| {
+            core::iter::Iterator::sum(iter)
+        })
+        .map_err(|(_, err)| err)
     }
 }
 impl<L, P> DoubleEndedFallibleLender for Filter<L, P>

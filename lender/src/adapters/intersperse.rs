@@ -19,11 +19,17 @@ where
     L: Lender,
 {
     pub(crate) fn new(lender: L, separator: Lend<'this, L>) -> Self {
-        Self { lender: lender.peekable(), separator, needs_sep: false }
+        Self {
+            lender: lender.peekable(),
+            separator,
+            needs_sep: false,
+        }
     }
+
     pub fn into_inner(self) -> L {
         self.lender.into_inner()
     }
+
     pub fn into_parts(self) -> (L, Lend<'this, L>) {
         (self.lender.into_inner(), self.separator)
     }
@@ -59,12 +65,15 @@ where
         if self.needs_sep && self.lender.peek().is_some() {
             self.needs_sep = false;
             // SAFETY: 'this: 'lend
-            Some(unsafe { core::mem::transmute::<Lend<'this, Self>, Lend<'_, Self>>(self.separator.clone()) })
+            Some(unsafe {
+                core::mem::transmute::<Lend<'this, Self>, Lend<'_, Self>>(self.separator.clone())
+            })
         } else {
             self.needs_sep = true;
             self.lender.next()
         }
     }
+
     fn fold<B, F>(mut self, init: B, mut f: F) -> B
     where
         Self: Sized,
@@ -84,6 +93,7 @@ where
             acc
         })
     }
+
     fn size_hint(&self) -> (usize, Option<usize>) {
         intersperse_size_hint(&self.lender, self.needs_sep)
     }
@@ -105,7 +115,11 @@ where
     G: FnMut() -> Lend<'this, L>,
 {
     pub(crate) fn new(lender: L, separator: G) -> Self {
-        Self { lender: Peekable::new(lender), separator, needs_sep: false }
+        Self {
+            lender: Peekable::new(lender),
+            separator,
+            needs_sep: false,
+        }
     }
 }
 impl<L: fmt::Debug, G: fmt::Debug> fmt::Debug for IntersperseWith<'_, L, G>
@@ -145,6 +159,7 @@ where
             self.lender.next()
         }
     }
+
     fn fold<B, F>(mut self, init: B, mut f: F) -> B
     where
         Self: Sized,
@@ -164,6 +179,7 @@ where
             acc
         })
     }
+
     fn size_hint(&self) -> (usize, Option<usize>) {
         intersperse_size_hint(&self.lender, self.needs_sep)
     }

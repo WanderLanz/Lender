@@ -15,8 +15,11 @@ where
     for<'all> Lend<'all, L>: IntoLender,
 {
     pub(crate) fn new(lender: L) -> Self {
-        Self { inner: FlattenCompat::new(lender) }
+        Self {
+            inner: FlattenCompat::new(lender),
+        }
     }
+
     pub fn into_inner(self) -> L {
         *AliasableBox::into_unique(self.inner.lender)
     }
@@ -27,7 +30,9 @@ where
     for<'all> <Lend<'all, L> as IntoLender>::Lender: Clone,
 {
     fn clone(&self) -> Self {
-        Flatten { inner: self.inner.clone() }
+        Flatten {
+            inner: self.inner.clone(),
+        }
     }
 }
 impl<L: Lender + fmt::Debug> fmt::Debug for Flatten<'_, L>
@@ -36,7 +41,9 @@ where
     for<'all> <Lend<'all, L> as IntoLender>::Lender: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Flatten").field("inner", &self.inner).finish()
+        f.debug_struct("Flatten")
+            .field("inner", &self.inner)
+            .finish()
     }
 }
 impl<'lend, 'this, L: Lender> Lending<'lend> for Flatten<'this, L>
@@ -55,6 +62,7 @@ where
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.inner.next()
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.inner.size_hint()
@@ -76,7 +84,9 @@ where
     for<'all> Lend<'all, Map<L, F>>: IntoLender,
 {
     pub(crate) fn new(lender: L, f: F) -> Self {
-        Self { inner: FlattenCompat::new(Map::new(lender, f)) }
+        Self {
+            inner: FlattenCompat::new(Map::new(lender, f)),
+        }
     }
 }
 impl<L: Lender + Clone, F: Clone> Clone for FlatMap<'_, L, F>
@@ -86,7 +96,9 @@ where
     for<'all> <Lend<'all, Map<L, F>> as IntoLender>::Lender: Clone,
 {
     fn clone(&self) -> Self {
-        FlatMap { inner: self.inner.clone() }
+        FlatMap {
+            inner: self.inner.clone(),
+        }
     }
 }
 impl<L: Lender + fmt::Debug, F> fmt::Debug for FlatMap<'_, L, F>
@@ -96,7 +108,9 @@ where
     for<'all> <Lend<'all, Map<L, F>> as IntoLender>::Lender: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("FlatMap").field("inner", &self.inner).finish()
+        f.debug_struct("FlatMap")
+            .field("inner", &self.inner)
+            .finish()
     }
 }
 impl<'lend, 'this, L: Lender, F> Lending<'lend> for FlatMap<'this, L, F>
@@ -117,6 +131,7 @@ where
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.inner.next()
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.inner.size_hint()
@@ -146,7 +161,10 @@ where
     for<'all> Lend<'all, L>: IntoLender,
 {
     pub(crate) fn new(lender: L) -> Self {
-        Self { inner: MaybeDangling::new(None), lender: AliasableBox::from_unique(alloc::boxed::Box::new(lender)) }
+        Self {
+            inner: MaybeDangling::new(None),
+            lender: AliasableBox::from_unique(alloc::boxed::Box::new(lender)),
+        }
     }
 }
 impl<L: Lender + Clone> Clone for FlattenCompat<'_, L>
@@ -167,7 +185,10 @@ where
     for<'all> <Lend<'all, L> as IntoLender>::Lender: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("FlattenCompat").field("lender", &self.lender).field("inner", &self.inner).finish()
+        f.debug_struct("FlattenCompat")
+            .field("lender", &self.lender)
+            .field("inner", &self.inner)
+            .finish()
     }
 }
 impl<'lend, 'this, L: Lender> Lending<'lend> for FlattenCompat<'this, L>
@@ -196,9 +217,10 @@ where
 
             // SAFETY: inner is manually guaranteed to be the only lend alive of the inner iterator
             *self.inner = self.lender.next().map(|l| unsafe {
-                core::mem::transmute::<<Lend<'_, L> as IntoLender>::Lender, <Lend<'this, L> as IntoLender>::Lender>(
-                    l.into_lender(),
-                )
+                core::mem::transmute::<
+                    <Lend<'_, L> as IntoLender>::Lender,
+                    <Lend<'this, L> as IntoLender>::Lender,
+                >(l.into_lender())
             });
 
             if self.inner.is_none() {
@@ -206,6 +228,7 @@ where
             }
         }
     }
+
     fn size_hint(&self) -> (usize, Option<usize>) {
         (
             match &*self.inner {
@@ -275,7 +298,10 @@ mod test {
     fn test_flatmap_empty() {
         use crate::traits::IteratorExt;
 
-        let mut l = [1, 0, 2].into_iter().into_lender().flat_map(|n| (0..n).into_lender());
+        let mut l = [1, 0, 2]
+            .into_iter()
+            .into_lender()
+            .flat_map(|n| (0..n).into_lender());
         assert_eq!(l.next(), Some(0));
         assert_eq!(l.next(), Some(0));
         assert_eq!(l.next(), Some(1));

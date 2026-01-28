@@ -29,7 +29,11 @@ use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lendi
 /// ```
 pub fn windows_mut<T>(slice: &mut [T], size: usize) -> WindowsMut<'_, T> {
     let size = NonZero::new(size).expect("window size must be non-zero");
-    WindowsMut { slice, size, position: WindowPosition::Init }
+    WindowsMut {
+        slice,
+        size,
+        position: WindowPosition::Init,
+    }
 }
 
 /// This struct is returned by [`windows_mut`].
@@ -135,9 +139,14 @@ impl<T> FusedLender for WindowsMut<'_, T> {}
 /// let mut lender = s.array_windows_mut::<2>();
 /// assert_eq!(lender.next(), Some(&mut [0, 1]));
 /// ```
-pub fn array_windows_mut<T, const WINDOW_SIZE: usize>(slice: &mut [T]) -> ArrayWindowsMut<'_, T, WINDOW_SIZE> {
+pub fn array_windows_mut<T, const WINDOW_SIZE: usize>(
+    slice: &mut [T],
+) -> ArrayWindowsMut<'_, T, WINDOW_SIZE> {
     assert!(WINDOW_SIZE != 0, "window size must be non-zero");
-    ArrayWindowsMut { slice, position: WindowPosition::Init }
+    ArrayWindowsMut {
+        slice,
+        position: WindowPosition::Init,
+    }
 }
 
 /// This struct is returned by [`array_windows_mut`].
@@ -188,7 +197,9 @@ impl<T, const WINDOW_SIZE: usize> FusedLender for ArrayWindowsMut<'_, T, WINDOW_
 /// [`array_windows_mut`](WindowsMutExt::array_windows_mut).
 pub trait WindowsMutExt<T> {
     fn windows_mut(&mut self, size: usize) -> WindowsMut<'_, T>;
-    fn array_windows_mut<const WINDOW_SIZE: usize>(&mut self) -> ArrayWindowsMut<'_, T, WINDOW_SIZE>;
+    fn array_windows_mut<const WINDOW_SIZE: usize>(
+        &mut self,
+    ) -> ArrayWindowsMut<'_, T, WINDOW_SIZE>;
 }
 
 impl<T> WindowsMutExt<T> for [T] {
@@ -205,7 +216,9 @@ impl<T> WindowsMutExt<T> for [T] {
     /// # Panics
     ///
     /// Panics if `WINDOW_SIZE` is zero.
-    fn array_windows_mut<const WINDOW_SIZE: usize>(&mut self) -> ArrayWindowsMut<'_, T, WINDOW_SIZE> {
+    fn array_windows_mut<const WINDOW_SIZE: usize>(
+        &mut self,
+    ) -> ArrayWindowsMut<'_, T, WINDOW_SIZE> {
         array_windows_mut(self)
     }
 }
@@ -224,7 +237,9 @@ impl<T, const N: usize> WindowsMutExt<T> for [T; N] {
     /// # Panics
     ///
     /// Panics if `WINDOW_SIZE` is zero.
-    fn array_windows_mut<const WINDOW_SIZE: usize>(&mut self) -> ArrayWindowsMut<'_, T, WINDOW_SIZE> {
+    fn array_windows_mut<const WINDOW_SIZE: usize>(
+        &mut self,
+    ) -> ArrayWindowsMut<'_, T, WINDOW_SIZE> {
         array_windows_mut(self)
     }
 }

@@ -4,7 +4,8 @@ use core::iter::FusedIterator;
 use fallible_iterator::{DoubleEndedFallibleIterator, FallibleIterator};
 
 use crate::{
-    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeLender, FallibleLend, FallibleLender, FusedLender, Lend, Lender,
+    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeLender, FallibleLend, FallibleLender,
+    FusedLender, Lend, Lender,
 };
 
 #[derive(Clone, Debug)]
@@ -16,6 +17,7 @@ impl<L> Owned<L> {
     pub(crate) fn new(lender: L) -> Self {
         Self { lender }
     }
+
     pub fn into_inner(self) -> L {
         self.lender
     }
@@ -30,6 +32,7 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         self.lender.next().map(|ref x| x.to_owned())
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
@@ -81,6 +84,7 @@ where
     fn next(&mut self) -> Result<Option<Self::Item>, Self::Error> {
         Ok(self.lender.next()?.map(|ref x| x.to_owned()))
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()

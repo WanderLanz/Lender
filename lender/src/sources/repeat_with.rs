@@ -20,7 +20,10 @@ where
     L: ?Sized + for<'all> Lending<'all> + 'a,
     F: FnMut() -> Lend<'a, L>,
 {
-    RepeatWith { f, _marker: PhantomData }
+    RepeatWith {
+        f,
+        _marker: PhantomData,
+    }
 }
 
 /// A lender that repeats an element endlessly by applying a closure.
@@ -51,6 +54,7 @@ where
         // SAFETY: 'a: 'lend
         Some(unsafe { core::mem::transmute::<Lend<'a, L>, Lend<'_, L>>((self.f)()) })
     }
+
     #[inline]
     fn advance_by(&mut self, _n: usize) -> Result<(), core::num::NonZeroUsize> {
         Ok(())
@@ -75,7 +79,10 @@ where
     L: ?Sized + for<'all> FallibleLending<'all> + 'a,
     F: FnMut() -> Result<FallibleLend<'a, L>, E>,
 {
-    FallibleRepeatWith { f, _marker: PhantomData }
+    FallibleRepeatWith {
+        f,
+        _marker: PhantomData,
+    }
 }
 
 /// A fallible lender that repeats an element endlessly by applying a closure.
@@ -112,8 +119,12 @@ where
             )
         })
     }
+
     #[inline]
-    fn advance_by(&mut self, _n: usize) -> Result<Result<(), core::num::NonZeroUsize>, Self::Error> {
+    fn advance_by(
+        &mut self,
+        _n: usize,
+    ) -> Result<Result<(), core::num::NonZeroUsize>, Self::Error> {
         Ok(Ok(()))
     }
 }

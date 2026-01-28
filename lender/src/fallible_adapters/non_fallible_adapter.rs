@@ -1,8 +1,8 @@
 use core::iter::FusedIterator;
 
 use crate::{
-    DoubleEndedFallibleLender, DoubleEndedLender, FallibleLend, FallibleLender, FusedFallibleLender, FusedLender, Lend,
-    Lender, Lending,
+    DoubleEndedFallibleLender, DoubleEndedLender, FallibleLend, FallibleLender,
+    FusedFallibleLender, FusedLender, Lend, Lender, Lending,
 };
 
 // The user must check that the lender did not produce an error after use
@@ -26,7 +26,10 @@ where
     for<'all> F: FnMut(NonFallibleAdapter<'all, L>) -> U,
 {
     let mut error = None;
-    let adapter = NonFallibleAdapter { lender, error: &mut error };
+    let adapter = NonFallibleAdapter {
+        lender,
+        error: &mut error,
+    };
     let value = f(adapter);
     match error {
         None => Ok(value),
@@ -48,7 +51,12 @@ where
         match self.lender.next() {
             Ok(next) => {
                 // SAFETY: for<'all> Lend<'all, L>: 'this
-                unsafe { core::mem::transmute::<Option<FallibleLend<'_, L>>, Option<FallibleLend<'this, L>>>(next) }
+                unsafe {
+                    core::mem::transmute::<
+                        Option<FallibleLend<'_, L>>,
+                        Option<FallibleLend<'this, L>>,
+                    >(next)
+                }
             }
             Err(err) => {
                 *self.error = Some(err);
@@ -56,12 +64,14 @@ where
             }
         }
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (_, upper) = self.lender.size_hint();
         (0, upper)
     }
 }
+
 impl<'this, L> DoubleEndedIterator for NonFallibleAdapter<'this, L>
 where
     L: DoubleEndedFallibleLender,
@@ -75,7 +85,12 @@ where
         match self.lender.next_back() {
             Ok(next) => {
                 // SAFETY: for<'all> Lend<'all, L>: 'this
-                unsafe { core::mem::transmute::<Option<FallibleLend<'_, L>>, Option<FallibleLend<'this, L>>>(next) }
+                unsafe {
+                    core::mem::transmute::<
+                        Option<FallibleLend<'_, L>>,
+                        Option<FallibleLend<'this, L>>,
+                    >(next)
+                }
             }
             Err(err) => {
                 *self.error = Some(err);
@@ -110,12 +125,14 @@ where
             }
         }
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (_, upper) = self.lender.size_hint();
         (0, upper)
     }
 }
+
 impl<'this, L> DoubleEndedLender for NonFallibleAdapter<'this, L>
 where
     L: DoubleEndedFallibleLender,

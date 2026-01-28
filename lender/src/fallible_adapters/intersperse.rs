@@ -19,11 +19,17 @@ where
     L: FallibleLender,
 {
     pub(crate) fn new(lender: L, separator: FallibleLend<'this, L>) -> Self {
-        Self { lender: lender.peekable(), separator, needs_sep: false }
+        Self {
+            lender: lender.peekable(),
+            separator,
+            needs_sep: false,
+        }
     }
+
     pub fn into_inner(self) -> L {
         self.lender.into_inner()
     }
+
     pub fn into_parts(self) -> (L, FallibleLend<'this, L>) {
         (self.lender.into_inner(), self.separator)
     }
@@ -62,13 +68,18 @@ where
             self.needs_sep = false;
             Ok(Some(
                 // SAFETY: 'this: 'lend
-                unsafe { core::mem::transmute::<FallibleLend<'this, Self>, FallibleLend<'_, Self>>(self.separator.clone()) },
+                unsafe {
+                    core::mem::transmute::<FallibleLend<'this, Self>, FallibleLend<'_, Self>>(
+                        self.separator.clone(),
+                    )
+                },
             ))
         } else {
             self.needs_sep = true;
             self.lender.next()
         }
     }
+
     fn fold<B, F>(mut self, init: B, mut f: F) -> Result<B, Self::Error>
     where
         Self: Sized,
@@ -88,6 +99,7 @@ where
             Ok(acc)
         })
     }
+
     fn size_hint(&self) -> (usize, Option<usize>) {
         intersperse_size_hint(&self.lender, self.needs_sep)
     }
@@ -109,7 +121,11 @@ where
     G: FnMut() -> Result<FallibleLend<'this, L>, L::Error>,
 {
     pub(crate) fn new(lender: L, separator: G) -> Self {
-        Self { lender: FalliblePeekable::new(lender), separator, needs_sep: false }
+        Self {
+            lender: FalliblePeekable::new(lender),
+            separator,
+            needs_sep: false,
+        }
     }
 }
 impl<L: fmt::Debug, G: fmt::Debug> fmt::Debug for IntersperseWith<'_, L, G>
@@ -147,13 +163,16 @@ where
             let separator = (self.separator)()?;
             Ok(Some(
                 // SAFETY: 'this: 'lend
-                unsafe { core::mem::transmute::<FallibleLend<'this, L>, FallibleLend<'_, L>>(separator) },
+                unsafe {
+                    core::mem::transmute::<FallibleLend<'this, L>, FallibleLend<'_, L>>(separator)
+                },
             ))
         } else {
             self.needs_sep = true;
             self.lender.next()
         }
     }
+
     fn fold<B, F>(mut self, init: B, mut f: F) -> Result<B, Self::Error>
     where
         Self: Sized,
@@ -173,6 +192,7 @@ where
             Ok(acc)
         })
     }
+
     fn size_hint(&self) -> (usize, Option<usize>) {
         intersperse_size_hint(&self.lender, self.needs_sep)
     }

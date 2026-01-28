@@ -2,8 +2,8 @@ use core::fmt;
 
 use crate::{
     higher_order::{FnMutHKAOpt, FnMutHKAResOpt},
-    DoubleEndedFallibleLender, DoubleEndedLender, FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender,
-    FusedLender, Lend, Lender, Lending,
+    DoubleEndedFallibleLender, DoubleEndedLender, FallibleLend, FallibleLender, FallibleLending,
+    FusedFallibleLender, FusedLender, Lend, Lender, Lending,
 };
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -15,16 +15,20 @@ impl<L, F> FilterMap<L, F> {
     pub(crate) fn new(lender: L, f: F) -> FilterMap<L, F> {
         FilterMap { lender, f }
     }
+
     pub fn into_inner(self) -> L {
         self.lender
     }
+
     pub fn into_parts(self) -> (L, F) {
         (self.lender, self.f)
     }
 }
 impl<L: fmt::Debug, F> fmt::Debug for FilterMap<L, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("FilterMap").field("lender", &self.lender).finish()
+        f.debug_struct("FilterMap")
+            .field("lender", &self.lender)
+            .finish()
     }
 }
 impl<'lend, B, L, F> Lending<'lend> for FilterMap<L, F>
@@ -52,6 +56,7 @@ where
         }
         None
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (_, upper) = self.lender.size_hint();
@@ -103,12 +108,15 @@ where
             if let Some(y) = (self.f)(x)? {
                 return Ok(Some(
                     // SAFETY: polonius return
-                    unsafe { core::mem::transmute::<FallibleLend<'_, Self>, FallibleLend<'_, Self>>(y) },
+                    unsafe {
+                        core::mem::transmute::<FallibleLend<'_, Self>, FallibleLend<'_, Self>>(y)
+                    },
                 ));
             }
         }
         Ok(None)
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (_, upper) = self.lender.size_hint();
@@ -125,7 +133,9 @@ where
             if let Some(y) = (self.f)(x)? {
                 return Ok(Some(
                     // SAFETY: polonius return
-                    unsafe { core::mem::transmute::<FallibleLend<'_, Self>, FallibleLend<'_, Self>>(y) },
+                    unsafe {
+                        core::mem::transmute::<FallibleLend<'_, Self>, FallibleLend<'_, Self>>(y)
+                    },
                 ));
             }
         }

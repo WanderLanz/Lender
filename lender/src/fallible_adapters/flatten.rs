@@ -2,7 +2,9 @@ use aliasable::boxed::AliasableBox;
 use core::fmt;
 use maybe_dangling::MaybeDangling;
 
-use crate::{FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, IntoFallibleLender, Map};
+use crate::{
+    FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, IntoFallibleLender, Map,
+};
 
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Flatten<'this, L: FallibleLender>
@@ -16,8 +18,11 @@ where
     for<'all> FallibleLend<'all, L>: IntoFallibleLender,
 {
     pub(crate) fn new(lender: L) -> Self {
-        Self { inner: FlattenCompat::new(lender) }
+        Self {
+            inner: FlattenCompat::new(lender),
+        }
     }
+
     pub fn into_inner(self) -> L {
         *AliasableBox::into_unique(self.inner.lender)
     }
@@ -28,7 +33,9 @@ where
     for<'all> <FallibleLend<'all, L> as IntoFallibleLender>::FallibleLender: Clone,
 {
     fn clone(&self) -> Self {
-        Flatten { inner: self.inner.clone() }
+        Flatten {
+            inner: self.inner.clone(),
+        }
     }
 }
 impl<L: FallibleLender + fmt::Debug> fmt::Debug for Flatten<'_, L>
@@ -37,7 +44,9 @@ where
     for<'all> <FallibleLend<'all, L> as IntoFallibleLender>::FallibleLender: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Flatten").field("inner", &self.inner).finish()
+        f.debug_struct("Flatten")
+            .field("inner", &self.inner)
+            .finish()
     }
 }
 impl<'lend, 'this, L: FallibleLender> FallibleLending<'lend> for Flatten<'this, L>
@@ -58,6 +67,7 @@ where
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.inner.next()
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.inner.size_hint()
@@ -83,7 +93,9 @@ where
     for<'all> FallibleLend<'all, Map<L, F>>: IntoFallibleLender,
 {
     pub(crate) fn new(lender: L, f: F) -> Self {
-        Self { inner: FlattenCompat::new(Map::new(lender, f)) }
+        Self {
+            inner: FlattenCompat::new(Map::new(lender, f)),
+        }
     }
 }
 impl<L: FallibleLender + Clone, F: Clone> Clone for FlatMap<'_, L, F>
@@ -93,7 +105,9 @@ where
     for<'all> <FallibleLend<'all, Map<L, F>> as IntoFallibleLender>::FallibleLender: Clone,
 {
     fn clone(&self) -> Self {
-        FlatMap { inner: self.inner.clone() }
+        FlatMap {
+            inner: self.inner.clone(),
+        }
     }
 }
 impl<L: FallibleLender + fmt::Debug, F> fmt::Debug for FlatMap<'_, L, F>
@@ -103,7 +117,9 @@ where
     for<'all> <FallibleLend<'all, Map<L, F>> as IntoFallibleLender>::FallibleLender: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("FlatMap").field("inner", &self.inner).finish()
+        f.debug_struct("FlatMap")
+            .field("inner", &self.inner)
+            .finish()
     }
 }
 impl<'lend, 'this, L: FallibleLender, F> FallibleLending<'lend> for FlatMap<'this, L, F>
@@ -111,7 +127,8 @@ where
     Map<L, F>: FallibleLender,
     for<'all> FallibleLend<'all, Map<L, F>>: IntoFallibleLender,
 {
-    type Lend = FallibleLend<'lend, <FallibleLend<'this, Map<L, F>> as IntoFallibleLender>::FallibleLender>;
+    type Lend =
+        FallibleLend<'lend, <FallibleLend<'this, Map<L, F>> as IntoFallibleLender>::FallibleLender>;
 }
 impl<L: FallibleLender, F> FallibleLender for FlatMap<'_, L, F>
 where
@@ -126,6 +143,7 @@ where
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.inner.next()
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.inner.size_hint()
@@ -157,7 +175,10 @@ where
     for<'all> FallibleLend<'all, L>: IntoFallibleLender,
 {
     pub(crate) fn new(lender: L) -> Self {
-        Self { inner: MaybeDangling::new(None), lender: AliasableBox::from_unique(alloc::boxed::Box::new(lender)) }
+        Self {
+            inner: MaybeDangling::new(None),
+            lender: AliasableBox::from_unique(alloc::boxed::Box::new(lender)),
+        }
     }
 }
 impl<L: FallibleLender + Clone> Clone for FlattenCompat<'_, L>
@@ -178,7 +199,10 @@ where
     for<'all> <FallibleLend<'all, L> as IntoFallibleLender>::FallibleLender: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("FlattenCompat").field("lender", &self.lender).field("inner", &self.inner).finish()
+        f.debug_struct("FlattenCompat")
+            .field("lender", &self.lender)
+            .field("inner", &self.inner)
+            .finish()
     }
 }
 impl<'lend, 'this, L: FallibleLender> FallibleLending<'lend> for FlattenCompat<'this, L>
@@ -218,6 +242,7 @@ where
             }
         }
     }
+
     fn size_hint(&self) -> (usize, Option<usize>) {
         (
             match &*self.inner {
@@ -283,7 +308,9 @@ mod test {
         moved_flatten(flatten)
     }
 
-    fn moved_flatten(mut flatten: Flatten<IntoFallible<Infallible, Parent>>) -> Result<(), Infallible> {
+    fn moved_flatten(
+        mut flatten: Flatten<IntoFallible<Infallible, Parent>>,
+    ) -> Result<(), Infallible> {
         let next_array_ref = flatten.next()?.unwrap() as *const _;
         let array_ref = &flatten.inner.lender.lender.0 as *const _;
         assert_eq!(

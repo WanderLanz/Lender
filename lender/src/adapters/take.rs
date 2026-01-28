@@ -1,8 +1,9 @@
 use core::num::NonZeroUsize;
 
 use crate::{
-    try_trait_v2::Try, DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender, FallibleLend,
-    FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender, Lending,
+    try_trait_v2::Try, DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender,
+    ExactSizeLender, FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender,
+    FusedLender, Lend, Lender, Lending,
 };
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -14,9 +15,11 @@ impl<L> Take<L> {
     pub(crate) fn new(lender: L, n: usize) -> Take<L> {
         Take { lender, n }
     }
+
     pub fn into_inner(self) -> L {
         self.lender
     }
+
     pub fn into_parts(self) -> (L, usize) {
         (self.lender, self.n)
     }
@@ -42,6 +45,7 @@ where
             None
         }
     }
+
     #[inline]
     fn nth(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         if self.n > n {
@@ -55,6 +59,7 @@ where
             None
         }
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         if self.n == 0 {
@@ -72,6 +77,7 @@ where
 
         (lower, upper)
     }
+
     #[inline]
     fn advance_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {
         let min = self.n.min(n);
@@ -98,6 +104,7 @@ where
             None
         }
     }
+
     #[inline]
     fn nth_back(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         let len = self.lender.len();
@@ -112,6 +119,7 @@ where
             None
         }
     }
+
     #[inline]
     fn try_rfold<B, F, R>(&mut self, init: B, f: F) -> R
     where
@@ -130,6 +138,7 @@ where
             }
         }
     }
+
     #[inline]
     fn rfold<B, F>(mut self, init: B, f: F) -> B
     where
@@ -147,6 +156,7 @@ where
             }
         }
     }
+
     #[inline]
     fn advance_back_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {
         let trim_inner = self.lender.len().saturating_sub(self.n);
@@ -187,6 +197,7 @@ where
             Ok(None)
         }
     }
+
     #[inline]
     fn nth(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         if self.n > n {
@@ -200,6 +211,7 @@ where
             Ok(None)
         }
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         if self.n == 0 {
@@ -217,6 +229,7 @@ where
 
         (lower, upper)
     }
+
     #[inline]
     fn advance_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         let min = self.n.min(n);
@@ -243,6 +256,7 @@ where
             Ok(None)
         }
     }
+
     #[inline]
     fn nth_back(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         let len = self.lender.len();
@@ -257,6 +271,7 @@ where
             Ok(None)
         }
     }
+
     #[inline]
     fn try_rfold<B, F, R>(&mut self, init: B, f: F) -> Result<R, Self::Error>
     where
@@ -275,6 +290,7 @@ where
             }
         }
     }
+
     #[inline]
     fn rfold<B, F>(mut self, init: B, f: F) -> Result<B, Self::Error>
     where
@@ -292,6 +308,7 @@ where
             }
         }
     }
+
     #[inline]
     fn advance_back_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         let trim_inner = self.lender.len().saturating_sub(self.n);

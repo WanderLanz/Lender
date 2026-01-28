@@ -15,16 +15,21 @@ impl<L, St, F> Scan<L, St, F> {
     pub(crate) fn new(lender: L, state: St, f: F) -> Scan<L, St, F> {
         Scan { lender, state, f }
     }
+
     pub fn into_inner(self) -> L {
         self.lender
     }
+
     pub fn into_parts(self) -> (L, St, F) {
         (self.lender, self.state, self.f)
     }
 }
 impl<L: fmt::Debug, St: fmt::Debug, F> fmt::Debug for Scan<L, St, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Scan").field("lender", &self.lender).field("state", &self.state).finish()
+        f.debug_struct("Scan")
+            .field("lender", &self.lender)
+            .field("state", &self.state)
+            .finish()
     }
 }
 impl<'lend, B, L, St, F> Lending<'lend> for Scan<L, St, F>
@@ -46,6 +51,7 @@ where
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         (self.f)((&mut self.state, self.lender.next()?))
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (_, upper) = self.lender.size_hint();
@@ -77,6 +83,7 @@ where
             None => Ok(None),
         }
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (_, upper) = self.lender.size_hint();

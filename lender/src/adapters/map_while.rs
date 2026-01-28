@@ -14,16 +14,20 @@ impl<L, P> MapWhile<L, P> {
     pub(crate) fn new(lender: L, predicate: P) -> MapWhile<L, P> {
         MapWhile { lender, predicate }
     }
+
     pub fn into_inner(self) -> L {
         self.lender
     }
+
     pub fn into_parts(self) -> (L, P) {
         (self.lender, self.predicate)
     }
 }
 impl<L: fmt::Debug, P> fmt::Debug for MapWhile<L, P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("MapWhile").field("lender", &self.lender).finish()
+        f.debug_struct("MapWhile")
+            .field("lender", &self.lender)
+            .finish()
     }
 }
 impl<'lend, B, L, P> Lending<'lend> for MapWhile<L, P>
@@ -45,6 +49,7 @@ where
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         (self.predicate)(self.lender.next()?)
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (_, upper) = self.lender.size_hint();
@@ -76,6 +81,7 @@ where
             None => Ok(None),
         }
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (_, upper) = self.lender.size_hint();

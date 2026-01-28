@@ -1,8 +1,9 @@
 use core::fmt;
 
 use crate::{
-    try_trait_v2::Try, DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender, FallibleLend,
-    FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender, Lending,
+    try_trait_v2::Try, DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender,
+    ExactSizeLender, FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender,
+    FusedLender, Lend, Lender, Lending,
 };
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -14,16 +15,20 @@ impl<L, F> Inspect<L, F> {
     pub(crate) fn new(lender: L, f: F) -> Inspect<L, F> {
         Inspect { lender, f }
     }
+
     pub fn into_inner(self) -> L {
         self.lender
     }
+
     pub fn into_parts(self) -> (L, F) {
         (self.lender, self.f)
     }
 }
 impl<I: fmt::Debug, F> fmt::Debug for Inspect<I, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Inspect").field("lender", &self.lender).finish()
+        f.debug_struct("Inspect")
+            .field("lender", &self.lender)
+            .finish()
     }
 }
 impl<'lend, L, F> Lending<'lend> for Inspect<L, F>
@@ -48,10 +53,12 @@ where
         }
         next
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
+
     #[inline]
     fn try_fold<B, Fold, R>(&mut self, init: B, mut fold: Fold) -> R
     where
@@ -65,6 +72,7 @@ where
             fold(acc, x)
         })
     }
+
     #[inline]
     fn fold<B, Fold>(mut self, init: B, mut fold: Fold) -> B
     where
@@ -90,6 +98,7 @@ where
         }
         next
     }
+
     #[inline]
     fn try_rfold<B, Fold, R>(&mut self, init: B, mut fold: Fold) -> R
     where
@@ -103,6 +112,7 @@ where
             fold(acc, x)
         })
     }
+
     #[inline]
     fn rfold<B, Fold>(mut self, init: B, mut fold: Fold) -> B
     where
@@ -123,6 +133,7 @@ where
     fn len(&self) -> usize {
         self.lender.len()
     }
+
     #[inline]
     fn is_empty(&self) -> bool {
         self.lender.is_empty()
@@ -154,10 +165,12 @@ where
         }
         Ok(next)
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
+
     #[inline]
     fn try_fold<B, Fold, R>(&mut self, init: B, mut fold: Fold) -> Result<R, Self::Error>
     where
@@ -171,6 +184,7 @@ where
             fold(acc, x)
         })
     }
+
     #[inline]
     fn fold<B, Fold>(mut self, init: B, mut fold: Fold) -> Result<B, Self::Error>
     where
@@ -196,6 +210,7 @@ where
         }
         Ok(next)
     }
+
     #[inline]
     fn try_rfold<B, Fold, R>(&mut self, init: B, mut fold: Fold) -> Result<R, Self::Error>
     where
@@ -209,6 +224,7 @@ where
             fold(acc, x)
         })
     }
+
     #[inline]
     fn rfold<B, Fold>(mut self, init: B, mut fold: Fold) -> Result<B, Self::Error>
     where
@@ -229,6 +245,7 @@ where
     fn len(&self) -> usize {
         self.lender.len()
     }
+
     #[inline]
     fn is_empty(&self) -> bool {
         self.lender.is_empty()

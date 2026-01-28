@@ -1,8 +1,9 @@
 use core::ops::ControlFlow;
 
 use crate::{
-    try_trait_v2::Try, DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender, FallibleLend,
-    FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender, Lending,
+    try_trait_v2::Try, DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender,
+    ExactSizeLender, FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender,
+    FusedLender, Lend, Lender, Lending,
 };
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -14,11 +15,17 @@ pub struct StepBy<L> {
 impl<L> StepBy<L> {
     pub(crate) fn new(lender: L, step: usize) -> Self {
         assert!(step != 0);
-        StepBy { lender, step: step - 1, first_take: true }
+        StepBy {
+            lender,
+            step: step - 1,
+            first_take: true,
+        }
     }
+
     pub fn into_inner(self) -> L {
         self.lender
     }
+
     pub fn into_parts(self) -> (L, usize) {
         (self.lender, self.step)
     }
@@ -44,6 +51,7 @@ where
             self.lender.nth(self.step)
         }
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (low, high) = self.lender.size_hint();
@@ -56,6 +64,7 @@ where
             (f(low), high.map(f))
         }
     }
+
     #[inline]
     fn nth(&mut self, mut n: usize) -> Option<Lend<'_, Self>> {
         if self.first_take {
@@ -90,6 +99,7 @@ where
             self.lender.nth(nth - 1);
         }
     }
+
     fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> R
     where
         Self: Sized,
@@ -117,6 +127,7 @@ where
         }
         R::from_output(acc)
     }
+
     fn fold<B, F>(mut self, init: B, mut f: F) -> B
     where
         Self: Sized,
@@ -164,7 +175,9 @@ where
 
     #[inline]
     fn nth_back(&mut self, n: usize) -> Option<Lend<'_, Self>> {
-        let n = n.saturating_mul(self.step + 1).saturating_add(self.next_back_index());
+        let n = n
+            .saturating_mul(self.step + 1)
+            .saturating_add(self.next_back_index());
         self.lender.nth_back(n)
     }
 
@@ -237,6 +250,7 @@ where
             self.lender.nth(self.step)
         }
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (low, high) = self.lender.size_hint();
@@ -249,6 +263,7 @@ where
             (f(low), high.map(f))
         }
     }
+
     #[inline]
     fn nth(&mut self, mut n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         if self.first_take {
@@ -283,6 +298,7 @@ where
             self.lender.nth(nth - 1)?;
         }
     }
+
     fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> Result<R, Self::Error>
     where
         Self: Sized,
@@ -310,6 +326,7 @@ where
         }
         Ok(R::from_output(acc))
     }
+
     fn fold<B, F>(mut self, init: B, mut f: F) -> Result<B, Self::Error>
     where
         Self: Sized,
@@ -357,7 +374,9 @@ where
 
     #[inline]
     fn nth_back(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
-        let n = n.saturating_mul(self.step + 1).saturating_add(self.next_back_index_fallible());
+        let n = n
+            .saturating_mul(self.step + 1)
+            .saturating_add(self.next_back_index_fallible());
         self.lender.nth_back(n)
     }
 

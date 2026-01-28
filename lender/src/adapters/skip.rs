@@ -1,8 +1,9 @@
 use core::{num::NonZeroUsize, ops::ControlFlow};
 
 use crate::{
-    try_trait_v2::Try, DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender, FallibleLend,
-    FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender, Lending,
+    try_trait_v2::Try, DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender,
+    ExactSizeLender, FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender,
+    FusedLender, Lend, Lender, Lending,
 };
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -14,9 +15,11 @@ impl<L> Skip<L> {
     pub(crate) fn new(lender: L, n: usize) -> Skip<L> {
         Skip { lender, n }
     }
+
     pub fn into_inner(self) -> L {
         self.lender
     }
+
     pub fn into_parts(self) -> (L, usize) {
         (self.lender, self.n)
     }
@@ -41,6 +44,7 @@ where
             self.lender.next()
         }
     }
+
     #[inline]
     fn nth(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         if self.n > 0 {
@@ -57,6 +61,7 @@ where
             self.lender.nth(n)
         }
     }
+
     #[inline]
     fn count(mut self) -> usize {
         if self.n > 0 && self.lender.nth(self.n - 1).is_none() {
@@ -64,6 +69,7 @@ where
         }
         self.lender.count()
     }
+
     #[inline]
     fn last(&mut self) -> Option<Lend<'_, Self>>
     where
@@ -74,6 +80,7 @@ where
         }
         self.lender.last()
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (lower, upper) = self.lender.size_hint();
@@ -83,6 +90,7 @@ where
 
         (lower, upper)
     }
+
     #[inline]
     fn try_fold<B, F, R>(&mut self, init: B, f: F) -> R
     where
@@ -97,6 +105,7 @@ where
         }
         self.lender.try_fold(init, f)
     }
+
     #[inline]
     fn fold<B, F>(mut self, init: B, f: F) -> B
     where
@@ -108,6 +117,7 @@ where
         }
         self.lender.fold(init, f)
     }
+
     #[inline]
     fn advance_by(&mut self, mut n: usize) -> Result<(), NonZeroUsize> {
         let skip_inner = self.n;
@@ -143,6 +153,7 @@ where
             None
         }
     }
+
     #[inline]
     fn nth_back(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         let len = self.len();
@@ -155,6 +166,7 @@ where
             None
         }
     }
+
     fn try_rfold<B, F, R>(&mut self, init: B, mut f: F) -> R
     where
         Self: Sized,
@@ -182,6 +194,7 @@ where
             }
         }
     }
+
     #[inline]
     fn advance_back_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {
         let min = core::cmp::min(self.len(), n);
@@ -214,6 +227,7 @@ where
             self.lender.next()
         }
     }
+
     #[inline]
     fn nth(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         if self.n > 0 {
@@ -230,6 +244,7 @@ where
             self.lender.nth(n)
         }
     }
+
     #[inline]
     fn count(mut self) -> Result<usize, <L as FallibleLender>::Error> {
         if self.n > 0 && self.lender.nth(self.n - 1)?.is_none() {
@@ -237,6 +252,7 @@ where
         }
         self.lender.count()
     }
+
     #[inline]
     fn last(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error>
     where
@@ -247,6 +263,7 @@ where
         }
         self.lender.last()
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (lower, upper) = self.lender.size_hint();
@@ -256,6 +273,7 @@ where
 
         (lower, upper)
     }
+
     #[inline]
     fn try_fold<B, F, R>(&mut self, init: B, f: F) -> Result<R, Self::Error>
     where
@@ -270,6 +288,7 @@ where
         }
         self.lender.try_fold(init, f)
     }
+
     #[inline]
     fn fold<B, F>(mut self, init: B, f: F) -> Result<B, Self::Error>
     where
@@ -281,6 +300,7 @@ where
         }
         self.lender.fold(init, f)
     }
+
     #[inline]
     fn advance_by(&mut self, mut n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         let skip_inner = self.n;
@@ -316,6 +336,7 @@ where
             Ok(None)
         }
     }
+
     #[inline]
     fn nth_back(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         let len = self.len();
@@ -328,6 +349,7 @@ where
             Ok(None)
         }
     }
+
     fn try_rfold<B, F, R>(&mut self, init: B, mut f: F) -> Result<R, Self::Error>
     where
         Self: Sized,
@@ -356,6 +378,7 @@ where
             }
         }
     }
+
     #[inline]
     fn advance_back_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         let min = core::cmp::min(self.len(), n);

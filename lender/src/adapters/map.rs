@@ -2,8 +2,9 @@ use core::fmt;
 
 use crate::{
     higher_order::{FnMutHKA, FnMutHKARes},
-    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender, FallibleLend, FallibleLender,
-    FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender, Lending,
+    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender,
+    FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender,
+    Lending,
 };
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -15,9 +16,11 @@ impl<L, F> Map<L, F> {
     pub(crate) fn new(lender: L, f: F) -> Map<L, F> {
         Map { lender, f }
     }
+
     pub fn into_inner(self) -> L {
         self.lender
     }
+
     pub fn into_parts(self) -> (L, F) {
         (self.lender, self.f)
     }
@@ -45,6 +48,7 @@ where
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.lender.next().map(&mut self.f)
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
@@ -67,6 +71,7 @@ where
     fn len(&self) -> usize {
         self.lender.len()
     }
+
     #[inline]
     fn is_empty(&self) -> bool {
         self.lender.is_empty()
@@ -105,6 +110,7 @@ where
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.lender.next()?.map(&mut self.f).transpose()
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
@@ -127,6 +133,7 @@ where
     fn len(&self) -> usize {
         self.lender.len()
     }
+
     #[inline]
     fn is_empty(&self) -> bool {
         self.lender.is_empty()

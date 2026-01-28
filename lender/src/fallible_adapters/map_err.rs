@@ -1,7 +1,8 @@
 use core::{fmt, marker::PhantomData};
 
 use crate::{
-    DoubleEndedFallibleLender, ExactSizeFallibleLender, FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender,
+    DoubleEndedFallibleLender, ExactSizeFallibleLender, FallibleLend, FallibleLender,
+    FallibleLending, FusedFallibleLender,
 };
 
 #[derive(Clone)]
@@ -13,18 +14,26 @@ pub struct MapErr<E, L, F> {
 }
 impl<E, L, F> MapErr<E, L, F> {
     pub(crate) fn new(lender: L, f: F) -> Self {
-        Self { lender, f, _marker: PhantomData }
+        Self {
+            lender,
+            f,
+            _marker: PhantomData,
+        }
     }
+
     pub fn into_inner(self) -> L {
         self.lender
     }
+
     pub fn into_parts(self) -> (L, F) {
         (self.lender, self.f)
     }
 }
 impl<E, L: fmt::Debug, F> fmt::Debug for MapErr<E, L, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("MapErr").field("lender", &self.lender).finish()
+        f.debug_struct("MapErr")
+            .field("lender", &self.lender)
+            .finish()
     }
 }
 
@@ -47,6 +56,7 @@ where
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.lender.next().map_err(&mut self.f)
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()

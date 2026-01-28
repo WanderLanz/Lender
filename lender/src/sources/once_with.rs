@@ -2,8 +2,8 @@ use core::marker::PhantomData;
 
 use crate::{
     higher_order::{FnOnceHKA, FnOnceHKARes},
-    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeLender, FallibleLend, FallibleLender, FallibleLending,
-    FusedFallibleLender, FusedLender, Lend, Lender, Lending,
+    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeLender, FallibleLend, FallibleLender,
+    FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender, Lending,
 };
 
 /// Creates a lender that lazily generates a value exactly once by invoking
@@ -58,6 +58,7 @@ where
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.f.take().map(|f| f(&mut self.state))
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         if self.f.is_some() {
@@ -117,7 +118,11 @@ pub fn fallible_once_with<St, E, F>(state: St, f: F) -> FallibleOnceWith<St, E, 
 where
     F: for<'all> FnOnceHKARes<'all, &'all mut St, E>,
 {
-    FallibleOnceWith { state, f: Some(f), _marker: PhantomData }
+    FallibleOnceWith {
+        state,
+        f: Some(f),
+        _marker: PhantomData,
+    }
 }
 
 /// A fallible lender that yields a single element by applying the provided closure.
@@ -152,6 +157,7 @@ where
             None => Ok(None),
         }
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         if self.f.is_some() {
@@ -172,4 +178,7 @@ where
     }
 }
 
-impl<St, E, F> FusedFallibleLender for FallibleOnceWith<St, E, F> where F: for<'all> FnOnceHKARes<'all, &'all mut St, E> {}
+impl<St, E, F> FusedFallibleLender for FallibleOnceWith<St, E, F> where
+    F: for<'all> FnOnceHKARes<'all, &'all mut St, E>
+{
+}

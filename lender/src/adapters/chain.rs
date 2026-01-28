@@ -2,8 +2,8 @@ use core::{num::NonZeroUsize, ops::ControlFlow};
 
 use crate::{
     try_trait_v2::{FromResidual, Try},
-    DoubleEndedFallibleLender, DoubleEndedLender, FallibleLend, FallibleLender, FallibleLending, Fuse, FusedFallibleLender,
-    FusedLender, Lend, Lender, Lending,
+    DoubleEndedFallibleLender, DoubleEndedLender, FallibleLend, FallibleLender, FallibleLending,
+    Fuse, FusedFallibleLender, FusedLender, Lend, Lender, Lending,
 };
 
 #[derive(Clone, Debug)]
@@ -14,8 +14,12 @@ pub struct Chain<A, B> {
 }
 impl<A, B> Chain<A, B> {
     pub(crate) fn new(a: A, b: B) -> Self {
-        Self { a: Fuse::new(a), b: Fuse::new(b) }
+        Self {
+            a: Fuse::new(a),
+            b: Fuse::new(b),
+        }
     }
+
     pub fn into_inner(self) -> (A, B) {
         (self.a.into_inner(), self.b.into_inner())
     }
@@ -37,10 +41,12 @@ where
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.a.next().or_else(|| self.b.next())
     }
+
     #[inline]
     fn count(self) -> usize {
         self.a.count() + self.b.count()
     }
+
     fn try_fold<Acc, F, R>(&mut self, mut acc: Acc, mut f: F) -> R
     where
         Self: Sized,
@@ -57,6 +63,7 @@ where
         };
         Try::from_output(acc)
     }
+
     fn fold<Acc, F>(self, mut acc: Acc, mut f: F) -> Acc
     where
         F: FnMut(Acc, Lend<'_, Self>) -> Acc,
@@ -65,6 +72,7 @@ where
         acc = self.b.fold(acc, f);
         acc
     }
+
     #[inline]
     fn advance_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {
         match self.a.advance_by(n) {
@@ -72,6 +80,7 @@ where
             Err(k) => self.b.advance_by(k.get()),
         }
     }
+
     #[inline]
     fn nth(&mut self, mut n: usize) -> Option<Lend<'_, Self>> {
         n = match self.a.advance_by(n) {
@@ -83,13 +92,17 @@ where
         };
         self.b.nth(n)
     }
+
     #[inline]
     fn find<P>(&mut self, mut predicate: P) -> Option<Lend<'_, Self>>
     where
         P: FnMut(&Lend<'_, Self>) -> bool,
     {
-        self.a.find(&mut predicate).or_else(|| self.b.find(predicate))
+        self.a
+            .find(&mut predicate)
+            .or_else(|| self.b.find(predicate))
     }
+
     #[inline]
     fn last(&mut self) -> Option<Lend<'_, Self>>
     where
@@ -99,6 +112,7 @@ where
         let b_last = self.b.last();
         b_last.or(a_last)
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (a_lower, a_upper) = self.a.size_hint();
@@ -129,6 +143,7 @@ where
             Err(k) => self.a.advance_back_by(k.get()),
         }
     }
+
     #[inline]
     fn nth_back(&mut self, mut n: usize) -> Option<Lend<'_, Self>> {
         n = match self.b.advance_back_by(n) {
@@ -147,7 +162,9 @@ where
         Self: Sized,
         P: FnMut(&Lend<'_, Self>) -> bool,
     {
-        self.b.rfind(&mut predicate).or_else(|| self.a.rfind(predicate))
+        self.b
+            .rfind(&mut predicate)
+            .or_else(|| self.a.rfind(predicate))
     }
 
     fn try_rfold<Acc, F, R>(&mut self, init: Acc, mut f: F) -> R
@@ -193,14 +210,16 @@ impl<A: Default, B: Default> Default for Chain<A, B> {
 impl<'lend, A, B> FallibleLending<'lend> for Chain<A, B>
 where
     A: FallibleLender,
-    B: FallibleLender<Error = A::Error> + for<'all> FallibleLending<'all, Lend = FallibleLend<'all, A>>,
+    B: FallibleLender<Error = A::Error>
+        + for<'all> FallibleLending<'all, Lend = FallibleLend<'all, A>>,
 {
     type Lend = FallibleLend<'lend, A>;
 }
 impl<A, B> FallibleLender for Chain<A, B>
 where
     A: FallibleLender,
-    B: FallibleLender<Error = A::Error> + for<'all> FallibleLending<'all, Lend = FallibleLend<'all, A>>,
+    B: FallibleLender<Error = A::Error>
+        + for<'all> FallibleLending<'all, Lend = FallibleLend<'all, A>>,
 {
     type Error = A::Error;
     // SAFETY: the lend is that of A (and B has the same lend type)
@@ -212,10 +231,12 @@ where
             None => self.b.next(),
         }
     }
+
     #[inline]
     fn count(self) -> Result<usize, Self::Error> {
         Ok(self.a.count()? + self.b.count()?)
     }
+
     fn try_fold<Acc, F, R>(&mut self, mut acc: Acc, mut f: F) -> Result<R, Self::Error>
     where
         Self: Sized,
@@ -232,6 +253,7 @@ where
         };
         Ok(Try::from_output(acc))
     }
+
     fn fold<Acc, F>(self, mut acc: Acc, mut f: F) -> Result<Acc, Self::Error>
     where
         F: FnMut(Acc, FallibleLend<'_, Self>) -> Result<Acc, Self::Error>,
@@ -240,6 +262,7 @@ where
         acc = self.b.fold(acc, f)?;
         Ok(acc)
     }
+
     #[inline]
     fn advance_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         match self.a.advance_by(n)? {
@@ -247,6 +270,7 @@ where
             Err(k) => self.b.advance_by(k.get()),
         }
     }
+
     #[inline]
     fn nth(&mut self, mut n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         n = match self.a.advance_by(n)? {
@@ -258,6 +282,7 @@ where
         };
         self.b.nth(n)
     }
+
     #[inline]
     fn find<P>(&mut self, mut predicate: P) -> Result<Option<FallibleLend<'_, Self>>, Self::Error>
     where
@@ -268,6 +293,7 @@ where
             None => self.b.find(predicate),
         }
     }
+
     #[inline]
     fn last(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error>
     where
@@ -278,6 +304,7 @@ where
             None => self.a.last(),
         }
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (a_lower, a_upper) = self.a.size_hint();
@@ -294,7 +321,8 @@ where
 impl<A, B> DoubleEndedFallibleLender for Chain<A, B>
 where
     A: DoubleEndedFallibleLender,
-    B: DoubleEndedFallibleLender<Error = A::Error> + for<'all> FallibleLending<'all, Lend = FallibleLend<'all, A>>,
+    B: DoubleEndedFallibleLender<Error = A::Error>
+        + for<'all> FallibleLending<'all, Lend = FallibleLend<'all, A>>,
 {
     #[inline]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
@@ -311,6 +339,7 @@ where
             Err(k) => self.a.advance_back_by(k.get()),
         }
     }
+
     #[inline]
     fn nth_back(&mut self, mut n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         n = match self.b.advance_back_by(n)? {
@@ -365,6 +394,7 @@ where
 impl<A, B> FusedFallibleLender for Chain<A, B>
 where
     A: FusedFallibleLender,
-    B: FusedFallibleLender<Error = A::Error> + for<'all> FallibleLending<'all, Lend = FallibleLend<'all, A>>,
+    B: FusedFallibleLender<Error = A::Error>
+        + for<'all> FallibleLending<'all, Lend = FallibleLend<'all, A>>,
 {
 }

@@ -3,7 +3,8 @@ use core::{iter::FusedIterator, marker::PhantomData};
 use fallible_iterator::{DoubleEndedFallibleIterator, FallibleIterator};
 
 use crate::{
-    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeLender, FallibleLend, FallibleLender, FusedLender, Lend, Lender,
+    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeLender, FallibleLend, FallibleLender,
+    FusedLender, Lend, Lender,
 };
 
 /// [`Iterator`] adapter for any [`Lender`] where multiple [`Lend`]s can exist at a
@@ -37,8 +38,12 @@ pub struct Iter<'this, L: 'this> {
 }
 impl<'this, L: 'this> Iter<'this, L> {
     pub(crate) fn new(lender: L) -> Iter<'this, L> {
-        Iter { lender, _marker: PhantomData }
+        Iter {
+            lender,
+            _marker: PhantomData,
+        }
     }
+
     pub fn into_inner(self) -> L {
         self.lender
     }
@@ -52,8 +57,11 @@ where
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         // SAFETY: for<'all> Lend<'all, L>: 'this
-        unsafe { core::mem::transmute::<Option<Lend<'_, L>>, Option<Lend<'this, L>>>(self.lender.next()) }
+        unsafe {
+            core::mem::transmute::<Option<Lend<'_, L>>, Option<Lend<'this, L>>>(self.lender.next())
+        }
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
@@ -67,7 +75,11 @@ where
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
         // SAFETY: for<'all> Lend<'all, L>: 'this
-        unsafe { core::mem::transmute::<Option<Lend<'_, L>>, Option<Lend<'this, L>>>(self.lender.next_back()) }
+        unsafe {
+            core::mem::transmute::<Option<Lend<'_, L>>, Option<Lend<'this, L>>>(
+                self.lender.next_back(),
+            )
+        }
     }
 }
 impl<'this, L: 'this> ExactSizeIterator for Iter<'this, L>
@@ -99,10 +111,13 @@ where
         Ok(
             // SAFETY: for<'all> FallibleLend<'all, L>: 'this
             unsafe {
-                core::mem::transmute::<Option<FallibleLend<'_, L>>, Option<FallibleLend<'this, L>>>(self.lender.next()?)
+                core::mem::transmute::<Option<FallibleLend<'_, L>>, Option<FallibleLend<'this, L>>>(
+                    self.lender.next()?,
+                )
             },
         )
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
@@ -118,7 +133,9 @@ where
         Ok(
             // SAFETY: for<'all> Lend<'all, L>: 'this
             unsafe {
-                core::mem::transmute::<Option<FallibleLend<'_, L>>, Option<FallibleLend<'this, L>>>(self.lender.next_back()?)
+                core::mem::transmute::<Option<FallibleLend<'_, L>>, Option<FallibleLend<'this, L>>>(
+                    self.lender.next_back()?,
+                )
             },
         )
     }

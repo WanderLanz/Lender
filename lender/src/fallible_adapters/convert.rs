@@ -3,8 +3,9 @@ use core::marker::PhantomData;
 use stable_try_trait_v2::Try;
 
 use crate::{
-    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender, FallibleLend, FallibleLender,
-    FallibleLending, FusedFallibleLender, FusedLender, ImplBound, Lender, Lending, Ref,
+    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender,
+    FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, ImplBound,
+    Lender, Lending, Ref,
 };
 
 trait LendingResult<'lend, E, __ImplBound: ImplBound = Ref<'lend, Self>>:

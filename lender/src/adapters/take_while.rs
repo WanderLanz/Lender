@@ -1,6 +1,9 @@
 use core::fmt;
 
-use crate::{FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender, Lending};
+use crate::{
+    FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender,
+    Lending,
+};
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct TakeWhile<L, P> {
@@ -10,18 +13,27 @@ pub struct TakeWhile<L, P> {
 }
 impl<L, P> TakeWhile<L, P> {
     pub(crate) fn new(lender: L, predicate: P) -> TakeWhile<L, P> {
-        TakeWhile { lender, flag: false, predicate }
+        TakeWhile {
+            lender,
+            flag: false,
+            predicate,
+        }
     }
+
     pub fn into_inner(self) -> L {
         self.lender
     }
+
     pub fn into_parts(self) -> (L, P) {
         (self.lender, self.predicate)
     }
 }
 impl<L: fmt::Debug, P> fmt::Debug for TakeWhile<L, P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("TakeWhile").field("lender", &self.lender).field("flag", &self.flag).finish()
+        f.debug_struct("TakeWhile")
+            .field("lender", &self.lender)
+            .field("flag", &self.flag)
+            .finish()
     }
 }
 impl<'lend, L, P> Lending<'lend> for TakeWhile<L, P>
@@ -49,6 +61,7 @@ where
         }
         None
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         if self.flag {
@@ -96,6 +109,7 @@ where
         }
         Ok(None)
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         if self.flag {

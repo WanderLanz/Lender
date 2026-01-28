@@ -1,6 +1,7 @@
 use crate::{
-    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender, FallibleLend, FallibleLender,
-    FallibleLending, FusedFallibleLender, FusedLender, IntoLender, Lend, Lender, Lending,
+    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender,
+    FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, IntoLender,
+    Lend, Lender, Lending,
 };
 
 /// Zips two lenders into a single lender of pairs.
@@ -44,6 +45,7 @@ impl<A, B> Zip<A, B> {
     pub(crate) fn new(a: A, b: B) -> Self {
         Self { a, b }
     }
+
     /// Returns the inner lenders.
     ///
     /// # Examples
@@ -84,6 +86,7 @@ where
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         Some((self.a.next()?, self.b.next()?))
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (a_lower, a_upper) = self.a.size_hint();
@@ -160,10 +163,15 @@ where
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
-        let Some(value_a) = self.a.next()? else { return Ok(None) };
-        let Some(value_b) = self.b.next()? else { return Ok(None) };
+        let Some(value_a) = self.a.next()? else {
+            return Ok(None);
+        };
+        let Some(value_b) = self.b.next()? else {
+            return Ok(None);
+        };
         Ok(Some((value_a, value_b)))
     }
+
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (a_lower, a_upper) = self.a.size_hint();
