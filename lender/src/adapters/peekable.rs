@@ -108,6 +108,7 @@ impl<'this, L> Lender for Peekable<'this, L>
 where
     L: Lender,
 {
+    // SAFETY: the lend is that of L
     crate::unsafe_assume_covariance!();
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         match self.peeked.take() {

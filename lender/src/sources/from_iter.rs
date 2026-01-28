@@ -176,6 +176,7 @@ where
     L: ?Sized + for<'all> Lending<'all> + 'a,
     I: Iterator<Item = Lend<'a, L>>,
 {
+    // SAFETY: the lend is the type parameter L
     crate::unsafe_assume_covariance!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
@@ -369,6 +370,7 @@ where
     I: FallibleIterator<Item = FallibleLend<'a, L>>,
 {
     type Error = I::Error;
+    // SAFETY: the lend is the type parameter L
     crate::unsafe_assume_covariance_fallible!();
 
     #[inline]

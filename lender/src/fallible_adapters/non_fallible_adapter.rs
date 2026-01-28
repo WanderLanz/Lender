@@ -95,6 +95,7 @@ impl<'this, L> Lender for NonFallibleAdapter<'this, L>
 where
     L: FallibleLender,
 {
+    // SAFETY: the lend is that of L
     crate::unsafe_assume_covariance!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {

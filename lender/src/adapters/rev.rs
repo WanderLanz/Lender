@@ -25,6 +25,7 @@ impl<L> Lender for Rev<L>
 where
     L: DoubleEndedLender,
 {
+    // SAFETY: the lend is that of L
     crate::unsafe_assume_covariance!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
@@ -135,6 +136,7 @@ where
     L: DoubleEndedFallibleLender,
 {
     type Error = L::Error;
+    // SAFETY: the lend is that of L
     crate::unsafe_assume_covariance_fallible!();
 
     #[inline]

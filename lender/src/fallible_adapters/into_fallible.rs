@@ -66,6 +66,7 @@ where
     L: Lender,
 {
     type Error = E;
+    // SAFETY: the lend is that of L
     crate::unsafe_assume_covariance_fallible!();
 
     #[inline]

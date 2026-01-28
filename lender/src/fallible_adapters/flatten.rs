@@ -51,6 +51,7 @@ where
     for<'all> FallibleLend<'all, L>: IntoFallibleLender<Error = L::Error>,
 {
     type Error = L::Error;
+    // SAFETY: the lend is that of the inner lender
     crate::unsafe_assume_covariance_fallible!();
 
     #[inline]
@@ -118,6 +119,7 @@ where
     for<'all> FallibleLend<'all, Map<L, F>>: IntoFallibleLender<Error = L::Error>,
 {
     type Error = L::Error;
+    // SAFETY: the lend is that of the inner lender
     crate::unsafe_assume_covariance_fallible!();
 
     #[inline]
@@ -190,6 +192,7 @@ where
     for<'all> FallibleLend<'all, L>: IntoFallibleLender<Error = L::Error>,
 {
     type Error = L::Error;
+    // SAFETY: the lend is that of the inner lender
     crate::unsafe_assume_covariance_fallible!();
 
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {

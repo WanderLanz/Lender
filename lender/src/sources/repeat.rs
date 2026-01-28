@@ -40,6 +40,7 @@ where
     L: ?Sized + for<'all> Lending<'all> + 'a,
     for<'all> Lend<'all, L>: Clone,
 {
+    // SAFETY: the lend is the type parameter L
     crate::unsafe_assume_covariance!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
@@ -111,6 +112,7 @@ where
     for<'all> FallibleLend<'all, L>: Clone,
 {
     type Error = E;
+    // SAFETY: the lend is the type parameter L
     crate::unsafe_assume_covariance_fallible!();
 
     #[inline]

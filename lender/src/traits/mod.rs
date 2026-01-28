@@ -298,16 +298,19 @@ macro_rules! check_covariance {
 ///
 /// ```rust,ignore
 /// impl<L: Lender> Lender for MyAdapter<L> {
-///     unsafe_assume_covariance!();  // Inherits covariance from L
+///     // SAFETY: the lend is that of L
+///     unsafe_assume_covariance!();  
 ///     // ...
 /// }
 /// ```
 ///
 /// # Safety
 ///
-/// This macro disables the covariance check. It is the caller's responsibility
-/// to ensure that the adapter's [`Lend`](Lending::Lend) type is indeed
-/// covariant in its lifetime.
+/// This macro disables the covariance check using unsafe code. It is the
+/// caller's responsibility to ensure that the adapter's [`Lend`](Lending::Lend)
+/// type is indeed covariant in its lifetime. Please write a brief SAFETY
+/// comment explaining why covariance holds, as you would for any other unsafe
+/// code.
 #[macro_export]
 macro_rules! unsafe_assume_covariance {
     () => {

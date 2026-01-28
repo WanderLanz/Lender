@@ -54,6 +54,7 @@ where
     L: FallibleLender,
 {
     type Error = L::Error;
+    // SAFETY: the lend is that of L
     crate::unsafe_assume_covariance_fallible!();
 
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
@@ -137,6 +138,7 @@ where
     G: FnMut() -> Result<FallibleLend<'this, L>, L::Error>,
 {
     type Error = L::Error;
+    // SAFETY: the lend is that of L
     crate::unsafe_assume_covariance_fallible!();
 
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {

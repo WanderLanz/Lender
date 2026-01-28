@@ -45,6 +45,7 @@ where
     I: LenderResult<E>,
 {
     type Error = E;
+    // SAFETY: the lend is that of I
     crate::unsafe_assume_covariance_fallible!();
 
     #[inline]

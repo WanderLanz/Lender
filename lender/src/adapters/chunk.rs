@@ -27,6 +27,7 @@ impl<T> Lender for Chunk<'_, T>
 where
     T: Lender,
 {
+    // SAFETY: the lend is that of T
     crate::unsafe_assume_covariance!();
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         if self.len == 0 {
@@ -54,6 +55,7 @@ where
     T: FallibleLender,
 {
     type Error = T::Error;
+    // SAFETY: the lend is that of T
     crate::unsafe_assume_covariance_fallible!();
 
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {

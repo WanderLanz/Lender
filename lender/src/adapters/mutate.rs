@@ -38,6 +38,7 @@ where
     L: Lender,
     F: FnMut(&mut Lend<'_, L>),
 {
+    // SAFETY: the lend is that of L
     crate::unsafe_assume_covariance!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
@@ -142,6 +143,7 @@ where
     F: FnMut(&mut FallibleLend<'_, L>) -> Result<(), L::Error>,
 {
     type Error = L::Error;
+    // SAFETY: the lend is that of L
     crate::unsafe_assume_covariance_fallible!();
 
     #[inline]

@@ -5,12 +5,12 @@
 ### New
 
 - New infrastructure to check covariance of lends. Every implementation must
-  use either the `check_covariance!`/`check_covariance_fallible!` macros (for
-  sources) to check covariance of the lend lifetime, or the
-  `unsafe_assume_covariance!`/`unsafe_assume_covariance_fallible!` macros (for adapters) to
-  propagate covariance of underlying lends (without any check). Covariance
+  use either the (safe) `check_covariance!`/`check_covariance_fallible!` macros
+  (for sources) to check covariance of the lend lifetime, or the (unsafe)
+  `unsafe_assume_covariance!`/`unsafe_assume_covariance_fallible!` macros when
+  assuming covariance of underlying lends (without any check). Covariance
   checks have also been embedded in the `hrc!`, `hrc_mut!` and `hrc_once`
-  macros. 
+  macros.
 
 - Fallible lenders have now feature parity with normal lenders. In particular,
   `FallibleLender` has now `chunk` and `rposition` methods.
@@ -22,10 +22,10 @@
 - The return type of `Peekable::peek` is now `Option<&'_ Lend<'_, L>>`, which
   fixes a problem of data escape. Analogously for `FalliblePeekable::peek`.
 
-- The `lend!` macro now covers a set of fixed covariant types. If you need
+- The `lend!` macro now covers just a set of fixed covariant types. If you need
   to use more complex types, you can use the `covariant_lend!` macro, which
-  however requires that you define a type name (it cannot be inlined). The
-  same applies to `fallible_lend!` and `covariant_fallible_lend!`.
+  however requires that you define a type name (it cannot be inlined). The same
+  applies to `fallible_lend!` and `covariant_fallible_lend!`.
 
 - Thanks to `AliasableBox` and `MaybeDangling` we now pass miri.
 

@@ -39,6 +39,7 @@ where
     F: for<'all> FnMutHKA<'all, Lend<'all, L>>,
     L: Lender,
 {
+    // SAFETY: the lend is the return type of F
     crate::unsafe_assume_covariance!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
@@ -97,6 +98,7 @@ where
     L: FallibleLender,
 {
     type Error = L::Error;
+    // SAFETY: the lend is the return type of F
     crate::unsafe_assume_covariance_fallible!();
 
     #[inline]

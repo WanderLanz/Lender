@@ -31,6 +31,7 @@ impl<L> Lender for Skip<L>
 where
     L: Lender,
 {
+    // SAFETY: the lend is that of L
     crate::unsafe_assume_covariance!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
@@ -202,6 +203,7 @@ where
     L: FallibleLender,
 {
     type Error = L::Error;
+    // SAFETY: the lend is that of L
     crate::unsafe_assume_covariance_fallible!();
 
     #[inline]

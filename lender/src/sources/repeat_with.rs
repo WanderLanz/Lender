@@ -44,6 +44,7 @@ where
     L: ?Sized + for<'all> Lending<'all> + 'a,
     F: FnMut() -> Lend<'a, L>,
 {
+    // SAFETY: the lend is the return type of F
     crate::unsafe_assume_covariance!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
@@ -99,6 +100,7 @@ where
     F: FnMut() -> Result<FallibleLend<'a, L>, E>,
 {
     type Error = E;
+    // SAFETY: the lend is the return type of F
     crate::unsafe_assume_covariance_fallible!();
 
     #[inline]

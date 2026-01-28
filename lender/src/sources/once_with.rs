@@ -52,6 +52,7 @@ impl<St, F> Lender for OnceWith<St, F>
 where
     F: for<'all> FnOnceHKA<'all, &'all mut St>,
 {
+    // SAFETY: the lend is the return type of F
     crate::unsafe_assume_covariance!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
@@ -141,6 +142,7 @@ where
     F: for<'all> FnOnceHKARes<'all, &'all mut St, E>,
 {
     type Error = E;
+    // SAFETY: the lend is the return type of F
     crate::unsafe_assume_covariance_fallible!();
 
     #[inline]

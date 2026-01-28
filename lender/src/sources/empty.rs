@@ -44,6 +44,7 @@ impl<L> Lender for Empty<L>
 where
     L: ?Sized + for<'all> Lending<'all>,
 {
+    // SAFETY: the lend is the type parameter L
     crate::unsafe_assume_covariance!();
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         None
@@ -117,6 +118,7 @@ where
     L: ?Sized + for<'all> FallibleLending<'all>,
 {
     type Error = E;
+    // SAFETY: the lend is the type parameter L
     crate::unsafe_assume_covariance_fallible!();
 
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {

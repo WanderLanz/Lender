@@ -1343,6 +1343,7 @@ impl<'lend, L: Lender> Lending<'lend> for &mut L {
     type Lend = Lend<'lend, L>;
 }
 impl<L: Lender> Lender for &mut L {
+    // SAFETY: the lend is that of L
     crate::unsafe_assume_covariance!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {

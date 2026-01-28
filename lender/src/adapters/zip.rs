@@ -78,6 +78,7 @@ where
     A: Lender,
     B: Lender,
 {
+    // SAFETY: the lend is a tuple of the lends of A and B
     crate::unsafe_assume_covariance!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
@@ -154,6 +155,7 @@ where
     B: FallibleLender<Error = A::Error>,
 {
     type Error = A::Error;
+    // SAFETY: the lend is a tuple of the lends of A and B
     crate::unsafe_assume_covariance_fallible!();
 
     #[inline]

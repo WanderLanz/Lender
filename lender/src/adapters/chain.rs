@@ -32,6 +32,7 @@ where
     A: Lender,
     B: Lender + for<'all> Lending<'all, Lend = Lend<'all, A>>,
 {
+    // SAFETY: the lend is that of A (and B has the same lend type)
     crate::unsafe_assume_covariance!();
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.a.next().or_else(|| self.b.next())
@@ -202,6 +203,7 @@ where
     B: FallibleLender<Error = A::Error> + for<'all> FallibleLending<'all, Lend = FallibleLend<'all, A>>,
 {
     type Error = A::Error;
+    // SAFETY: the lend is that of A (and B has the same lend type)
     crate::unsafe_assume_covariance_fallible!();
 
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {

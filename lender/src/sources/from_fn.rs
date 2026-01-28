@@ -59,6 +59,7 @@ impl<St, F> Lender for FromFn<St, F>
 where
     F: for<'all> FnMutHKAOpt<'all, &'all mut St>,
 {
+    // SAFETY: the lend is the return type of F
     crate::unsafe_assume_covariance!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
@@ -126,6 +127,7 @@ where
     F: for<'all> FnMutHKAResOpt<'all, &'all mut St, E>,
 {
     type Error = E;
+    // SAFETY: the lend is the return type of F
     crate::unsafe_assume_covariance_fallible!();
 
     #[inline]

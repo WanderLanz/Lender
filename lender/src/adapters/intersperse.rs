@@ -53,6 +53,7 @@ where
     for<'all> Lend<'all, L>: Clone,
     L: Lender,
 {
+    // SAFETY: the lend is that of L
     crate::unsafe_assume_covariance!();
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         if self.needs_sep && self.lender.peek().is_some() {
@@ -132,6 +133,7 @@ where
     L: Lender,
     G: FnMut() -> Lend<'this, L>,
 {
+    // SAFETY: the lend is that of L
     crate::unsafe_assume_covariance!();
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         if self.needs_sep && self.lender.peek().is_some() {

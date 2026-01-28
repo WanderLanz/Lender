@@ -62,6 +62,7 @@ impl<'a, L> Lender for Once<'a, L>
 where
     L: ?Sized + for<'all> Lending<'all>,
 {
+    // SAFETY: the lend is the type parameter L
     crate::unsafe_assume_covariance!();
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         // SAFETY: 'a: 'lend
@@ -144,6 +145,7 @@ where
     L: ?Sized + for<'all> FallibleLending<'all>,
 {
     type Error = E;
+    // SAFETY: the lend is the type parameter L
     crate::unsafe_assume_covariance_fallible!();
 
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
