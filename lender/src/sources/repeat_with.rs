@@ -56,6 +56,11 @@ where
     }
 
     #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (usize::MAX, None)
+    }
+
+    #[inline]
     fn advance_by(&mut self, _n: usize) -> Result<(), core::num::NonZeroUsize> {
         Ok(())
     }
@@ -118,6 +123,11 @@ where
                 unsafe { core::mem::transmute::<FallibleLend<'a, L>, FallibleLend<'_, L>>(value) },
             )
         })
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (usize::MAX, None)
     }
 
     #[inline]

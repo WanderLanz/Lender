@@ -413,6 +413,10 @@ fn fallible_repeat() {
         });
     assert!(result_err.is_err());
     assert!(collected_err.is_empty()); // Should not have collected anything
+
+    // size_hint should indicate infinite iterator
+    let repeat_hint = fallible_repeat::<String, fallible_lend!(i32)>(Ok(42));
+    assert_eq!(repeat_hint.size_hint(), (usize::MAX, None));
 }
 
 #[test]
@@ -466,6 +470,11 @@ fn fallible_repeat_with() {
         Err(e) => assert_eq!(e, "error"),
         Ok(_) => panic!("Expected error"),
     }
+
+    // size_hint should indicate infinite iterator
+    let repeat_with_hint =
+        fallible_repeat_with::<'_, fallible_lend!(i32), String, _>(|| Ok(1));
+    assert_eq!(repeat_with_hint.size_hint(), (usize::MAX, None));
 }
 
 #[test]
@@ -2051,12 +2060,16 @@ fn lender_position() {
 fn lender_max() {
     assert_eq!(VecLender::new(vec![1, 5, 3, 2, 4]).max(), Some(5));
     assert_eq!(VecLender::new(vec![]).max(), None);
+    // Per Iterator::max docs: "If several elements are equally maximum, the last element is returned."
+    assert_eq!(VecLender::new(vec![1, 3, 3, 1]).max(), Some(3));
 }
 
 #[test]
 fn lender_min() {
     assert_eq!(VecLender::new(vec![3, 1, 5, 2, 4]).min(), Some(1));
     assert_eq!(VecLender::new(vec![]).min(), None);
+    // Per Iterator::min docs: "If several elements are equally minimum, the first element is returned."
+    assert_eq!(VecLender::new(vec![3, 1, 1, 3]).min(), Some(1));
 }
 
 #[test]
@@ -2083,6 +2096,12 @@ fn lender_max_by() {
         VecLender::new(vec![1, 5, 3]).max_by(|a, b| a.cmp(b)),
         Some(5)
     );
+    // Per Iterator::max_by docs: "If several elements are equally maximum, the last element is returned."
+    // Use abs() comparison so that -3 and 3 are equal; last should win.
+    assert_eq!(
+        VecLender::new(vec![-3, 1, 3]).max_by(|a, b| a.abs().cmp(&b.abs())),
+        Some(3)
+    );
 }
 
 #[test]
@@ -2090,6 +2109,12 @@ fn lender_min_by() {
     assert_eq!(
         VecLender::new(vec![3, 1, 5]).min_by(|a, b| a.cmp(b)),
         Some(1)
+    );
+    // Per Iterator::min_by docs: "If several elements are equally minimum, the first element is returned."
+    // Use abs() comparison so that -1 and 1 are equal; first should win.
+    assert_eq!(
+        VecLender::new(vec![3, -1, 1]).min_by(|a, b| a.abs().cmp(&b.abs())),
+        Some(-1)
     );
 }
 
@@ -2171,8 +2196,8 @@ fn double_ended_lender_rfind() {
 #[test]
 fn double_ended_lender_rposition() {
     let mut lender = VecLender::new(vec![1, 2, 3, 2, 1]);
-    // rposition finds index from end
-    // Element 2 appears at indices 1 and 3, rposition returns 3 (rightmost)
+    // rposition searches from the end but returns a front-based index
+    // Element 2 appears at indices 1 and 3; searching from the end finds index 3 first
     assert_eq!(lender.rposition(|x| x == 2), Some(3));
 }
 
@@ -3079,6 +3104,13 @@ fn source_repeat_double_ended() {
 }
 
 #[test]
+fn source_repeat_size_hint() {
+    // Per Iterator::repeat docs: size_hint returns (usize::MAX, None) for infinite iterators
+    let repeat = lender::repeat::<lend!(i32)>(42);
+    assert_eq!(repeat.size_hint(), (usize::MAX, None));
+}
+
+#[test]
 fn source_repeat_with_basic() {
     let mut counter = 0;
     let mut repeat_with = lender::repeat_with::<lend!(i32), _>(|| {
@@ -3089,6 +3121,12 @@ fn source_repeat_with_basic() {
     assert_eq!(repeat_with.next(), Some(1));
     assert_eq!(repeat_with.next(), Some(2));
     assert_eq!(repeat_with.next(), Some(3));
+}
+
+#[test]
+fn source_repeat_with_size_hint() {
+    let repeat_with = lender::repeat_with::<lend!(i32), _>(|| 42);
+    assert_eq!(repeat_with.size_hint(), (usize::MAX, None));
 }
 
 #[test]

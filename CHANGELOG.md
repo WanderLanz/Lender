@@ -48,6 +48,11 @@
 - All implementations propagate correctly fused, double-ended and exact-size 
   traits.
 
+- `max`/`max_by` return the last instance in case of ties, as in `Iterator`
+  (previously they returned the first instance).
+
+- All repeat method return `(usize::MAX, None)` on `size_hint`, as in `Iterator`.
+
 ## [0.4.2] - 2025-11-18
 
 ### Fixed

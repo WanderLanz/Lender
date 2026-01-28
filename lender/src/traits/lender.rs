@@ -987,8 +987,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         self.reduce(move |x, y| {
             match compare(&x, &y) {
-                Ordering::Less => y.to_owned(),
-                _ => x,
+                Ordering::Greater => x,
+                _ => y.to_owned(),
             }
         })
     }
