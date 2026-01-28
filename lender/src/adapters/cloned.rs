@@ -12,6 +12,7 @@ use crate::{
 pub struct Cloned<L> {
     lender: L,
 }
+
 impl<L> Cloned<L> {
     pub(crate) fn new(lender: L) -> Cloned<L> {
         Cloned { lender }

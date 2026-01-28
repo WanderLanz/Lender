@@ -155,6 +155,7 @@ pub struct FirstShunt<L>(PhantomData<L>);
 /// Private adapter. Marks a [`Lender`], where [`Lend`] implements [`TupleLend`], as a
 /// [`Lender`] of `<Lend as TupleLend>::Second`.
 pub struct SecondShunt<L>(PhantomData<L>);
+
 impl<'lend, L: Lender> Lending<'lend> for FirstShunt<L>
 where
     for<'all> Lend<'all, L>: TupleLend<'all>,

@@ -13,6 +13,7 @@ where
     separator: Lend<'this, L>,
     needs_sep: bool,
 }
+
 impl<'this, L> Intersperse<'this, L>
 where
     for<'all> Lend<'all, L>: Clone,
@@ -112,6 +113,7 @@ where
     lender: Peekable<'this, L>,
     needs_sep: bool,
 }
+
 impl<'this, L, G> IntersperseWith<'this, L, G>
 where
     L: Lender,

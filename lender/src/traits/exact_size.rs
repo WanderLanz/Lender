@@ -14,6 +14,7 @@ pub trait ExactSizeLender: Lender {
         self.len() == 0
     }
 }
+
 impl<I: ExactSizeLender> ExactSizeLender for &mut I {
     #[inline(always)]
     fn len(&self) -> usize {

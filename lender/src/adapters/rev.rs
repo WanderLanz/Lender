@@ -3,11 +3,13 @@ use crate::{
     FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender,
     Lending, try_trait_v2::Try,
 };
+
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Rev<L> {
     lender: L,
 }
+
 impl<L> Rev<L> {
     pub(crate) fn new(lender: L) -> Rev<L> {
         Rev { lender }
@@ -268,4 +270,5 @@ where
         self.lender.is_empty()
     }
 }
+
 impl<L> FusedFallibleLender for Rev<L> where L: DoubleEndedFallibleLender + FusedFallibleLender {}

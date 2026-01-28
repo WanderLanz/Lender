@@ -12,6 +12,7 @@ pub struct MapErr<E, L, F> {
     f: F,
     _marker: PhantomData<E>,
 }
+
 impl<E, L, F> MapErr<E, L, F> {
     pub(crate) fn new(lender: L, f: F) -> Self {
         Self {

@@ -12,6 +12,7 @@ pub struct Take<L> {
     lender: L,
     n: usize,
 }
+
 impl<L> Take<L> {
     pub(crate) fn new(lender: L, n: usize) -> Take<L> {
         Take { lender, n }
@@ -175,7 +176,9 @@ where
         NonZeroUsize::new(n - advanced_by).map_or(Ok(()), Err)
     }
 }
+
 impl<L> ExactSizeLender for Take<L> where L: ExactSizeLender {}
+
 impl<L> FusedLender for Take<L> where L: FusedLender {}
 
 impl<'lend, L> FallibleLending<'lend> for Take<L>
@@ -184,6 +187,7 @@ where
 {
     type Lend = FallibleLend<'lend, L>;
 }
+
 impl<L> FallibleLender for Take<L>
 where
     L: FallibleLender,
@@ -246,6 +250,7 @@ where
         Ok(NonZeroUsize::new(n - advanced).map_or(Ok(()), Err))
     }
 }
+
 impl<L> DoubleEndedFallibleLender for Take<L>
 where
     L: DoubleEndedFallibleLender + ExactSizeFallibleLender,
@@ -327,5 +332,7 @@ where
         Ok(NonZeroUsize::new(n - advanced_by).map_or(Ok(()), Err))
     }
 }
+
 impl<L> ExactSizeFallibleLender for Take<L> where L: ExactSizeFallibleLender {}
+
 impl<L> FusedFallibleLender for Take<L> where L: FusedFallibleLender {}

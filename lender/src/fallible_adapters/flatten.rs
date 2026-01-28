@@ -13,6 +13,7 @@ where
 {
     inner: FlattenCompat<'this, L>,
 }
+
 impl<L: FallibleLender> Flatten<'_, L>
 where
     for<'all> FallibleLend<'all, L>: IntoFallibleLender,
@@ -91,6 +92,7 @@ where
 {
     inner: FlattenCompat<'this, Map<L, F>>,
 }
+
 impl<L: FallibleLender, F> FlatMap<'_, L, F>
 where
     Map<L, F>: FallibleLender,

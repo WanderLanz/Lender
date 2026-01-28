@@ -5,12 +5,14 @@ use crate::{
     FusedFallibleLender, FusedLender, Lend, Lender, Lending,
     higher_order::{FnMutHKAOpt, FnMutHKAResOpt},
 };
+
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct FilterMap<L, F> {
     lender: L,
     f: F,
 }
+
 impl<L, F> FilterMap<L, F> {
     pub(crate) fn new(lender: L, f: F) -> FilterMap<L, F> {
         FilterMap { lender, f }

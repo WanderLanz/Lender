@@ -6,12 +6,14 @@ use crate::{
     Lending,
     try_trait_v2::{FromResidual, Try},
 };
+
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Fuse<L> {
     lender: L,
     flag: bool,
 }
+
 impl<L> Fuse<L> {
     pub(crate) fn new(lender: L) -> Fuse<L> {
         Fuse {

@@ -4,12 +4,14 @@ use crate::{
     DoubleEndedFallibleLender, DoubleEndedLender, FallibleLend, FallibleLender, FallibleLending,
     FusedFallibleLender, FusedLender, Lend, Lender, Lending,
 };
+
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Filter<L, P> {
     pub(crate) lender: L,
     predicate: P,
 }
+
 impl<L, P> Filter<L, P> {
     pub(crate) fn new(lender: L, predicate: P) -> Filter<L, P> {
         Filter { lender, predicate }

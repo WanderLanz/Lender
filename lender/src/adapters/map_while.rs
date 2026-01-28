@@ -4,12 +4,14 @@ use crate::{
     FallibleLend, FallibleLender, FallibleLending, Lend, Lender, Lending,
     higher_order::{FnMutHKAOpt, FnMutHKAResOpt},
 };
+
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct MapWhile<L, P> {
     lender: L,
     predicate: P,
 }
+
 impl<L, P> MapWhile<L, P> {
     pub(crate) fn new(lender: L, predicate: P) -> MapWhile<L, P> {
         MapWhile { lender, predicate }

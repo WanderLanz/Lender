@@ -14,6 +14,7 @@
 pub trait FnOnceHKA<'b, A>: FnOnce(A) -> <Self as FnOnceHKA<'b, A>>::B {
     type B: 'b;
 }
+
 impl<'b, A, B: 'b, F: FnOnce(A) -> B> FnOnceHKA<'b, A> for F {
     type B = B;
 }
@@ -22,6 +23,7 @@ impl<'b, A, B: 'b, F: FnOnce(A) -> B> FnOnceHKA<'b, A> for F {
 pub trait FnMutHKA<'b, A>: FnMut(A) -> <Self as FnMutHKA<'b, A>>::B {
     type B: 'b;
 }
+
 impl<'b, A, B: 'b, F: FnMut(A) -> B> FnMutHKA<'b, A> for F {
     type B = B;
 }
@@ -31,6 +33,7 @@ impl<'b, A, B: 'b, F: FnMut(A) -> B> FnMutHKA<'b, A> for F {
 pub trait FnMutHKAOpt<'b, A>: FnMut(A) -> Option<<Self as FnMutHKAOpt<'b, A>>::B> {
     type B: 'b;
 }
+
 impl<'b, A, B: 'b, F: FnMut(A) -> Option<B>> FnMutHKAOpt<'b, A> for F {
     type B = B;
 }
@@ -42,6 +45,7 @@ pub trait FnOnceHKARes<'b, A, E>:
 {
     type B: 'b;
 }
+
 impl<'b, A, B: 'b, E, F: FnOnce(A) -> Result<B, E>> FnOnceHKARes<'b, A, E> for F {
     type B = B;
 }
@@ -51,6 +55,7 @@ impl<'b, A, B: 'b, E, F: FnOnce(A) -> Result<B, E>> FnOnceHKARes<'b, A, E> for F
 pub trait FnMutHKARes<'b, A, E>: FnMut(A) -> Result<<Self as FnMutHKARes<'b, A, E>>::B, E> {
     type B: 'b;
 }
+
 impl<'b, A, B: 'b, E, F: FnMut(A) -> Result<B, E>> FnMutHKARes<'b, A, E> for F {
     type B = B;
 }
@@ -62,6 +67,7 @@ pub trait FnMutHKAResOpt<'b, A, E>:
 {
     type B: 'b;
 }
+
 impl<'b, A, B: 'b, E, F: FnMut(A) -> Result<Option<B>, E>> FnMutHKAResOpt<'b, A, E> for F {
     type B = B;
 }

@@ -12,6 +12,7 @@ pub struct Chain<A, B> {
     a: Fuse<A>,
     b: Fuse<B>,
 }
+
 impl<A, B> Chain<A, B> {
     pub(crate) fn new(a: A, b: B) -> Self {
         Self {

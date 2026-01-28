@@ -53,6 +53,7 @@ pub trait IntoLender {
     type Lender: Lender;
     fn into_lender(self) -> <Self as IntoLender>::Lender;
 }
+
 impl<L: Lender> IntoLender for L {
     type Lender = L;
     #[inline]
@@ -60,6 +61,7 @@ impl<L: Lender> IntoLender for L {
         self
     }
 }
+
 /// The [`Lender`] version of [`core::iter::Extend`].
 pub trait ExtendLender<L: IntoLender> {
     fn extend_lender(&mut self, lender: L);
@@ -99,6 +101,7 @@ pub trait IntoFallibleLender {
     type FallibleLender: FallibleLender<Error = Self::Error>;
     fn into_fallible_lender(self) -> Self::FallibleLender;
 }
+
 impl<L: FallibleLender> IntoFallibleLender for L {
     type Error = L::Error;
     type FallibleLender = L;

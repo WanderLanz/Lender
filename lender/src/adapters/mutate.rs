@@ -5,12 +5,14 @@ use crate::{
     FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender,
     Lending, try_trait_v2::Try,
 };
+
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Mutate<L, F> {
     lender: L,
     f: F,
 }
+
 impl<L, F> Mutate<L, F> {
     pub(crate) fn new(lender: L, f: F) -> Mutate<L, F> {
         Mutate { lender, f }
@@ -144,6 +146,7 @@ where
         self.lender.is_empty()
     }
 }
+
 impl<L: FusedLender, F> FusedLender for Mutate<L, F> where F: FnMut(&mut Lend<'_, L>) {}
 
 impl<'lend, L, F> FallibleLending<'lend> for Mutate<L, F>
@@ -259,6 +262,7 @@ where
         self.lender.is_empty()
     }
 }
+
 impl<L: FusedFallibleLender, F> FusedFallibleLender for Mutate<L, F> where
     F: FnMut(&mut FallibleLend<'_, L>) -> Result<(), L::Error>
 {

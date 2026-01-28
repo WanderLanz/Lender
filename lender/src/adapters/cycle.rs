@@ -12,6 +12,7 @@ pub struct Cycle<L> {
     orig: L,
     lender: L,
 }
+
 impl<L> Cycle<L>
 where
     L: Clone,

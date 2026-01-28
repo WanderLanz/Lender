@@ -36,6 +36,7 @@ pub struct Iter<'this, L: 'this> {
     lender: L,
     _marker: PhantomData<&'this ()>,
 }
+
 impl<'this, L: 'this> Iter<'this, L> {
     pub(crate) fn new(lender: L) -> Iter<'this, L> {
         Iter {

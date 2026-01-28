@@ -41,6 +41,7 @@ pub struct Zip<A, B> {
     a: A,
     b: B,
 }
+
 impl<A, B> Zip<A, B> {
     pub(crate) fn new(a: A, b: B) -> Self {
         Self { a, b }

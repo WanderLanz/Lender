@@ -5,12 +5,14 @@ use crate::{
     FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender,
     Lending, try_trait_v2::Try,
 };
+
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Skip<L> {
     lender: L,
     n: usize,
 }
+
 impl<L> Skip<L> {
     pub(crate) fn new(lender: L, n: usize) -> Skip<L> {
         Skip { lender, n }
@@ -395,4 +397,5 @@ where
         Ok(NonZeroUsize::new(n - min).map_or(Ok(()), Err))
     }
 }
+
 impl<L> FusedFallibleLender for Skip<L> where L: FusedFallibleLender {}

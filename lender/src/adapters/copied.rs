@@ -12,6 +12,7 @@ use crate::{
 pub struct Copied<L> {
     lender: L,
 }
+
 impl<L> Copied<L> {
     pub(crate) fn new(lender: L) -> Copied<L> {
         Copied { lender }

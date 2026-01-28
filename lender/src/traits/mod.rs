@@ -27,6 +27,7 @@ pub trait TupleLend<'a> {
     type Second: 'a;
     fn tuple_lend(self) -> (Self::First, Self::Second);
 }
+
 impl<'a, A: 'a, B: 'a> TupleLend<'a> for (A, B) {
     type First = A;
     type Second = B;
@@ -35,6 +36,7 @@ impl<'a, A: 'a, B: 'a> TupleLend<'a> for (A, B) {
         (self.0, self.1)
     }
 }
+
 impl<'a, A, B> TupleLend<'a> for &'a (A, B) {
     type First = &'a A;
     type Second = &'a B;
@@ -43,6 +45,7 @@ impl<'a, A, B> TupleLend<'a> for &'a (A, B) {
         (&self.0, &self.1)
     }
 }
+
 impl<'a, A, B> TupleLend<'a> for &'a mut (A, B) {
     type First = &'a mut A;
     type Second = &'a mut B;

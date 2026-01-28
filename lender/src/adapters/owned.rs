@@ -13,6 +13,7 @@ use crate::{
 pub struct Owned<L> {
     lender: L,
 }
+
 impl<L> Owned<L> {
     pub(crate) fn new(lender: L) -> Self {
         Self { lender }

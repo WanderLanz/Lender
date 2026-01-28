@@ -6,12 +6,14 @@ use crate::{
     Lending,
     higher_order::{FnMutHKA, FnMutHKARes},
 };
+
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Map<L, F> {
     pub(crate) lender: L,
     f: F,
 }
+
 impl<L, F> Map<L, F> {
     pub(crate) fn new(lender: L, f: F) -> Map<L, F> {
         Map { lender, f }

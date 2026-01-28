@@ -3,6 +3,7 @@ use core::fmt;
 use maybe_dangling::MaybeDangling;
 
 use crate::{FusedLender, IntoLender, Lend, Lender, Lending, Map};
+
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Flatten<'this, L: Lender>
 where
@@ -10,6 +11,7 @@ where
 {
     inner: FlattenCompat<'this, L>,
 }
+
 impl<L: Lender> Flatten<'_, L>
 where
     for<'all> Lend<'all, L>: IntoLender,
@@ -83,6 +85,7 @@ where
 {
     inner: FlattenCompat<'this, Map<L, F>>,
 }
+
 impl<L: Lender, F> FlatMap<'_, L, F>
 where
     Map<L, F>: Lender,
@@ -153,6 +156,7 @@ where
     for<'all> Lend<'all, Map<L, F>>: IntoLender,
 {
 }
+
 pub struct FlattenCompat<'this, L: Lender>
 where
     for<'all> Lend<'all, L>: IntoLender,
@@ -166,6 +170,7 @@ where
     inner: MaybeDangling<Option<<Lend<'this, L> as IntoLender>::Lender>>,
     lender: AliasableBox<L>,
 }
+
 impl<L: Lender> FlattenCompat<'_, L>
 where
     for<'all> Lend<'all, L>: IntoLender,

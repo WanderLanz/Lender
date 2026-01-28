@@ -326,6 +326,7 @@ impl<'this, L: DoubleEndedFallibleLender> DoubleEndedFallibleLender for Peekable
 }
 
 impl<'this, L> ExactSizeFallibleLender for Peekable<'this, L> where L: ExactSizeFallibleLender {}
+
 impl<'this, L> FusedFallibleLender for Peekable<'this, L> where L: FusedFallibleLender {}
 
 #[cfg(test)]

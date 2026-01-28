@@ -5,6 +5,7 @@ use crate::{
     FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender,
     Lending, try_trait_v2::Try,
 };
+
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct StepBy<L> {
@@ -12,6 +13,7 @@ pub struct StepBy<L> {
     step: usize,
     first_take: bool,
 }
+
 impl<L> StepBy<L> {
     pub(crate) fn new(lender: L, step: usize) -> Self {
         assert!(step != 0);

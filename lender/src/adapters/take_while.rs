@@ -12,6 +12,7 @@ pub struct TakeWhile<L, P> {
     flag: bool,
     predicate: P,
 }
+
 impl<L, P> TakeWhile<L, P> {
     pub(crate) fn new(lender: L, predicate: P) -> TakeWhile<L, P> {
         TakeWhile {

@@ -5,12 +5,14 @@ use crate::{
     FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender,
     Lending, try_trait_v2::Try,
 };
+
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Enumerate<L> {
     lender: L,
     count: usize,
 }
+
 impl<L> Enumerate<L> {
     pub(crate) fn new(lender: L) -> Enumerate<L> {
         Enumerate { lender, count: 0 }

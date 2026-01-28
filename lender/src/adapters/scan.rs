@@ -4,6 +4,7 @@ use crate::{
     FallibleLend, FallibleLender, FallibleLending, Lend, Lender, Lending,
     higher_order::{FnMutHKAOpt, FnMutHKAResOpt},
 };
+
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Scan<L, St, F> {
@@ -11,6 +12,7 @@ pub struct Scan<L, St, F> {
     f: F,
     state: St,
 }
+
 impl<L, St, F> Scan<L, St, F> {
     pub(crate) fn new(lender: L, state: St, f: F) -> Scan<L, St, F> {
         Scan { lender, state, f }

@@ -9,6 +9,7 @@ pub struct Chunk<'s, T> {
     lender: &'s mut T,
     len: usize,
 }
+
 impl<'s, T> Chunk<'s, T> {
     pub(crate) fn new(lender: &'s mut T, len: usize) -> Self {
         Self { lender, len }

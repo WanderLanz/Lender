@@ -5,12 +5,14 @@ use crate::{
     FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender,
     Lending, try_trait_v2::Try,
 };
+
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Inspect<L, F> {
     lender: L,
     f: F,
 }
+
 impl<L, F> Inspect<L, F> {
     pub(crate) fn new(lender: L, f: F) -> Inspect<L, F> {
         Inspect { lender, f }

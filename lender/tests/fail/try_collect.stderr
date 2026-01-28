@@ -25,5 +25,5 @@ error: implementation of `lender::FromLender` is not general enough
 40 |     let wrapper: ChangeOutputType<Result<(), _>, _> = lender.try_collect::<Wrapper<TryShunt<'_, _>>>();
    |                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ implementation of `lender::FromLender` is not general enough
    |
-   = note: `Wrapper<lender::TryShunt<'2, &mut lender::FromFn<(), {closure@$DIR/src/higher_order.rs:157:15: 157:43}>>>` must implement `lender::FromLender<lender::TryShunt<'1, &mut lender::FromFn<(), {closure@$DIR/src/higher_order.rs:157:15: 157:43}>>>`, for any lifetime `'1`...
-   = note: ...but it actually implements `lender::FromLender<lender::TryShunt<'2, &mut lender::FromFn<(), {closure@$DIR/src/higher_order.rs:157:15: 157:43}>>>`, for some specific lifetime `'2`
+   = note: `Wrapper<lender::TryShunt<'2, &mut lender::FromFn<(), {closure@$DIR/src/higher_order.rs:163:15: 163:43}>>>` must implement `lender::FromLender<lender::TryShunt<'1, &mut lender::FromFn<(), {closure@$DIR/src/higher_order.rs:163:15: 163:43}>>>`, for any lifetime `'1`...
+   = note: ...but it actually implements `lender::FromLender<lender::TryShunt<'2, &mut lender::FromFn<(), {closure@$DIR/src/higher_order.rs:163:15: 163:43}>>>`, for some specific lifetime `'2`
