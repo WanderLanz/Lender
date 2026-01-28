@@ -2217,6 +2217,259 @@ fn lender_is_sorted_by_key() {
 }
 
 // ============================================================================
+// Reduce, partition, sum, product, unzip tests (Lender)
+// ============================================================================
+
+#[test]
+fn lender_reduce() {
+    // Basic reduce: sum via reduce
+    assert_eq!(
+        VecLender::new(vec![1, 2, 3, 4]).reduce(|acc, x| acc + x),
+        Some(10)
+    );
+    // Single element
+    assert_eq!(VecLender::new(vec![42]).reduce(|acc, x| acc + x), Some(42));
+    // Empty
+    assert_eq!(VecLender::new(vec![]).reduce(|acc, x| acc + x), None);
+}
+
+#[test]
+fn lender_try_reduce() {
+    // Successful try_reduce
+    let result: Result<Option<i32>, &str> =
+        VecLender::new(vec![1, 2, 3]).try_reduce(|acc, x| Ok::<_, &str>(acc + x));
+    assert_eq!(result, Ok(Some(6)));
+
+    // Empty lender
+    let result: Result<Option<i32>, &str> =
+        VecLender::new(vec![]).try_reduce(|acc, x| Ok::<_, &str>(acc + x));
+    assert_eq!(result, Ok(None));
+
+    // Early exit on error
+    let result: Result<Option<i32>, &str> = VecLender::new(vec![1, 2, 3]).try_reduce(|acc, x| {
+        if acc + x > 4 {
+            Err("too large")
+        } else {
+            Ok(acc + x)
+        }
+    });
+    assert_eq!(result, Err("too large"));
+}
+
+#[test]
+fn lender_partition() {
+    struct I32Vec(Vec<i32>);
+
+    impl Default for I32Vec {
+        fn default() -> Self {
+            I32Vec(Vec::new())
+        }
+    }
+
+    impl<L: IntoLender> lender::ExtendLender<L> for I32Vec
+    where
+        L::Lender: for<'all> Lending<'all, Lend = i32>,
+    {
+        fn extend_lender(&mut self, lender: L) {
+            lender.into_lender().for_each(|x| self.0.push(x));
+        }
+
+        fn extend_lender_one(&mut self, item: i32) {
+            self.0.push(item);
+        }
+    }
+
+    let (evens, odds): (I32Vec, I32Vec) =
+        VecLender::new(vec![1, 2, 3, 4, 5]).partition::<(), _, _>(|&x| x % 2 == 0);
+    assert_eq!(evens.0, vec![2, 4]);
+    assert_eq!(odds.0, vec![1, 3, 5]);
+
+    // All match predicate
+    let (all, none): (I32Vec, I32Vec) =
+        VecLender::new(vec![2, 4, 6]).partition::<(), _, _>(|&x| x % 2 == 0);
+    assert_eq!(all.0, vec![2, 4, 6]);
+    assert!(none.0.is_empty());
+
+    // Empty lender
+    let (a, b): (I32Vec, I32Vec) =
+        VecLender::new(vec![]).partition::<(), _, _>(|&x| x > 0);
+    assert!(a.0.is_empty());
+    assert!(b.0.is_empty());
+}
+
+#[test]
+fn lender_sum() {
+    struct I32Sum(i32);
+
+    impl lender::SumLender<VecLender> for I32Sum {
+        fn sum_lender(lender: VecLender) -> Self {
+            I32Sum(lender.fold(0, |acc, x| acc + x))
+        }
+    }
+
+    let sum: I32Sum = VecLender::new(vec![1, 2, 3, 4]).sum();
+    assert_eq!(sum.0, 10);
+
+    let sum_empty: I32Sum = VecLender::new(vec![]).sum();
+    assert_eq!(sum_empty.0, 0);
+}
+
+#[test]
+fn lender_product() {
+    struct I32Product(i32);
+
+    impl lender::ProductLender<VecLender> for I32Product {
+        fn product_lender(lender: VecLender) -> Self {
+            I32Product(lender.fold(1, |acc, x| acc * x))
+        }
+    }
+
+    let product: I32Product = VecLender::new(vec![1, 2, 3, 4]).product();
+    assert_eq!(product.0, 24);
+
+    let product_empty: I32Product = VecLender::new(vec![]).product();
+    assert_eq!(product_empty.0, 1);
+}
+
+#[test]
+fn lender_unzip() {
+    // A lender over (i32, i32) tuples
+    struct TupleLender {
+        data: Vec<(i32, i32)>,
+        idx: usize,
+    }
+
+    impl<'lend> Lending<'lend> for TupleLender {
+        type Lend = (i32, i32);
+    }
+
+    impl Lender for TupleLender {
+        check_covariance!();
+
+        fn next(&mut self) -> Option<Lend<'_, Self>> {
+            if self.idx < self.data.len() {
+                let item = self.data[self.idx];
+                self.idx += 1;
+                Some(item)
+            } else {
+                None
+            }
+        }
+    }
+
+    // Lender::unzip requires ExtendLender impls for FirstShunt/SecondShunt,
+    // so we test via owned() which delegates to Iterator::unzip.
+    let (a, b): (Vec<i32>, Vec<i32>) = TupleLender {
+        data: vec![(1, 4), (2, 5), (3, 6)],
+        idx: 0,
+    }
+    .owned()
+    .unzip();
+    assert_eq!(a, vec![1, 2, 3]);
+    assert_eq!(b, vec![4, 5, 6]);
+}
+
+// ============================================================================
+// Comparison method tests (Lender)
+// ============================================================================
+
+#[test]
+fn lender_cmp() {
+    use core::cmp::Ordering;
+
+    assert_eq!(VecLender::new(vec![1, 2, 3]).cmp(VecLender::new(vec![1, 2, 3])), Ordering::Equal);
+    assert_eq!(VecLender::new(vec![1, 2, 3]).cmp(VecLender::new(vec![1, 2, 4])), Ordering::Less);
+    assert_eq!(VecLender::new(vec![1, 2, 4]).cmp(VecLender::new(vec![1, 2, 3])), Ordering::Greater);
+    // Different lengths
+    assert_eq!(VecLender::new(vec![1, 2]).cmp(VecLender::new(vec![1, 2, 3])), Ordering::Less);
+    assert_eq!(VecLender::new(vec![1, 2, 3]).cmp(VecLender::new(vec![1, 2])), Ordering::Greater);
+    // Empty
+    assert_eq!(VecLender::new(vec![]).cmp(VecLender::new(vec![])), Ordering::Equal);
+}
+
+#[test]
+fn lender_cmp_by() {
+    use core::cmp::Ordering;
+
+    // Compare by absolute value
+    assert_eq!(
+        VecLender::new(vec![-1, 2]).cmp_by(VecLender::new(vec![1, -2]), |a, b| a.abs().cmp(&b.abs())),
+        Ordering::Equal
+    );
+    assert_eq!(
+        VecLender::new(vec![1]).cmp_by(VecLender::new(vec![2]), |a, b| a.cmp(&b)),
+        Ordering::Less
+    );
+}
+
+#[test]
+fn lender_partial_cmp_by() {
+    use core::cmp::Ordering;
+
+    assert_eq!(
+        VecLender::new(vec![1, 2, 3]).partial_cmp_by(VecLender::new(vec![1, 2, 3]), |a, b| a.partial_cmp(&b)),
+        Some(Ordering::Equal)
+    );
+    assert_eq!(
+        VecLender::new(vec![1, 2]).partial_cmp_by(VecLender::new(vec![1, 3]), |a, b| a.partial_cmp(&b)),
+        Some(Ordering::Less)
+    );
+    assert_eq!(
+        VecLender::new(vec![1, 3]).partial_cmp_by(VecLender::new(vec![1, 2]), |a, b| a.partial_cmp(&b)),
+        Some(Ordering::Greater)
+    );
+    // Different lengths
+    assert_eq!(
+        VecLender::new(vec![1]).partial_cmp_by(VecLender::new(vec![1, 2]), |a, b| a.partial_cmp(&b)),
+        Some(Ordering::Less)
+    );
+}
+
+#[test]
+fn lender_eq_by() {
+    assert!(VecLender::new(vec![1, 2, 3]).eq_by(VecLender::new(vec![1, 2, 3]), |a, b| a == b));
+    assert!(!VecLender::new(vec![1, 2, 3]).eq_by(VecLender::new(vec![1, 2, 4]), |a, b| a == b));
+    assert!(!VecLender::new(vec![1, 2]).eq_by(VecLender::new(vec![1, 2, 3]), |a, b| a == b));
+    assert!(VecLender::new(vec![]).eq_by(VecLender::new(vec![]), |a: i32, b: i32| a == b));
+    // Equal by absolute value
+    assert!(VecLender::new(vec![-1, 2]).eq_by(VecLender::new(vec![1, -2]), |a, b| a.abs() == b.abs()));
+}
+
+#[test]
+fn lender_ne_via_eq_by() {
+    // ne is !eq, so test via eq_by negation
+    assert!(!VecLender::new(vec![1, 2, 3]).eq_by(VecLender::new(vec![1, 2, 4]), |a, b| a == b));
+    assert!(VecLender::new(vec![1, 2, 3]).eq_by(VecLender::new(vec![1, 2, 3]), |a, b| a == b));
+    assert!(!VecLender::new(vec![1]).eq_by(VecLender::new(vec![1, 2]), |a, b| a == b));
+}
+
+#[test]
+fn lender_ordering_via_partial_cmp_by() {
+    use core::cmp::Ordering;
+
+    // lt: a < b
+    assert_eq!(
+        VecLender::new(vec![1, 2]).partial_cmp_by(VecLender::new(vec![1, 3]), |a, b| a.partial_cmp(&b)),
+        Some(Ordering::Less)
+    );
+    // le: a <= b (equal)
+    assert_eq!(
+        VecLender::new(vec![1, 2]).partial_cmp_by(VecLender::new(vec![1, 2]), |a, b| a.partial_cmp(&b)),
+        Some(Ordering::Equal)
+    );
+    // gt: a > b
+    assert_eq!(
+        VecLender::new(vec![1, 3]).partial_cmp_by(VecLender::new(vec![1, 2]), |a, b| a.partial_cmp(&b)),
+        Some(Ordering::Greater)
+    );
+    // ge: a >= b (equal)
+    assert_eq!(
+        VecLender::new(vec![1, 2]).partial_cmp_by(VecLender::new(vec![1, 2]), |a, b| a.partial_cmp(&b)),
+        Some(Ordering::Equal)
+    );
+}
+
+// ============================================================================
 // DoubleEndedLender trait method tests
 // ============================================================================
 
@@ -3539,6 +3792,20 @@ fn array_windows_mut_rfold() {
     });
     // Windows in reverse: [3,4], [2,3], [1,2] -> first elements: 3, 2, 1
     assert_eq!(first_elements, vec![3, 2, 1]);
+}
+
+#[test]
+#[should_panic(expected = "window size must be non-zero")]
+fn windows_mut_zero_panics() {
+    let mut data = [1, 2, 3];
+    let _ = lender::windows_mut(&mut data, 0);
+}
+
+#[test]
+#[should_panic(expected = "window size must be non-zero")]
+fn array_windows_mut_zero_panics() {
+    let mut data = [1, 2, 3];
+    let _ = lender::array_windows_mut::<_, 0>(&mut data);
 }
 
 // ============================================================================
