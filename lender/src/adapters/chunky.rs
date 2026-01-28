@@ -5,13 +5,64 @@ use crate::{
     FusedFallibleLender, FusedLender, Lend, Lender, Lending,
 };
 
-/// A lender yielding lenders returning the next `chunk_size` lends.
+/// A lender yielding lenders ([`Chunk`]s) returning the next `chunk_size` lends.
 ///
-/// This is the closest lending approximation to [`core::iter::ArrayChunks`], as
-/// we cannot accumulate the lends into an array.
+/// This is the closest lending approximation to [`core::iter:ArrayChunks`], as
+/// we cannot accumulate the lends into an array. Unlike [`ArrayChunks`](core::iter::ArrayChunks), which
+/// yields fixed-size arrays, `Chunky` yields [`Chunk`] lenders that must be
+/// consumed to access the elements.
 ///
-/// This struct is created by [`chunky`][Lender::chunky] or
-/// [`chunky`][FallibleLender::chunky].
+/// # Important: Partial Chunk Consumption
+///
+/// **Each [`Chunk`] yielded by `Chunky` must be fully consumed before requesting
+/// the next chunk.** If a chunk is not fully consumed, the unconsumed elements
+/// are effectively skipped, and the next chunk will start from whatever position
+/// the underlying lender is at.
+///
+/// This behavior differs from [`core::slice::Chunks`] where each chunk is a
+/// complete view. With `Chunky`, you are borrowing from a single underlying
+/// lender, so partial consumption affects subsequent chunks.
+///
+/// # Examples
+///
+/// Correct usage (fully consuming each chunk):
+/// ```rust
+/// # use lender::prelude::*;
+/// let mut data = [1, 2, 3, 4, 5, 6];
+/// let mut chunky = lender::windows_mut(&mut data, 1).chunky(2);
+///
+/// // First chunk: elements 1, 2
+/// let mut chunk1 = chunky.next().unwrap();
+/// assert_eq!(chunk1.next().map(|s| s[0]), Some(1));
+/// assert_eq!(chunk1.next().map(|s| s[0]), Some(2));
+/// assert_eq!(chunk1.next(), None); // Chunk exhausted
+///
+/// // Second chunk: elements 3, 4
+/// let mut chunk2 = chunky.next().unwrap();
+/// assert_eq!(chunk2.next().map(|s| s[0]), Some(3));
+/// assert_eq!(chunk2.next().map(|s| s[0]), Some(4));
+/// ```
+///
+/// Partial consumption (demonstrating the behavior):
+/// ```rust
+/// # use lender::prelude::*;
+/// let data = vec![1, 2, 3, 4, 5, 6];
+/// // Sum the first element of each chunk (partial consumption)
+/// let sum = lender::from_iter(data.iter())
+///     .chunky(2)
+///     .fold(0, |acc, mut chunk| {
+///         // Only consume first element of each chunk
+///         acc + chunk.next().copied().unwrap_or(0)
+///     });
+/// // Since we only consume 1 element per chunk iteration,
+/// // and chunky tracks chunk count (not element position),
+/// // we get: 1 (chunk 1), 2 (chunk 2), 3 (chunk 3) = 6
+/// // NOT: 1, 3, 5 as you might expect!
+/// assert_eq!(sum, 6);
+/// ```
+///
+/// This struct is created by [`Lender::chunky`](crate::Lender::chunky) or
+/// [`FallibleLender::chunky`](crate::FallibleLender::chunky).
 #[derive(Debug, Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Chunky<L> {
@@ -162,15 +213,9 @@ where
 {
     #[inline]
     fn len(&self) -> usize {
-        let mut len = self.len;
-        let sz = self.chunk_size;
-
-        let rem = len % sz;
-        len /= sz;
-        if rem > 0 {
-            len += 1;
-        }
-        len
+        // self.len already stores the number of remaining chunks
+        // (computed in new() and decremented in next())
+        self.len
     }
 }
 
@@ -277,14 +322,8 @@ where
 {
     #[inline]
     fn len(&self) -> usize {
-        let mut len = self.len;
-        let sz = self.chunk_size;
-
-        let rem = len % sz;
-        len /= sz;
-        if rem > 0 {
-            len += 1;
-        }
-        len
+        // self.len already stores the number of remaining chunks
+        // (computed in new_fallible() and decremented in next())
+        self.len
     }
 }

@@ -63,13 +63,17 @@ where
     where
         F: FnOnce(&Lend<'_, L>) -> bool,
     {
-        #[allow(clippy::deref_addrof)]
-        let peeked = unsafe { &mut *(&raw mut *self.peeked) };
-        match self.next() {
+        // Get the next value by inlining the logic of next() to avoid borrow conflicts
+        let v = match self.peeked.take() {
+            // SAFETY: The lend is manually guaranteed to be the only one alive
+            Some(peeked) => unsafe { core::mem::transmute::<Option<Lend<'this, L>>, Option<Lend<'_, L>>>(peeked) },
+            None => self.lender.next(),
+        };
+        match v {
             Some(v) if f(&v) => Some(v),
             v => {
                 // SAFETY: The lend is manually guaranteed to be the only one alive
-                *peeked = Some(unsafe { core::mem::transmute::<Option<Lend<'_, L>>, Option<Lend<'this, L>>>(v) });
+                *self.peeked = Some(unsafe { core::mem::transmute::<Option<Lend<'_, L>>, Option<Lend<'this, L>>>(v) });
                 None
             }
         }

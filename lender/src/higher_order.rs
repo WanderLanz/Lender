@@ -229,8 +229,8 @@ macro_rules! __hrc__ {
 /// (`for<'a> |x: &'a T| -> &'a U { ... }`). It wraps a closure and provides the necessary
 /// type hints for the compiler to understand higher-rank lifetime bounds.
 ///
-/// Use `hrc_once!` when the closure will only be called once (e.g., with [`Lender::fold`]).
-/// For closures that may be called multiple times, use [`hrc_mut!`] or [`hrc!`].
+/// Use `hrc_once!` when the closure will only be called once (e.g., with [`Lender::fold`](crate::Lender::fold)).
+/// For closures that may be called multiple times, use [`hrc_mut!`](crate::hrc_mut) or [`hrc!`](crate::hrc).
 ///
 /// # Covariance Check
 ///
@@ -276,7 +276,7 @@ macro_rules! hrc_once {($($t:tt)+) => ($crate::__hrc__!(FnOnce, $($t)+))}
 ///
 /// Use `hrc_mut!` when the closure may be called multiple times and captures mutable state
 /// or needs `&mut self` semantics. This is the most commonly used variant for lender methods
-/// like [`Lender::map`], [`Lender::for_each`], [`Lender::filter_map`], and [`Lender::scan`].
+/// like [`Lender::map`](crate::Lender::map), [`Lender::for_each`](crate::Lender::for_each), [`Lender::filter_map`](crate::Lender::filter_map), and [`Lender::scan`](crate::Lender::scan).
 ///
 /// # Covariance Check
 ///
@@ -331,7 +331,7 @@ macro_rules! hrc_mut {($($t:tt)+) => ($crate::__hrc__!(FnMut, $($t)+))}
 /// type hints for the compiler to understand higher-rank lifetime bounds.
 ///
 /// Use `hrc!` when the closure only needs shared access to its captures (`&self` semantics)
-/// and may be called multiple times. In practice, [`hrc_mut!`] is more commonly used since
+/// and may be called multiple times. In practice, [`hrc_mut!`](crate::hrc_mut) is more commonly used since
 /// most lender methods require [`FnMut`].
 ///
 /// # Covariance Check
