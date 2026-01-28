@@ -1465,7 +1465,7 @@ fn step_by_empty() {
 #[should_panic(expected = "assertion failed")]
 fn step_by_zero_panics() {
     // step_by(0) should panic
-    VecLender::new(vec![1, 2, 3]).step_by(0);
+    let _ = VecLender::new(vec![1, 2, 3]).step_by(0);
 }
 
 #[test]
@@ -2799,7 +2799,7 @@ fn chunky_exact_size() {
     assert_eq!(chunky.len(), 0);
 
     // With uneven division: 5 elements, chunk_size 2 -> ceil(5/2) = 3 chunks
-    let mut chunky2 = VecLender::new(vec![1, 2, 3, 4, 5]).chunky(2);
+    let chunky2 = VecLender::new(vec![1, 2, 3, 4, 5]).chunky(2);
     assert_eq!(chunky2.len(), 3);
 }
 
@@ -2856,7 +2856,7 @@ fn chunky_into_inner() {
 #[test]
 #[should_panic(expected = "chunk size must be non-zero")]
 fn chunky_zero_panics() {
-    VecLender::new(vec![1, 2, 3]).chunky(0);
+    let _ = VecLender::new(vec![1, 2, 3]).chunky(0);
 }
 
 // ============================================================================
@@ -3336,7 +3336,7 @@ fn fallible_into_fallible_try_fold() {
 
 #[test]
 fn fallible_into_fallible_try_rfold() {
-    use lender::{DoubleEndedFallibleLender, FallibleLender};
+    use lender::DoubleEndedFallibleLender;
 
     let mut fallible: lender::IntoFallible<(), _> = VecLender::new(vec![1, 2, 3]).into_fallible();
 
@@ -4364,7 +4364,7 @@ fn fallible_lender_nth() {
 fn fallible_lender_step_by() {
     use lender::FallibleLender;
 
-    let mut fallible: lender::IntoFallible<(), _> = VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
+    let fallible: lender::IntoFallible<(), _> = VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
     let mut stepped = fallible.step_by(2);
     assert_eq!(stepped.next(), Ok(Some(1)));
     assert_eq!(stepped.next(), Ok(Some(3)));
@@ -4587,7 +4587,7 @@ fn fallible_lender_chunky() {
 
 #[test]
 fn fallible_lender_rev() {
-    use lender::{DoubleEndedFallibleLender, FallibleLender};
+    use lender::FallibleLender;
 
     let fallible: lender::IntoFallible<(), _> = VecLender::new(vec![1, 2, 3]).into_fallible();
     let mut rev = fallible.rev();
@@ -4643,7 +4643,7 @@ fn double_ended_rfold() {
 
 #[test]
 fn double_ended_fallible_advance_back_by() {
-    use lender::{DoubleEndedFallibleLender, FallibleLender};
+    use lender::DoubleEndedFallibleLender;
 
     let mut fallible: lender::IntoFallible<(), _> = VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
     assert_eq!(fallible.advance_back_by(2), Ok(Ok(())));
@@ -4866,6 +4866,22 @@ fn intersperse_with_coverage() {
     assert_eq!(results, vec![1, 0, 2, 0, 3]);
 }
 
+
+// Cycle fallible next (covers unsafe reborrow at line 129)
+#[test]
+fn cycle_fallible_next_coverage() {
+    use lender::FallibleLender;
+
+    let fallible: lender::IntoFallible<(), _> = VecLender::new(vec![1, 2]).into_fallible();
+    let mut cycle = fallible.cycle();
+    // Call next() multiple times to exercise the unsafe reborrow and cycling
+    assert_eq!(cycle.next(), Ok(Some(1)));
+    assert_eq!(cycle.next(), Ok(Some(2)));
+    // This should cycle back to the beginning
+    assert_eq!(cycle.next(), Ok(Some(1)));
+    assert_eq!(cycle.next(), Ok(Some(2)));
+    assert_eq!(cycle.next(), Ok(Some(1)));
+}
 
 // FilterMap unsafe transmute (covers unsafe at lines 50, 70)
 #[test]

@@ -253,6 +253,7 @@ macro_rules! check_covariance {
 #[macro_export]
 macro_rules! unsafe_assume_covariance {
     () => {
+        #[allow(clippy::not_unsafe_ptr_arg_deref)]
         fn _check_covariance<'long: 'short, 'short>(
             lend: *const &'short <Self as Lending<'long>>::Lend,
             _: $crate::Uncallable,
@@ -400,6 +401,7 @@ macro_rules! check_covariance_fallible {
 #[macro_export]
 macro_rules! unsafe_assume_covariance_fallible {
     () => {
+        #[allow(clippy::not_unsafe_ptr_arg_deref)]
         fn _check_covariance<'long: 'short, 'short>(
             lend: *const &'short <Self as FallibleLending<'long>>::Lend,
             _: $crate::Uncallable,
