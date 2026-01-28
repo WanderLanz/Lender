@@ -57,7 +57,7 @@ where
         self.lender.next().map_err(&mut self.f)
     }
 
-    #[inline]
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
@@ -83,7 +83,7 @@ where
     F: FnMut(L::Error) -> E,
     L: ExactSizeFallibleLender,
 {
-    #[inline]
+    #[inline(always)]
     fn len(&self) -> usize {
         self.lender.len()
     }

@@ -62,7 +62,7 @@ where
         }
     }
 
-    #[inline]
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
@@ -87,7 +87,7 @@ where
     L: ExactSizeLender,
     for<'all> Lend<'all, L>: 'this,
 {
-    #[inline]
+    #[inline(always)]
     fn len(&self) -> usize {
         self.lender.len()
     }
@@ -118,7 +118,7 @@ where
         )
     }
 
-    #[inline]
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }

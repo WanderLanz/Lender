@@ -41,7 +41,7 @@ where
         })
     }
 
-    #[inline]
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
@@ -54,7 +54,7 @@ where
         Some((i, a))
     }
 
-    #[inline]
+    #[inline(always)]
     fn count(self) -> usize {
         self.lender.count()
     }
@@ -153,10 +153,12 @@ impl<L> ExactSizeLender for Enumerate<L>
 where
     L: ExactSizeLender,
 {
+    #[inline(always)]
     fn len(&self) -> usize {
         self.lender.len()
     }
 
+    #[inline(always)]
     fn is_empty(&self) -> bool {
         self.lender.is_empty()
     }
@@ -191,7 +193,7 @@ where
         }))
     }
 
-    #[inline]
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
@@ -207,7 +209,7 @@ where
         Ok(Some((i, a)))
     }
 
-    #[inline]
+    #[inline(always)]
     fn count(self) -> Result<usize, Self::Error> {
         self.lender.count()
     }
@@ -315,10 +317,12 @@ impl<L> ExactSizeFallibleLender for Enumerate<L>
 where
     L: ExactSizeFallibleLender,
 {
+    #[inline(always)]
     fn len(&self) -> usize {
         self.lender.len()
     }
 
+    #[inline(always)]
     fn is_empty(&self) -> bool {
         self.lender.is_empty()
     }

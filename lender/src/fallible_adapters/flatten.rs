@@ -63,12 +63,12 @@ where
     // SAFETY: the lend is that of the inner lender
     crate::unsafe_assume_covariance_fallible!();
 
-    #[inline]
+    #[inline(always)]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.inner.next()
     }
 
-    #[inline]
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.inner.size_hint()
     }
@@ -139,12 +139,12 @@ where
     // SAFETY: the lend is that of the inner lender
     crate::unsafe_assume_covariance_fallible!();
 
-    #[inline]
+    #[inline(always)]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.inner.next()
     }
 
-    #[inline]
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.inner.size_hint()
     }

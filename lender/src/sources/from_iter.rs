@@ -54,24 +54,26 @@ impl<I: Iterator> Lending<'_> for FromIter<I> {
 
 impl<I: Iterator> Lender for FromIter<I> {
     crate::check_covariance!();
-    #[inline]
+    #[inline(always)]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.iter.next()
     }
 
-    #[inline]
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
     }
 }
 
 impl<I: DoubleEndedIterator> DoubleEndedLender for FromIter<I> {
+    #[inline(always)]
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         self.iter.next_back()
     }
 }
 
 impl<I: ExactSizeIterator> ExactSizeLender for FromIter<I> {
+    #[inline(always)]
     fn len(&self) -> usize {
         self.iter.len()
     }
@@ -191,7 +193,7 @@ where
         }
     }
 
-    #[inline]
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
     }
@@ -215,6 +217,7 @@ where
     L: ?Sized + for<'all> Lending<'all> + 'a,
     I: ExactSizeIterator<Item = Lend<'a, L>>,
 {
+    #[inline(always)]
     fn len(&self) -> usize {
         self.iter.len()
     }
@@ -258,18 +261,19 @@ impl<I: FallibleIterator> FallibleLending<'_> for FromFallibleIter<I> {
 impl<I: FallibleIterator> FallibleLender for FromFallibleIter<I> {
     type Error = I::Error;
     crate::check_covariance_fallible!();
-    #[inline]
+    #[inline(always)]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.iter.next()
     }
 
-    #[inline]
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
     }
 }
 
 impl<I: DoubleEndedFallibleIterator> DoubleEndedFallibleLender for FromFallibleIter<I> {
+    #[inline(always)]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.iter.next_back()
     }
@@ -400,7 +404,7 @@ where
         )
     }
 
-    #[inline]
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
     }

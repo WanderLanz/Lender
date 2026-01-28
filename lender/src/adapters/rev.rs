@@ -34,7 +34,7 @@ where
         self.lender.next_back()
     }
 
-    #[inline]
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
@@ -123,7 +123,7 @@ impl<L> ExactSizeLender for Rev<L>
 where
     L: DoubleEndedLender + ExactSizeLender,
 {
-    #[inline]
+    #[inline(always)]
     fn len(&self) -> usize {
         self.lender.len()
     }
@@ -157,7 +157,7 @@ where
         self.lender.next_back()
     }
 
-    #[inline]
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
@@ -249,10 +249,12 @@ impl<L> ExactSizeFallibleLender for Rev<L>
 where
     L: ExactSizeFallibleLender + DoubleEndedFallibleLender,
 {
+    #[inline(always)]
     fn len(&self) -> usize {
         self.lender.len()
     }
 
+    #[inline(always)]
     fn is_empty(&self) -> bool {
         self.lender.is_empty()
     }

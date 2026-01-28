@@ -58,7 +58,7 @@ where
         }
     }
 
-    #[inline]
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
     }
@@ -82,7 +82,7 @@ impl<E, I> ExactSizeFallibleLender for Convert<E, I>
 where
     I: ExactSizeLender + LenderResult<E>,
 {
-    #[inline]
+    #[inline(always)]
     fn len(&self) -> usize {
         self.iter.len()
     }

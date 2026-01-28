@@ -33,7 +33,7 @@ where
         self.lender.next().cloned()
     }
 
-    #[inline]
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
@@ -55,6 +55,7 @@ where
     T: Clone,
     L: for<'all> Lending<'all, Lend = &'all T>,
 {
+    #[inline(always)]
     fn len(&self) -> usize {
         self.lender.len()
     }
@@ -89,7 +90,7 @@ where
         self.lender.next().map(Option::<&T>::cloned)
     }
 
-    #[inline]
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }

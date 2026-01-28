@@ -15,10 +15,12 @@ pub trait ExactSizeLender: Lender {
     }
 }
 impl<I: ExactSizeLender> ExactSizeLender for &mut I {
+    #[inline(always)]
     fn len(&self) -> usize {
         (**self).len()
     }
 
+    #[inline(always)]
     fn is_empty(&self) -> bool {
         (**self).is_empty()
     }
@@ -40,10 +42,12 @@ pub trait ExactSizeFallibleLender: FallibleLender {
 }
 
 impl<I: ExactSizeFallibleLender> ExactSizeFallibleLender for &mut I {
+    #[inline(always)]
     fn len(&self) -> usize {
         (**self).len()
     }
 
+    #[inline(always)]
     fn is_empty(&self) -> bool {
         (**self).is_empty()
     }

@@ -1345,15 +1345,17 @@ impl<'lend, L: Lender> Lending<'lend> for &mut L {
 impl<L: Lender> Lender for &mut L {
     // SAFETY: the lend is that of L
     crate::unsafe_assume_covariance!();
-    #[inline]
+    #[inline(always)]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         (**self).next()
     }
-    #[inline]
+
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         (**self).size_hint()
     }
-    #[inline]
+
+    #[inline(always)]
     fn advance_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {
         (**self).advance_by(n)
     }

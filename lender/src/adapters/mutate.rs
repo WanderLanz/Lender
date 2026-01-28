@@ -54,7 +54,7 @@ where
         next
     }
 
-    #[inline]
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
@@ -129,12 +129,12 @@ impl<L: ExactSizeLender, F> ExactSizeLender for Mutate<L, F>
 where
     F: FnMut(&mut Lend<'_, L>),
 {
-    #[inline]
+    #[inline(always)]
     fn len(&self) -> usize {
         self.lender.len()
     }
 
-    #[inline]
+    #[inline(always)]
     fn is_empty(&self) -> bool {
         self.lender.is_empty()
     }
@@ -166,7 +166,7 @@ where
         Ok(next)
     }
 
-    #[inline]
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
@@ -241,12 +241,12 @@ impl<L: ExactSizeFallibleLender, F> ExactSizeFallibleLender for Mutate<L, F>
 where
     F: FnMut(&mut FallibleLend<'_, L>) -> Result<(), L::Error>,
 {
-    #[inline]
+    #[inline(always)]
     fn len(&self) -> usize {
         self.lender.len()
     }
 
-    #[inline]
+    #[inline(always)]
     fn is_empty(&self) -> bool {
         self.lender.is_empty()
     }

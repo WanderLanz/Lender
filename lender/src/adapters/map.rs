@@ -49,7 +49,7 @@ where
         self.lender.next().map(&mut self.f)
     }
 
-    #[inline]
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
@@ -67,12 +67,12 @@ impl<L: ExactSizeLender, F> ExactSizeLender for Map<L, F>
 where
     F: for<'all> FnMutHKA<'all, Lend<'all, L>>,
 {
-    #[inline]
+    #[inline(always)]
     fn len(&self) -> usize {
         self.lender.len()
     }
 
-    #[inline]
+    #[inline(always)]
     fn is_empty(&self) -> bool {
         self.lender.is_empty()
     }
@@ -111,7 +111,7 @@ where
         self.lender.next()?.map(&mut self.f).transpose()
     }
 
-    #[inline]
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
@@ -129,12 +129,12 @@ impl<L: ExactSizeFallibleLender, F> ExactSizeFallibleLender for Map<L, F>
 where
     F: for<'all> FnMutHKARes<'all, FallibleLend<'all, L>, L::Error>,
 {
-    #[inline]
+    #[inline(always)]
     fn len(&self) -> usize {
         self.lender.len()
     }
 
-    #[inline]
+    #[inline(always)]
     fn is_empty(&self) -> bool {
         self.lender.is_empty()
     }

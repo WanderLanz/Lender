@@ -1412,15 +1412,17 @@ impl<L: FallibleLender> FallibleLender for &mut L {
     type Error = L::Error;
     // SAFETY: the lend is that of L
     crate::unsafe_assume_covariance_fallible!();
-    #[inline]
+    #[inline(always)]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         (**self).next()
     }
-    #[inline]
+
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         (**self).size_hint()
     }
-    #[inline]
+
+    #[inline(always)]
     fn advance_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         (**self).advance_by(n)
     }
