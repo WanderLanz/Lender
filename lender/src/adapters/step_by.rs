@@ -104,6 +104,7 @@ where
         }
     }
 
+    #[inline]
     fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> R
     where
         Self: Sized,
@@ -132,6 +133,7 @@ where
         R::from_output(acc)
     }
 
+    #[inline]
     fn fold<B, F>(mut self, init: B, mut f: F) -> B
     where
         Self: Sized,
@@ -183,6 +185,7 @@ where
         self.lender.nth_back(n)
     }
 
+    #[inline]
     fn try_rfold<B, F, R>(&mut self, init: B, mut f: F) -> R
     where
         Self: Sized,
@@ -303,6 +306,7 @@ where
         }
     }
 
+    #[inline]
     fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> Result<R, Self::Error>
     where
         Self: Sized,
@@ -331,6 +335,7 @@ where
         Ok(R::from_output(acc))
     }
 
+    #[inline]
     fn fold<B, F>(mut self, init: B, mut f: F) -> Result<B, Self::Error>
     where
         Self: Sized,
@@ -382,6 +387,7 @@ where
         self.lender.nth_back(n)
     }
 
+    #[inline]
     fn try_rfold<B, F, R>(&mut self, init: B, mut f: F) -> Result<R, Self::Error>
     where
         Self: Sized,

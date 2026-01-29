@@ -152,6 +152,7 @@ impl<L> DoubleEndedLender for Skip<L>
 where
     L: DoubleEndedLender + ExactSizeLender,
 {
+    #[inline]
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         if self.len() > 0 {
             self.lender.next_back()
@@ -173,6 +174,7 @@ where
         }
     }
 
+    #[inline]
     fn try_rfold<B, F, R>(&mut self, init: B, mut f: F) -> R
     where
         Self: Sized,
@@ -339,6 +341,7 @@ impl<L> DoubleEndedFallibleLender for Skip<L>
 where
     L: DoubleEndedFallibleLender + ExactSizeFallibleLender,
 {
+    #[inline]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         if self.len() > 0 {
             self.lender.next_back()
@@ -360,6 +363,7 @@ where
         }
     }
 
+    #[inline]
     fn try_rfold<B, F, R>(&mut self, init: B, mut f: F) -> Result<R, Self::Error>
     where
         Self: Sized,

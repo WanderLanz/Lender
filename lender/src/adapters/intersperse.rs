@@ -1,6 +1,10 @@
 use core::fmt;
+use core::ops::ControlFlow;
 
-use crate::{FusedLender, Lend, Lender, Lending, Peekable};
+use crate::{
+    FusedLender, Lend, Lender, Lending, Peekable,
+    try_trait_v2::{FromResidual, Try},
+};
 
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -65,6 +69,7 @@ where
 {
     // SAFETY: the lend is that of L
     crate::unsafe_assume_covariance!();
+    #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         if self.needs_sep && self.lender.peek().is_some() {
             self.needs_sep = false;
@@ -78,6 +83,36 @@ where
         }
     }
 
+    #[inline]
+    fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> R
+    where
+        Self: Sized,
+        F: FnMut(B, Lend<'_, Self>) -> R,
+        R: Try<Output = B>,
+    {
+        let mut acc = init;
+        if !self.needs_sep {
+            match self.lender.next() {
+                Some(x) => {
+                    acc = match f(acc, x).branch() {
+                        ControlFlow::Continue(v) => v,
+                        ControlFlow::Break(r) => return FromResidual::from_residual(r),
+                    };
+                }
+                None => return R::from_output(acc),
+            }
+        }
+        let separator = &self.separator;
+        self.lender.try_fold(acc, move |acc, x| {
+            let acc = match f(acc, separator.clone()).branch() {
+                ControlFlow::Continue(v) => v,
+                ControlFlow::Break(r) => return FromResidual::from_residual(r),
+            };
+            f(acc, x)
+        })
+    }
+
+    #[inline]
     fn fold<B, F>(mut self, init: B, mut f: F) -> B
     where
         Self: Sized,
@@ -98,6 +133,7 @@ where
         })
     }
 
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         intersperse_size_hint(&self.lender, self.needs_sep)
     }
@@ -157,6 +193,7 @@ where
 {
     // SAFETY: the lend is that of L
     crate::unsafe_assume_covariance!();
+    #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         if self.needs_sep && self.lender.peek().is_some() {
             self.needs_sep = false;
@@ -168,6 +205,36 @@ where
         }
     }
 
+    #[inline]
+    fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> R
+    where
+        Self: Sized,
+        F: FnMut(B, Lend<'_, Self>) -> R,
+        R: Try<Output = B>,
+    {
+        let mut acc = init;
+        if !self.needs_sep {
+            match self.lender.next() {
+                Some(x) => {
+                    acc = match f(acc, x).branch() {
+                        ControlFlow::Continue(v) => v,
+                        ControlFlow::Break(r) => return FromResidual::from_residual(r),
+                    };
+                }
+                None => return R::from_output(acc),
+            }
+        }
+        let separator = &mut self.separator;
+        self.lender.try_fold(acc, move |acc, x| {
+            let acc = match f(acc, (separator)()).branch() {
+                ControlFlow::Continue(v) => v,
+                ControlFlow::Break(r) => return FromResidual::from_residual(r),
+            };
+            f(acc, x)
+        })
+    }
+
+    #[inline]
     fn fold<B, F>(mut self, init: B, mut f: F) -> B
     where
         Self: Sized,
@@ -188,6 +255,7 @@ where
         })
     }
 
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         intersperse_size_hint(&self.lender, self.needs_sep)
     }

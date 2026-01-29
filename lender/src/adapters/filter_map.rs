@@ -51,6 +51,7 @@ where
 {
     // SAFETY: the lend is the return type of F
     crate::unsafe_assume_covariance!();
+    #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         while let Some(x) = self.lender.next() {
             if let Some(y) = (self.f)(x) {
@@ -73,6 +74,7 @@ where
     for<'all> F: FnMutHKAOpt<'all, Lend<'all, L>>,
     L: DoubleEndedLender,
 {
+    #[inline]
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         while let Some(x) = self.lender.next_back() {
             if let Some(y) = (self.f)(x) {
@@ -109,6 +111,7 @@ where
     // SAFETY: the lend is the return type of F
     crate::unsafe_assume_covariance_fallible!();
 
+    #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         while let Some(x) = self.lender.next()? {
             if let Some(y) = (self.f)(x)? {
@@ -135,6 +138,7 @@ where
     for<'all> F: FnMutHKAResOpt<'all, FallibleLend<'all, L>, L::Error>,
     L: DoubleEndedFallibleLender,
 {
+    #[inline]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         while let Some(x) = self.lender.next_back()? {
             if let Some(y) = (self.f)(x)? {

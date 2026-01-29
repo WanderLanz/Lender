@@ -216,10 +216,12 @@ impl<L> ExactSizeLender for Fuse<L>
 where
     L: ExactSizeLender,
 {
+    #[inline]
     fn len(&self) -> usize {
         if !self.flag { self.lender.len() } else { 0 }
     }
 
+    #[inline]
     fn is_empty(&self) -> bool {
         if !self.flag {
             self.lender.is_empty()
@@ -462,10 +464,12 @@ impl<L> ExactSizeFallibleLender for Fuse<L>
 where
     L: ExactSizeFallibleLender,
 {
+    #[inline]
     fn len(&self) -> usize {
         if self.flag { 0 } else { self.lender.len() }
     }
 
+    #[inline]
     fn is_empty(&self) -> bool {
         self.flag || self.lender.is_empty()
     }

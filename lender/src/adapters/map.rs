@@ -5,6 +5,7 @@ use crate::{
     FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender,
     Lending,
     higher_order::{FnMutHKA, FnMutHKARes},
+    try_trait_v2::Try,
 };
 
 #[derive(Clone)]
@@ -58,6 +59,26 @@ where
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
+
+    #[inline]
+    fn try_fold<B, Fold, R>(&mut self, init: B, mut fold: Fold) -> R
+    where
+        Self: Sized,
+        Fold: FnMut(B, Lend<'_, Self>) -> R,
+        R: Try<Output = B>,
+    {
+        let f = &mut self.f;
+        self.lender.try_fold(init, move |acc, x| fold(acc, (f)(x)))
+    }
+
+    #[inline]
+    fn fold<B, Fold>(mut self, init: B, mut fold: Fold) -> B
+    where
+        Self: Sized,
+        Fold: FnMut(B, Lend<'_, Self>) -> B,
+    {
+        self.lender.fold(init, move |acc, x| fold(acc, (self.f)(x)))
+    }
 }
 
 impl<L: DoubleEndedLender, F> DoubleEndedLender for Map<L, F>
@@ -67,6 +88,26 @@ where
     #[inline]
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         self.lender.next_back().map(&mut self.f)
+    }
+
+    #[inline]
+    fn try_rfold<B, Fold, R>(&mut self, init: B, mut fold: Fold) -> R
+    where
+        Self: Sized,
+        Fold: FnMut(B, Lend<'_, Self>) -> R,
+        R: Try<Output = B>,
+    {
+        let f = &mut self.f;
+        self.lender.try_rfold(init, move |acc, x| fold(acc, (f)(x)))
+    }
+
+    #[inline]
+    fn rfold<B, Fold>(mut self, init: B, mut fold: Fold) -> B
+    where
+        Self: Sized,
+        Fold: FnMut(B, Lend<'_, Self>) -> B,
+    {
+        self.lender.rfold(init, move |acc, x| fold(acc, (self.f)(x)))
     }
 }
 
@@ -113,6 +154,27 @@ where
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
+
+    #[inline]
+    fn try_fold<B, Fold, R>(&mut self, init: B, mut fold: Fold) -> Result<R, Self::Error>
+    where
+        Self: Sized,
+        Fold: FnMut(B, FallibleLend<'_, Self>) -> Result<R, Self::Error>,
+        R: Try<Output = B>,
+    {
+        let f = &mut self.f;
+        self.lender.try_fold(init, move |acc, x| fold(acc, (f)(x)?))
+    }
+
+    #[inline]
+    fn fold<B, Fold>(mut self, init: B, mut fold: Fold) -> Result<B, Self::Error>
+    where
+        Self: Sized,
+        Fold: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
+    {
+        self.lender
+            .fold(init, move |acc, x| fold(acc, (self.f)(x)?))
+    }
 }
 
 impl<L: DoubleEndedFallibleLender, F> DoubleEndedFallibleLender for Map<L, F>
@@ -122,6 +184,28 @@ where
     #[inline]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.lender.next_back()?.map(&mut self.f).transpose()
+    }
+
+    #[inline]
+    fn try_rfold<B, Fold, R>(&mut self, init: B, mut fold: Fold) -> Result<R, Self::Error>
+    where
+        Self: Sized,
+        Fold: FnMut(B, FallibleLend<'_, Self>) -> Result<R, Self::Error>,
+        R: Try<Output = B>,
+    {
+        let f = &mut self.f;
+        self.lender
+            .try_rfold(init, move |acc, x| fold(acc, (f)(x)?))
+    }
+
+    #[inline]
+    fn rfold<B, Fold>(mut self, init: B, mut fold: Fold) -> Result<B, Self::Error>
+    where
+        Self: Sized,
+        Fold: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
+    {
+        self.lender
+            .rfold(init, move |acc, x| fold(acc, (self.f)(x)?))
     }
 }
 

@@ -142,6 +142,7 @@ where
 {
     // SAFETY: the lend is that of L
     crate::unsafe_assume_covariance!();
+    #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         match self.peeked.take() {
             // SAFETY: The lend is manually guaranteed to be the only one alive
