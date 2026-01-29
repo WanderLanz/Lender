@@ -1,3 +1,5 @@
+use core::fmt;
+
 use crate::{FusedFallibleLender, FusedLender, prelude::*};
 
 /// Creates a new lender that endlessly repeats a single element.
@@ -26,6 +28,28 @@ where
     L: ?Sized + for<'all> Lending<'all> + 'a,
 {
     elt: Lend<'a, L>,
+}
+
+impl<'a, L> Clone for Repeat<'a, L>
+where
+    L: ?Sized + for<'all> Lending<'all> + 'a,
+    Lend<'a, L>: Clone,
+{
+    fn clone(&self) -> Self {
+        Repeat {
+            elt: self.elt.clone(),
+        }
+    }
+}
+
+impl<'a, L> fmt::Debug for Repeat<'a, L>
+where
+    L: ?Sized + for<'all> Lending<'all> + 'a,
+    Lend<'a, L>: fmt::Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Repeat").field("elt", &self.elt).finish()
+    }
 }
 
 impl<'lend, 'a, L> Lending<'lend> for Repeat<'a, L>
@@ -104,6 +128,32 @@ where
     L: ?Sized + for<'all> FallibleLending<'all> + 'a,
 {
     elt: Result<FallibleLend<'a, L>, E>,
+}
+
+impl<'a, E, L> Clone for FallibleRepeat<'a, E, L>
+where
+    E: Clone,
+    L: ?Sized + for<'all> FallibleLending<'all> + 'a,
+    FallibleLend<'a, L>: Clone,
+{
+    fn clone(&self) -> Self {
+        FallibleRepeat {
+            elt: self.elt.clone(),
+        }
+    }
+}
+
+impl<'a, E, L> fmt::Debug for FallibleRepeat<'a, E, L>
+where
+    E: fmt::Debug,
+    L: ?Sized + for<'all> FallibleLending<'all> + 'a,
+    FallibleLend<'a, L>: fmt::Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("FallibleRepeat")
+            .field("elt", &self.elt)
+            .finish()
+    }
 }
 
 impl<'lend, 'a, E, L> FallibleLending<'lend> for FallibleRepeat<'a, E, L>

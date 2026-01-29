@@ -1,4 +1,4 @@
-use core::marker::PhantomData;
+use core::{fmt, marker::PhantomData};
 
 use crate::{FusedFallibleLender, FusedLender, prelude::*};
 
@@ -33,6 +33,12 @@ where
 pub struct RepeatWith<'a, L: ?Sized, F> {
     f: F,
     _marker: core::marker::PhantomData<&'a L>,
+}
+
+impl<L: ?Sized, F> fmt::Debug for RepeatWith<'_, L, F> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("RepeatWith").finish()
+    }
 }
 
 impl<'lend, 'a, L, F> Lending<'lend> for RepeatWith<'a, L, F>
@@ -114,6 +120,12 @@ where
 pub struct FallibleRepeatWith<'a, L: ?Sized, E, F> {
     f: F,
     _marker: core::marker::PhantomData<(&'a L, E)>,
+}
+
+impl<L: ?Sized, E, F> fmt::Debug for FallibleRepeatWith<'_, L, E, F> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("FallibleRepeatWith").finish()
+    }
 }
 
 impl<'lend, 'a, L, E, F> FallibleLending<'lend> for FallibleRepeatWith<'a, L, E, F>

@@ -1,4 +1,4 @@
-use core::num::NonZero;
+use core::{fmt, num::NonZero};
 
 use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending};
 
@@ -42,6 +42,15 @@ pub struct WindowsMut<'a, T> {
     slice: &'a mut [T],
     size: NonZero<usize>,
     position: WindowPosition,
+}
+
+impl<T: fmt::Debug> fmt::Debug for WindowsMut<'_, T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("WindowsMut")
+            .field("slice", &self.slice)
+            .field("size", &self.size)
+            .finish()
+    }
 }
 
 /// Tracks which position was most recently returned.
@@ -155,6 +164,14 @@ pub fn array_windows_mut<T, const WINDOW_SIZE: usize>(
 pub struct ArrayWindowsMut<'a, T, const WINDOW_SIZE: usize> {
     slice: &'a mut [T],
     position: WindowPosition,
+}
+
+impl<T: fmt::Debug, const WINDOW_SIZE: usize> fmt::Debug for ArrayWindowsMut<'_, T, WINDOW_SIZE> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ArrayWindowsMut")
+            .field("slice", &self.slice)
+            .finish()
+    }
 }
 
 impl<'any, T, const WINDOW_SIZE: usize> Lending<'any> for ArrayWindowsMut<'_, T, WINDOW_SIZE> {

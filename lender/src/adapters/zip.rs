@@ -35,7 +35,7 @@ where
 ///
 /// This `struct` is created by [`Lender::zip`] or [`zip`]. See their
 /// documentation for more.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Zip<A, B> {
     a: A,

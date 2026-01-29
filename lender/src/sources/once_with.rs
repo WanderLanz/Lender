@@ -1,4 +1,4 @@
-use core::marker::PhantomData;
+use core::{fmt, marker::PhantomData};
 
 use crate::{
     DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender,
@@ -41,6 +41,14 @@ where
 pub struct OnceWith<St, F> {
     state: St,
     f: Option<F>,
+}
+
+impl<St: fmt::Debug, F> fmt::Debug for OnceWith<St, F> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("OnceWith")
+            .field("state", &self.state)
+            .finish()
+    }
 }
 
 impl<'lend, St, F> Lending<'lend> for OnceWith<St, F>
@@ -136,6 +144,14 @@ pub struct FallibleOnceWith<St, E, F> {
     state: St,
     f: Option<F>,
     _marker: PhantomData<E>,
+}
+
+impl<St: fmt::Debug, E, F> fmt::Debug for FallibleOnceWith<St, E, F> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("FallibleOnceWith")
+            .field("state", &self.state)
+            .finish()
+    }
 }
 
 impl<'lend, St, E, F> FallibleLending<'lend> for FallibleOnceWith<St, E, F>

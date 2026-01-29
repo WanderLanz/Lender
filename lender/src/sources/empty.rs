@@ -27,6 +27,7 @@ pub const fn empty<L: ?Sized + for<'all> Lending<'all>>() -> Empty<L> {
 ///
 /// The [`Lender`] version of [`core::iter::Empty`].
 #[must_use = "lenders are lazy and do nothing unless consumed"]
+#[derive(Clone, Copy, Default)]
 pub struct Empty<L: ?Sized>(marker::PhantomData<L>);
 
 impl<L: ?Sized> fmt::Debug for Empty<L> {
@@ -66,28 +67,9 @@ where
     }
 }
 
-impl<L> ExactSizeLender for Empty<L>
-where
-    L: ?Sized + for<'all> Lending<'all>,
-{
-    fn len(&self) -> usize {
-        0
-    }
-}
+impl<L> ExactSizeLender for Empty<L> where L: ?Sized + for<'all> Lending<'all> {}
 
 impl<L> FusedLender for Empty<L> where L: ?Sized + for<'all> Lending<'all> {}
-
-impl<L: ?Sized> Clone for Empty<L> {
-    fn clone(&self) -> Empty<L> {
-        Empty(marker::PhantomData)
-    }
-}
-
-impl<L: ?Sized> Default for Empty<L> {
-    fn default() -> Empty<L> {
-        Empty(marker::PhantomData)
-    }
-}
 
 /// Creates a fallible lender that yields nothing.
 ///
@@ -103,6 +85,7 @@ pub const fn fallible_empty<E, L: ?Sized + for<'all> FallibleLending<'all>>() ->
 ///
 /// The [`FallibleLender`] version of [`core::iter::Empty`].
 #[must_use = "lenders are lazy and do nothing unless consumed"]
+#[derive(Clone, Copy, Default)]
 pub struct FallibleEmpty<E, L: ?Sized>(marker::PhantomData<(E, L)>);
 
 impl<E, L: ?Sized> fmt::Debug for FallibleEmpty<E, L> {
