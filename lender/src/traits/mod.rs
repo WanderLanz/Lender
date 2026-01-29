@@ -338,7 +338,7 @@ macro_rules! covariant_lend {
 ///
 /// // Define a covariance-checked fallible lending type for Option<&'lend str>.
 /// // This type cannot be expressed with fallible_lend!() because Option has generics.
-/// lender::covariant_lend_fallible!(OptStr = Option<&'lend str>);
+/// lender::covariant_fallible_lend!(OptStr = Option<&'lend str>);
 ///
 /// let data = [Some("hello"), None, Some("world")];
 /// let mut lender = lender::lend_fallible_iter::<'_, OptStr, _>(data.iter().copied().into_fallible());
@@ -356,10 +356,10 @@ macro_rules! covariant_lend {
 /// use lender::prelude::*;
 ///
 /// // This fails to compile - Cell makes the type invariant!
-/// lender::covariant_lend_fallible!(InvariantLend = &'lend Cell<Option<&'lend String>>);
+/// lender::covariant_fallible_lend!(InvariantLend = &'lend Cell<Option<&'lend String>>);
 /// ```
 #[macro_export]
-macro_rules! covariant_lend_fallible {
+macro_rules! covariant_fallible_lend {
     ($name:ident = $T:ty) => {
         /// A fallible lending type with compile-time covariance checking.
         #[derive(Clone, Copy, Debug, Default)]
@@ -449,7 +449,7 @@ pub trait DynFallibleLend<'lend> {
 /// - References to tuples: `&'lend (T0,)`, `&'lend (T0, T1)`, `&'lend mut (T0,)`, `&'lend mut (T0, T1)`, etc.
 ///
 /// For types that are not covered by this macro, please use
-/// [`covariant_lend_fallible!`](crate::covariant_lend_fallible!), which
+/// [`covariant_fallible_lend!`](crate::covariant_fallible_lend!), which
 /// performs a compile-time covariance check.
 ///
 /// # Examples
@@ -484,7 +484,7 @@ macro_rules! fallible_lend {
     ($($tt:tt)*) => {
         compile_error!(concat!(
             "fallible_lend!() only accepts simple covariant patterns. ",
-            "For complex types, use covariant_lend_fallible!(Name = YourType) instead."
+            "For complex types, use covariant_fallible_lend!(Name = YourType) instead."
         ))
     };
 }

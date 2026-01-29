@@ -37,6 +37,7 @@ pub fn windows_mut<T>(slice: &mut [T], size: usize) -> WindowsMut<'_, T> {
 }
 
 /// This struct is returned by [`windows_mut`].
+#[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct WindowsMut<'a, T> {
     slice: &'a mut [T],
     size: NonZero<usize>,
@@ -150,6 +151,7 @@ pub fn array_windows_mut<T, const WINDOW_SIZE: usize>(
 }
 
 /// This struct is returned by [`array_windows_mut`].
+#[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct ArrayWindowsMut<'a, T, const WINDOW_SIZE: usize> {
     slice: &'a mut [T],
     position: WindowPosition,
@@ -339,7 +341,7 @@ fn test_windows_mut_exact_size() {
 #[should_panic(expected = "window size must be non-zero")]
 fn test_windows_mut_zero_size_panics() {
     let mut arr = [1, 2, 3];
-    windows_mut(&mut arr, 0);
+    let _ = windows_mut(&mut arr, 0);
 }
 
 #[test]

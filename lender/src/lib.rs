@@ -54,10 +54,12 @@ pub mod prelude {
     pub use crate::{
         DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender,
         ExtendFallibleLender, ExtendLender, FallibleIteratorExt, FallibleLend, FallibleLender,
-        FallibleLending, FromFallibleLender, FromLender, IntoFallibleIteratorExt,
-        IntoFallibleLender, IntoIteratorExt, IntoLender, IteratorExt, Lend, Lender, Lending,
-        WindowsMutExt, check_covariance, check_covariance_fallible, covariant_lend, fallible_lend,
-        from_fallible_iter, from_into_fallible_iter, from_into_iter, from_iter, hrc, hrc_mut,
-        hrc_once, lend, unsafe_assume_covariance, unsafe_assume_covariance_fallible,
+        FallibleLending, FromFallibleLender, FromLender, FusedFallibleLender, FusedLender,
+        IntoFallibleIteratorExt, IntoFallibleLender, IntoIteratorExt, IntoLender, IteratorExt,
+        Lend, Lender, Lending, ProductFallibleLender, ProductLender, SumFallibleLender, SumLender,
+        WindowsMutExt, check_covariance, check_covariance_fallible, covariant_fallible_lend,
+        covariant_lend, fallible_lend, from_fallible_iter, from_into_fallible_iter, from_into_iter,
+        from_iter, hrc, hrc_mut, hrc_once, lend, lend_fallible_iter, lend_iter,
+        unsafe_assume_covariance, unsafe_assume_covariance_fallible,
     };
 }

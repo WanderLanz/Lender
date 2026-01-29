@@ -29,6 +29,7 @@ where
 /// A lender that repeats an element endlessly by applying a closure.
 ///
 /// This `struct` is created by the [`repeat_with()`] function.
+#[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct RepeatWith<'a, L: ?Sized, F> {
     f: F,
     _marker: core::marker::PhantomData<&'a L>,
@@ -109,6 +110,7 @@ where
 /// A fallible lender that repeats an element endlessly by applying a closure.
 ///
 /// This `struct` is created by the [`fallible_repeat_with()`] function.
+#[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct FallibleRepeatWith<'a, L: ?Sized, E, F> {
     f: F,
     _marker: core::marker::PhantomData<(&'a L, E)>,

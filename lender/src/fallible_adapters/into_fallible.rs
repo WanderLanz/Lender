@@ -41,6 +41,7 @@ where
 /// A fallible lender that wraps a normal lender.
 #[derive(Clone, Debug)]
 #[repr(transparent)]
+#[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct IntoFallible<E, L> {
     pub(crate) lender: L,
     _marker: PhantomData<E>,
@@ -82,6 +83,11 @@ where
     #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
+    }
+
+    #[inline(always)]
+    fn advance_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
+        Ok(self.lender.advance_by(n))
     }
 
     #[inline]

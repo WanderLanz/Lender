@@ -20,6 +20,7 @@ where
 /// A lender that repeats an element endlessly.
 ///
 /// This `struct` is created by the [`repeat()`] function.
+#[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Repeat<'a, L>
 where
     L: ?Sized + for<'all> Lending<'all> + 'a,
@@ -97,6 +98,7 @@ where
 /// A fallible lender that repeats an element endlessly.
 ///
 /// This `struct` is created by the [`fallible_repeat()`] function.
+#[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct FallibleRepeat<'a, E, L>
 where
     L: ?Sized + for<'all> FallibleLending<'all> + 'a,

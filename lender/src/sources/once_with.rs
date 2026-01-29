@@ -1,8 +1,9 @@
 use core::marker::PhantomData;
 
 use crate::{
-    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeLender, FallibleLend, FallibleLender,
-    FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender, Lending,
+    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender,
+    FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, FusedLender, Lend, Lender,
+    Lending,
     higher_order::{FnOnceHKA, FnOnceHKARes},
 };
 
@@ -36,6 +37,7 @@ where
 ///
 /// This `struct` is created by the [`once_with()`] function.
 ///
+#[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct OnceWith<St, F> {
     state: St,
     f: Option<F>,
@@ -129,6 +131,7 @@ where
 ///
 /// This `struct` is created by the [`fallible_once_with()`] function.
 ///
+#[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct FallibleOnceWith<St, E, F> {
     state: St,
     f: Option<F>,
@@ -176,6 +179,11 @@ where
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.next()
     }
+}
+
+impl<St, E, F> ExactSizeFallibleLender for FallibleOnceWith<St, E, F> where
+    F: for<'all> FnOnceHKARes<'all, &'all mut St, E>
+{
 }
 
 impl<St, E, F> FusedFallibleLender for FallibleOnceWith<St, E, F> where

@@ -8,6 +8,7 @@ use crate::{
 };
 
 #[derive(Clone, Debug)]
+#[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct MapIntoIter<L, O, F> {
     pub(crate) lender: L,
     f: F,

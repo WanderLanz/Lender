@@ -29,6 +29,7 @@ impl<E, I> LenderResult<E> for I where I: Lender + for<'all> LendingResult<'all,
 
 /// A fallible lending iterator that wraps a normal lending iterator over [`Result`]s.
 #[repr(transparent)]
+#[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Convert<E, I> {
     iter: I,
     _marker: PhantomData<E>,

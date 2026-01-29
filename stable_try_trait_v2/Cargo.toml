@@ -1,7 +1,8 @@
 [package]
 name = "stable_try_trait_v2"
 version = "1.75.1"
-edition = "2021"
+edition = "2024"
+rust-version = "1.85"
 authors = ["Lance Warden <wanderlanz@proton.me>"]
 description = "A simple stable implementation of the `Try`, `FromResidual`, and `Residual` traits under the `try_trait_v2` feature."
 repository = "https://github.com/WanderLanz/Lender"
