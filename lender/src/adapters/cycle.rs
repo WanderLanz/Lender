@@ -77,7 +77,7 @@ where
         self.lender = self.orig.clone();
         let mut empty = true;
         acc = match self
-            .orig
+            .lender
             .try_fold(acc, |acc, x| {
                 empty = false;
                 f(acc, x)
@@ -92,7 +92,7 @@ where
         }
         loop {
             self.lender = self.orig.clone();
-            acc = match self.orig.try_fold(acc, &mut f).branch() {
+            acc = match self.lender.try_fold(acc, &mut f).branch() {
                 ControlFlow::Break(x) => return FromResidual::from_residual(x),
                 ControlFlow::Continue(x) => x,
             };
@@ -171,7 +171,7 @@ where
         self.lender = self.orig.clone();
         let mut empty = true;
         acc = match self
-            .orig
+            .lender
             .try_fold(acc, |acc, x| {
                 empty = false;
                 f(acc, x)
@@ -186,7 +186,7 @@ where
         }
         loop {
             self.lender = self.orig.clone();
-            acc = match self.orig.try_fold(acc, &mut f)?.branch() {
+            acc = match self.lender.try_fold(acc, &mut f)?.branch() {
                 ControlFlow::Break(x) => return Ok(FromResidual::from_residual(x)),
                 ControlFlow::Continue(x) => x,
             };

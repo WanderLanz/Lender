@@ -1,4 +1,5 @@
 use core::num::NonZeroUsize;
+use core::ops::ControlFlow;
 
 use crate::{
     DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender,
@@ -92,6 +93,59 @@ where
         let advanced = min - rem;
         self.n -= advanced;
         NonZeroUsize::new(n - advanced).map_or(Ok(()), Err)
+    }
+
+    #[inline]
+    fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> R
+    where
+        Self: Sized,
+        F: FnMut(B, Lend<'_, Self>) -> R,
+        R: Try<Output = B>,
+    {
+        if self.n == 0 {
+            return R::from_output(init);
+        }
+        let n = &mut self.n;
+        match self.lender.try_fold(init, move |acc, x| {
+            *n -= 1;
+            let r = f(acc, x);
+            if *n == 0 {
+                ControlFlow::Break(r)
+            } else {
+                match r.branch() {
+                    ControlFlow::Continue(b) => ControlFlow::Continue(b),
+                    ControlFlow::Break(residual) => {
+                        ControlFlow::Break(R::from_residual(residual))
+                    }
+                }
+            }
+        }) {
+            ControlFlow::Continue(acc) => R::from_output(acc),
+            ControlFlow::Break(r) => r,
+        }
+    }
+
+    #[inline]
+    fn fold<B, F>(mut self, init: B, mut f: F) -> B
+    where
+        Self: Sized,
+        F: FnMut(B, Lend<'_, Self>) -> B,
+    {
+        if self.n == 0 {
+            return init;
+        }
+        let n = &mut self.n;
+        match self.lender.try_fold(init, move |acc, x| {
+            *n -= 1;
+            let acc = f(acc, x);
+            if *n == 0 {
+                ControlFlow::Break(acc)
+            } else {
+                ControlFlow::Continue(acc)
+            }
+        }) {
+            ControlFlow::Continue(acc) | ControlFlow::Break(acc) => acc,
+        }
     }
 }
 
@@ -248,6 +302,59 @@ where
         let advanced = min - rem;
         self.n -= advanced;
         Ok(NonZeroUsize::new(n - advanced).map_or(Ok(()), Err))
+    }
+
+    #[inline]
+    fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> Result<R, Self::Error>
+    where
+        Self: Sized,
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<R, Self::Error>,
+        R: Try<Output = B>,
+    {
+        if self.n == 0 {
+            return Ok(R::from_output(init));
+        }
+        let n = &mut self.n;
+        match self.lender.try_fold(init, move |acc, x| {
+            *n -= 1;
+            let r = f(acc, x)?;
+            if *n == 0 {
+                Ok(ControlFlow::Break(r))
+            } else {
+                match r.branch() {
+                    ControlFlow::Continue(b) => Ok(ControlFlow::Continue(b)),
+                    ControlFlow::Break(residual) => {
+                        Ok(ControlFlow::Break(R::from_residual(residual)))
+                    }
+                }
+            }
+        })? {
+            ControlFlow::Continue(acc) => Ok(R::from_output(acc)),
+            ControlFlow::Break(r) => Ok(r),
+        }
+    }
+
+    #[inline]
+    fn fold<B, F>(mut self, init: B, mut f: F) -> Result<B, Self::Error>
+    where
+        Self: Sized,
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
+    {
+        if self.n == 0 {
+            return Ok(init);
+        }
+        let n = &mut self.n;
+        match self.lender.try_fold(init, move |acc, x| {
+            *n -= 1;
+            let acc = f(acc, x)?;
+            if *n == 0 {
+                Ok(ControlFlow::Break(acc))
+            } else {
+                Ok(ControlFlow::Continue(acc))
+            }
+        })? {
+            ControlFlow::Continue(acc) | ControlFlow::Break(acc) => Ok(acc),
+        }
     }
 }
 
