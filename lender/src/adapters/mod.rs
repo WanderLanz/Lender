@@ -77,6 +77,7 @@ use crate::{
 /// # Safety
 ///
 /// The residual of the lender cannot outlive it, otherwise UB.
+#[doc(hidden)]
 pub struct TryShunt<'this, L: Lender>
 where
     for<'all> Lend<'all, L>: Try,

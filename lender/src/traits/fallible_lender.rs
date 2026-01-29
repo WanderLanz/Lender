@@ -1384,10 +1384,8 @@ where
                 break;
             }
             Some(y) => {
-                let this = f(x, y)?;
-                let f = ControlFlow::Break;
-                if let ControlFlow::Break(x) = this {
-                    ctl = ControlFlow::Break(f(x));
+                if let ControlFlow::Break(x) = f(x, y)? {
+                    ctl = ControlFlow::Break(ControlFlow::Break(x));
                     break;
                 }
             }

@@ -35,6 +35,15 @@ pub struct RepeatWith<'a, L: ?Sized, F> {
     _marker: core::marker::PhantomData<&'a L>,
 }
 
+impl<L: ?Sized, F: Clone> Clone for RepeatWith<'_, L, F> {
+    fn clone(&self) -> Self {
+        Self {
+            f: self.f.clone(),
+            _marker: PhantomData,
+        }
+    }
+}
+
 impl<L: ?Sized, F> fmt::Debug for RepeatWith<'_, L, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("RepeatWith").finish()
@@ -120,6 +129,15 @@ where
 pub struct FallibleRepeatWith<'a, L: ?Sized, E, F> {
     f: F,
     _marker: core::marker::PhantomData<(&'a L, E)>,
+}
+
+impl<L: ?Sized, E, F: Clone> Clone for FallibleRepeatWith<'_, L, E, F> {
+    fn clone(&self) -> Self {
+        Self {
+            f: self.f.clone(),
+            _marker: PhantomData,
+        }
+    }
 }
 
 impl<L: ?Sized, E, F> fmt::Debug for FallibleRepeatWith<'_, L, E, F> {

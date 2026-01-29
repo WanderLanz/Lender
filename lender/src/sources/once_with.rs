@@ -43,6 +43,15 @@ pub struct OnceWith<St, F> {
     f: Option<F>,
 }
 
+impl<St: Clone, F: Clone> Clone for OnceWith<St, F> {
+    fn clone(&self) -> Self {
+        Self {
+            state: self.state.clone(),
+            f: self.f.clone(),
+        }
+    }
+}
+
 impl<St: fmt::Debug, F> fmt::Debug for OnceWith<St, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("OnceWith")
@@ -144,6 +153,16 @@ pub struct FallibleOnceWith<St, E, F> {
     state: St,
     f: Option<F>,
     _marker: PhantomData<E>,
+}
+
+impl<St: Clone, E, F: Clone> Clone for FallibleOnceWith<St, E, F> {
+    fn clone(&self) -> Self {
+        Self {
+            state: self.state.clone(),
+            f: self.f.clone(),
+            _marker: PhantomData,
+        }
+    }
 }
 
 impl<St: fmt::Debug, E, F> fmt::Debug for FallibleOnceWith<St, E, F> {

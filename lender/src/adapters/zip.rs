@@ -117,17 +117,10 @@ where
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         let a_sz = self.a.len();
         let b_sz = self.b.len();
-        if a_sz != b_sz {
-            // Adjust a, b to equal length
-            if a_sz > b_sz {
-                for _ in 0..a_sz - b_sz {
-                    self.a.next_back();
-                }
-            } else {
-                for _ in 0..b_sz - a_sz {
-                    self.b.next_back();
-                }
-            }
+        if a_sz > b_sz {
+            self.a.advance_back_by(a_sz - b_sz).ok();
+        } else if b_sz > a_sz {
+            self.b.advance_back_by(b_sz - a_sz).ok();
         }
         match (self.a.next_back(), self.b.next_back()) {
             (Some(x), Some(y)) => Some((x, y)),
@@ -206,17 +199,10 @@ where
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         let a_sz = self.a.len();
         let b_sz = self.b.len();
-        if a_sz != b_sz {
-            // Adjust a, b to equal length
-            if a_sz > b_sz {
-                for _ in 0..a_sz - b_sz {
-                    self.a.next_back()?;
-                }
-            } else {
-                for _ in 0..b_sz - a_sz {
-                    self.b.next_back()?;
-                }
-            }
+        if a_sz > b_sz {
+            self.a.advance_back_by(a_sz - b_sz)?.ok();
+        } else if b_sz > a_sz {
+            self.b.advance_back_by(b_sz - a_sz)?.ok();
         }
         match (self.a.next_back()?, self.b.next_back()?) {
             (Some(x), Some(y)) => Ok(Some((x, y))),
