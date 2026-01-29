@@ -2,7 +2,7 @@ use core::fmt;
 
 use crate::{
     DoubleEndedFallibleLender, DoubleEndedLender, FallibleLend, FallibleLender, FallibleLending,
-    FusedFallibleLender, FusedLender, Lend, Lender, Lending,
+    FusedFallibleLender, FusedLender, Lend, Lender, Lending, try_trait_v2::Try,
 };
 
 #[derive(Clone)]
@@ -73,6 +73,30 @@ where
         }
         self.lender.map(f::<Self, _>(self.predicate)).iter().sum()
     }
+
+    #[inline]
+    fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> R
+    where
+        Self: Sized,
+        F: FnMut(B, Lend<'_, Self>) -> R,
+        R: Try<Output = B>,
+    {
+        let predicate = &mut self.predicate;
+        self.lender.try_fold(init, move |acc, x| {
+            if (predicate)(&x) { f(acc, x) } else { R::from_output(acc) }
+        })
+    }
+
+    #[inline]
+    fn fold<B, F>(mut self, init: B, mut f: F) -> B
+    where
+        Self: Sized,
+        F: FnMut(B, Lend<'_, Self>) -> B,
+    {
+        self.lender.fold(init, move |acc, x| {
+            if (self.predicate)(&x) { f(acc, x) } else { acc }
+        })
+    }
 }
 
 impl<L, P> DoubleEndedLender for Filter<L, P>
@@ -83,6 +107,30 @@ where
     #[inline]
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         self.lender.rfind(&mut self.predicate)
+    }
+
+    #[inline]
+    fn try_rfold<B, F, R>(&mut self, init: B, mut f: F) -> R
+    where
+        Self: Sized,
+        F: FnMut(B, Lend<'_, Self>) -> R,
+        R: Try<Output = B>,
+    {
+        let predicate = &mut self.predicate;
+        self.lender.try_rfold(init, move |acc, x| {
+            if (predicate)(&x) { f(acc, x) } else { R::from_output(acc) }
+        })
+    }
+
+    #[inline]
+    fn rfold<B, F>(mut self, init: B, mut f: F) -> B
+    where
+        Self: Sized,
+        F: FnMut(B, Lend<'_, Self>) -> B,
+    {
+        self.lender.rfold(init, move |acc, x| {
+            if (self.predicate)(&x) { f(acc, x) } else { acc }
+        })
     }
 }
 
@@ -142,6 +190,30 @@ where
         })
         .map_err(|(_, err)| err)
     }
+
+    #[inline]
+    fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> Result<R, Self::Error>
+    where
+        Self: Sized,
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<R, Self::Error>,
+        R: Try<Output = B>,
+    {
+        let predicate = &mut self.predicate;
+        self.lender.try_fold(init, move |acc, x| {
+            if (predicate)(&x)? { f(acc, x) } else { Ok(R::from_output(acc)) }
+        })
+    }
+
+    #[inline]
+    fn fold<B, F>(mut self, init: B, mut f: F) -> Result<B, Self::Error>
+    where
+        Self: Sized,
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
+    {
+        self.lender.fold(init, move |acc, x| {
+            if (self.predicate)(&x)? { f(acc, x) } else { Ok(acc) }
+        })
+    }
 }
 
 impl<L, P> DoubleEndedFallibleLender for Filter<L, P>
@@ -152,6 +224,29 @@ where
     #[inline]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.lender.rfind(&mut self.predicate)
+    }
+
+    #[inline]
+    fn try_rfold<B, F, R>(&mut self, init: B, mut f: F) -> Result<R, Self::Error>
+    where
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<R, Self::Error>,
+        R: Try<Output = B>,
+    {
+        let predicate = &mut self.predicate;
+        self.lender.try_rfold(init, move |acc, x| {
+            if (predicate)(&x)? { f(acc, x) } else { Ok(R::from_output(acc)) }
+        })
+    }
+
+    #[inline]
+    fn rfold<B, F>(mut self, init: B, mut f: F) -> Result<B, Self::Error>
+    where
+        Self: Sized,
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
+    {
+        self.lender.rfold(init, move |acc, x| {
+            if (self.predicate)(&x)? { f(acc, x) } else { Ok(acc) }
+        })
     }
 }
 

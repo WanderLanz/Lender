@@ -28,12 +28,27 @@ trait LenderResult<E>: Lender + for<'all> LendingResult<'all, E> {}
 impl<E, I> LenderResult<E> for I where I: Lender + for<'all> LendingResult<'all, E> {}
 
 /// A fallible lending iterator that wraps a normal lending iterator over [`Result`]s.
+///
+/// This struct is created by [`Lender::convert`](crate::Lender::convert).
 #[derive(Clone, Debug)]
 #[repr(transparent)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Convert<E, I> {
     iter: I,
     _marker: PhantomData<E>,
+}
+
+impl<E, I> Convert<E, I> {
+    pub(crate) fn new(iter: I) -> Self {
+        Self {
+            iter,
+            _marker: PhantomData,
+        }
+    }
+
+    pub fn into_inner(self) -> I {
+        self.iter
+    }
 }
 
 impl<'lend, E, I> FallibleLending<'lend> for Convert<E, I>

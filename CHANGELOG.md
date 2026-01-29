@@ -17,6 +17,8 @@
 
 - Added missing `FromFallibleLender`/`ExtendFallibleLender` traits.
 
+- The `Convert` adapter is now accessible through the `Lender::convert` method.
+
 ### Changed
 
 - `windows_mut` is now double-ended.

@@ -1299,6 +1299,31 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         Chunky::new(self, chunk_size)
     }
 
+    /// Converts a [`Lender`] whose lend type is `Result<T, E>` into a
+    /// [`FallibleLender`] with error type `E` and lend type `T`.
+    ///
+    /// This is the lending equivalent of
+    /// [`fallible_iterator::convert`](https://docs.rs/fallible-iterator/latest/fallible_iterator/fn.convert.html).
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let data = vec![Ok(1), Ok(2), Err("oops")];
+    /// let mut lender = lender::from_iter(data.into_iter())
+    ///     .convert::<&str>();
+    /// assert_eq!(lender.next(), Ok(Some(1)));
+    /// assert_eq!(lender.next(), Ok(Some(2)));
+    /// assert!(lender.next().is_err());
+    /// ```
+    #[inline]
+    fn convert<E>(self) -> Convert<E, Self>
+    where
+        Self: Sized,
+    {
+        Convert::new(self)
+    }
+
     /// Converts a [`Lender`] into a [`FallibleLender`] by wrapping
     /// into `Result<Lend<'_, Self>, E>` where `E` is an
     /// error that can never actually happen.
