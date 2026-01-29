@@ -289,11 +289,11 @@ impl<I: FallibleIterator> From<I> for FromFallibleIter<I> {
 /// Creates an [`IntoFallibleLender`] from an [`IntoFallibleIterator`].
 ///
 /// This function can be conveniently accessed using the
-/// [`into_into_lender`](crate::traits::IntoIteratorExt::into_into_lender) method
-/// added to [`IntoIterator`] by this crate.
+/// [`into_into_fallible_lender`](crate::traits::IntoFallibleIteratorExt::into_into_fallible_lender) method
+/// added to [`IntoFallibleIterator`] by this crate.
 ///
-/// The lenders returned are obtained by applying [`from_iter`]
-/// to the iterators returned by the wrapped [`IntoIterator`].
+/// The lenders returned are obtained by applying [`from_fallible_iter`]
+/// to the iterators returned by the wrapped [`IntoFallibleIterator`].
 ///
 #[inline]
 pub fn from_into_fallible_iter<I: IntoFallibleIterator>(into_iter: I) -> FromIntoFallibleIter<I> {

@@ -307,6 +307,10 @@ impl<'this> Lender for StrRef<'this> {
 }
 ```
 
+Implementing a [`FallibleLender`] is similar, using the
+[`check_covariance_fallible!`] or [`unsafe_assume_covariance_fallible!`] macros
+instead.
+
 ## Why Not GATs?
 
 _Generic associated types_ (GATs) were introduced [exactly having lending iterators

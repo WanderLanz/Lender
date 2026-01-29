@@ -350,7 +350,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(mapped_into_iter.next(), None);
     /// ```
     #[inline]
-    fn map_into_iter<O, F: FnMut(Lend<'_, Self>)-> O>(self, f: F) -> MapIntoIter<Self, O, F>
+    fn map_into_iter<O, F: FnMut(Lend<'_, Self>) -> O>(self, f: F) -> MapIntoIter<Self, O, F>
     where Self: Sized
     {
         MapIntoIter::new(self, f)

@@ -4,6 +4,7 @@ use crate::{
     DoubleEndedFallibleLender, DoubleEndedLender, FallibleLend, FallibleLender, FallibleLending,
     FusedFallibleLender, FusedLender, Lend, Lender, Lending,
     higher_order::{FnMutHKAOpt, FnMutHKAResOpt},
+    try_trait_v2::Try,
 };
 
 #[derive(Clone)]
@@ -65,6 +66,38 @@ where
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (_, upper) = self.lender.size_hint();
         (0, upper)
+    }
+
+    #[inline]
+    fn try_fold<B, G, R>(&mut self, init: B, mut g: G) -> R
+    where
+        Self: Sized,
+        G: FnMut(B, Lend<'_, Self>) -> R,
+        R: Try<Output = B>,
+    {
+        let f = &mut self.f;
+        self.lender.try_fold(init, move |acc, x| {
+            if let Some(y) = (f)(x) {
+                g(acc, y)
+            } else {
+                R::from_output(acc)
+            }
+        })
+    }
+
+    #[inline]
+    fn fold<B, G>(mut self, init: B, mut g: G) -> B
+    where
+        Self: Sized,
+        G: FnMut(B, Lend<'_, Self>) -> B,
+    {
+        self.lender.fold(init, move |acc, x| {
+            if let Some(y) = (self.f)(x) {
+                g(acc, y)
+            } else {
+                acc
+            }
+        })
     }
 }
 

@@ -5200,6 +5200,26 @@ fn fallible_lender_position() {
 }
 
 #[test]
+fn fallible_lender_rposition() {
+    use lender::{DoubleEndedFallibleLender, FallibleLender};
+
+    let mut fallible: lender::IntoFallible<(), _> =
+        VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
+    assert_eq!(fallible.rposition(|x| Ok(x == 3)), Ok(Some(2)));
+}
+
+#[test]
+fn lender_convert() {
+    use lender::FallibleLender;
+
+    let data = vec![Ok(1), Ok(2), Err("oops")];
+    let mut lender = lender::from_iter(data.into_iter()).convert::<&str>();
+    assert_eq!(lender.next(), Ok(Some(1)));
+    assert_eq!(lender.next(), Ok(Some(2)));
+    assert!(lender.next().is_err());
+}
+
+#[test]
 fn fallible_lender_chunky() {
     use lender::FallibleLender;
 
