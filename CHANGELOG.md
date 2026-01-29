@@ -22,7 +22,7 @@
 - `windows_mut` is now double-ended.
 
 - Windows and array windows must have a non-zero length, as in `Iterator`,
-  and they implemented `FusedLender` and `ExactSizeLender`.
+  and they implement `FusedLender` and `ExactSizeLender`.
 
 - The return type of `Peekable::peek` is now `Option<&'_ Lend<'_, L>>`, which
   fixes a problem of data escape. Analogously for `FalliblePeekable::peek`.
@@ -36,6 +36,11 @@
 
 - `FallibleLender::advance_by`/`FallibleLender::advance_back_by` have now a 
   signature aligned with `Lender::advance_by`/`Lender::advance_back_by`.
+
+- Completed implementation of standard traits (`Debug`, `Clone`, `Default`, etc.)
+  where possible.
+
+- Coherent use of `must_use` attribute.
 
 ### Fixed
 

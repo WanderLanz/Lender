@@ -1,4 +1,4 @@
-use lender::prelude::*;
+use lender::{from_into_iter, from_iter, prelude::*};
 
 #[test]
 // Test with Lender and IntoLender. Note that iterators are converted automagically.

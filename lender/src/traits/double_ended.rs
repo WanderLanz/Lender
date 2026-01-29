@@ -107,7 +107,9 @@ pub trait DoubleEndedFallibleLender: FallibleLender {
 
     #[inline]
     fn nth_back(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
-        self.advance_back_by(n)?.ok();
+        if self.advance_back_by(n)?.is_err() {
+            return Ok(None);
+        }
         self.next_back()
     }
 

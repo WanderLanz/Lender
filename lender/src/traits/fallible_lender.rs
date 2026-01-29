@@ -176,7 +176,9 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// `n` is zero-indexed.
     #[inline]
     fn nth(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
-        self.advance_by(n)?.ok();
+        if self.advance_by(n)?.is_err() {
+            return Ok(None);
+        }
         self.next()
     }
 
@@ -291,15 +293,12 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
 
     /// Calls the given function with each lend of this lender.
     #[inline]
-    fn for_each<F>(mut self, mut f: F) -> Result<(), Self::Error>
+    fn for_each<F>(self, mut f: F) -> Result<(), Self::Error>
     where
         Self: Sized,
         F: FnMut(FallibleLend<'_, Self>) -> Result<(), Self::Error>,
     {
-        while let Some(a) = self.next()? {
-            f(a)?;
-        }
-        Ok(())
+        self.fold((), |(), item| { f(item)?; Ok(()) })
     }
 
     /// Filters this lender using the given predicate.

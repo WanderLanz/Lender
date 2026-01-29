@@ -5542,3 +5542,89 @@ fn from_iter_fallible_coverage() {
     assert_eq!(lender.next(), Ok(Some(&1)));
     assert_eq!(lender.next_back(), Ok(Some(&3)));
 }
+
+#[test]
+fn fallible_lender_nth_past_end() {
+    use core::num::NonZeroUsize;
+    use lender::{
+        FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender,
+    };
+
+    /// A fallible lender that always has elements but whose advance_by
+    /// always reports failure without consuming anything.
+    struct StubbyAdvance(i32);
+
+    impl<'lend> FallibleLending<'lend> for StubbyAdvance {
+        type Lend = i32;
+    }
+
+    impl FallibleLender for StubbyAdvance {
+        type Error = ();
+        crate::check_covariance_fallible!();
+
+        fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+            self.0 += 1;
+            Ok(Some(self.0))
+        }
+
+        fn advance_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
+            // Report complete failure: didn't advance at all.
+            Ok(NonZeroUsize::new(n).map_or(Ok(()), Err))
+        }
+    }
+
+    impl FusedFallibleLender for StubbyAdvance {}
+
+    let mut lender = StubbyAdvance(0);
+    // advance_by(3) will return Ok(Err(3)) — full failure.
+    // nth(3) must therefore return Ok(None), not call next().
+    assert_eq!(lender.nth(3), Ok(None));
+}
+
+#[test]
+fn double_ended_fallible_nth_back_past_end() {
+    use core::num::NonZeroUsize;
+    use lender::{
+        DoubleEndedFallibleLender, FallibleLend, FallibleLender, FallibleLending,
+        FusedFallibleLender,
+    };
+
+    /// A fallible lender whose advance_back_by always reports failure.
+    struct StubbyAdvanceBack(i32);
+
+    impl<'lend> FallibleLending<'lend> for StubbyAdvanceBack {
+        type Lend = i32;
+    }
+
+    impl FallibleLender for StubbyAdvanceBack {
+        type Error = ();
+        crate::check_covariance_fallible!();
+
+        fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+            self.0 += 1;
+            Ok(Some(self.0))
+        }
+    }
+
+    impl DoubleEndedFallibleLender for StubbyAdvanceBack {
+        fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+            self.0 += 1;
+            Ok(Some(self.0))
+        }
+
+        fn advance_back_by(
+            &mut self,
+            n: usize,
+        ) -> Result<Result<(), NonZeroUsize>, Self::Error> {
+            // Report complete failure: didn't advance at all.
+            Ok(NonZeroUsize::new(n).map_or(Ok(()), Err))
+        }
+    }
+
+    impl FusedFallibleLender for StubbyAdvanceBack {}
+
+    let mut lender = StubbyAdvanceBack(0);
+    // advance_back_by(3) will return Ok(Err(3)) — full failure.
+    // nth_back(3) must therefore return Ok(None), not call next_back().
+    assert_eq!(lender.nth_back(3), Ok(None));
+}

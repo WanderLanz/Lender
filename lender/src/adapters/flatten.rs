@@ -113,7 +113,7 @@ where
 
 impl<L: Lender + fmt::Debug, F> fmt::Debug for FlatMap<'_, L, F>
 where
-    Map<L, F>: Lender + Clone,
+    Map<L, F>: Lender,
     for<'all> Lend<'all, Map<L, F>>: IntoLender,
     for<'all> <Lend<'all, Map<L, F>> as IntoLender>::Lender: fmt::Debug,
 {

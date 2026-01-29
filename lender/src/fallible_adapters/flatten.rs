@@ -107,7 +107,7 @@ where
 
 impl<L: FallibleLender + Clone, F: Clone> Clone for FlatMap<'_, L, F>
 where
-    Map<L, F>: FallibleLender + Clone,
+    Map<L, F>: FallibleLender,
     for<'all> FallibleLend<'all, Map<L, F>>: IntoFallibleLender,
     for<'all> <FallibleLend<'all, Map<L, F>> as IntoFallibleLender>::FallibleLender: Clone,
 {

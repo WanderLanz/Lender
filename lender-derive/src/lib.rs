@@ -96,7 +96,7 @@ pub fn for_(input: TokenStream) -> TokenStream {
     } = parse_macro_input!(input as ForLenderInfo);
 
     quote! {{
-        use lender::{Lender, IntoLender};
+        use ::lender::{Lender, IntoLender};
         let mut ___ඞඞඞlenderඞඞඞ___ = (#expr).into_lender();
         while let Some( #pat ) = ___ඞඞඞlenderඞඞඞ___.next() #body
     }}
