@@ -36,7 +36,6 @@ impl<L: fmt::Debug, P> fmt::Debug for TakeWhile<L, P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("TakeWhile")
             .field("lender", &self.lender)
-            .field("flag", &self.flag)
             .finish()
     }
 }

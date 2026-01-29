@@ -53,6 +53,7 @@ where
         self.lender.nth_back(n)
     }
 
+    #[inline]
     fn try_fold<B, F, R>(&mut self, init: B, f: F) -> R
     where
         Self: Sized,
@@ -62,6 +63,7 @@ where
         self.lender.try_rfold(init, f)
     }
 
+    #[inline]
     fn fold<B, F>(self, init: B, f: F) -> B
     where
         Self: Sized,
@@ -99,6 +101,7 @@ where
         self.lender.nth(n)
     }
 
+    #[inline]
     fn try_rfold<B, F, R>(&mut self, init: B, f: F) -> R
     where
         Self: Sized,
@@ -108,6 +111,7 @@ where
         self.lender.try_fold(init, f)
     }
 
+    #[inline]
     fn rfold<B, F>(self, init: B, f: F) -> B
     where
         Self: Sized,
@@ -116,6 +120,7 @@ where
         self.lender.fold(init, f)
     }
 
+    #[inline]
     fn rfind<P>(&mut self, predicate: P) -> Option<Lend<'_, Self>>
     where
         Self: Sized,
@@ -181,6 +186,7 @@ where
         self.lender.nth_back(n)
     }
 
+    #[inline]
     fn try_fold<B, F, R>(&mut self, init: B, f: F) -> Result<R, Self::Error>
     where
         Self: Sized,
@@ -190,6 +196,7 @@ where
         self.lender.try_rfold(init, f)
     }
 
+    #[inline]
     fn fold<B, F>(self, init: B, f: F) -> Result<B, Self::Error>
     where
         Self: Sized,
@@ -230,6 +237,7 @@ where
         self.lender.nth(n)
     }
 
+    #[inline]
     fn try_rfold<B, F, R>(&mut self, init: B, f: F) -> Result<R, Self::Error>
     where
         Self: Sized,
@@ -239,6 +247,7 @@ where
         self.lender.try_fold(init, f)
     }
 
+    #[inline]
     fn rfold<B, F>(self, init: B, f: F) -> Result<B, Self::Error>
     where
         Self: Sized,
@@ -247,6 +256,7 @@ where
         self.lender.fold(init, f)
     }
 
+    #[inline]
     fn rfind<P>(&mut self, predicate: P) -> Result<Option<FallibleLend<'_, Self>>, Self::Error>
     where
         Self: Sized,

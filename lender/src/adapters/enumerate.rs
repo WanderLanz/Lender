@@ -21,6 +21,11 @@ impl<L> Enumerate<L> {
     pub fn into_inner(self) -> L {
         self.lender
     }
+
+    /// Returns the inner lender and the current count.
+    pub fn into_parts(self) -> (L, usize) {
+        (self.lender, self.count)
+    }
 }
 
 impl<'lend, L> Lending<'lend> for Enumerate<L>

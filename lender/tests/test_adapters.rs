@@ -2135,6 +2135,150 @@ fn intersperse_with_coverage() {
     assert_eq!(results, vec![1, 0, 2, 0, 3]);
 }
 
+#[test]
+fn intersperse_try_fold_early_exit() {
+    // try_fold that stops early via None
+    let result: Option<i32> = VecLender::new(vec![1, 2, 3])
+        .intersperse(10)
+        .try_fold(0, |acc, x| {
+            if acc + x > 15 {
+                None
+            } else {
+                Some(acc + x)
+            }
+        });
+    // 1 + 10 + 2 = 13, then next is 10 → 23 > 15, so None
+    assert_eq!(result, None);
+}
+
+#[test]
+fn intersperse_try_fold_empty() {
+    let result: Option<i32> = VecLender::new(vec![])
+        .intersperse(10)
+        .try_fold(0, |acc, x| Some(acc + x));
+    assert_eq!(result, Some(0));
+}
+
+#[test]
+fn intersperse_try_fold_single() {
+    let result: Option<i32> = VecLender::new(vec![42])
+        .intersperse(10)
+        .try_fold(0, |acc, x| Some(acc + x));
+    assert_eq!(result, Some(42));
+}
+
+#[test]
+fn intersperse_fold_empty() {
+    let sum = VecLender::new(vec![])
+        .intersperse(10)
+        .fold(0, |acc, x: i32| acc + x);
+    assert_eq!(sum, 0);
+}
+
+#[test]
+fn intersperse_fold_single() {
+    let sum = VecLender::new(vec![42])
+        .intersperse(10)
+        .fold(0, |acc, x| acc + x);
+    assert_eq!(sum, 42);
+}
+
+#[test]
+fn intersperse_with_try_fold() {
+    let result: Option<i32> = VecLender::new(vec![1, 2, 3])
+        .intersperse_with(|| 10)
+        .try_fold(0, |acc, x| Some(acc + x));
+    // 1 + 10 + 2 + 10 + 3 = 26
+    assert_eq!(result, Some(26));
+}
+
+#[test]
+fn intersperse_with_try_fold_early_exit() {
+    let result: Option<i32> = VecLender::new(vec![1, 2, 3])
+        .intersperse_with(|| 10)
+        .try_fold(0, |acc, x| {
+            if acc + x > 15 {
+                None
+            } else {
+                Some(acc + x)
+            }
+        });
+    assert_eq!(result, None);
+}
+
+#[test]
+fn intersperse_with_try_fold_empty() {
+    let result: Option<i32> = VecLender::new(vec![])
+        .intersperse_with(|| 10)
+        .try_fold(0, |acc, x| Some(acc + x));
+    assert_eq!(result, Some(0));
+}
+
+#[test]
+fn intersperse_with_try_fold_single() {
+    let result: Option<i32> = VecLender::new(vec![42])
+        .intersperse_with(|| 10)
+        .try_fold(0, |acc, x| Some(acc + x));
+    assert_eq!(result, Some(42));
+}
+
+#[test]
+fn intersperse_with_fold() {
+    let sum = VecLender::new(vec![1, 2, 3])
+        .intersperse_with(|| 10)
+        .fold(0, |acc, x| acc + x);
+    // 1 + 10 + 2 + 10 + 3 = 26
+    assert_eq!(sum, 26);
+}
+
+#[test]
+fn intersperse_with_fold_empty() {
+    let sum = VecLender::new(vec![])
+        .intersperse_with(|| 10)
+        .fold(0, |acc, x: i32| acc + x);
+    assert_eq!(sum, 0);
+}
+
+#[test]
+fn intersperse_with_fold_single() {
+    let sum = VecLender::new(vec![42])
+        .intersperse_with(|| 10)
+        .fold(0, |acc, x| acc + x);
+    assert_eq!(sum, 42);
+}
+
+#[test]
+fn intersperse_for_each() {
+    let mut items = Vec::new();
+    VecLender::new(vec![1, 2, 3])
+        .intersperse(0)
+        .for_each(|x| items.push(x));
+    assert_eq!(items, vec![1, 0, 2, 0, 3]);
+}
+
+#[test]
+fn intersperse_with_for_each() {
+    let mut items = Vec::new();
+    VecLender::new(vec![1, 2, 3])
+        .intersperse_with(|| 0)
+        .for_each(|x| items.push(x));
+    assert_eq!(items, vec![1, 0, 2, 0, 3]);
+}
+
+#[test]
+fn intersperse_count() {
+    let count = VecLender::new(vec![1, 2, 3]).intersperse(0).count();
+    assert_eq!(count, 5); // 3 elements + 2 separators
+}
+
+#[test]
+fn intersperse_with_count() {
+    let count = VecLender::new(vec![1, 2, 3])
+        .intersperse_with(|| 0)
+        .count();
+    assert_eq!(count, 5);
+}
+
 // ============================================================================
 // Chunk adapter tests
 // ============================================================================

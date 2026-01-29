@@ -425,18 +425,18 @@ fn lender_partition() {
     }
 
     let (evens, odds): (I32Vec, I32Vec) =
-        VecLender::new(vec![1, 2, 3, 4, 5]).partition::<(), _, _>(|&x| x % 2 == 0);
+        VecLender::new(vec![1, 2, 3, 4, 5]).partition::<_, _>(|&x| x % 2 == 0);
     assert_eq!(evens.0, vec![2, 4]);
     assert_eq!(odds.0, vec![1, 3, 5]);
 
     // All match predicate
     let (all, none): (I32Vec, I32Vec) =
-        VecLender::new(vec![2, 4, 6]).partition::<(), _, _>(|&x| x % 2 == 0);
+        VecLender::new(vec![2, 4, 6]).partition::<_, _>(|&x| x % 2 == 0);
     assert_eq!(all.0, vec![2, 4, 6]);
     assert!(none.0.is_empty());
 
     // Empty lender
-    let (a, b): (I32Vec, I32Vec) = VecLender::new(vec![]).partition::<(), _, _>(|&x| x > 0);
+    let (a, b): (I32Vec, I32Vec) = VecLender::new(vec![]).partition::<_, _>(|&x| x > 0);
     assert!(a.0.is_empty());
     assert!(b.0.is_empty());
 }

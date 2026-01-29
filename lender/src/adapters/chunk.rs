@@ -37,6 +37,7 @@ where
 {
     // SAFETY: the lend is that of T
     crate::unsafe_assume_covariance!();
+    #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         if self.len == 0 {
             None
@@ -46,6 +47,7 @@ where
         }
     }
 
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (lower, upper) = self.lender.size_hint();
         (lower.min(self.len), upper.map(|x| x.min(self.len)))
@@ -69,6 +71,7 @@ where
     // SAFETY: the lend is that of T
     crate::unsafe_assume_covariance_fallible!();
 
+    #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         if self.len == 0 {
             Ok(None)
@@ -78,6 +81,7 @@ where
         }
     }
 
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (lower, upper) = self.lender.size_hint();
         (lower.min(self.len), upper.map(|x| x.min(self.len)))

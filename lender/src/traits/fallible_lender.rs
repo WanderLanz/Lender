@@ -610,7 +610,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::partition`].
-    fn partition<'this, A, E, F>(mut self, mut f: F) -> Result<(E, E), Self::Error>
+    fn partition<'this, E, F>(mut self, mut f: F) -> Result<(E, E), Self::Error>
     where
         Self: Sized + 'this,
         E: Default + ExtendLender<NonFallibleAdapter<'this, Self>>,

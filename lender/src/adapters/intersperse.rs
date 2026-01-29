@@ -162,6 +162,15 @@ where
             needs_sep: false,
         }
     }
+
+    pub fn into_inner(self) -> L {
+        self.lender.into_inner()
+    }
+
+    /// Returns the inner lender and the separator function.
+    pub fn into_parts(self) -> (L, G) {
+        (self.lender.into_inner(), self.separator)
+    }
 }
 
 impl<L: fmt::Debug, G: fmt::Debug> fmt::Debug for IntersperseWith<'_, L, G>

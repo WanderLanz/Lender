@@ -96,6 +96,15 @@ where
             inner: FlattenCompat::new(Map::new(lender, f)),
         }
     }
+
+    pub fn into_inner(self) -> L {
+        (*AliasableBox::into_unique(self.inner.lender)).into_inner()
+    }
+
+    /// Returns the inner lender and the mapping function.
+    pub fn into_parts(self) -> (L, F) {
+        (*AliasableBox::into_unique(self.inner.lender)).into_parts()
+    }
 }
 
 impl<L: Lender + Clone, F: Clone> Clone for FlatMap<'_, L, F>
@@ -222,6 +231,7 @@ where
 {
     // SAFETY: the lend is that of the inner lender
     crate::unsafe_assume_covariance!();
+    #[inline]
     #[allow(clippy::question_mark)]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         loop {
@@ -248,14 +258,13 @@ where
         }
     }
 
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
-        (
-            match &*self.inner {
-                Some(inner) => inner.size_hint().0,
-                None => self.lender.size_hint().0,
-            },
-            None,
-        )
+        let inner_len = match &*self.inner {
+            Some(inner) => inner.size_hint().0,
+            None => 0,
+        };
+        (inner_len, None)
     }
 }
 

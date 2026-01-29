@@ -372,7 +372,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         Self: Sized,
         F: FnMut(Lend<'_, Self>),
     {
-	self.fold((), |_, t| f(t))
+        self.fold((), |_, t| f(t))
     }
     /// Filters this lender using the given predicate.
     ///
@@ -717,7 +717,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         collection
     }
     /// The [`Lender`] version of [`Iterator::partition`].
-    fn partition<A, E, F>(mut self, mut f: F) -> (E, E)
+    fn partition<E, F>(mut self, mut f: F) -> (E, E)
     where
         Self: Sized,
         E: Default + ExtendLender<Self>,
