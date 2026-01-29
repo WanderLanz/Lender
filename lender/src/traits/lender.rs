@@ -1294,7 +1294,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     #[inline]
     fn chunky(self, chunk_size: usize) -> Chunky<Self>
     where
-        Self: Sized,
+        Self: Sized + ExactSizeLender,
     {
         Chunky::new(self, chunk_size)
     }

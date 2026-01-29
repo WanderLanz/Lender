@@ -67,43 +67,38 @@ use crate::{
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Chunky<L> {
     lender: L,
-    done: bool,
+    len: usize,
     chunk_size: usize,
 }
 
 impl<L> Chunky<L>
 where
-    L: Lender,
+    L: Lender + ExactSizeLender,
 {
     pub(crate) fn new(lender: L, chunk_size: usize) -> Self {
         assert!(chunk_size != 0, "chunk size must be non-zero");
+        let len = lender.len().div_ceil(chunk_size);
         Self {
             lender,
             chunk_size,
-            done: false,
+            len,
         }
     }
 }
 
 impl<L> Chunky<L>
 where
-    L: FallibleLender,
+    L: FallibleLender + ExactSizeFallibleLender,
 {
     pub(crate) fn new_fallible(lender: L, chunk_size: usize) -> Self {
         assert!(chunk_size != 0, "chunk size must be non-zero");
+        let len = lender.len().div_ceil(chunk_size);
         Self {
             lender,
             chunk_size,
-            done: false,
+            len,
         }
     }
-}
-
-/// Helper to compute the number of chunks from a number of elements and a chunk size.
-#[inline]
-fn div_ceil(n: usize, chunk_size: usize) -> usize {
-    let q = n / chunk_size;
-    if n % chunk_size > 0 { q + 1 } else { q }
 }
 
 impl<L> Chunky<L> {
@@ -131,33 +126,22 @@ where
     crate::unsafe_assume_covariance!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
-        if self.done {
-            return None;
+        if self.len > 0 {
+            self.len -= 1;
+            Some(self.lender.next_chunk(self.chunk_size))
+        } else {
+            None
         }
-        // Peek at the underlying lender via size_hint to check if exhausted.
-        // This works correctly because Chunk fully consumes its allocation
-        // before the next call to Chunky::next().
-        let hint = self.lender.size_hint();
-        if hint.1 == Some(0) {
-            self.done = true;
-            return None;
-        }
-        Some(self.lender.next_chunk(self.chunk_size))
     }
 
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
-        if self.done {
-            return (0, Some(0));
-        }
-        let (lower, upper) = self.lender.size_hint();
-        (div_ceil(lower, self.chunk_size), upper.map(|n| div_ceil(n, self.chunk_size)))
+        (self.len, Some(self.len))
     }
 
     #[inline]
     fn count(self) -> usize {
-        if self.done { return 0; }
-        div_ceil(self.lender.count(), self.chunk_size)
+        self.len
     }
 
     fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> R
@@ -168,11 +152,8 @@ where
     {
         let mut acc = init;
         let sz = self.chunk_size;
-        while !self.done {
-            if self.lender.size_hint().1 == Some(0) {
-                self.done = true;
-                break;
-            }
+        while self.len > 0 {
+            self.len -= 1;
             acc = match f(acc, self.lender.next_chunk(sz)).branch() {
                 ControlFlow::Break(x) => return R::from_residual(x),
                 ControlFlow::Continue(x) => x,
@@ -189,11 +170,8 @@ where
     {
         let mut accum = init;
         let sz = self.chunk_size;
-        while !self.done {
-            if self.lender.size_hint().1 == Some(0) {
-                self.done = true;
-                break;
-            }
+        while self.len > 0 {
+            self.len -= 1;
             accum = f(accum, self.lender.next_chunk(sz));
         }
         accum
@@ -204,12 +182,11 @@ impl<L> FusedLender for Chunky<L> where L: FusedLender {}
 
 impl<L> ExactSizeLender for Chunky<L>
 where
-    L: ExactSizeLender,
+    L: Lender,
 {
     #[inline]
     fn len(&self) -> usize {
-        if self.done { return 0; }
-        div_ceil(self.lender.len(), self.chunk_size)
+        self.len
     }
 }
 
@@ -230,30 +207,22 @@ where
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
-        if self.done {
-            return Ok(None);
+        if self.len > 0 {
+            self.len -= 1;
+            Ok(Some(self.lender.next_chunk(self.chunk_size)))
+        } else {
+            Ok(None)
         }
-        let hint = self.lender.size_hint();
-        if hint.1 == Some(0) {
-            self.done = true;
-            return Ok(None);
-        }
-        Ok(Some(self.lender.next_chunk(self.chunk_size)))
     }
 
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
-        if self.done {
-            return (0, Some(0));
-        }
-        let (lower, upper) = self.lender.size_hint();
-        (div_ceil(lower, self.chunk_size), upper.map(|n| div_ceil(n, self.chunk_size)))
+        (self.len, Some(self.len))
     }
 
     #[inline]
     fn count(self) -> Result<usize, Self::Error> {
-        if self.done { return Ok(0); }
-        Ok(div_ceil(self.lender.count()?, self.chunk_size))
+        Ok(self.len)
     }
 
     fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> Result<R, Self::Error>
@@ -264,11 +233,8 @@ where
     {
         let mut acc = init;
         let sz = self.chunk_size;
-        while !self.done {
-            if self.lender.size_hint().1 == Some(0) {
-                self.done = true;
-                break;
-            }
+        while self.len > 0 {
+            self.len -= 1;
             acc = match f(acc, self.lender.next_chunk(sz))?.branch() {
                 ControlFlow::Break(x) => return Ok(R::from_residual(x)),
                 ControlFlow::Continue(x) => x,
@@ -285,11 +251,8 @@ where
     {
         let mut accum = init;
         let sz = self.chunk_size;
-        while !self.done {
-            if self.lender.size_hint().1 == Some(0) {
-                self.done = true;
-                break;
-            }
+        while self.len > 0 {
+            self.len -= 1;
             accum = f(accum, self.lender.next_chunk(sz))?;
         }
         Ok(accum)
@@ -300,11 +263,10 @@ impl<L> FusedFallibleLender for Chunky<L> where L: FusedFallibleLender {}
 
 impl<L> ExactSizeFallibleLender for Chunky<L>
 where
-    L: ExactSizeFallibleLender,
+    L: FallibleLender,
 {
     #[inline]
     fn len(&self) -> usize {
-        if self.done { return 0; }
-        div_ceil(self.lender.len(), self.chunk_size)
+        self.len
     }
 }
