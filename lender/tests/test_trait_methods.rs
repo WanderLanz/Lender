@@ -380,24 +380,31 @@ fn lender_reduce() {
 
 #[test]
 fn lender_try_reduce() {
-    // try_reduce is unstable on Iterator, so we use try_fold for a similar test
-    let result: Result<i32, &str> =
-        VecLender::new(vec![1, 2, 3]).try_fold(0, |acc, x| Ok::<_, &str>(acc + *x));
-    assert_eq!(result, Ok(6));
+    // try_reduce requires ToOwned, so use from_iter with owned values.
+    // Return type is ChangeOutputType<R, Option<T>> = Result<Option<i32>, &str>.
+    let result: Result<Option<i32>, &str> =
+        lender::from_iter(vec![1, 2, 3].into_iter()).try_reduce(|acc, x| Ok(acc + x));
+    assert_eq!(result, Ok(Some(6)));
+
+    // Single element (closure is never called)
+    let result: Result<Option<i32>, &str> =
+        lender::from_iter(vec![42].into_iter()).try_reduce(|acc, x| Ok(acc + x));
+    assert_eq!(result, Ok(Some(42)));
 
     // Empty lender
-    let result: Result<i32, &str> =
-        VecLender::new(vec![]).try_fold(0, |acc, x| Ok::<_, &str>(acc + *x));
-    assert_eq!(result, Ok(0));
+    let result: Result<Option<i32>, &str> =
+        lender::from_iter(Vec::<i32>::new().into_iter()).try_reduce(|acc, x| Ok(acc + x));
+    assert_eq!(result, Ok(None));
 
     // Early exit on error
-    let result: Result<i32, &str> = VecLender::new(vec![1, 2, 3, 4, 5]).try_fold(0, |acc, x| {
-        if acc + *x > 6 {
-            Err("too large")
-        } else {
-            Ok(acc + *x)
-        }
-    });
+    let result: Result<Option<i32>, &str> =
+        lender::from_iter(vec![1, 2, 3, 4, 5].into_iter()).try_reduce(|acc, x| {
+            if acc + x > 6 {
+                Err("too large")
+            } else {
+                Ok(acc + x)
+            }
+        });
     assert_eq!(result, Err("too large"));
 }
 

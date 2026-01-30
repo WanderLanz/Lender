@@ -131,7 +131,7 @@ macro_rules! __lend_impl {
 /// Use lifetime `'lend` within type `$T` to create an `impl for<'lend>
 /// Lending<'lend, Lend = $T>`.
 ///
-/// Uses a known borrow-checker behavior which allows `dyn` objects to implement
+/// Uses a known borrow-checker bug which allows `dyn` objects to implement
 /// impossible traits.
 ///
 /// This macro only accepts type patterns that are guaranteed to be covariant in `'lend`:
@@ -437,7 +437,7 @@ pub trait DynFallibleLend<'lend> {
 /// Use lifetime `'lend` within type `$T` to create an `impl for<'lend>
 /// FallibleLending<'lend, Lend = $T>`.
 ///
-/// Uses a known borrow-checker behavior which allows `dyn` objects to implement
+/// Uses a known borrow-checker bug which allows `dyn` objects to implement
 /// impossible traits.
 ///
 /// This macro only accepts type patterns that are guaranteed to be covariant in `'lend`:
