@@ -77,7 +77,10 @@ where
     }
 
     #[inline]
-    fn advance_by(&mut self, _n: usize) -> Result<(), core::num::NonZeroUsize> {
+    fn advance_by(&mut self, n: usize) -> Result<(), core::num::NonZeroUsize> {
+        for _ in 0..n {
+            (self.f)();
+        }
         Ok(())
     }
 }
@@ -93,7 +96,10 @@ where
     }
 
     #[inline]
-    fn advance_back_by(&mut self, _n: usize) -> Result<(), core::num::NonZeroUsize> {
+    fn advance_back_by(&mut self, n: usize) -> Result<(), core::num::NonZeroUsize> {
+        for _ in 0..n {
+            (self.f)();
+        }
         Ok(())
     }
 }

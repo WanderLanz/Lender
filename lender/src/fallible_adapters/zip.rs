@@ -32,17 +32,6 @@ where
     }
 
     #[inline]
-    fn nth(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
-        let Some(a) = self.a.nth(n)? else {
-            return Ok(None);
-        };
-        let Some(b) = self.b.nth(n)? else {
-            return Ok(None);
-        };
-        Ok(Some((a, b)))
-    }
-
-    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (a_lower, a_upper) = self.a.size_hint();
         let (b_lower, b_upper) = self.b.size_hint();

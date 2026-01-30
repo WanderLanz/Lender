@@ -7,8 +7,17 @@ use crate::{
 
 /// The [`Lender`] version of [`core::iter::DoubleEndedIterator`].
 pub trait DoubleEndedLender: Lender {
+    /// Removes and returns a lend from the end of the lender.
+    ///
+    /// Returns `None` when there are no more elements.
+    ///
+    /// See [`DoubleEndedIterator::next_back`](core::iter::DoubleEndedIterator::next_back).
     fn next_back(&mut self) -> Option<Lend<'_, Self>>;
 
+    /// Advances the lender from the back by `n` elements.
+    ///
+    /// See
+    /// [`DoubleEndedIterator::advance_back_by`](core::iter::DoubleEndedIterator::advance_back_by).
     #[inline]
     fn advance_back_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {
         for i in 0..n {
@@ -20,6 +29,9 @@ pub trait DoubleEndedLender: Lender {
         Ok(())
     }
 
+    /// Returns the `n`th element from the end of the lender.
+    ///
+    /// See [`DoubleEndedIterator::nth_back`](core::iter::DoubleEndedIterator::nth_back).
     #[inline]
     fn nth_back(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         if self.advance_back_by(n).is_err() {
@@ -28,6 +40,11 @@ pub trait DoubleEndedLender: Lender {
         self.next_back()
     }
 
+    /// The reverse version of [`Lender::try_fold`]: it takes elements starting from
+    /// the back of the lender.
+    ///
+    /// See
+    /// [`DoubleEndedIterator::try_rfold`](core::iter::DoubleEndedIterator::try_rfold).
     #[inline]
     fn try_rfold<B, F, R>(&mut self, init: B, mut f: F) -> R
     where
@@ -45,6 +62,10 @@ pub trait DoubleEndedLender: Lender {
         Try::from_output(accum)
     }
 
+    /// The reverse version of [`Lender::fold`]: it takes elements starting from
+    /// the back of the lender.
+    ///
+    /// See [`DoubleEndedIterator::rfold`](core::iter::DoubleEndedIterator::rfold).
     #[inline]
     fn rfold<B, F>(mut self, init: B, mut f: F) -> B
     where
@@ -58,6 +79,10 @@ pub trait DoubleEndedLender: Lender {
         accum
     }
 
+    /// The reverse version of [`Lender::find`]: it searches for an element of the
+    /// lender from the back that satisfies the predicate.
+    ///
+    /// See [`DoubleEndedIterator::rfind`](core::iter::DoubleEndedIterator::rfind).
     #[inline]
     fn rfind<P>(&mut self, mut predicate: P) -> Option<Lend<'_, Self>>
     where
@@ -91,9 +116,18 @@ impl<L: DoubleEndedLender> DoubleEndedLender for &mut L {
     }
 }
 
+/// The [`FallibleLender`] version of [`core::iter::DoubleEndedIterator`].
 pub trait DoubleEndedFallibleLender: FallibleLender {
+    /// Removes and returns a lend from the end of the lender, or an error.
+    ///
+    /// Returns `Ok(None)` when there are no more elements.
+    ///
+    /// See [`DoubleEndedLender::next_back`].
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error>;
 
+    /// Advances the lender from the back by `n` elements.
+    ///
+    /// See [`DoubleEndedLender::advance_back_by`].
     #[inline]
     fn advance_back_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         for i in 0..n {
@@ -105,6 +139,9 @@ pub trait DoubleEndedFallibleLender: FallibleLender {
         Ok(Ok(()))
     }
 
+    /// Returns the `n`th element from the end of the lender.
+    ///
+    /// See [`DoubleEndedLender::nth_back`].
     #[inline]
     fn nth_back(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         if self.advance_back_by(n)?.is_err() {
@@ -113,6 +150,10 @@ pub trait DoubleEndedFallibleLender: FallibleLender {
         self.next_back()
     }
 
+    /// The reverse version of [`FallibleLender::try_fold`]: it takes elements
+    /// starting from the back of the lender.
+    ///
+    /// See [`DoubleEndedLender::try_rfold`].
     #[inline]
     fn try_rfold<B, F, R>(&mut self, mut init: B, mut f: F) -> Result<R, Self::Error>
     where
@@ -128,6 +169,10 @@ pub trait DoubleEndedFallibleLender: FallibleLender {
         Ok(R::from_output(init))
     }
 
+    /// The reverse version of [`FallibleLender::fold`]: it takes elements
+    /// starting from the back of the lender.
+    ///
+    /// See [`DoubleEndedLender::rfold`].
     #[inline]
     fn rfold<B, F>(mut self, init: B, mut f: F) -> Result<B, Self::Error>
     where
@@ -138,6 +183,10 @@ pub trait DoubleEndedFallibleLender: FallibleLender {
             .map(|res| res.0)
     }
 
+    /// The reverse version of [`FallibleLender::find`]: it searches for an element
+    /// from the back that satisfies the predicate.
+    ///
+    /// See [`DoubleEndedLender::rfind`].
     #[inline]
     fn rfind<P>(&mut self, mut predicate: P) -> Result<Option<FallibleLend<'_, Self>>, Self::Error>
     where

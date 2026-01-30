@@ -204,6 +204,7 @@ where
     L: ?Sized + for<'all> Lending<'all> + 'a,
     I: DoubleEndedIterator<Item = Lend<'a, L>>,
 {
+    #[inline]
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         // SAFETY: 'a: 'lend, and caller must ensure Lend<'a, L> is covariant in 'a
         unsafe {
@@ -304,7 +305,7 @@ pub fn from_into_fallible_iter<I: IntoFallibleIterator>(into_iter: I) -> FromInt
     FromIntoFallibleIter { into_iter }
 }
 
-/// A [`IntoFallibleLender`] that returns lenders obtained by applying [`from_iter`]
+/// A [`IntoFallibleLender`] that returns lenders obtained by applying [`from_fallible_iter`]
 /// to the iterators returned by the wrapped [`IntoFallibleIterator`].
 ///
 /// This `struct` is created by the [`from_into_fallible_iter()`] function.
@@ -419,6 +420,7 @@ where
     L: ?Sized + for<'all> FallibleLending<'all> + 'a,
     I: DoubleEndedFallibleIterator<Item = FallibleLend<'a, L>>,
 {
+    #[inline]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         let next = self.iter.next_back()?;
         Ok(

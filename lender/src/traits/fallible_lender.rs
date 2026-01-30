@@ -196,6 +196,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// Chains the lender with another lender of the same type.
     ///
     /// The resulting lender will first yield all lends from `self`, then all lends from `other`.
+    #[inline]
     fn chain<U>(self, other: U) -> Chain<Self, <U as IntoFallibleLender>::FallibleLender>
         where
             Self: Sized,
@@ -555,7 +556,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::by_ref`].
-    #[inline]
+    #[inline(always)]
     fn by_ref(&mut self) -> &mut Self
     where
         Self: Sized,
@@ -1186,6 +1187,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::partial_cmp_by`].
+    #[inline]
     fn partial_cmp_by<L, F>(self, other: L, mut partial_cmp: F) -> Result<Option<Ordering>, Self::Error>
     where
         Self: Sized,

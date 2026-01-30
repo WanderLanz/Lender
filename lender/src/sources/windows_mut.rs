@@ -94,6 +94,12 @@ impl<T> Lender for WindowsMut<'_, T> {
         self.position = WindowPosition::Front;
         self.slice.get_mut(..self.size.get())
     }
+
+    #[inline(always)]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.len();
+        (len, Some(len))
+    }
 }
 
 impl<T> DoubleEndedLender for WindowsMut<'_, T> {
@@ -188,6 +194,12 @@ impl<T, const WINDOW_SIZE: usize> Lender for ArrayWindowsMut<'_, T, WINDOW_SIZE>
         self.position = WindowPosition::Front;
         self.slice.first_chunk_mut()
     }
+
+    #[inline(always)]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.len();
+        (len, Some(len))
+    }
 }
 
 impl<T, const WINDOW_SIZE: usize> DoubleEndedLender for ArrayWindowsMut<'_, T, WINDOW_SIZE> {
@@ -231,6 +243,7 @@ impl<T> WindowsMutExt<T> for [T] {
     /// # Panics
     ///
     /// Panics if `size` is zero.
+    #[inline]
     fn windows_mut(&mut self, size: usize) -> WindowsMut<'_, T> {
         windows_mut(self, size)
     }
@@ -239,6 +252,7 @@ impl<T> WindowsMutExt<T> for [T] {
     /// # Panics
     ///
     /// Panics if `WINDOW_SIZE` is zero.
+    #[inline]
     fn array_windows_mut<const WINDOW_SIZE: usize>(
         &mut self,
     ) -> ArrayWindowsMut<'_, T, WINDOW_SIZE> {
@@ -252,6 +266,7 @@ impl<T, const N: usize> WindowsMutExt<T> for [T; N] {
     /// # Panics
     ///
     /// Panics if `size` is zero.
+    #[inline]
     fn windows_mut(&mut self, size: usize) -> WindowsMut<'_, T> {
         windows_mut(self, size)
     }
@@ -260,6 +275,7 @@ impl<T, const N: usize> WindowsMutExt<T> for [T; N] {
     /// # Panics
     ///
     /// Panics if `WINDOW_SIZE` is zero.
+    #[inline]
     fn array_windows_mut<const WINDOW_SIZE: usize>(
         &mut self,
     ) -> ArrayWindowsMut<'_, T, WINDOW_SIZE> {

@@ -13,6 +13,7 @@ pub struct Fuse<L> {
 }
 
 impl<L> Fuse<L> {
+    #[inline(always)]
     pub(crate) fn new(lender: L) -> Fuse<L> {
         Fuse {
             lender,

@@ -57,6 +57,7 @@ where
     L: ExactSizeLender,
     for<'all> Lend<'all, L>: ToOwned<Owned = T>,
 {
+    #[inline(always)]
     fn len(&self) -> usize {
         self.lender.len()
     }

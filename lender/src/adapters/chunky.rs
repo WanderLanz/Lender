@@ -91,6 +91,7 @@ impl<L> Chunky<L>
 where
     L: FallibleLender + ExactSizeFallibleLender,
 {
+    #[inline(always)]
     pub(crate) fn new_fallible(lender: L, chunk_size: usize) -> Self {
         assert!(chunk_size != 0, "chunk size must be non-zero");
         let len = lender.len().div_ceil(chunk_size);
@@ -148,6 +149,7 @@ where
         self.len
     }
 
+    #[inline]
     fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> R
     where
         Self: Sized,

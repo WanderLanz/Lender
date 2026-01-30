@@ -684,7 +684,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         Mutate::new(self, f)
     }
     /// The [`Lender`] version of [`Iterator::by_ref`].
-    #[inline]
+    #[inline(always)]
     fn by_ref(&mut self) -> &mut Self
     where
         Self: Sized,
@@ -1113,6 +1113,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// Note: the closure receives both lends under a single lifetime
     /// (`for<'all>`). This is an HRTB limitation — the two lenders cannot
     /// be advanced independently within the closure.
+    #[inline]
     fn cmp_by<L, F>(self, other: L, mut cmp: F) -> Ordering
     where
         Self: Sized,
@@ -1140,6 +1141,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// The [`Lender`] version of [`Iterator::partial_cmp_by`].
     ///
     /// See [`cmp_by`](Lender::cmp_by) for a note on the unified lifetime constraint.
+    #[inline]
     fn partial_cmp_by<L, F>(self, other: L, mut partial_cmp: F) -> Option<Ordering>
     where
         Self: Sized,
@@ -1167,6 +1169,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// The [`Lender`] version of [`Iterator::eq_by`].
     ///
     /// See [`cmp_by`](Lender::cmp_by) for a note on the unified lifetime constraint.
+    #[inline]
     fn eq_by<L, F>(self, other: L, mut eq: F) -> bool
     where
         Self: Sized,
@@ -1349,6 +1352,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// Converts a [`Lender`] into a [`FallibleLender`] by wrapping
     /// into `Result<Lend<'_, Self>, E>` where `E` is an
     /// error that can never actually happen.
+    #[inline]
     fn into_fallible<E>(self) -> IntoFallible<E, Self> where Self: Sized {
         IntoFallible::new(self)
     }

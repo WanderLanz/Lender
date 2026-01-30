@@ -91,13 +91,6 @@ where
     }
 
     #[inline]
-    fn nth(&mut self, n: usize) -> Option<Lend<'_, Self>> {
-        let a = self.a.nth(n)?;
-        let b = self.b.nth(n)?;
-        Some((a, b))
-    }
-
-    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (a_lower, a_upper) = self.a.size_hint();
         let (b_lower, b_upper) = self.b.size_hint();
