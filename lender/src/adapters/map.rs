@@ -24,6 +24,7 @@ impl<L, F> Map<L, F> {
         self.lender
     }
 
+    /// Returns the inner lender and the mapping function.
     pub fn into_parts(self) -> (L, F) {
         (self.lender, self.f)
     }

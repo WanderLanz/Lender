@@ -31,6 +31,7 @@ where
         self.lender.into_inner()
     }
 
+    /// Returns the inner lender and the separator value.
     pub fn into_parts(self) -> (L, FallibleLend<'this, L>) {
         (self.lender.into_inner(), self.separator)
     }
@@ -131,6 +132,15 @@ where
             separator,
             needs_sep: false,
         }
+    }
+
+    pub fn into_inner(self) -> L {
+        self.lender.into_inner()
+    }
+
+    /// Returns the inner lender and the separator function.
+    pub fn into_parts(self) -> (L, G) {
+        (self.lender.into_inner(), self.separator)
     }
 }
 

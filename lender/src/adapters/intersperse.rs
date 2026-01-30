@@ -35,6 +35,7 @@ where
         self.lender.into_inner()
     }
 
+    /// Returns the inner lender and the separator value.
     pub fn into_parts(self) -> (L, Lend<'this, L>) {
         (self.lender.into_inner(), self.separator)
     }

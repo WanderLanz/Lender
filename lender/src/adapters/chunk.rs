@@ -19,6 +19,7 @@ impl<'s, T> Chunk<'s, T> {
         self.lender
     }
 
+    /// Returns the inner lender and the remaining chunk length.
     pub fn into_parts(self) -> (&'s mut T, usize) {
         (self.lender, self.len)
     }

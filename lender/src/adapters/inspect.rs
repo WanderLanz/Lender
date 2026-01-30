@@ -22,6 +22,7 @@ impl<L, F> Inspect<L, F> {
         self.lender
     }
 
+    /// Returns the inner lender and the inspection function.
     pub fn into_parts(self) -> (L, F) {
         (self.lender, self.f)
     }

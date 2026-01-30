@@ -103,6 +103,15 @@ where
             inner: FlattenCompat::new(Map::new(lender, f)),
         }
     }
+
+    pub fn into_inner(self) -> L {
+        (*AliasableBox::into_unique(self.inner.lender)).into_inner()
+    }
+
+    /// Returns the inner lender and the mapping function.
+    pub fn into_parts(self) -> (L, F) {
+        (*AliasableBox::into_unique(self.inner.lender)).into_parts()
+    }
 }
 
 impl<L: FallibleLender + Clone, F: Clone> Clone for FlatMap<'_, L, F>

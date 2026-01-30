@@ -21,6 +21,7 @@ impl<L, P> MapWhile<L, P> {
         self.lender
     }
 
+    /// Returns the inner lender and the predicate.
     pub fn into_parts(self) -> (L, P) {
         (self.lender, self.predicate)
     }

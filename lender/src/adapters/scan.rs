@@ -22,6 +22,7 @@ impl<L, St, F> Scan<L, St, F> {
         self.lender
     }
 
+    /// Returns the inner lender, the state, and the scan function.
     pub fn into_parts(self) -> (L, St, F) {
         (self.lender, self.state, self.f)
     }

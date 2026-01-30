@@ -106,6 +106,7 @@ impl<L> Chunky<L> {
         self.lender
     }
 
+    /// Returns the inner lender and the chunk size.
     pub fn into_parts(self) -> (L, usize) {
         (self.lender, self.chunk_size)
     }

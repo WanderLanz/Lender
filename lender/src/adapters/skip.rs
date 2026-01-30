@@ -22,6 +22,7 @@ impl<L> Skip<L> {
         self.lender
     }
 
+    /// Returns the inner lender and the remaining number of elements to skip.
     pub fn into_parts(self) -> (L, usize) {
         (self.lender, self.n)
     }

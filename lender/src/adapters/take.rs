@@ -23,6 +23,7 @@ impl<L> Take<L> {
         self.lender
     }
 
+    /// Returns the inner lender and the remaining number of elements to take.
     pub fn into_parts(self) -> (L, usize) {
         (self.lender, self.n)
     }

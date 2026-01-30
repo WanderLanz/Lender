@@ -26,6 +26,7 @@ impl<E, L, F> MapErr<E, L, F> {
         self.lender
     }
 
+    /// Returns the inner lender and the error-mapping function.
     pub fn into_parts(self) -> (L, F) {
         (self.lender, self.f)
     }

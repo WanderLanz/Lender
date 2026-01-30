@@ -22,6 +22,7 @@ impl<L, F> Mutate<L, F> {
         self.lender
     }
 
+    /// Returns the inner lender and the mutation function.
     pub fn into_parts(self) -> (L, F) {
         (self.lender, self.f)
     }

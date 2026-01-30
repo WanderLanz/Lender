@@ -28,6 +28,7 @@ impl<L> StepBy<L> {
         self.lender
     }
 
+    /// Returns the inner lender and the step size.
     pub fn into_parts(self) -> (L, usize) {
         (self.lender, self.step + 1)
     }
