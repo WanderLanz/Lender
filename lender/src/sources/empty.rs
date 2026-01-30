@@ -49,11 +49,12 @@ where
 {
     // SAFETY: the lend is the type parameter L
     crate::unsafe_assume_covariance!();
-    #[inline]
+    #[inline(always)]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         None
     }
 
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         (0, Some(0))
     }
@@ -63,6 +64,7 @@ impl<L> DoubleEndedLender for Empty<L>
 where
     L: ?Sized + for<'all> Lending<'all>,
 {
+    #[inline(always)]
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         None
     }
@@ -110,11 +112,12 @@ where
     // SAFETY: the lend is the type parameter L
     crate::unsafe_assume_covariance_fallible!();
 
-    #[inline]
+    #[inline(always)]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         Ok(None)
     }
 
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         (0, Some(0))
     }
@@ -124,6 +127,7 @@ impl<E, L> DoubleEndedFallibleLender for FallibleEmpty<E, L>
 where
     L: ?Sized + for<'all> FallibleLending<'all>,
 {
+    #[inline(always)]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         Ok(None)
     }

@@ -13,15 +13,18 @@ pub struct Take<L> {
 }
 
 impl<L> Take<L> {
+    #[inline(always)]
     pub(crate) fn new(lender: L, n: usize) -> Take<L> {
         Take { lender, n }
     }
 
+    #[inline(always)]
     pub fn into_inner(self) -> L {
         self.lender
     }
 
     /// Returns the inner lender and the remaining number of elements to take.
+    #[inline(always)]
     pub fn into_parts(self) -> (L, usize) {
         (self.lender, self.n)
     }

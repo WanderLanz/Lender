@@ -13,15 +13,18 @@ pub struct MapWhile<L, P> {
 }
 
 impl<L, P> MapWhile<L, P> {
+    #[inline(always)]
     pub(crate) fn new(lender: L, predicate: P) -> MapWhile<L, P> {
         MapWhile { lender, predicate }
     }
 
+    #[inline(always)]
     pub fn into_inner(self) -> L {
         self.lender
     }
 
     /// Returns the inner lender and the predicate.
+    #[inline(always)]
     pub fn into_parts(self) -> (L, P) {
         (self.lender, self.predicate)
     }

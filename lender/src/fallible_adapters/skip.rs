@@ -59,8 +59,12 @@ where
     where
         Self: Sized,
     {
-        if self.n > 0 && self.lender.nth(self.n - 1)?.is_none() {
-            return Ok(None);
+        if self.n > 0 {
+            let n = self.n;
+            self.n = 0;
+            if self.lender.nth(n - 1)?.is_none() {
+                return Ok(None);
+            }
         }
         self.lender.last()
     }

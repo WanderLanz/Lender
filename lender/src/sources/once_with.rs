@@ -102,7 +102,7 @@ impl<St, F> ExactSizeLender for OnceWith<St, F>
 where
     F: for<'all> FnOnceHKA<'all, &'all mut St>,
 {
-    #[inline]
+    #[inline(always)]
     fn len(&self) -> usize {
         self.size_hint().0
     }

@@ -107,7 +107,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2, 3u8].iter());
     /// assert_eq!(lender.size_hint(), (3, Some(3)));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) { (0, None) }
     /// Counts the number of lends in the lender by consuming it.
     ///

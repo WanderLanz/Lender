@@ -17,7 +17,7 @@ where
         Ok(self.lender.next()?.map(|ref x| x.to_owned()))
     }
 
-    #[inline]
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }

@@ -12,10 +12,12 @@ pub struct Copied<L> {
 }
 
 impl<L> Copied<L> {
+    #[inline(always)]
     pub(crate) fn new(lender: L) -> Copied<L> {
         Copied { lender }
     }
 
+    #[inline(always)]
     pub fn into_inner(self) -> L {
         self.lender
     }

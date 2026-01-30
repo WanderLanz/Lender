@@ -12,15 +12,18 @@ pub struct Inspect<L, F> {
 }
 
 impl<L, F> Inspect<L, F> {
+    #[inline(always)]
     pub(crate) fn new(lender: L, f: F) -> Inspect<L, F> {
         Inspect { lender, f }
     }
 
+    #[inline(always)]
     pub fn into_inner(self) -> L {
         self.lender
     }
 
     /// Returns the inner lender and the inspection function.
+    #[inline(always)]
     pub fn into_parts(self) -> (L, F) {
         (self.lender, self.f)
     }

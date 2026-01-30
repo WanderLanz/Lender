@@ -12,15 +12,18 @@ pub struct Skip<L> {
 }
 
 impl<L> Skip<L> {
+    #[inline(always)]
     pub(crate) fn new(lender: L, n: usize) -> Skip<L> {
         Skip { lender, n }
     }
 
+    #[inline(always)]
     pub fn into_inner(self) -> L {
         self.lender
     }
 
     /// Returns the inner lender and the remaining number of elements to skip.
+    #[inline(always)]
     pub fn into_parts(self) -> (L, usize) {
         (self.lender, self.n)
     }
@@ -80,6 +83,7 @@ where
     {
         if self.n > 0 {
             self.lender.nth(self.n - 1)?;
+            self.n = 0;
         }
         self.lender.last()
     }

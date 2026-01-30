@@ -117,7 +117,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>([1, 2, 3u8].iter().into_fallible());
     /// assert_eq!(lender.size_hint(), (3, Some(3)));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) { (0, None) }
 
     /// Counts the number of lends in the lender by consuming it until the

@@ -12,15 +12,18 @@ pub struct Mutate<L, F> {
 }
 
 impl<L, F> Mutate<L, F> {
+    #[inline(always)]
     pub(crate) fn new(lender: L, f: F) -> Mutate<L, F> {
         Mutate { lender, f }
     }
 
+    #[inline(always)]
     pub fn into_inner(self) -> L {
         self.lender
     }
 
     /// Returns the inner lender and the mutation function.
+    #[inline(always)]
     pub fn into_parts(self) -> (L, F) {
         (self.lender, self.f)
     }

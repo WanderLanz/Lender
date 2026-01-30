@@ -20,6 +20,7 @@ impl<L> Fuse<L> {
         }
     }
 
+    #[inline(always)]
     pub fn into_inner(self) -> L {
         self.lender
     }
@@ -213,12 +214,12 @@ impl<L> ExactSizeLender for Fuse<L>
 where
     L: ExactSizeLender,
 {
-    #[inline]
+    #[inline(always)]
     fn len(&self) -> usize {
         if !self.flag { self.lender.len() } else { 0 }
     }
 
-    #[inline]
+    #[inline(always)]
     fn is_empty(&self) -> bool {
         if !self.flag {
             self.lender.is_empty()

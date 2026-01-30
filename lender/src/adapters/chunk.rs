@@ -10,15 +10,18 @@ pub struct Chunk<'s, T> {
 }
 
 impl<'s, T> Chunk<'s, T> {
+    #[inline(always)]
     pub(crate) fn new(lender: &'s mut T, len: usize) -> Self {
         Self { lender, len }
     }
 
+    #[inline(always)]
     pub fn into_inner(self) -> &'s mut T {
         self.lender
     }
 
     /// Returns the inner lender and the remaining chunk length.
+    #[inline(always)]
     pub fn into_parts(self) -> (&'s mut T, usize) {
         (self.lender, self.len)
     }

@@ -25,6 +25,7 @@ impl<'this, L> Peekable<'this, L>
 where
     L: FallibleLender,
 {
+    #[inline(always)]
     pub(crate) fn new(lender: L) -> Peekable<'this, L> {
         Peekable {
             peeked: MaybeDangling::new(None),
@@ -32,6 +33,7 @@ where
         }
     }
 
+    #[inline(always)]
     pub fn into_inner(self) -> L {
         *AliasableBox::into_unique(self.lender)
     }
@@ -117,17 +119,9 @@ where
     }
 }
 
-impl<L> Clone for Peekable<'_, L>
-where
-    L: FallibleLender + Clone,
-{
-    fn clone(&self) -> Self {
-        Peekable {
-            peeked: MaybeDangling::new(None),
-            lender: AliasableBox::from_unique((*self.lender).clone().into()),
-        }
-    }
-}
+// Clone is not implemented for Peekable because the peeked value borrows from
+// the lender's AliasableBox allocation; a clone would need its own allocation,
+// leaving the cloned peeked value dangling.
 
 impl<'this, L: fmt::Debug> fmt::Debug for Peekable<'this, L>
 where

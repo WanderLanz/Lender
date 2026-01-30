@@ -71,7 +71,7 @@ where
         Some(unsafe { core::mem::transmute::<Lend<'a, L>, Lend<'_, L>>((self.f)()) })
     }
 
-    #[inline]
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         (usize::MAX, None)
     }
@@ -173,7 +173,7 @@ where
         })
     }
 
-    #[inline]
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         (usize::MAX, None)
     }
@@ -181,8 +181,11 @@ where
     #[inline]
     fn advance_by(
         &mut self,
-        _n: usize,
+        n: usize,
     ) -> Result<Result<(), core::num::NonZeroUsize>, Self::Error> {
+        for _ in 0..n {
+            (self.f)()?;
+        }
         Ok(Ok(()))
     }
 }
@@ -200,8 +203,11 @@ where
     #[inline]
     fn advance_back_by(
         &mut self,
-        _n: usize,
+        n: usize,
     ) -> Result<Result<(), core::num::NonZeroUsize>, Self::Error> {
+        for _ in 0..n {
+            (self.f)()?;
+        }
         Ok(Ok(()))
     }
 }

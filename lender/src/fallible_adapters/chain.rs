@@ -25,6 +25,7 @@ where
     // SAFETY: the lend is that of A (and B has the same lend type)
     crate::unsafe_assume_covariance_fallible!();
 
+    #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         match self.a.next()? {
             Some(next) => Ok(Some(next)),
@@ -37,6 +38,7 @@ where
         Ok(self.a.count()? + self.b.count()?)
     }
 
+    #[inline]
     fn try_fold<Acc, F, R>(&mut self, mut acc: Acc, mut f: F) -> Result<R, Self::Error>
     where
         Self: Sized,
@@ -54,6 +56,7 @@ where
         Ok(Try::from_output(acc))
     }
 
+    #[inline]
     fn fold<Acc, F>(self, mut acc: Acc, mut f: F) -> Result<Acc, Self::Error>
     where
         F: FnMut(Acc, FallibleLend<'_, Self>) -> Result<Acc, Self::Error>,
@@ -99,10 +102,9 @@ where
     where
         Self: Sized,
     {
-        match self.b.last()? {
-            Some(last) => Ok(Some(last)),
-            None => self.a.last(),
-        }
+        let a_last = self.a.last()?;
+        let b_last = self.b.last()?;
+        Ok(b_last.or(a_last))
     }
 
     #[inline]

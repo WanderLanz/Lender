@@ -12,15 +12,18 @@ pub struct Enumerate<L> {
 }
 
 impl<L> Enumerate<L> {
+    #[inline(always)]
     pub(crate) fn new(lender: L) -> Enumerate<L> {
         Enumerate { lender, count: 0 }
     }
 
+    #[inline(always)]
     pub fn into_inner(self) -> L {
         self.lender
     }
 
     /// Returns the inner lender and the current count.
+    #[inline(always)]
     pub fn into_parts(self) -> (L, usize) {
         (self.lender, self.count)
     }

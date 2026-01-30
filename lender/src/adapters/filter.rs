@@ -10,15 +10,18 @@ pub struct Filter<L, P> {
 }
 
 impl<L, P> Filter<L, P> {
+    #[inline(always)]
     pub(crate) fn new(lender: L, predicate: P) -> Filter<L, P> {
         Filter { lender, predicate }
     }
 
+    #[inline(always)]
     pub fn into_inner(self) -> L {
         self.lender
     }
 
     /// Returns the inner lender and the predicate.
+    #[inline(always)]
     pub fn into_parts(self) -> (L, P) {
         (self.lender, self.predicate)
     }

@@ -2911,3 +2911,211 @@ fn chunk_fold_partial_underlying() {
     let result = chunk.fold(0, |acc, x| acc + *x);
     assert_eq!(result, 3); // 1+2, underlying runs out before chunk limit
 }
+
+// ============================================================================
+// Cloned adapter tests
+// ============================================================================
+
+#[test]
+fn cloned_basic() {
+    let lender = VecLender::new(vec![1, 2, 3]);
+    let result: Vec<i32> = lender.cloned().collect();
+    assert_eq!(result, vec![1, 2, 3]);
+}
+
+#[test]
+fn cloned_empty() {
+    let lender = VecLender::new(vec![]);
+    let result: Vec<i32> = lender.cloned().collect();
+    assert!(result.is_empty());
+}
+
+#[test]
+fn cloned_double_ended() {
+    let lender = VecLender::new(vec![1, 2, 3]);
+    let mut iter = lender.cloned();
+    assert_eq!(iter.next_back(), Some(3));
+    assert_eq!(iter.next(), Some(1));
+    assert_eq!(iter.next_back(), Some(2));
+    assert_eq!(iter.next(), None);
+}
+
+#[test]
+fn cloned_exact_size() {
+    let lender = VecLender::new(vec![1, 2, 3]);
+    let iter = lender.cloned();
+    assert_eq!(iter.len(), 3);
+    assert_eq!(iter.size_hint(), (3, Some(3)));
+}
+
+#[test]
+fn cloned_into_inner() {
+    let lender = VecLender::new(vec![1, 2, 3]);
+    let cloned = lender.cloned();
+    let mut inner = cloned.into_inner();
+    assert_eq!(inner.next(), Some(&1));
+}
+
+// ============================================================================
+// Copied adapter tests
+// ============================================================================
+
+#[test]
+fn copied_basic() {
+    let lender = VecLender::new(vec![10, 20, 30]);
+    let result: Vec<i32> = lender.copied().collect();
+    assert_eq!(result, vec![10, 20, 30]);
+}
+
+#[test]
+fn copied_empty() {
+    let lender = VecLender::new(vec![]);
+    let result: Vec<i32> = lender.copied().collect();
+    assert!(result.is_empty());
+}
+
+#[test]
+fn copied_double_ended() {
+    let lender = VecLender::new(vec![10, 20, 30]);
+    let mut iter = lender.copied();
+    assert_eq!(iter.next(), Some(10));
+    assert_eq!(iter.next_back(), Some(30));
+    assert_eq!(iter.next(), Some(20));
+    assert_eq!(iter.next(), None);
+    assert_eq!(iter.next_back(), None);
+}
+
+#[test]
+fn copied_exact_size() {
+    let lender = VecLender::new(vec![10, 20, 30]);
+    let iter = lender.copied();
+    assert_eq!(iter.len(), 3);
+    assert_eq!(iter.size_hint(), (3, Some(3)));
+}
+
+#[test]
+fn copied_into_inner() {
+    let lender = VecLender::new(vec![10, 20]);
+    let copied = lender.copied();
+    let mut inner = copied.into_inner();
+    assert_eq!(inner.next(), Some(&10));
+}
+
+// ============================================================================
+// Owned adapter tests
+// ============================================================================
+
+#[test]
+fn owned_basic() {
+    // owned() requires for<'all> Lend<'all, L>: ToOwned<Owned = T> where T is
+    // lifetime-independent. Use into_lender() from an iterator yielding values.
+    let lender = [1i32, 2, 3].into_iter().into_lender();
+    let result: Vec<i32> = lender.owned().collect();
+    assert_eq!(result, vec![1, 2, 3]);
+}
+
+#[test]
+fn owned_empty() {
+    let lender = std::iter::empty::<i32>().into_lender();
+    let result: Vec<i32> = lender.owned().collect();
+    assert!(result.is_empty());
+}
+
+#[test]
+fn owned_into_inner() {
+    let lender = [1i32, 2].into_iter().into_lender();
+    let owned = lender.owned();
+    let mut inner = owned.into_inner();
+    assert_eq!(inner.next(), Some(1));
+}
+
+// ============================================================================
+// FlatMap adapter tests (infallible)
+// ============================================================================
+
+#[test]
+fn flat_map_basic() {
+    // flat_map: for each element n, produce n copies of n
+    let mut l = [1, 2, 3]
+        .into_iter()
+        .into_lender()
+        .flat_map(|n| (0..n).into_lender());
+    assert_eq!(l.next(), Some(0));      // from n=1: [0]
+    assert_eq!(l.next(), Some(0));      // from n=2: [0, 1]
+    assert_eq!(l.next(), Some(1));
+    assert_eq!(l.next(), Some(0));      // from n=3: [0, 1, 2]
+    assert_eq!(l.next(), Some(1));
+    assert_eq!(l.next(), Some(2));
+    assert_eq!(l.next(), None);
+}
+
+#[test]
+fn flat_map_empty_outer() {
+    let mut l = std::iter::empty::<i32>()
+        .into_lender()
+        .flat_map(|n| (0..n).into_lender());
+    assert_eq!(l.next(), None);
+}
+
+#[test]
+fn flat_map_empty_inner() {
+    // All inner lenders are empty
+    let mut l = [0, 0, 0]
+        .into_iter()
+        .into_lender()
+        .flat_map(|n| (0..n).into_lender());
+    assert_eq!(l.next(), None);
+}
+
+#[test]
+fn flat_map_mixed_empty_nonempty() {
+    let mut l = [1, 0, 2]
+        .into_iter()
+        .into_lender()
+        .flat_map(|n| (0..n).into_lender());
+    assert_eq!(l.next(), Some(0));      // from n=1
+    // n=0 produces empty
+    assert_eq!(l.next(), Some(0));      // from n=2
+    assert_eq!(l.next(), Some(1));
+    assert_eq!(l.next(), None);
+}
+
+// ============================================================================
+// Flatten fold/try_fold/count tests
+// ============================================================================
+
+#[test]
+fn flatten_fold() {
+    let lender = VecOfVecLender::new(vec![vec![1, 2], vec![3], vec![4, 5]]);
+    let result = lender.flatten().fold(0, |acc, x| acc + x);
+    assert_eq!(result, 15); // 1+2+3+4+5
+}
+
+#[test]
+fn flatten_count() {
+    let lender = VecOfVecLender::new(vec![vec![1, 2], vec![], vec![3, 4, 5]]);
+    assert_eq!(lender.flatten().count(), 5);
+}
+
+#[test]
+fn flatten_try_fold() {
+    let lender = VecOfVecLender::new(vec![vec![1, 2], vec![3, 4], vec![5]]);
+    let result: Result<i32, i32> = lender.flatten().try_fold(0, |acc, x| {
+        let new = acc + x;
+        if new > 6 { Err(new) } else { Ok(new) }
+    });
+    assert_eq!(result, Err(10)); // 1+2+3+4 = 10 > 6
+}
+
+#[test]
+fn flatten_fold_empty() {
+    let lender = VecOfVecLender::new(vec![]);
+    let result = lender.flatten().fold(0, |acc, x: &i32| acc + x);
+    assert_eq!(result, 0);
+}
+
+#[test]
+fn flatten_count_empty() {
+    let lender = VecOfVecLender::new(vec![]);
+    assert_eq!(lender.flatten().count(), 0);
+}

@@ -75,6 +75,7 @@ impl<L> Chunky<L>
 where
     L: Lender + ExactSizeLender,
 {
+    #[inline(always)]
     pub(crate) fn new(lender: L, chunk_size: usize) -> Self {
         assert!(chunk_size != 0, "chunk size must be non-zero");
         let len = lender.len().div_ceil(chunk_size);
@@ -102,11 +103,13 @@ where
 }
 
 impl<L> Chunky<L> {
+    #[inline(always)]
     pub fn into_inner(self) -> L {
         self.lender
     }
 
     /// Returns the inner lender and the chunk size.
+    #[inline(always)]
     pub fn into_parts(self) -> (L, usize) {
         (self.lender, self.chunk_size)
     }

@@ -41,6 +41,7 @@ pub struct Zip<A, B> {
 }
 
 impl<A, B> Zip<A, B> {
+    #[inline(always)]
     pub(crate) fn new(a: A, b: B) -> Self {
         Self { a, b }
     }
@@ -63,6 +64,7 @@ impl<A, B> Zip<A, B> {
     /// assert_eq!(a.next(), Some(&2));
     /// assert_eq!(b.next(), Some(&5));
     /// ```
+    #[inline(always)]
     pub fn into_inner(self) -> (A, B) {
         (self.a, self.b)
     }

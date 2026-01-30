@@ -39,6 +39,7 @@ pub struct Convert<E, I> {
 }
 
 impl<E, I> Convert<E, I> {
+    #[inline(always)]
     pub(crate) fn new(iter: I) -> Self {
         Self {
             iter,
@@ -46,6 +47,7 @@ impl<E, I> Convert<E, I> {
         }
     }
 
+    #[inline(always)]
     pub fn into_inner(self) -> I {
         self.iter
     }

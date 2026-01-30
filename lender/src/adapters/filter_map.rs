@@ -12,15 +12,18 @@ pub struct FilterMap<L, F> {
 }
 
 impl<L, F> FilterMap<L, F> {
+    #[inline(always)]
     pub(crate) fn new(lender: L, f: F) -> FilterMap<L, F> {
         FilterMap { lender, f }
     }
 
+    #[inline(always)]
     pub fn into_inner(self) -> L {
         self.lender
     }
 
     /// Returns the inner lender and the mapping function.
+    #[inline(always)]
     pub fn into_parts(self) -> (L, F) {
         (self.lender, self.f)
     }

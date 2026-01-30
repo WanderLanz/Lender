@@ -13,10 +13,12 @@ pub struct Owned<L> {
 }
 
 impl<L> Owned<L> {
+    #[inline(always)]
     pub(crate) fn new(lender: L) -> Self {
         Self { lender }
     }
 
+    #[inline(always)]
     pub fn into_inner(self) -> L {
         self.lender
     }
@@ -33,7 +35,7 @@ where
         self.lender.next().map(|ref x| x.to_owned())
     }
 
-    #[inline]
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }

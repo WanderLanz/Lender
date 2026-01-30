@@ -12,6 +12,7 @@ pub struct TakeWhile<L, P> {
 }
 
 impl<L, P> TakeWhile<L, P> {
+    #[inline(always)]
     pub(crate) fn new(lender: L, predicate: P) -> TakeWhile<L, P> {
         TakeWhile {
             lender,
@@ -20,11 +21,13 @@ impl<L, P> TakeWhile<L, P> {
         }
     }
 
+    #[inline(always)]
     pub fn into_inner(self) -> L {
         self.lender
     }
 
     /// Returns the inner lender and the predicate.
+    #[inline(always)]
     pub fn into_parts(self) -> (L, P) {
         (self.lender, self.predicate)
     }

@@ -14,15 +14,18 @@ pub struct Scan<L, St, F> {
 }
 
 impl<L, St, F> Scan<L, St, F> {
+    #[inline(always)]
     pub(crate) fn new(lender: L, state: St, f: F) -> Scan<L, St, F> {
         Scan { lender, state, f }
     }
 
+    #[inline(always)]
     pub fn into_inner(self) -> L {
         self.lender
     }
 
     /// Returns the inner lender, the state, and the scan function.
+    #[inline(always)]
     pub fn into_parts(self) -> (L, St, F) {
         (self.lender, self.state, self.f)
     }

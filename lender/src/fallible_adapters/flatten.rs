@@ -4,6 +4,7 @@ use maybe_dangling::MaybeDangling;
 
 use crate::{
     FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, IntoFallibleLender, Map,
+    try_trait_v2::Try,
 };
 
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -18,28 +19,22 @@ impl<L: FallibleLender> Flatten<'_, L>
 where
     for<'all> FallibleLend<'all, L>: IntoFallibleLender,
 {
+    #[inline(always)]
     pub(crate) fn new(lender: L) -> Self {
         Self {
             inner: FlattenCompat::new(lender),
         }
     }
 
+    #[inline(always)]
     pub fn into_inner(self) -> L {
         *AliasableBox::into_unique(self.inner.lender)
     }
 }
 
-impl<L: FallibleLender + Clone> Clone for Flatten<'_, L>
-where
-    for<'all> FallibleLend<'all, L>: IntoFallibleLender,
-    for<'all> <FallibleLend<'all, L> as IntoFallibleLender>::FallibleLender: Clone,
-{
-    fn clone(&self) -> Self {
-        Flatten {
-            inner: self.inner.clone(),
-        }
-    }
-}
+// Clone is not implemented for Flatten because the inner sub-lender may
+// reference the AliasableBox allocation; a clone would create a new allocation
+// but the cloned inner sub-lender would still reference the original.
 
 impl<L: FallibleLender + fmt::Debug> fmt::Debug for Flatten<'_, L>
 where
@@ -77,6 +72,33 @@ where
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.inner.size_hint()
     }
+
+    #[inline]
+    fn try_fold<B, F, R>(&mut self, init: B, f: F) -> Result<R, Self::Error>
+    where
+        Self: Sized,
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<R, Self::Error>,
+        R: Try<Output = B>,
+    {
+        self.inner.try_fold(init, f)
+    }
+
+    #[inline]
+    fn fold<B, F>(self, init: B, f: F) -> Result<B, Self::Error>
+    where
+        Self: Sized,
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
+    {
+        self.inner.fold(init, f)
+    }
+
+    #[inline]
+    fn count(self) -> Result<usize, Self::Error>
+    where
+        Self: Sized,
+    {
+        self.inner.count()
+    }
 }
 
 impl<L: FusedFallibleLender> FusedFallibleLender for Flatten<'_, L> where
@@ -98,34 +120,28 @@ where
     Map<L, F>: FallibleLender,
     for<'all> FallibleLend<'all, Map<L, F>>: IntoFallibleLender,
 {
+    #[inline(always)]
     pub(crate) fn new(lender: L, f: F) -> Self {
         Self {
             inner: FlattenCompat::new(Map::new(lender, f)),
         }
     }
 
+    #[inline(always)]
     pub fn into_inner(self) -> L {
         (*AliasableBox::into_unique(self.inner.lender)).into_inner()
     }
 
     /// Returns the inner lender and the mapping function.
+    #[inline(always)]
     pub fn into_parts(self) -> (L, F) {
         (*AliasableBox::into_unique(self.inner.lender)).into_parts()
     }
 }
 
-impl<L: FallibleLender + Clone, F: Clone> Clone for FlatMap<'_, L, F>
-where
-    Map<L, F>: FallibleLender,
-    for<'all> FallibleLend<'all, Map<L, F>>: IntoFallibleLender,
-    for<'all> <FallibleLend<'all, Map<L, F>> as IntoFallibleLender>::FallibleLender: Clone,
-{
-    fn clone(&self) -> Self {
-        FlatMap {
-            inner: self.inner.clone(),
-        }
-    }
-}
+// Clone is not implemented for FlatMap because the inner sub-lender may
+// reference the AliasableBox allocation; a clone would create a new allocation
+// but the cloned inner sub-lender would still reference the original.
 
 impl<L: FallibleLender + fmt::Debug, F> fmt::Debug for FlatMap<'_, L, F>
 where
@@ -167,6 +183,33 @@ where
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.inner.size_hint()
     }
+
+    #[inline]
+    fn try_fold<B, G, R>(&mut self, init: B, f: G) -> Result<R, Self::Error>
+    where
+        Self: Sized,
+        G: FnMut(B, FallibleLend<'_, Self>) -> Result<R, Self::Error>,
+        R: Try<Output = B>,
+    {
+        self.inner.try_fold(init, f)
+    }
+
+    #[inline]
+    fn fold<B, G>(self, init: B, f: G) -> Result<B, Self::Error>
+    where
+        Self: Sized,
+        G: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
+    {
+        self.inner.fold(init, f)
+    }
+
+    #[inline]
+    fn count(self) -> Result<usize, Self::Error>
+    where
+        Self: Sized,
+    {
+        self.inner.count()
+    }
 }
 
 impl<L: FusedFallibleLender, F> FusedFallibleLender for FlatMap<'_, L, F>
@@ -194,6 +237,7 @@ impl<L: FallibleLender> FlattenCompat<'_, L>
 where
     for<'all> FallibleLend<'all, L>: IntoFallibleLender,
 {
+    #[inline(always)]
     pub(crate) fn new(lender: L) -> Self {
         Self {
             inner: MaybeDangling::new(None),
@@ -202,18 +246,9 @@ where
     }
 }
 
-impl<L: FallibleLender + Clone> Clone for FlattenCompat<'_, L>
-where
-    for<'all> FallibleLend<'all, L>: IntoFallibleLender,
-    for<'all> <FallibleLend<'all, L> as IntoFallibleLender>::FallibleLender: Clone,
-{
-    fn clone(&self) -> Self {
-        Self {
-            inner: MaybeDangling::new((*self.inner).clone()),
-            lender: AliasableBox::from_unique((*self.lender).clone().into()),
-        }
-    }
-}
+// Clone is not implemented for FlattenCompat because the inner sub-lender may
+// reference the AliasableBox allocation; a clone would create a new allocation
+// but the cloned inner sub-lender would still reference the original.
 
 impl<L: FallibleLender + fmt::Debug> fmt::Debug for FlattenCompat<'_, L>
 where
@@ -271,10 +306,77 @@ where
         (
             match &*self.inner {
                 Some(inner) => inner.size_hint().0,
-                None => self.lender.size_hint().0,
+                None => 0,
             },
             None,
         )
+    }
+
+    #[inline]
+    fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> Result<R, Self::Error>
+    where
+        Self: Sized,
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<R, Self::Error>,
+        R: Try<Output = B>,
+    {
+        use core::ops::ControlFlow;
+        let mut acc = init;
+        if let Some(ref mut inner) = *self.inner {
+            match inner.try_fold(acc, &mut f)?.branch() {
+                ControlFlow::Continue(b) => acc = b,
+                ControlFlow::Break(r) => return Ok(R::from_residual(r)),
+            }
+        }
+        *self.inner = None;
+        loop {
+            let Some(l) = self.lender.next()? else { break };
+            // SAFETY: inner is manually guaranteed to be the only lend alive of the inner lender
+            *self.inner = Some(unsafe {
+                core::mem::transmute::<
+                    <FallibleLend<'_, L> as IntoFallibleLender>::FallibleLender,
+                    <FallibleLend<'this, L> as IntoFallibleLender>::FallibleLender,
+                >(l.into_fallible_lender())
+            });
+            if let Some(ref mut inner) = *self.inner {
+                match inner.try_fold(acc, &mut f)?.branch() {
+                    ControlFlow::Continue(b) => acc = b,
+                    ControlFlow::Break(r) => return Ok(R::from_residual(r)),
+                }
+            }
+            *self.inner = None;
+        }
+        Ok(R::from_output(acc))
+    }
+
+    #[inline]
+    fn fold<B, F>(mut self, init: B, mut f: F) -> Result<B, Self::Error>
+    where
+        Self: Sized,
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
+    {
+        let mut acc = init;
+        if let Some(inner) = (&mut *self.inner).take() {
+            acc = inner.fold(acc, &mut f)?;
+        }
+        while let Some(l) = self.lender.next()? {
+            // SAFETY: inner is manually guaranteed to be the only lend alive of the inner lender
+            let sub = unsafe {
+                core::mem::transmute::<
+                    <FallibleLend<'_, L> as IntoFallibleLender>::FallibleLender,
+                    <FallibleLend<'this, L> as IntoFallibleLender>::FallibleLender,
+                >(l.into_fallible_lender())
+            };
+            acc = sub.fold(acc, &mut f)?;
+        }
+        Ok(acc)
+    }
+
+    #[inline]
+    fn count(self) -> Result<usize, Self::Error>
+    where
+        Self: Sized,
+    {
+        self.fold(0, |count, _| Ok(count + 1))
     }
 }
 

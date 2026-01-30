@@ -6,7 +6,7 @@ use crate::{
     try_trait_v2::{FromResidual, Try},
 };
 
-#[derive(Clone)]
+// Clone is not implemented because the inner Peekable is not Clone.
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Intersperse<'this, L>
 where
@@ -23,6 +23,7 @@ where
     for<'all> Lend<'all, L>: Clone,
     L: Lender,
 {
+    #[inline(always)]
     pub(crate) fn new(lender: L, separator: Lend<'this, L>) -> Self {
         Self {
             lender: lender.peekable(),
@@ -31,11 +32,13 @@ where
         }
     }
 
+    #[inline(always)]
     pub fn into_inner(self) -> L {
         self.lender.into_inner()
     }
 
     /// Returns the inner lender and the separator value.
+    #[inline(always)]
     pub fn into_parts(self) -> (L, Lend<'this, L>) {
         (self.lender.into_inner(), self.separator)
     }
@@ -151,7 +154,7 @@ where
     }
 }
 
-#[derive(Clone)]
+// Clone is not implemented because the inner Peekable is not Clone.
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct IntersperseWith<'this, L, G>
 where
@@ -167,6 +170,7 @@ where
     L: Lender,
     G: FnMut() -> Lend<'this, L>,
 {
+    #[inline(always)]
     pub(crate) fn new(lender: L, separator: G) -> Self {
         Self {
             lender: Peekable::new(lender),
@@ -175,11 +179,13 @@ where
         }
     }
 
+    #[inline(always)]
     pub fn into_inner(self) -> L {
         self.lender.into_inner()
     }
 
     /// Returns the inner lender and the separator function.
+    #[inline(always)]
     pub fn into_parts(self) -> (L, G) {
         (self.lender.into_inner(), self.separator)
     }

@@ -14,6 +14,7 @@ pub struct MapErr<E, L, F> {
 }
 
 impl<E, L, F> MapErr<E, L, F> {
+    #[inline(always)]
     pub(crate) fn new(lender: L, f: F) -> Self {
         Self {
             lender,
@@ -22,11 +23,13 @@ impl<E, L, F> MapErr<E, L, F> {
         }
     }
 
+    #[inline(always)]
     pub fn into_inner(self) -> L {
         self.lender
     }
 
     /// Returns the inner lender and the error-mapping function.
+    #[inline(always)]
     pub fn into_parts(self) -> (L, F) {
         (self.lender, self.f)
     }

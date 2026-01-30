@@ -36,6 +36,7 @@ pub struct Iter<'this, L: 'this> {
 }
 
 impl<'this, L: 'this> Iter<'this, L> {
+    #[inline(always)]
     pub(crate) fn new(lender: L) -> Iter<'this, L> {
         Iter {
             lender,
@@ -43,6 +44,7 @@ impl<'this, L: 'this> Iter<'this, L> {
         }
     }
 
+    #[inline(always)]
     pub fn into_inner(self) -> L {
         self.lender
     }

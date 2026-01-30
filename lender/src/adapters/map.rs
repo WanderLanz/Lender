@@ -13,15 +13,18 @@ pub struct Map<L, F> {
 }
 
 impl<L, F> Map<L, F> {
+    #[inline(always)]
     pub(crate) fn new(lender: L, f: F) -> Map<L, F> {
         Map { lender, f }
     }
 
+    #[inline(always)]
     pub fn into_inner(self) -> L {
         self.lender
     }
 
     /// Returns the inner lender and the mapping function.
+    #[inline(always)]
     pub fn into_parts(self) -> (L, F) {
         (self.lender, self.f)
     }

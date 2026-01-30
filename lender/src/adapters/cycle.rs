@@ -16,6 +16,7 @@ impl<L> Cycle<L>
 where
     L: Clone,
 {
+    #[inline(always)]
     pub(crate) fn new(lender: L) -> Cycle<L> {
         Cycle {
             orig: lender.clone(),
@@ -23,6 +24,7 @@ where
         }
     }
 
+    #[inline(always)]
     pub fn into_inner(self) -> (L, L) {
         (self.orig, self.lender)
     }

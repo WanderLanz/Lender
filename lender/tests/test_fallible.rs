@@ -452,6 +452,92 @@ fn flat_map_adapters() {
     assert_eq!(iter.next().unwrap(), Some(3));
 }
 
+#[test]
+fn fallible_flatten_fold() {
+    let data = vec![
+        Wrapper(vec![1, 2]),
+        Wrapper(vec![3]),
+        Wrapper(vec![4, 5]),
+    ];
+    let iter = data.into_iter().into_lender().into_fallible().flatten();
+    let result = iter.fold(0, |acc, x| Ok(acc + x)).unwrap();
+    assert_eq!(result, 15);
+}
+
+#[test]
+fn fallible_flatten_fold_empty() {
+    let data: Vec<Wrapper> = vec![];
+    let iter = data.into_iter().into_lender().into_fallible().flatten();
+    let result = iter.fold(0, |acc, x: i32| Ok(acc + x)).unwrap();
+    assert_eq!(result, 0);
+}
+
+#[test]
+fn fallible_flatten_count() {
+    let data = vec![
+        Wrapper(vec![1, 2]),
+        Wrapper(vec![]),
+        Wrapper(vec![3, 4, 5]),
+    ];
+    let iter = data.into_iter().into_lender().into_fallible().flatten();
+    assert_eq!(iter.count().unwrap(), 5);
+}
+
+#[test]
+fn fallible_flatten_count_empty() {
+    let data: Vec<Wrapper> = vec![];
+    let iter = data.into_iter().into_lender().into_fallible().flatten();
+    assert_eq!(iter.count().unwrap(), 0);
+}
+
+#[test]
+fn fallible_flatten_try_fold() {
+    let data = vec![
+        Wrapper(vec![1, 2]),
+        Wrapper(vec![3, 4]),
+        Wrapper(vec![5]),
+    ];
+    let mut iter = data.into_iter().into_lender().into_fallible().flatten();
+    let result: Result<i32, i32> = iter.try_fold(0, |acc, x| {
+        let new = acc + x;
+        if new > 6 {
+            Ok(Err(new))
+        } else {
+            Ok(Ok(new))
+        }
+    }).unwrap();
+    assert_eq!(result, Err(10));
+}
+
+#[test]
+fn fallible_flat_map_fold() {
+    let data = vec![1, 2, 3];
+    let iter = data
+        .into_iter()
+        .into_lender()
+        .into_fallible()
+        .flat_map(hrc_mut!(for<'lend> |x: i32| -> Result<
+            Wrapper,
+            std::convert::Infallible,
+        > { Ok(Wrapper(vec![x; 2])) }));
+    let result = iter.fold(0, |acc, x| Ok(acc + x)).unwrap();
+    assert_eq!(result, 12); // (1+1) + (2+2) + (3+3) = 12
+}
+
+#[test]
+fn fallible_flat_map_count() {
+    let data = vec![1, 2, 3];
+    let iter = data
+        .into_iter()
+        .into_lender()
+        .into_fallible()
+        .flat_map(hrc_mut!(for<'lend> |x: i32| -> Result<
+            Wrapper,
+            std::convert::Infallible,
+        > { Ok(Wrapper(vec![x; 2])) }));
+    assert_eq!(iter.count().unwrap(), 6);
+}
+
 // ============================================================================
 // ExactSize/DoubleEnded/Fused fallible basics
 // ============================================================================

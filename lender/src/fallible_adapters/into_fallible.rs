@@ -48,6 +48,7 @@ pub struct IntoFallible<E, L> {
 }
 
 impl<E, L> IntoFallible<E, L> {
+    #[inline(always)]
     pub(crate) fn new(lender: L) -> Self {
         Self {
             lender,
@@ -55,6 +56,7 @@ impl<E, L> IntoFallible<E, L> {
         }
     }
 
+    #[inline(always)]
     pub fn into_inner(self) -> L {
         self.lender
     }

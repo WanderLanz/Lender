@@ -12,10 +12,12 @@ pub struct Cloned<L> {
 }
 
 impl<L> Cloned<L> {
+    #[inline(always)]
     pub(crate) fn new(lender: L) -> Cloned<L> {
         Cloned { lender }
     }
 
+    #[inline(always)]
     pub fn into_inner(self) -> L {
         self.lender
     }

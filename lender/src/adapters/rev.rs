@@ -9,10 +9,12 @@ pub struct Rev<L> {
 }
 
 impl<L> Rev<L> {
+    #[inline(always)]
     pub(crate) fn new(lender: L) -> Rev<L> {
         Rev { lender }
     }
 
+    #[inline(always)]
     pub fn into_inner(self) -> L {
         self.lender
     }

@@ -2,7 +2,7 @@ use aliasable::boxed::AliasableBox;
 use core::fmt;
 use maybe_dangling::MaybeDangling;
 
-use crate::{FusedLender, IntoLender, Lend, Lender, Lending, Map};
+use crate::{FusedLender, IntoLender, Lend, Lender, Lending, Map, try_trait_v2::Try};
 
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Flatten<'this, L: Lender>
@@ -16,28 +16,22 @@ impl<L: Lender> Flatten<'_, L>
 where
     for<'all> Lend<'all, L>: IntoLender,
 {
+    #[inline(always)]
     pub(crate) fn new(lender: L) -> Self {
         Self {
             inner: FlattenCompat::new(lender),
         }
     }
 
+    #[inline(always)]
     pub fn into_inner(self) -> L {
         *AliasableBox::into_unique(self.inner.lender)
     }
 }
 
-impl<L: Lender + Clone> Clone for Flatten<'_, L>
-where
-    for<'all> Lend<'all, L>: IntoLender,
-    for<'all> <Lend<'all, L> as IntoLender>::Lender: Clone,
-{
-    fn clone(&self) -> Self {
-        Flatten {
-            inner: self.inner.clone(),
-        }
-    }
-}
+// Clone is not implemented for Flatten because the inner sub-lender may
+// reference the AliasableBox allocation; a clone would create a new allocation
+// but the cloned inner sub-lender would still reference the original.
 
 impl<L: Lender + fmt::Debug> fmt::Debug for Flatten<'_, L>
 where
@@ -73,6 +67,33 @@ where
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.inner.size_hint()
     }
+
+    #[inline]
+    fn try_fold<B, F, R>(&mut self, init: B, f: F) -> R
+    where
+        Self: Sized,
+        F: FnMut(B, Lend<'_, Self>) -> R,
+        R: Try<Output = B>,
+    {
+        self.inner.try_fold(init, f)
+    }
+
+    #[inline]
+    fn fold<B, F>(self, init: B, f: F) -> B
+    where
+        Self: Sized,
+        F: FnMut(B, Lend<'_, Self>) -> B,
+    {
+        self.inner.fold(init, f)
+    }
+
+    #[inline]
+    fn count(self) -> usize
+    where
+        Self: Sized,
+    {
+        self.inner.count()
+    }
 }
 
 impl<L: FusedLender> FusedLender for Flatten<'_, L> where for<'all> Lend<'all, L>: IntoLender {}
@@ -91,34 +112,28 @@ where
     Map<L, F>: Lender,
     for<'all> Lend<'all, Map<L, F>>: IntoLender,
 {
+    #[inline(always)]
     pub(crate) fn new(lender: L, f: F) -> Self {
         Self {
             inner: FlattenCompat::new(Map::new(lender, f)),
         }
     }
 
+    #[inline(always)]
     pub fn into_inner(self) -> L {
         (*AliasableBox::into_unique(self.inner.lender)).into_inner()
     }
 
     /// Returns the inner lender and the mapping function.
+    #[inline(always)]
     pub fn into_parts(self) -> (L, F) {
         (*AliasableBox::into_unique(self.inner.lender)).into_parts()
     }
 }
 
-impl<L: Lender + Clone, F: Clone> Clone for FlatMap<'_, L, F>
-where
-    Map<L, F>: Lender + Clone,
-    for<'all> Lend<'all, Map<L, F>>: IntoLender,
-    for<'all> <Lend<'all, Map<L, F>> as IntoLender>::Lender: Clone,
-{
-    fn clone(&self) -> Self {
-        FlatMap {
-            inner: self.inner.clone(),
-        }
-    }
-}
+// Clone is not implemented for FlatMap because the inner sub-lender may
+// reference the AliasableBox allocation; a clone would create a new allocation
+// but the cloned inner sub-lender would still reference the original.
 
 impl<L: Lender + fmt::Debug, F> fmt::Debug for FlatMap<'_, L, F>
 where
@@ -157,6 +172,33 @@ where
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.inner.size_hint()
     }
+
+    #[inline]
+    fn try_fold<B, G, R>(&mut self, init: B, f: G) -> R
+    where
+        Self: Sized,
+        G: FnMut(B, Lend<'_, Self>) -> R,
+        R: Try<Output = B>,
+    {
+        self.inner.try_fold(init, f)
+    }
+
+    #[inline]
+    fn fold<B, G>(self, init: B, f: G) -> B
+    where
+        Self: Sized,
+        G: FnMut(B, Lend<'_, Self>) -> B,
+    {
+        self.inner.fold(init, f)
+    }
+
+    #[inline]
+    fn count(self) -> usize
+    where
+        Self: Sized,
+    {
+        self.inner.count()
+    }
 }
 
 impl<L: FusedLender, F> FusedLender for FlatMap<'_, L, F>
@@ -184,6 +226,7 @@ impl<L: Lender> FlattenCompat<'_, L>
 where
     for<'all> Lend<'all, L>: IntoLender,
 {
+    #[inline(always)]
     pub(crate) fn new(lender: L) -> Self {
         Self {
             inner: MaybeDangling::new(None),
@@ -192,18 +235,9 @@ where
     }
 }
 
-impl<L: Lender + Clone> Clone for FlattenCompat<'_, L>
-where
-    for<'all> Lend<'all, L>: IntoLender,
-    for<'all> <Lend<'all, L> as IntoLender>::Lender: Clone,
-{
-    fn clone(&self) -> Self {
-        Self {
-            inner: MaybeDangling::new((*self.inner).clone()),
-            lender: AliasableBox::from_unique((*self.lender).clone().into()),
-        }
-    }
-}
+// Clone is not implemented for FlattenCompat because the inner sub-lender may
+// reference the AliasableBox allocation; a clone would create a new allocation
+// but the cloned inner sub-lender would still reference the original.
 
 impl<L: Lender + fmt::Debug> fmt::Debug for FlattenCompat<'_, L>
 where
@@ -265,6 +299,73 @@ where
             None => 0,
         };
         (inner_len, None)
+    }
+
+    #[inline]
+    fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> R
+    where
+        Self: Sized,
+        F: FnMut(B, Lend<'_, Self>) -> R,
+        R: Try<Output = B>,
+    {
+        use core::ops::ControlFlow;
+        let mut acc = init;
+        if let Some(ref mut inner) = *self.inner {
+            match inner.try_fold(acc, &mut f).branch() {
+                ControlFlow::Continue(b) => acc = b,
+                ControlFlow::Break(r) => return R::from_residual(r),
+            }
+        }
+        *self.inner = None;
+        loop {
+            let Some(l) = self.lender.next() else { break };
+            // SAFETY: inner is manually guaranteed to be the only lend alive of the inner lender
+            *self.inner = Some(unsafe {
+                core::mem::transmute::<
+                    <Lend<'_, L> as IntoLender>::Lender,
+                    <Lend<'this, L> as IntoLender>::Lender,
+                >(l.into_lender())
+            });
+            if let Some(ref mut inner) = *self.inner {
+                match inner.try_fold(acc, &mut f).branch() {
+                    ControlFlow::Continue(b) => acc = b,
+                    ControlFlow::Break(r) => return R::from_residual(r),
+                }
+            }
+            *self.inner = None;
+        }
+        R::from_output(acc)
+    }
+
+    #[inline]
+    fn fold<B, F>(mut self, init: B, mut f: F) -> B
+    where
+        Self: Sized,
+        F: FnMut(B, Lend<'_, Self>) -> B,
+    {
+        let mut acc = init;
+        if let Some(inner) = (&mut *self.inner).take() {
+            acc = inner.fold(acc, &mut f);
+        }
+        while let Some(l) = self.lender.next() {
+            // SAFETY: inner is manually guaranteed to be the only lend alive of the inner lender
+            let sub = unsafe {
+                core::mem::transmute::<
+                    <Lend<'_, L> as IntoLender>::Lender,
+                    <Lend<'this, L> as IntoLender>::Lender,
+                >(l.into_lender())
+            };
+            acc = sub.fold(acc, &mut f);
+        }
+        acc
+    }
+
+    #[inline]
+    fn count(self) -> usize
+    where
+        Self: Sized,
+    {
+        self.fold(0, |count, _| count + 1)
     }
 }
 

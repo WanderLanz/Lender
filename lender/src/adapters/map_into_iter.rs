@@ -14,6 +14,7 @@ pub struct MapIntoIter<L, O, F> {
 }
 
 impl<L, O, F> MapIntoIter<L, O, F> {
+    #[inline(always)]
     pub(crate) fn new(lender: L, f: F) -> MapIntoIter<L, O, F> {
         MapIntoIter {
             lender,
@@ -22,11 +23,13 @@ impl<L, O, F> MapIntoIter<L, O, F> {
         }
     }
 
+    #[inline(always)]
     pub fn into_inner(self) -> L {
         self.lender
     }
 
     /// Returns the inner lender and the mapping function.
+    #[inline(always)]
     pub fn into_parts(self) -> (L, F) {
         (self.lender, self.f)
     }

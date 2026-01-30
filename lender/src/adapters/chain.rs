@@ -13,6 +13,7 @@ pub struct Chain<A, B> {
 }
 
 impl<A, B> Chain<A, B> {
+    #[inline(always)]
     pub(crate) fn new(a: A, b: B) -> Self {
         Self {
             a: Fuse::new(a),
@@ -20,6 +21,7 @@ impl<A, B> Chain<A, B> {
         }
     }
 
+    #[inline(always)]
     pub fn into_inner(self) -> (A, B) {
         (self.a.into_inner(), self.b.into_inner())
     }
@@ -40,6 +42,7 @@ where
 {
     // SAFETY: the lend is that of A (and B has the same lend type)
     crate::unsafe_assume_covariance!();
+    #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.a.next().or_else(|| self.b.next())
     }
@@ -49,6 +52,7 @@ where
         self.a.count() + self.b.count()
     }
 
+    #[inline]
     fn try_fold<Acc, F, R>(&mut self, mut acc: Acc, mut f: F) -> R
     where
         Self: Sized,
@@ -66,6 +70,7 @@ where
         Try::from_output(acc)
     }
 
+    #[inline]
     fn fold<Acc, F>(self, mut acc: Acc, mut f: F) -> Acc
     where
         F: FnMut(Acc, Lend<'_, Self>) -> Acc,

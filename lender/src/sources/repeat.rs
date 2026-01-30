@@ -73,7 +73,7 @@ where
         Some(unsafe { core::mem::transmute::<Lend<'a, Self>, Lend<'_, Self>>(self.elt.clone()) })
     }
 
-    #[inline]
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         (usize::MAX, None)
     }
@@ -190,7 +190,7 @@ where
         })
     }
 
-    #[inline]
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         (usize::MAX, None)
     }
@@ -198,8 +198,11 @@ where
     #[inline]
     fn advance_by(
         &mut self,
-        _n: usize,
+        n: usize,
     ) -> Result<Result<(), core::num::NonZeroUsize>, Self::Error> {
+        if n > 0 {
+            self.elt.clone()?;
+        }
         Ok(Ok(()))
     }
 }
@@ -218,8 +221,11 @@ where
     #[inline]
     fn advance_back_by(
         &mut self,
-        _n: usize,
+        n: usize,
     ) -> Result<Result<(), core::num::NonZeroUsize>, Self::Error> {
+        if n > 0 {
+            self.elt.clone()?;
+        }
         Ok(Ok(()))
     }
 }
