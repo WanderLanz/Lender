@@ -1,6 +1,9 @@
-use core::fmt;
+use core::{fmt, ops::ControlFlow};
 
-use crate::{FallibleLend, FallibleLender, FallibleLending, FalliblePeekable, FusedFallibleLender};
+use crate::{
+    FallibleLend, FallibleLender, FallibleLending, FalliblePeekable, FusedFallibleLender,
+    try_trait_v2::Try,
+};
 
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -83,6 +86,34 @@ where
             self.needs_sep = true;
             self.lender.next()
         }
+    }
+
+    fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> Result<R, Self::Error>
+    where
+        Self: Sized,
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<R, Self::Error>,
+        R: Try<Output = B>,
+    {
+        let mut acc = init;
+        if !self.needs_sep {
+            match self.lender.next()? {
+                None => return Ok(R::from_output(acc)),
+                Some(x) => {
+                    acc = match f(acc, x)?.branch() {
+                        ControlFlow::Continue(b) => b,
+                        ControlFlow::Break(residual) => return Ok(R::from_residual(residual)),
+                    };
+                }
+            }
+        }
+        let separator = &self.separator;
+        self.lender.try_fold(acc, move |acc, x| {
+            let acc = match f(acc, separator.clone())?.branch() {
+                ControlFlow::Continue(b) => b,
+                ControlFlow::Break(residual) => return Ok(R::from_residual(residual)),
+            };
+            f(acc, x)
+        })
     }
 
     fn fold<B, F>(mut self, init: B, mut f: F) -> Result<B, Self::Error>
@@ -189,6 +220,34 @@ where
             self.needs_sep = true;
             self.lender.next()
         }
+    }
+
+    fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> Result<R, Self::Error>
+    where
+        Self: Sized,
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<R, Self::Error>,
+        R: Try<Output = B>,
+    {
+        let mut acc = init;
+        if !self.needs_sep {
+            match self.lender.next()? {
+                None => return Ok(R::from_output(acc)),
+                Some(x) => {
+                    acc = match f(acc, x)?.branch() {
+                        ControlFlow::Continue(b) => b,
+                        ControlFlow::Break(residual) => return Ok(R::from_residual(residual)),
+                    };
+                }
+            }
+        }
+        let separator = &mut self.separator;
+        self.lender.try_fold(acc, move |acc, x| {
+            let acc = match f(acc, (separator)()?)?.branch() {
+                ControlFlow::Continue(b) => b,
+                ControlFlow::Break(residual) => return Ok(R::from_residual(residual)),
+            };
+            f(acc, x)
+        })
     }
 
     fn fold<B, F>(mut self, init: B, mut f: F) -> Result<B, Self::Error>

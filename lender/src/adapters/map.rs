@@ -11,7 +11,7 @@ use crate::{
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Map<L, F> {
-    pub(crate) lender: L,
+    lender: L,
     f: F,
 }
 

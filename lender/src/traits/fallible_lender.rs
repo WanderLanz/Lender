@@ -31,7 +31,7 @@ pub trait FallibleLending<'lend, __ImplBound: ImplBound = Ref<'lend, Self>> {
 /// A readable shorthand for the type of the items of a [`FallibleLender`] `L`.
 pub type FallibleLend<'lend, L> = <L as FallibleLending<'lend>>::Lend;
 
-/// A trait for dealing with lending iterators.
+/// A trait for dealing with fallible lending iterators.
 ///
 /// This is the main lender trait. For more about the concept of lenders
 /// generally, please see the [crate documentation](crate).
@@ -557,6 +557,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::by_ref`].
+    #[inline]
     fn by_ref(&mut self) -> &mut Self
     where
         Self: Sized,
@@ -567,6 +568,12 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// Transforms the iterator into a collection.
     /// If any invocation of next returns Err, returns the collection built
     /// from values yielded successfully, together with the error.
+    ///
+    /// # Error Handling
+    ///
+    /// The return type `Result<B, (B, Self::Error)>` preserves partial
+    /// results even on error: the `B` inside the `Err` variant contains
+    /// whatever was accumulated before the error occurred.
     #[inline]
     fn collect<B>(self) -> Result<B, (B, Self::Error)>
     where
@@ -610,6 +617,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::partition`].
+    #[inline]
     fn partition<'this, E, F>(mut self, mut f: F) -> Result<(E, E), Self::Error>
     where
         Self: Sized + 'this,
@@ -706,6 +714,12 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::reduce`].
+    ///
+    /// # Error Handling
+    ///
+    /// If the closure or the underlying lender returns an error, `reduce`
+    /// propagates it immediately. Unlike [`collect`](FallibleLender::collect),
+    /// the partial accumulation is not preserved on error.
     #[inline]
     fn reduce<T, F>(mut self, f: F) -> Result<Option<T>, Self::Error>
     where
@@ -1069,6 +1083,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(copied.next()?, None);
     /// # Ok::<(), core::convert::Infallible>(())
     /// ```
+    #[inline]
     fn copied<T>(self) -> Copied<Self>
     where
         Self: Sized + for<'all> FallibleLending<'all, Lend = &'all T>,
@@ -1080,6 +1095,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// The [`FallibleLender`] version of [`Iterator::cloned`].
     ///
     /// Turns this [`FallibleLender`] into a [`FallibleIterator`](fallible_iterator::FallibleIterator).
+    #[inline]
     fn cloned<T>(self) -> Cloned<Self>
     where
         Self: Sized + for<'all> FallibleLending<'all, Lend = &'all T>,
@@ -1129,6 +1145,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::cmp`].
+    #[inline]
     fn cmp<L>(self, other: L) -> Result<Ordering, Self::Error>
     where
         L: IntoFallibleLender<Error = Self::Error>,
@@ -1140,6 +1157,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::cmp_by`].
+    #[inline]
     fn cmp_by<L, F>(self, other: L, mut cmp: F) -> Result<Ordering, Self::Error>
     where
         Self: Sized,
@@ -1156,6 +1174,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::partial_cmp`].
+    #[inline]
     fn partial_cmp<L>(self, other: L) -> Result<Option<Ordering>, Self::Error>
     where
         L: IntoFallibleLender<Error = Self::Error>,
@@ -1182,6 +1201,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::eq`].
+    #[inline]
     fn eq<L>(self, other: L) -> Result<bool, Self::Error>
     where
         L: IntoFallibleLender<Error = Self::Error>,
@@ -1192,6 +1212,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::eq_by`].
+    #[inline]
     fn eq_by<L, F>(self, other: L, mut eq: F) -> Result<bool, Self::Error>
     where
         Self: Sized,
@@ -1207,6 +1228,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::ne`].
+    #[inline]
     fn ne<L>(self, other: L) -> Result<bool, Self::Error>
     where
         L: IntoFallibleLender<Error = Self::Error>,
@@ -1217,6 +1239,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::lt`].
+    #[inline]
     fn lt<L>(self, other: L) -> Result<bool, Self::Error>
     where
         L: IntoFallibleLender<Error = Self::Error>,
@@ -1227,6 +1250,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::le`].
+    #[inline]
     fn le<L>(self, other: L) -> Result<bool, Self::Error>
     where
         L: IntoFallibleLender<Error = Self::Error>,
@@ -1237,6 +1261,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::gt`].
+    #[inline]
     fn gt<L>(self, other: L) -> Result<bool, Self::Error>
     where
         L: IntoFallibleLender<Error = Self::Error>,
@@ -1247,6 +1272,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::ge`].
+    #[inline]
     fn ge<L>(self, other: L) -> Result<bool, Self::Error>
     where
         L: IntoFallibleLender<Error = Self::Error>,

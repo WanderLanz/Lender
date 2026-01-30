@@ -70,6 +70,7 @@ where
 {
     // SAFETY: the lend is the type parameter L
     crate::unsafe_assume_covariance!();
+    #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         // SAFETY: 'a: 'lend
         self.inner
@@ -164,6 +165,7 @@ where
     // SAFETY: the lend is the type parameter L
     crate::unsafe_assume_covariance_fallible!();
 
+    #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         match self.inner.take() {
             None => Ok(None),

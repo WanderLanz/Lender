@@ -2411,22 +2411,20 @@ fn chunky_fold() {
 }
 
 #[test]
-fn chunky_exact_size() {
-    use lender::ExactSizeLender;
-
+fn chunky_size_hint_decreases() {
     let mut chunky = VecLender::new(vec![1, 2, 3, 4, 5, 6]).chunky(2);
     // 6 elements, chunk_size 2 -> 3 chunks
-    assert_eq!(chunky.len(), 3);
+    assert_eq!(chunky.size_hint(), (3, Some(3)));
     chunky.next();
-    assert_eq!(chunky.len(), 2);
+    assert_eq!(chunky.size_hint(), (2, Some(2)));
     chunky.next();
-    assert_eq!(chunky.len(), 1);
+    assert_eq!(chunky.size_hint(), (1, Some(1)));
     chunky.next();
-    assert_eq!(chunky.len(), 0);
+    assert_eq!(chunky.size_hint(), (0, Some(0)));
 
     // With uneven division: 5 elements, chunk_size 2 -> ceil(5/2) = 3 chunks
     let chunky2 = VecLender::new(vec![1, 2, 3, 4, 5]).chunky(2);
-    assert_eq!(chunky2.len(), 3);
+    assert_eq!(chunky2.size_hint(), (3, Some(3)));
 }
 
 #[test]
@@ -2752,4 +2750,161 @@ fn flatten_empty_inner() {
 fn flatten_empty_outer() {
     let mut flattened = VecOfVecLender::new(vec![]).flatten();
     assert_eq!(flattened.next(), None);
+}
+
+// ============================================================================
+// New method tests (M5–M7)
+// ============================================================================
+
+// M5: Zip nth_back — equal-length lenders
+#[test]
+fn zip_nth_back_equal_length() {
+    let mut zipped = VecLender::new(vec![1, 2, 3, 4, 5])
+        .zip(VecLender::new(vec![10, 20, 30, 40, 50]));
+    // nth_back(0) yields the last pair
+    assert_eq!(zipped.nth_back(0), Some((5, 50)));
+    // nth_back(1) skips (4,40) and yields (3,30)
+    assert_eq!(zipped.nth_back(1), Some((3, 30)));
+    // Only (1,10) and (2,20) remain; nth_back(2) is past the end
+    assert_eq!(zipped.nth_back(2), None);
+}
+
+// M5: Zip nth_back — unequal-length lenders
+#[test]
+fn zip_nth_back_unequal_length() {
+    let mut zipped = VecLender::new(vec![1, 2, 3, 4, 5])
+        .zip(VecLender::new(vec![10, 20, 30]));
+    // Zip length is min(5, 3) = 3, so effective pairs are (1,10),(2,20),(3,30).
+    // nth_back(0) should yield (3,30)
+    assert_eq!(zipped.nth_back(0), Some((3, 30)));
+    assert_eq!(zipped.nth_back(0), Some((2, 20)));
+    assert_eq!(zipped.nth_back(0), Some((1, 10)));
+    assert_eq!(zipped.nth_back(0), None);
+}
+
+// M5: Zip nth_back — empty
+#[test]
+fn zip_nth_back_empty() {
+    let mut zipped = VecLender::new(vec![]).zip(VecLender::new(vec![1, 2]));
+    assert_eq!(zipped.nth_back(0), None);
+}
+
+// M6: StepBy count
+#[test]
+fn step_by_count_basic() {
+    let lender = VecLender::new(vec![1, 2, 3, 4, 5, 6, 7]);
+    // step=2 yields [1, 3, 5, 7] → count = 4
+    assert_eq!(lender.step_by(2).count(), 4);
+}
+
+#[test]
+fn step_by_count_step_one() {
+    let lender = VecLender::new(vec![1, 2, 3]);
+    assert_eq!(lender.step_by(1).count(), 3);
+}
+
+#[test]
+fn step_by_count_empty() {
+    let lender = VecLender::new(vec![]);
+    assert_eq!(lender.step_by(3).count(), 0);
+}
+
+#[test]
+fn step_by_count_larger_step() {
+    let lender = VecLender::new(vec![1, 2, 3]);
+    // step=10 yields only the first element
+    assert_eq!(lender.step_by(10).count(), 1);
+}
+
+// M7: Chunk count
+#[test]
+fn chunk_count() {
+    let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]);
+    let chunk = lender.next_chunk(3);
+    assert_eq!(chunk.count(), 3);
+}
+
+#[test]
+fn chunk_count_larger_than_remaining() {
+    let mut lender = VecLender::new(vec![1, 2]);
+    let chunk = lender.next_chunk(5);
+    // Underlying only has 2 elements even though chunk_size is 5
+    assert_eq!(chunk.count(), 2);
+}
+
+#[test]
+fn chunk_count_empty() {
+    let mut lender = VecLender::new(vec![]);
+    let chunk = lender.next_chunk(3);
+    assert_eq!(chunk.count(), 0);
+}
+
+// M7: Chunk nth
+#[test]
+fn chunk_nth_within_range() {
+    let mut lender = VecLender::new(vec![10, 20, 30, 40, 50]);
+    let mut chunk = lender.next_chunk(4);
+    // nth(2) should skip first 2 elements and return the 3rd (30)
+    assert_eq!(chunk.nth(2), Some(30));
+    // Only one element left in chunk (40)
+    assert_eq!(chunk.next(), Some(40));
+    assert_eq!(chunk.next(), None);
+}
+
+#[test]
+fn chunk_nth_past_end() {
+    let mut lender = VecLender::new(vec![10, 20, 30]);
+    let mut chunk = lender.next_chunk(3);
+    // nth(5) is past the chunk boundary
+    assert_eq!(chunk.nth(5), None);
+    // Chunk is exhausted now
+    assert_eq!(chunk.next(), None);
+}
+
+#[test]
+fn chunk_nth_zero() {
+    let mut lender = VecLender::new(vec![10, 20, 30]);
+    let mut chunk = lender.next_chunk(3);
+    assert_eq!(chunk.nth(0), Some(10));
+    assert_eq!(chunk.nth(0), Some(20));
+    assert_eq!(chunk.nth(0), Some(30));
+    assert_eq!(chunk.nth(0), None);
+}
+
+// M7: Chunk try_fold
+#[test]
+fn chunk_try_fold_full() {
+    let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]);
+    let mut chunk = lender.next_chunk(4);
+    let result: Result<i32, ()> = chunk.try_fold(0, |acc, x| Ok(acc + x));
+    assert_eq!(result, Ok(10)); // 1+2+3+4
+}
+
+#[test]
+fn chunk_try_fold_early_exit() {
+    let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]);
+    let mut chunk = lender.next_chunk(5);
+    // Stop when accumulator exceeds 5
+    let result: Result<i32, i32> = chunk.try_fold(0, |acc, x| {
+        let new = acc + x;
+        if new > 5 { Err(new) } else { Ok(new) }
+    });
+    assert_eq!(result, Err(6)); // 1+2+3 = 6 > 5
+}
+
+// M7: Chunk fold
+#[test]
+fn chunk_fold_full() {
+    let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]);
+    let chunk = lender.next_chunk(4);
+    let result = chunk.fold(0, |acc, x| acc + x);
+    assert_eq!(result, 10); // 1+2+3+4
+}
+
+#[test]
+fn chunk_fold_partial_underlying() {
+    let mut lender = VecLender::new(vec![1, 2]);
+    let chunk = lender.next_chunk(5);
+    let result = chunk.fold(0, |acc, x| acc + x);
+    assert_eq!(result, 3); // 1+2, underlying runs out before chunk limit
 }

@@ -33,7 +33,7 @@ impl<L: fmt::Debug, St: fmt::Debug, F> fmt::Debug for Scan<L, St, F> {
         f.debug_struct("Scan")
             .field("lender", &self.lender)
             .field("state", &self.state)
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 

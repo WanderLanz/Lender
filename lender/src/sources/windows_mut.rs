@@ -88,6 +88,7 @@ impl<'any, T> Lending<'any> for WindowsMut<'_, T> {
 
 impl<T> Lender for WindowsMut<'_, T> {
     crate::check_covariance!();
+    #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.position.update_slice(&mut self.slice);
         self.position = WindowPosition::Front;
@@ -96,6 +97,7 @@ impl<T> Lender for WindowsMut<'_, T> {
 }
 
 impl<T> DoubleEndedLender for WindowsMut<'_, T> {
+    #[inline]
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         self.position.update_slice(&mut self.slice);
         self.position = WindowPosition::Back;
@@ -180,6 +182,7 @@ impl<'any, T, const WINDOW_SIZE: usize> Lending<'any> for ArrayWindowsMut<'_, T,
 
 impl<T, const WINDOW_SIZE: usize> Lender for ArrayWindowsMut<'_, T, WINDOW_SIZE> {
     crate::check_covariance!();
+    #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.position.update_slice(&mut self.slice);
         self.position = WindowPosition::Front;
@@ -188,6 +191,7 @@ impl<T, const WINDOW_SIZE: usize> Lender for ArrayWindowsMut<'_, T, WINDOW_SIZE>
 }
 
 impl<T, const WINDOW_SIZE: usize> DoubleEndedLender for ArrayWindowsMut<'_, T, WINDOW_SIZE> {
+    #[inline]
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         self.position.update_slice(&mut self.slice);
         self.position = WindowPosition::Back;

@@ -680,6 +680,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         Mutate::new(self, f)
     }
     /// The [`Lender`] version of [`Iterator::by_ref`].
+    #[inline]
     fn by_ref(&mut self) -> &mut Self
     where
         Self: Sized,
@@ -717,6 +718,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         collection
     }
     /// The [`Lender`] version of [`Iterator::partition`].
+    #[inline]
     fn partition<E, F>(mut self, mut f: F) -> (E, E)
     where
         Self: Sized,
@@ -1036,6 +1038,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// The [`Lender`] version of [`Iterator::copied`].
     ///
     /// Turns this [`Lender`] into an [`Iterator`].
+    #[inline]
     fn copied<T>(self) -> Copied<Self>
     where
         Self: Sized + for<'all> Lending<'all, Lend = &'all T>,
@@ -1046,6 +1049,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// The [`Lender`] version of [`Iterator::cloned`].
     ///
     /// Turns this [`Lender`] into an [`Iterator`].
+    #[inline]
     fn cloned<T>(self) -> Cloned<Self>
     where
         Self: Sized + for<'all> Lending<'all, Lend = &'all T>,
@@ -1090,6 +1094,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         P::product_lender(self)
     }
     /// The [`Lender`] version of [`Iterator::cmp`].
+    #[inline]
     fn cmp<L>(self, other: L) -> Ordering
     where
         L: IntoLender,
@@ -1115,6 +1120,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         }
     }
     /// The [`Lender`] version of [`Iterator::partial_cmp`].
+    #[inline]
     fn partial_cmp<L>(self, other: L) -> Option<Ordering>
     where
         L: IntoLender,
@@ -1139,6 +1145,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         }
     }
     /// The [`Lender`] version of [`Iterator::eq`].
+    #[inline]
     fn eq<L>(self, other: L) -> bool
     where
         L: IntoLender,
@@ -1162,6 +1169,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         }
     }
     /// The [`Lender`] version of [`Iterator::ne`].
+    #[inline]
     fn ne<L>(self, other: L) -> bool
     where
         L: IntoLender,
@@ -1171,6 +1179,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         !self.eq(other)
     }
     /// The [`Lender`] version of [`Iterator::lt`].
+    #[inline]
     fn lt<L>(self, other: L) -> bool
     where
         L: IntoLender,
@@ -1180,6 +1189,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         self.partial_cmp(other) == Some(Ordering::Less)
     }
     /// The [`Lender`] version of [`Iterator::le`].
+    #[inline]
     fn le<L>(self, other: L) -> bool
     where
         L: IntoLender,
@@ -1189,6 +1199,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         matches!(self.partial_cmp(other), Some(Ordering::Less | Ordering::Equal))
     }
     /// The [`Lender`] version of [`Iterator::gt`].
+    #[inline]
     fn gt<L>(self, other: L) -> bool
     where
         L: IntoLender,
@@ -1198,6 +1209,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         self.partial_cmp(other) == Some(Ordering::Greater)
     }
     /// The [`Lender`] version of [`Iterator::ge`].
+    #[inline]
     fn ge<L>(self, other: L) -> bool
     where
         L: IntoLender,

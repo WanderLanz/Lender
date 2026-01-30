@@ -137,7 +137,7 @@ where
     #[inline]
     fn next_back(&mut self) -> Result<Option<Self::Item>, Self::Error> {
         Ok(
-            // SAFETY: for<'all> Lend<'all, L>: 'this
+            // SAFETY: for<'all> FallibleLend<'all, L>: 'this
             unsafe {
                 core::mem::transmute::<Option<FallibleLend<'_, L>>, Option<FallibleLend<'this, L>>>(
                     self.lender.next_back()?,

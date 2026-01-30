@@ -36,7 +36,7 @@ impl<L: fmt::Debug, P> fmt::Debug for SkipWhile<L, P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("SkipWhile")
             .field("lender", &self.lender)
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 

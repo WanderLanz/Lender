@@ -1412,3 +1412,192 @@ fn double_ended_fallible_nth_back_past_end() {
     // nth_back(3) must therefore return Ok(None), not call next_back().
     assert_eq!(lender.nth_back(3), Ok(None));
 }
+
+// ============================================================================
+// New method tests (M5–M7, M11)
+// ============================================================================
+
+// M5: Fallible Zip nth_back — equal-length lenders
+#[test]
+fn fallible_zip_nth_back_equal_length() {
+    let mut zipped = VecFallibleLender::new(vec![1, 2, 3, 4, 5])
+        .zip(VecFallibleLender::new(vec![10, 20, 30, 40, 50]));
+    assert_eq!(zipped.nth_back(0), Ok(Some((5, 50))));
+    assert_eq!(zipped.nth_back(1), Ok(Some((3, 30))));
+    assert_eq!(zipped.nth_back(2), Ok(None));
+}
+
+// M5: Fallible Zip nth_back — unequal-length lenders
+#[test]
+fn fallible_zip_nth_back_unequal_length() {
+    let mut zipped = VecFallibleLender::new(vec![1, 2, 3, 4, 5])
+        .zip(VecFallibleLender::new(vec![10, 20, 30]));
+    assert_eq!(zipped.nth_back(0), Ok(Some((3, 30))));
+    assert_eq!(zipped.nth_back(0), Ok(Some((2, 20))));
+    assert_eq!(zipped.nth_back(0), Ok(Some((1, 10))));
+    assert_eq!(zipped.nth_back(0), Ok(None));
+}
+
+// M5: Fallible Zip nth_back — empty
+#[test]
+fn fallible_zip_nth_back_empty() {
+    let mut zipped = VecFallibleLender::new(vec![])
+        .zip(VecFallibleLender::new(vec![1, 2]));
+    assert_eq!(zipped.nth_back(0), Ok(None));
+}
+
+// M6: Fallible StepBy count
+#[test]
+fn fallible_step_by_count() {
+    let lender = VecFallibleLender::new(vec![1, 2, 3, 4, 5, 6, 7]);
+    // step=2 yields [1, 3, 5, 7] → count = 4
+    assert_eq!(lender.step_by(2).count(), Ok(4));
+}
+
+#[test]
+fn fallible_step_by_count_step_one() {
+    let lender = VecFallibleLender::new(vec![1, 2, 3]);
+    assert_eq!(lender.step_by(1).count(), Ok(3));
+}
+
+#[test]
+fn fallible_step_by_count_empty() {
+    let lender = VecFallibleLender::new(vec![]);
+    assert_eq!(lender.step_by(3).count(), Ok(0));
+}
+
+// M7: Fallible Chunk count
+#[test]
+fn fallible_chunk_count() {
+    let mut lender = VecFallibleLender::new(vec![1, 2, 3, 4, 5]);
+    let chunk = lender.next_chunk(3);
+    assert_eq!(chunk.count(), Ok(3));
+}
+
+#[test]
+fn fallible_chunk_count_larger_than_remaining() {
+    let mut lender = VecFallibleLender::new(vec![1, 2]);
+    let chunk = lender.next_chunk(5);
+    assert_eq!(chunk.count(), Ok(2));
+}
+
+#[test]
+fn fallible_chunk_count_empty() {
+    let mut lender = VecFallibleLender::new(vec![]);
+    let chunk = lender.next_chunk(3);
+    assert_eq!(chunk.count(), Ok(0));
+}
+
+// M7: Fallible Chunk nth
+#[test]
+fn fallible_chunk_nth_within_range() {
+    let mut lender = VecFallibleLender::new(vec![10, 20, 30, 40, 50]);
+    let mut chunk = lender.next_chunk(4);
+    assert_eq!(chunk.nth(2), Ok(Some(30)));
+    assert_eq!(chunk.next(), Ok(Some(40)));
+    assert_eq!(chunk.next(), Ok(None));
+}
+
+#[test]
+fn fallible_chunk_nth_past_end() {
+    let mut lender = VecFallibleLender::new(vec![10, 20, 30]);
+    let mut chunk = lender.next_chunk(3);
+    assert_eq!(chunk.nth(5), Ok(None));
+    assert_eq!(chunk.next(), Ok(None));
+}
+
+// M7: Fallible Chunk try_fold
+#[test]
+fn fallible_chunk_try_fold() {
+    let mut lender = VecFallibleLender::new(vec![1, 2, 3, 4, 5]);
+    let mut chunk = lender.next_chunk(4);
+    let result: Result<Result<i32, ()>, _> = chunk.try_fold(0, |acc, x| Ok(Ok(acc + x)));
+    assert_eq!(result, Ok(Ok(10)));
+}
+
+// M7: Fallible Chunk fold
+#[test]
+fn fallible_chunk_fold() {
+    let mut lender = VecFallibleLender::new(vec![1, 2, 3, 4, 5]);
+    let chunk = lender.next_chunk(4);
+    let result = chunk.fold(0, |acc, x| Ok(acc + x));
+    assert_eq!(result, Ok(10));
+}
+
+// M11: Fallible Intersperse try_fold
+#[test]
+fn fallible_intersperse_try_fold() {
+    use lender::from_fallible_fn;
+
+    let interspersed = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
+        *state += 1;
+        if *state <= 3 { Ok(Some(*state)) } else { Ok(None) }
+    })
+    .intersperse(0);
+
+    // try_fold to collect into a Vec via for_each (which calls try_fold internally)
+    let mut collected = Vec::new();
+    interspersed
+        .for_each(|x| {
+            collected.push(x);
+            Ok(())
+        })
+        .unwrap();
+    assert_eq!(collected, vec![1, 0, 2, 0, 3]);
+}
+
+// M11: Fallible Intersperse try_fold with fold (full consumption)
+#[test]
+fn fallible_intersperse_fold() {
+    use lender::from_fallible_fn;
+
+    let interspersed = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
+        *state += 1;
+        if *state <= 4 { Ok(Some(*state)) } else { Ok(None) }
+    })
+    .intersperse(0);
+
+    // fold sums all elements: 1 + 0 + 2 + 0 + 3 + 0 + 4 = 10
+    let sum = interspersed.fold(0, |acc, x| Ok(acc + x)).unwrap();
+    assert_eq!(sum, 10);
+}
+
+// M11: Fallible IntersperseWith try_fold
+#[test]
+fn fallible_intersperse_with_try_fold() {
+    use lender::from_fallible_fn;
+
+    let mut sep_counter = 100;
+    let interspersed = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
+        *state += 1;
+        if *state <= 3 { Ok(Some(*state)) } else { Ok(None) }
+    })
+    .intersperse_with(move || {
+        sep_counter += 1;
+        Ok(sep_counter)
+    });
+
+    let mut collected = Vec::new();
+    interspersed
+        .for_each(|x| {
+            collected.push(x);
+            Ok(())
+        })
+        .unwrap();
+    assert_eq!(collected, vec![1, 101, 2, 102, 3]);
+}
+
+// M11: Fallible IntersperseWith fold
+#[test]
+fn fallible_intersperse_with_fold() {
+    use lender::from_fallible_fn;
+
+    let interspersed = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
+        *state += 1;
+        if *state <= 3 { Ok(Some(*state)) } else { Ok(None) }
+    })
+    .intersperse_with(|| Ok(0));
+
+    let sum = interspersed.fold(0, |acc, x| Ok(acc + x)).unwrap();
+    assert_eq!(sum, 6); // 1 + 0 + 2 + 0 + 3 = 6
+}

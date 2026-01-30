@@ -181,15 +181,15 @@ where
 
 impl<L> FusedLender for Chunky<L> where L: FusedLender {}
 
-impl<L> ExactSizeLender for Chunky<L>
-where
-    L: Lender,
-{
-    #[inline]
-    fn len(&self) -> usize {
-        self.len
-    }
-}
+// Note: Chunky deliberately does not implement ExactSizeLender (nor
+// ExactSizeFallibleLender). The `len` field is pre-computed from the
+// underlying lender's length at construction time and counts *chunks*,
+// not elements. If a chunk is only partially consumed, the remaining
+// elements are silently skipped when the next chunk is requested, so
+// the pre-computed count may overestimate the number of lends that
+// `next()` will actually produce. This violates the ExactSizeLender
+// contract, which requires `len()` to match the actual remaining
+// count. The chunk count is still available through `size_hint()`.
 
 impl<'lend, L> FallibleLending<'lend> for Chunky<L>
 where
@@ -261,13 +261,3 @@ where
 }
 
 impl<L> FusedFallibleLender for Chunky<L> where L: FusedFallibleLender {}
-
-impl<L> ExactSizeFallibleLender for Chunky<L>
-where
-    L: FallibleLender,
-{
-    #[inline]
-    fn len(&self) -> usize {
-        self.len
-    }
-}

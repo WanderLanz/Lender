@@ -374,7 +374,7 @@ fn size_hint_intersperse_one() {
 }
 
 #[test]
-fn size_hint_flatten() {
+fn size_hint_map_constant() {
     let lender = VecLender::new(vec![1, 2, 3]).map(lender::hrc_mut!(for<'all> |_x: i32| -> i32 { 1 }));
     let (lo, hi) = lender.size_hint();
     assert_eq!(lo, 3);

@@ -135,6 +135,11 @@ where
     }
 
     #[inline]
+    fn count(self) -> usize {
+        self.fold(0, |count, _| count + 1)
+    }
+
+    #[inline]
     fn fold<B, F>(mut self, init: B, mut f: F) -> B
     where
         Self: Sized,
@@ -334,6 +339,11 @@ where
             };
         }
         Ok(R::from_output(acc))
+    }
+
+    #[inline]
+    fn count(self) -> Result<usize, Self::Error> {
+        self.fold(0, |count, _| Ok(count + 1))
     }
 
     #[inline]

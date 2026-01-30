@@ -8,7 +8,7 @@ use crate::{
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Filter<L, P> {
-    pub(crate) lender: L,
+    lender: L,
     predicate: P,
 }
 

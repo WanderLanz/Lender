@@ -135,6 +135,22 @@ where
             _ => unreachable!(),
         }
     }
+
+    #[inline]
+    fn nth_back(&mut self, n: usize) -> Option<Lend<'_, Self>> {
+        let a_sz = self.a.len();
+        let b_sz = self.b.len();
+        if a_sz > b_sz {
+            self.a.advance_back_by(a_sz - b_sz).ok();
+        } else if b_sz > a_sz {
+            self.b.advance_back_by(b_sz - a_sz).ok();
+        }
+        match (self.a.nth_back(n), self.b.nth_back(n)) {
+            (Some(x), Some(y)) => Some((x, y)),
+            (None, None) => None,
+            _ => unreachable!(),
+        }
+    }
 }
 
 impl<A, B> ExactSizeLender for Zip<A, B>
@@ -223,6 +239,22 @@ where
             self.b.advance_back_by(b_sz - a_sz)?.ok();
         }
         match (self.a.next_back()?, self.b.next_back()?) {
+            (Some(x), Some(y)) => Ok(Some((x, y))),
+            (None, None) => Ok(None),
+            _ => unreachable!(),
+        }
+    }
+
+    #[inline]
+    fn nth_back(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        let a_sz = self.a.len();
+        let b_sz = self.b.len();
+        if a_sz > b_sz {
+            self.a.advance_back_by(a_sz - b_sz)?.ok();
+        } else if b_sz > a_sz {
+            self.b.advance_back_by(b_sz - a_sz)?.ok();
+        }
+        match (self.a.nth_back(n)?, self.b.nth_back(n)?) {
             (Some(x), Some(y)) => Ok(Some((x, y))),
             (None, None) => Ok(None),
             _ => unreachable!(),

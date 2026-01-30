@@ -50,7 +50,7 @@ where
         }
         match self.lender.next() {
             Ok(next) => {
-                // SAFETY: for<'all> Lend<'all, L>: 'this
+                // SAFETY: for<'all> FallibleLend<'all, L>: 'this
                 unsafe {
                     core::mem::transmute::<
                         Option<FallibleLend<'_, L>>,
@@ -84,7 +84,7 @@ where
         }
         match self.lender.next_back() {
             Ok(next) => {
-                // SAFETY: for<'all> Lend<'all, L>: 'this
+                // SAFETY: for<'all> FallibleLend<'all, L>: 'this
                 unsafe {
                     core::mem::transmute::<
                         Option<FallibleLend<'_, L>>,
