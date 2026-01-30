@@ -146,6 +146,71 @@ impl lender::ExactSizeFallibleLender for VecFallibleLender {
 
 impl lender::FusedFallibleLender for VecFallibleLender {}
 
+/// A fallible lender that yields `&i32` references and errors at a specific index.
+/// Elements before `error_at` yield `Ok(Some(&data[i]))`,
+/// the element at `error_at` yields `Err("error at index {error_at}")`,
+/// and elements after continue normally (the error is not terminal).
+pub struct ErrorAtLender {
+    pub data: Vec<i32>,
+    pub front: usize,
+    pub error_at: usize,
+}
+
+impl ErrorAtLender {
+    pub fn new(data: Vec<i32>, error_at: usize) -> Self {
+        Self {
+            data,
+            front: 0,
+            error_at,
+        }
+    }
+}
+
+impl<'lend> lender::FallibleLending<'lend> for ErrorAtLender {
+    type Lend = &'lend i32;
+}
+
+impl lender::FallibleLender for ErrorAtLender {
+    type Error = String;
+    unsafe_assume_covariance_fallible!();
+
+    fn next(&mut self) -> Result<Option<lender::FallibleLend<'_, Self>>, Self::Error> {
+        if self.front >= self.data.len() {
+            Ok(None)
+        } else if self.front == self.error_at {
+            self.front += 1;
+            Err(format!("error at index {}", self.error_at))
+        } else {
+            let item = &self.data[self.front];
+            self.front += 1;
+            Ok(Some(item))
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining = self.data.len() - self.front;
+        (0, Some(remaining))
+    }
+}
+
+/// A collector that copies `&i32` lend values into a `Vec<i32>`.
+/// Used for testing `collect_into` (which requires `ExtendLender`).
+#[derive(Debug)]
+pub struct I32Collector(pub Vec<i32>);
+
+impl<L: lender::IntoLender> lender::ExtendLender<L> for I32Collector
+where
+    L::Lender: for<'all> Lending<'all, Lend = &'all i32>,
+{
+    fn extend_lender(&mut self, lender: L) {
+        lender.into_lender().for_each(|x| self.0.push(*x));
+    }
+
+    fn extend_lender_one(&mut self, item: &i32) {
+        self.0.push(*item);
+    }
+}
+
 /// Helper lender that yields VecLenders
 pub struct VecOfVecLender {
     data: Vec<Vec<i32>>,

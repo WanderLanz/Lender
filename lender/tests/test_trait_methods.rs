@@ -778,3 +778,93 @@ fn exact_size_is_empty() {
     let empty_lender = VecLender::new(Vec::<i32>::new());
     assert!(empty_lender.is_empty());
 }
+
+// ============================================================================
+// T1: try_find tests
+// ============================================================================
+
+#[test]
+fn lender_try_find_found() {
+    let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]);
+    let result: Result<Option<&i32>, String> = lender.try_find(|x| Ok(**x == 3));
+    assert_eq!(result, Ok(Some(&3)));
+}
+
+#[test]
+fn lender_try_find_not_found() {
+    let mut lender = VecLender::new(vec![1, 2, 3]);
+    let result: Result<Option<&i32>, String> = lender.try_find(|x| Ok(**x == 99));
+    assert_eq!(result, Ok(None));
+}
+
+#[test]
+fn lender_try_find_short_circuit() {
+    let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]);
+    let result: Result<Option<&i32>, String> = lender.try_find(|x| {
+        if **x == 3 {
+            Err("hit 3".to_string())
+        } else {
+            Ok(**x > 10)
+        }
+    });
+    assert_eq!(result, Err("hit 3".to_string()));
+}
+
+#[test]
+fn lender_try_find_empty() {
+    let mut lender = VecLender::new(vec![]);
+    let result: Result<Option<&i32>, String> = lender.try_find(|_| Ok(true));
+    assert_eq!(result, Ok(None));
+}
+
+// ============================================================================
+// T5: is_partitioned and collect_into tests
+// ============================================================================
+
+#[test]
+fn lender_is_partitioned_true() {
+    // All true elements come before all false elements
+    let lender = VecLender::new(vec![2, 4, 6, 1, 3, 5]);
+    assert!(lender.is_partitioned(|x| *x % 2 == 0));
+}
+
+#[test]
+fn lender_is_partitioned_all_true() {
+    let lender = VecLender::new(vec![2, 4, 6]);
+    assert!(lender.is_partitioned(|x| *x % 2 == 0));
+}
+
+#[test]
+fn lender_is_partitioned_all_false() {
+    let lender = VecLender::new(vec![1, 3, 5]);
+    assert!(lender.is_partitioned(|x| *x % 2 == 0));
+}
+
+#[test]
+fn lender_is_partitioned_false() {
+    // false, true, false — not partitioned
+    let lender = VecLender::new(vec![1, 2, 3]);
+    assert!(!lender.is_partitioned(|x| *x % 2 == 0));
+}
+
+#[test]
+fn lender_is_partitioned_empty() {
+    let lender = VecLender::new(vec![]);
+    assert!(lender.is_partitioned(|_: &i32| true));
+}
+
+#[test]
+fn lender_collect_into() {
+    let lender = VecLender::new(vec![1, 2, 3, 4, 5]);
+    let mut result = I32Collector(Vec::new());
+    lender.collect_into(&mut result);
+    assert_eq!(result.0, vec![1, 2, 3, 4, 5]);
+}
+
+#[test]
+fn lender_collect_into_existing() {
+    let lender = VecLender::new(vec![4, 5, 6]);
+    let mut result = I32Collector(vec![1, 2, 3]);
+    lender.collect_into(&mut result);
+    assert_eq!(result.0, vec![1, 2, 3, 4, 5, 6]);
+}

@@ -1,6 +1,6 @@
 use core::ops::ControlFlow;
 
-use crate::{try_trait_v2::Try, FusedLender, Lend, Lender, Lending};
+use crate::{FusedLender, Lend, Lender, Lending, try_trait_v2::Try};
 
 #[derive(Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -64,6 +64,11 @@ where
         self.fold(0, |count, _| count + 1)
     }
 
+    /// Returns the `n`th element of this chunk.
+    ///
+    /// If `n` is greater than or equal to the remaining length of the chunk,
+    /// the remaining chunk capacity is exhausted from the underlying lender,
+    /// and `None` is returned.
     #[inline]
     fn nth(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         if n >= self.len {

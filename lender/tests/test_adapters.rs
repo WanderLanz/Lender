@@ -3119,3 +3119,116 @@ fn flatten_count_empty() {
     let lender = VecOfVecLender::new(vec![]);
     assert_eq!(lender.flatten().count(), 0);
 }
+
+// ============================================================================
+// T4: Multi-adapter composition tests (infallible)
+// ============================================================================
+
+#[test]
+fn compose_filter_map_fold() {
+    // filter even numbers, map to doubled, then fold sum
+    let result = VecLender::new(vec![1, 2, 3, 4, 5, 6])
+        .filter(|x| *x % 2 == 0)
+        .map(hrc_mut!(for<'all> |x: &'all i32| -> i32 { *x * 10 }))
+        .fold(0, |acc, x| acc + x);
+    // 2*10 + 4*10 + 6*10 = 120
+    assert_eq!(result, 120);
+}
+
+#[test]
+fn compose_skip_take() {
+    let mut lender = VecLender::new(vec![1, 2, 3, 4, 5, 6, 7, 8])
+        .skip(2)
+        .take(3);
+    assert_eq!(lender.next(), Some(&3));
+    assert_eq!(lender.next(), Some(&4));
+    assert_eq!(lender.next(), Some(&5));
+    assert_eq!(lender.next(), None);
+}
+
+#[test]
+fn compose_chain_filter() {
+    let a = VecLender::new(vec![1, 2, 3]);
+    let b = VecLender::new(vec![4, 5, 6]);
+    let result = a.chain(b).filter(|x| **x > 2).count();
+    // 3, 4, 5, 6 pass the filter
+    assert_eq!(result, 4);
+}
+
+#[test]
+fn compose_rev_take() {
+    let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]).rev().take(3);
+    assert_eq!(lender.next(), Some(&5));
+    assert_eq!(lender.next(), Some(&4));
+    assert_eq!(lender.next(), Some(&3));
+    assert_eq!(lender.next(), None);
+}
+
+#[test]
+fn compose_flatten_filter_map() {
+    let result = VecOfVecLender::new(vec![vec![1, 2, 3], vec![4, 5, 6]])
+        .flatten()
+        .filter(|x| **x % 2 == 1)
+        .map(hrc_mut!(for<'all> |x: &'all i32| -> i32 { *x * 100 }))
+        .fold(0, |acc, x| acc + x);
+    // Odd: 1, 3, 5 → 100 + 300 + 500 = 900
+    assert_eq!(result, 900);
+}
+
+#[test]
+fn compose_enumerate_skip_take() {
+    let mut lender = VecLender::new(vec![10, 20, 30, 40, 50])
+        .enumerate()
+        .skip(1)
+        .take(2);
+    assert_eq!(lender.next(), Some((1, &20)));
+    assert_eq!(lender.next(), Some((2, &30)));
+    assert_eq!(lender.next(), None);
+}
+
+#[test]
+fn compose_filter_inspect_count() {
+    let mut seen = Vec::new();
+    let count = VecLender::new(vec![1, 2, 3, 4, 5])
+        .filter(|x| **x > 2)
+        .inspect(|x| seen.push(**x))
+        .count();
+    assert_eq!(count, 3);
+    assert_eq!(seen, vec![3, 4, 5]);
+}
+
+#[test]
+fn compose_step_by_chain() {
+    let a = VecLender::new(vec![1, 2, 3, 4, 5, 6]).step_by(2);
+    let b = VecLender::new(vec![10, 20]);
+    let mut lender = a.chain(b);
+    // step_by(2) yields: 1, 3, 5; then chain: 10, 20
+    assert_eq!(lender.next(), Some(&1));
+    assert_eq!(lender.next(), Some(&3));
+    assert_eq!(lender.next(), Some(&5));
+    assert_eq!(lender.next(), Some(&10));
+    assert_eq!(lender.next(), Some(&20));
+    assert_eq!(lender.next(), None);
+}
+
+#[test]
+fn compose_zip_map_fold() {
+    let a = VecLender::new(vec![1, 2, 3]);
+    let b = VecLender::new(vec![10, 20, 30]);
+    let result = a.zip(b)
+        .map(hrc_mut!(for<'all> |pair: (&'all i32, &'all i32)| -> i32 { *pair.0 + *pair.1 }))
+        .fold(0, |acc, x| acc + x);
+    // (1+10) + (2+20) + (3+30) = 66
+    assert_eq!(result, 66);
+}
+
+#[test]
+fn compose_take_while_skip_while() {
+    let mut lender = VecLender::new(vec![1, 2, 3, 4, 5, 6, 7])
+        .skip_while(|x| **x < 3)
+        .take_while(|x| **x <= 5);
+    assert_eq!(lender.next(), Some(&3));
+    assert_eq!(lender.next(), Some(&4));
+    assert_eq!(lender.next(), Some(&5));
+    assert_eq!(lender.next(), None);
+}
