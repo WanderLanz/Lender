@@ -166,7 +166,7 @@ where
 {
 }
 
-pub struct FlattenCompat<'this, L: Lender>
+pub(crate) struct FlattenCompat<'this, L: Lender>
 where
     for<'all> Lend<'all, L>: IntoLender,
 {

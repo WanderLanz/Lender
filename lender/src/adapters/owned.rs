@@ -1,17 +1,15 @@
 use alloc::borrow::ToOwned;
 use core::iter::FusedIterator;
 
-use fallible_iterator::{DoubleEndedFallibleIterator, FallibleIterator};
-
 use crate::{
-    DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeLender, FallibleLend, FallibleLender,
+    DoubleEndedLender, ExactSizeLender,
     FusedLender, Lend, Lender,
 };
 
 #[derive(Clone, Debug)]
 #[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Owned<L> {
-    lender: L,
+    pub(crate) lender: L,
 }
 
 impl<L> Owned<L> {
@@ -78,32 +76,3 @@ where
     }
 }
 
-impl<T, L> FallibleIterator for Owned<L>
-where
-    L: FallibleLender,
-    for<'all> FallibleLend<'all, L>: ToOwned<Owned = T>,
-{
-    type Item = T;
-    type Error = L::Error;
-
-    #[inline]
-    fn next(&mut self) -> Result<Option<Self::Item>, Self::Error> {
-        Ok(self.lender.next()?.map(|ref x| x.to_owned()))
-    }
-
-    #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.lender.size_hint()
-    }
-}
-
-impl<T, L> DoubleEndedFallibleIterator for Owned<L>
-where
-    L: DoubleEndedFallibleLender,
-    for<'all> FallibleLend<'all, L>: ToOwned<Owned = T>,
-{
-    #[inline]
-    fn next_back(&mut self) -> Result<Option<Self::Item>, Self::Error> {
-        Ok(self.lender.next_back()?.map(|ref x| x.to_owned()))
-    }
-}

@@ -400,7 +400,7 @@ impl<'lend> FallibleLending<'lend> for Wrapper {
 }
 impl FallibleLender for Wrapper {
     type Error = std::convert::Infallible;
-    check_covariance_fallible!();
+    lender::check_covariance_fallible!();
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         if self.0.is_empty() {
             Ok(None)
@@ -1349,7 +1349,7 @@ fn fallible_lender_nth_past_end() {
 
     impl FallibleLender for StubbyAdvance {
         type Error = ();
-        crate::check_covariance_fallible!();
+        lender::check_covariance_fallible!();
 
         fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
             self.0 += 1;
@@ -1387,7 +1387,7 @@ fn double_ended_fallible_nth_back_past_end() {
 
     impl FallibleLender for StubbyAdvanceBack {
         type Error = ();
-        crate::check_covariance_fallible!();
+        lender::check_covariance_fallible!();
 
         fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
             self.0 += 1;

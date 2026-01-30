@@ -1,16 +1,16 @@
 use core::fmt;
 
 use crate::{
-    FallibleLend, FallibleLender, FallibleLending, Lend, Lender, Lending,
-    higher_order::{FnMutHKAOpt, FnMutHKAResOpt},
+    Lend, Lender, Lending,
+    higher_order::FnMutHKAOpt,
 };
 
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Scan<L, St, F> {
-    lender: L,
-    f: F,
-    state: St,
+    pub(crate) lender: L,
+    pub(crate) f: F,
+    pub(crate) state: St,
 }
 
 impl<L, St, F> Scan<L, St, F> {
@@ -56,39 +56,6 @@ where
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         (self.f)((&mut self.state, self.lender.next()?))
-    }
-
-    #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        let (_, upper) = self.lender.size_hint();
-        (0, upper)
-    }
-}
-
-impl<'lend, B, L, St, F> FallibleLending<'lend> for Scan<L, St, F>
-where
-    F: FnMut((&'lend mut St, FallibleLend<'lend, L>)) -> Result<Option<B>, L::Error>,
-    L: FallibleLender,
-    B: 'lend,
-{
-    type Lend = B;
-}
-
-impl<L, St, F> FallibleLender for Scan<L, St, F>
-where
-    for<'all> F: FnMutHKAResOpt<'all, (&'all mut St, FallibleLend<'all, L>), L::Error>,
-    L: FallibleLender,
-{
-    type Error = L::Error;
-    // SAFETY: the lend is the return type of F
-    crate::unsafe_assume_covariance_fallible!();
-
-    #[inline]
-    fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
-        match self.lender.next()? {
-            Some(next) => (self.f)((&mut self.state, next)),
-            None => Ok(None),
-        }
     }
 
     #[inline]

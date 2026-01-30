@@ -138,7 +138,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         self.fold(0, |n, _| Ok(n + 1))
     }
 
-    /// Returns the last element of the iterator.
+    /// Returns the last element of the lender.
     #[inline]
     fn last<'call>(&'call mut self) -> Result<Option<FallibleLend<'call, Self>>, Self::Error>
     where
@@ -563,7 +563,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         self
     }
 
-    /// Transforms the iterator into a collection.
+    /// Transforms the fallible lender into a collection.
     /// If any invocation of next returns Err, returns the collection built
     /// from values yielded successfully, together with the error.
     ///
@@ -581,9 +581,11 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         non_fallible_adapter::process(self, |lender| B::from_lender(lender))
     }
 
-    /// Transforms the iterator into a collection.
-    /// If any invocation of next returns Err, returns the collection built
-    /// from values yielded successfully, together with the error.
+    /// Collects the lends of a fallible lender that are themselves [`Try`] types
+    /// into a collection of their outputs, short-circuiting on both lender errors
+    /// and `Try` failures.
+    ///
+    /// The [`FallibleLender`] version of [`Lender::try_collect`](crate::Lender::try_collect).
     #[inline]
     fn try_collect<'a, B, T>(&'a mut self) -> Result<T, (T, Self::Error)>
     where
@@ -597,9 +599,10 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         })
     }
 
-    /// Transforms the iterator into a collection.
-    /// If any invocation of next returns Err, returns the collection built
-    /// from values yielded successfully, together with the error.
+    /// Extends an existing collection with lends from this fallible lender.
+    ///
+    /// The [`FallibleLender`] version of [`Lender::collect_into`](crate::Lender::collect_into).
+    /// On error, returns the collection (with partial results) together with the error.
     #[inline]
     fn collect_into<E>(self, collection: &mut E) -> Result<&mut E, (&mut E, Self::Error)>
     where

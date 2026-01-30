@@ -553,7 +553,7 @@ fn step_by_empty() {
 }
 
 #[test]
-#[should_panic(expected = "assertion failed")]
+#[should_panic(expected = "assertion `left != right` failed")]
 fn step_by_zero_panics() {
     // step_by(0) should panic
     let _ = VecLender::new(vec![1, 2, 3]).step_by(0);

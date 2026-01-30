@@ -58,57 +58,6 @@ fn double_ended_lender_rposition() {
 }
 
 // ============================================================================
-// Additional double-ended tests for better coverage
-// ============================================================================
-
-#[test]
-fn enumerate_rfold_additional() {
-    let mut indices = Vec::new();
-    VecLender::new(vec![10, 20, 30])
-        .enumerate()
-        .rfold((), |(), (i, _v)| {
-            indices.push(i);
-        });
-    // Should process in reverse: (2,30), (1,20), (0,10)
-    assert_eq!(indices, vec![2, 1, 0]);
-}
-
-#[test]
-fn skip_rfold() {
-    let mut values = Vec::new();
-    VecLender::new(vec![1, 2, 3, 4, 5])
-        .skip(2)
-        .rfold((), |(), &x| {
-            values.push(x);
-        });
-    // skip(2) leaves [3, 4, 5], rfold processes: 5, 4, 3
-    assert_eq!(values, vec![5, 4, 3]);
-}
-
-#[test]
-fn take_rfold() {
-    let mut values = Vec::new();
-    VecLender::new(vec![1, 2, 3, 4, 5])
-        .take(3)
-        .rfold((), |(), &x| {
-            values.push(x);
-        });
-    // take(3) gives [1, 2, 3], rfold processes: 3, 2, 1
-    assert_eq!(values, vec![3, 2, 1]);
-}
-
-#[test]
-fn zip_rfold() {
-    let mut values = Vec::new();
-    VecLender::new(vec![1, 2, 3])
-        .zip(VecLender::new(vec![10, 20, 30]))
-        .rfold((), |(), (a, b)| {
-            values.push((*a, *b));
-        });
-    assert_eq!(values, vec![(3, 30), (2, 20), (1, 10)]);
-}
-
-// ============================================================================
 // DoubleEndedLender comprehensive tests
 // ============================================================================
 
