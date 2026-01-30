@@ -183,6 +183,9 @@ where
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
+        // Reports (1, Some(1)) even if inner holds Err: size_hint counts
+        // calls to next() that return non-None, and next() returns
+        // Err (not Ok(None)) in that case.
         if self.inner.is_some() {
             (1, Some(1))
         } else {

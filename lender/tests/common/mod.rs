@@ -3,7 +3,8 @@
 use ::lender::prelude::*;
 
 // ============================================================================
-// Helper struct for Lender tests - a simple double-ended lender over a Vec
+// Helper struct for Lender tests — yields &i32 references, exercising
+// the core lending pattern (items that borrow from the lender).
 // ============================================================================
 #[derive(Clone)]
 pub struct VecLender {
@@ -24,15 +25,16 @@ impl VecLender {
 }
 
 impl<'lend> Lending<'lend> for VecLender {
-    type Lend = i32;
+    type Lend = &'lend i32;
 }
 
 impl Lender for VecLender {
-    check_covariance!();
+    // SAFETY: &'lend i32 is covariant in 'lend
+    unsafe_assume_covariance!();
 
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         if self.front < self.back {
-            let item = self.data[self.front];
+            let item = &self.data[self.front];
             self.front += 1;
             Some(item)
         } else {
@@ -50,8 +52,7 @@ impl DoubleEndedLender for VecLender {
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         if self.front < self.back {
             self.back -= 1;
-            let item = self.data[self.back];
-            Some(item)
+            Some(&self.data[self.back])
         } else {
             None
         }
@@ -83,7 +84,7 @@ impl<T> Lender for WindowsMut<'_, T> {
     }
 }
 
-// Helper struct for testing fallible traits
+// Helper struct for testing fallible traits — yields &i32 references.
 pub struct VecFallibleLender {
     data: Vec<i32>,
     front: usize,
@@ -102,16 +103,17 @@ impl VecFallibleLender {
 }
 
 impl<'lend> lender::FallibleLending<'lend> for VecFallibleLender {
-    type Lend = i32;
+    type Lend = &'lend i32;
 }
 
 impl lender::FallibleLender for VecFallibleLender {
     type Error = std::convert::Infallible;
-    check_covariance_fallible!();
+    // SAFETY: &'lend i32 is covariant in 'lend
+    unsafe_assume_covariance_fallible!();
 
     fn next(&mut self) -> Result<Option<lender::FallibleLend<'_, Self>>, Self::Error> {
         if self.front < self.back {
-            let item = self.data[self.front];
+            let item = &self.data[self.front];
             self.front += 1;
             Ok(Some(item))
         } else {
@@ -129,8 +131,7 @@ impl lender::DoubleEndedFallibleLender for VecFallibleLender {
     fn next_back(&mut self) -> Result<Option<lender::FallibleLend<'_, Self>>, Self::Error> {
         if self.front < self.back {
             self.back -= 1;
-            let item = self.data[self.back];
-            Ok(Some(item))
+            Ok(Some(&self.data[self.back]))
         } else {
             Ok(None)
         }

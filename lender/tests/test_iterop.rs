@@ -9,20 +9,20 @@ use ::lender::prelude::*;
 #[test]
 fn map_into_iter_basic() {
     // MapIntoIter converts a lender to an iterator by applying a function
-    let iter = VecLender::new(vec![1, 2, 3]).map_into_iter(|x| x * 2);
+    let iter = VecLender::new(vec![1, 2, 3]).map_into_iter(|x| *x * 2);
     let collected: Vec<i32> = iter.collect();
     assert_eq!(collected, vec![2, 4, 6]);
 }
 
 #[test]
 fn map_into_iter_size_hint() {
-    let iter = VecLender::new(vec![1, 2, 3, 4, 5]).map_into_iter(|x| x);
+    let iter = VecLender::new(vec![1, 2, 3, 4, 5]).map_into_iter(|x| *x);
     assert_eq!(iter.size_hint(), (5, Some(5)));
 }
 
 #[test]
 fn map_into_iter_double_ended() {
-    let mut iter = VecLender::new(vec![1, 2, 3]).map_into_iter(|x| x * 2);
+    let mut iter = VecLender::new(vec![1, 2, 3]).map_into_iter(|x| *x * 2);
     assert_eq!(iter.next_back(), Some(6));
     assert_eq!(iter.next(), Some(2));
     assert_eq!(iter.next_back(), Some(4));
@@ -31,20 +31,20 @@ fn map_into_iter_double_ended() {
 
 #[test]
 fn map_into_iter_exact_size() {
-    let iter = VecLender::new(vec![1, 2, 3]).map_into_iter(|x| x);
+    let iter = VecLender::new(vec![1, 2, 3]).map_into_iter(|x| *x);
     assert_eq!(iter.len(), 3);
 }
 
 #[test]
 fn map_into_iter_into_inner() {
-    let iter = VecLender::new(vec![1, 2, 3]).map_into_iter(|x| x * 2);
+    let iter = VecLender::new(vec![1, 2, 3]).map_into_iter(|x| *x * 2);
     let lender = iter.into_inner();
     assert_eq!(lender.count(), 3);
 }
 
 #[test]
 fn map_into_iter_into_parts() {
-    let iter = VecLender::new(vec![1, 2, 3]).map_into_iter(|x| x * 2);
+    let iter = VecLender::new(vec![1, 2, 3]).map_into_iter(|x| *x * 2);
     let (lender, _f) = iter.into_parts();
     assert_eq!(lender.count(), 3);
 }

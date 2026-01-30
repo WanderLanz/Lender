@@ -110,7 +110,7 @@ where
     }
 
     #[inline]
-    fn fold<B, F>(mut self, init: B, mut f: F) -> B
+    fn fold<B, F>(self, init: B, mut f: F) -> B
     where
         Self: Sized,
         F: FnMut(B, Lend<'_, Self>) -> B,
@@ -118,7 +118,6 @@ where
         let mut acc = init;
         if !self.flag {
             acc = self.lender.fold(acc, &mut f);
-            self.flag = true;
         }
         acc
     }

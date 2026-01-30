@@ -23,7 +23,7 @@ fn exact_size_enumerate() {
 
 #[test]
 fn exact_size_map() {
-    let mut lender = VecLender::new(vec![1, 2, 3]).map(lender::hrc_mut!(for<'all> |x: i32| -> i32 { x * 2 }));
+    let mut lender = VecLender::new(vec![1, 2, 3]).map(lender::hrc_mut!(for<'all> |x: &i32| -> i32 { x * 2 }));
     assert_eq!(lender.len(), 3);
     assert!(!lender.is_empty());
     lender.next();
@@ -130,8 +130,8 @@ fn exact_size_mutate() {
 #[test]
 fn fused_fuse_adapter() {
     let mut lender = VecLender::new(vec![1, 2]).fuse();
-    assert_eq!(lender.next(), Some(1));
-    assert_eq!(lender.next(), Some(2));
+    assert_eq!(lender.next(), Some(&1));
+    assert_eq!(lender.next(), Some(&2));
     assert_eq!(lender.next(), None);
     // FusedLender contract: must keep returning None
     assert_eq!(lender.next(), None);
@@ -141,14 +141,14 @@ fn fused_fuse_adapter() {
 #[test]
 fn fused_enumerate() {
     let mut lender = VecLender::new(vec![10]).enumerate();
-    assert_eq!(lender.next(), Some((0, 10)));
+    assert_eq!(lender.next(), Some((0, &10)));
     assert_eq!(lender.next(), None);
     assert_eq!(lender.next(), None);
 }
 
 #[test]
 fn fused_map() {
-    let mut lender = VecLender::new(vec![1]).map(lender::hrc_mut!(for<'all> |x: i32| -> i32 { x + 1 }));
+    let mut lender = VecLender::new(vec![1]).map(lender::hrc_mut!(for<'all> |x: &i32| -> i32 { x + 1 }));
     assert_eq!(lender.next(), Some(2));
     assert_eq!(lender.next(), None);
     assert_eq!(lender.next(), None);
@@ -156,7 +156,7 @@ fn fused_map() {
 
 #[test]
 fn fused_filter() {
-    let mut lender = VecLender::new(vec![1, 2, 3]).filter(|x| *x > 5);
+    let mut lender = VecLender::new(vec![1, 2, 3]).filter(|x| **x > 5);
     assert_eq!(lender.next(), None);
     assert_eq!(lender.next(), None);
 }
@@ -166,7 +166,7 @@ fn fused_zip() {
     let a = VecLender::new(vec![1]);
     let b = VecLender::new(vec![2]);
     let mut lender = a.zip(b);
-    assert_eq!(lender.next(), Some((1, 2)));
+    assert_eq!(lender.next(), Some((&1, &2)));
     assert_eq!(lender.next(), None);
     assert_eq!(lender.next(), None);
 }
@@ -181,7 +181,7 @@ fn fused_skip() {
 #[test]
 fn fused_take() {
     let mut lender = VecLender::new(vec![1, 2, 3]).take(1);
-    assert_eq!(lender.next(), Some(1));
+    assert_eq!(lender.next(), Some(&1));
     assert_eq!(lender.next(), None);
     assert_eq!(lender.next(), None);
 }
@@ -191,8 +191,8 @@ fn fused_chain() {
     let a = VecLender::new(vec![1]);
     let b = VecLender::new(vec![2]);
     let mut lender = a.chain(b);
-    assert_eq!(lender.next(), Some(1));
-    assert_eq!(lender.next(), Some(2));
+    assert_eq!(lender.next(), Some(&1));
+    assert_eq!(lender.next(), Some(&2));
     assert_eq!(lender.next(), None);
     assert_eq!(lender.next(), None);
 }
@@ -200,7 +200,7 @@ fn fused_chain() {
 #[test]
 fn fused_inspect() {
     let mut lender = VecLender::new(vec![1]).inspect(|_| {});
-    assert_eq!(lender.next(), Some(1));
+    assert_eq!(lender.next(), Some(&1));
     assert_eq!(lender.next(), None);
     assert_eq!(lender.next(), None);
 }
@@ -208,7 +208,7 @@ fn fused_inspect() {
 #[test]
 fn fused_peekable() {
     let mut lender = VecLender::new(vec![1]).peekable();
-    assert_eq!(lender.next(), Some(1));
+    assert_eq!(lender.next(), Some(&1));
     assert_eq!(lender.next(), None);
     assert_eq!(lender.next(), None);
 }
@@ -216,7 +216,7 @@ fn fused_peekable() {
 #[test]
 fn fused_rev() {
     let mut lender = VecLender::new(vec![1]).rev();
-    assert_eq!(lender.next(), Some(1));
+    assert_eq!(lender.next(), Some(&1));
     assert_eq!(lender.next(), None);
     assert_eq!(lender.next(), None);
 }
@@ -227,7 +227,7 @@ fn fused_rev() {
 
 #[test]
 fn size_hint_filter() {
-    let lender = VecLender::new(vec![1, 2, 3, 4, 5]).filter(|x| *x > 2);
+    let lender = VecLender::new(vec![1, 2, 3, 4, 5]).filter(|x| **x > 2);
     let (lo, hi) = lender.size_hint();
     assert_eq!(lo, 0);
     assert_eq!(hi, Some(5));
@@ -235,7 +235,7 @@ fn size_hint_filter() {
 
 #[test]
 fn size_hint_filter_map() {
-    let lender = VecLender::new(vec![1, 2, 3]).filter_map(lender::hrc_mut!(for<'all> |x: i32| -> Option<i32> { if x > 1 { Some(x * 10) } else { None } }));
+    let lender = VecLender::new(vec![1, 2, 3]).filter_map(lender::hrc_mut!(for<'all> |x: &i32| -> Option<i32> { if *x > 1 { Some(x * 10) } else { None } }));
     let (lo, hi) = lender.size_hint();
     assert_eq!(lo, 0);
     assert_eq!(hi, Some(3));
@@ -243,7 +243,7 @@ fn size_hint_filter_map() {
 
 #[test]
 fn size_hint_map() {
-    let lender = VecLender::new(vec![1, 2, 3]).map(lender::hrc_mut!(for<'all> |x: i32| -> i32 { x * 2 }));
+    let lender = VecLender::new(vec![1, 2, 3]).map(lender::hrc_mut!(for<'all> |x: &i32| -> i32 { x * 2 }));
     let (lo, hi) = lender.size_hint();
     assert_eq!(lo, 3);
     assert_eq!(hi, Some(3));
@@ -311,7 +311,7 @@ fn size_hint_take_less_than_available() {
 
 #[test]
 fn size_hint_skip_while() {
-    let lender = VecLender::new(vec![1, 2, 3]).skip_while(|x| *x < 2);
+    let lender = VecLender::new(vec![1, 2, 3]).skip_while(|x| **x < 2);
     let (lo, hi) = lender.size_hint();
     assert_eq!(lo, 0);
     assert_eq!(hi, Some(3));
@@ -319,7 +319,7 @@ fn size_hint_skip_while() {
 
 #[test]
 fn size_hint_take_while() {
-    let lender = VecLender::new(vec![1, 2, 3]).take_while(|x| *x < 3);
+    let lender = VecLender::new(vec![1, 2, 3]).take_while(|x| **x < 3);
     let (lo, hi) = lender.size_hint();
     assert_eq!(lo, 0);
     assert_eq!(hi, Some(3));
@@ -351,7 +351,7 @@ fn size_hint_peekable() {
 
 #[test]
 fn size_hint_intersperse() {
-    let lender = VecLender::new(vec![1, 2, 3]).intersperse(0);
+    let lender = VecLender::new(vec![1, 2, 3]).intersperse(&0);
     let (lo, hi) = lender.size_hint();
     assert_eq!(lo, 5);
     assert_eq!(hi, Some(5));
@@ -359,7 +359,7 @@ fn size_hint_intersperse() {
 
 #[test]
 fn size_hint_intersperse_empty() {
-    let lender = VecLender::new(vec![]).intersperse(0);
+    let lender = VecLender::new(vec![]).intersperse(&0);
     let (lo, hi) = lender.size_hint();
     assert_eq!(lo, 0);
     assert_eq!(hi, Some(0));
@@ -367,7 +367,7 @@ fn size_hint_intersperse_empty() {
 
 #[test]
 fn size_hint_intersperse_one() {
-    let lender = VecLender::new(vec![42]).intersperse(0);
+    let lender = VecLender::new(vec![42]).intersperse(&0);
     let (lo, hi) = lender.size_hint();
     assert_eq!(lo, 1);
     assert_eq!(hi, Some(1));
@@ -375,7 +375,7 @@ fn size_hint_intersperse_one() {
 
 #[test]
 fn size_hint_map_constant() {
-    let lender = VecLender::new(vec![1, 2, 3]).map(lender::hrc_mut!(for<'all> |_x: i32| -> i32 { 1 }));
+    let lender = VecLender::new(vec![1, 2, 3]).map(lender::hrc_mut!(for<'all> |_x: &i32| -> i32 { 1 }));
     let (lo, hi) = lender.size_hint();
     assert_eq!(lo, 3);
     assert_eq!(hi, Some(3));

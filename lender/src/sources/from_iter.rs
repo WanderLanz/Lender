@@ -279,6 +279,10 @@ impl<I: DoubleEndedFallibleIterator> DoubleEndedFallibleLender for FromFallibleI
     }
 }
 
+// Note: FusedFallibleLender and ExactSizeFallibleLender are not implemented
+// for FromFallibleIter because the fallible_iterator crate does not expose
+// FusedFallibleIterator or ExactSizeFallibleIterator marker traits.
+
 impl<I: FallibleIterator> From<I> for FromFallibleIter<I> {
     #[inline]
     fn from(iter: I) -> Self {
@@ -427,3 +431,7 @@ where
         )
     }
 }
+
+// Note: FusedFallibleLender and ExactSizeFallibleLender are not implemented
+// for LendFallibleIter because the fallible_iterator crate does not expose
+// FusedFallibleIterator or ExactSizeFallibleIterator marker traits.

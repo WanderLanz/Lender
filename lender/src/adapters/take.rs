@@ -219,6 +219,8 @@ where
 
     #[inline]
     fn advance_back_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {
+        // Relies on ExactSizeLender: if len() is inaccurate,
+        // advanced_by_inner - trim_inner may underflow.
         let trim_inner = self.lender.len().saturating_sub(self.n);
         let advance_by = trim_inner.saturating_add(n);
         let remainder = match self.lender.advance_back_by(advance_by) {

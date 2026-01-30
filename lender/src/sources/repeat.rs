@@ -174,6 +174,10 @@ where
     // SAFETY: the lend is the type parameter L
     crate::unsafe_assume_covariance_fallible!();
 
+    /// Note: if the stored value is `Err`, the error is cloned and
+    /// returned on every call to `next`. This matches the semantics
+    /// of [`Repeat`](crate::Repeat) (which yields the value forever)
+    /// applied to the fallible case.
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.elt.clone().map(|value| {

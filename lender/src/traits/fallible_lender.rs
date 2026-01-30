@@ -17,12 +17,10 @@ use crate::{
     traits::collect::IntoFallibleLender,
 };
 
-/// A trait for dealing with the 'items' of fallible lending iterators.
+/// The fallible counterpart of [`Lending`](crate::Lending). See its documentation
+/// for details on the HRTB implicit-bound technique used here.
 ///
 /// Must be defined for any type that implements [`FallibleLender`].
-///
-/// It implicitly restricts the lifetime `'lend` used in [`FallibleLending<'lend>`](FallibleLending)
-/// to be `where Self: 'lend`.
 pub trait FallibleLending<'lend, __ImplBound: ImplBound = Ref<'lend, Self>> {
     /// The type being lent.
     type Lend: 'lend;

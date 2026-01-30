@@ -7,8 +7,8 @@ use crate::{
 
 /// A lender yielding lenders ([`Chunk`]s) returning the next `chunk_size` lends.
 ///
-/// This is the closest lending approximation to [`core::iter::ArrayChunks`], as
-/// we cannot accumulate the lends into an array. Unlike [`ArrayChunks`](core::iter::ArrayChunks), which
+/// This is the closest lending approximation to `core::iter::ArrayChunks` (unstable), as
+/// we cannot accumulate the lends into an array. Unlike `ArrayChunks`, which
 /// yields fixed-size arrays, `Chunky` yields [`Chunk`] lenders that must be
 /// consumed to access the elements.
 ///

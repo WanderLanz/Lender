@@ -127,6 +127,10 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     }
     /// Gets the last lend of the lender, if any, by consuming it.
     ///
+    /// Unlike [`Iterator::last`], this method takes `&mut self` rather than
+    /// `self` because returning a lend that borrows from the lender requires
+    /// the lender to remain alive.
+    ///
     /// # Examples
     ///
     /// ```rust
@@ -1105,6 +1109,10 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         self.cmp_by(other, |x, y| x.cmp(&y))
     }
     /// The [`Lender`] version of [`Iterator::cmp_by`].
+    ///
+    /// Note: the closure receives both lends under a single lifetime
+    /// (`for<'all>`). This is an HRTB limitation — the two lenders cannot
+    /// be advanced independently within the closure.
     fn cmp_by<L, F>(self, other: L, mut cmp: F) -> Ordering
     where
         Self: Sized,
@@ -1130,6 +1138,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         self.partial_cmp_by(other, |x, y| x.partial_cmp(&y))
     }
     /// The [`Lender`] version of [`Iterator::partial_cmp_by`].
+    ///
+    /// See [`cmp_by`](Lender::cmp_by) for a note on the unified lifetime constraint.
     fn partial_cmp_by<L, F>(self, other: L, mut partial_cmp: F) -> Option<Ordering>
     where
         Self: Sized,
@@ -1155,6 +1165,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         self.eq_by(other, |x, y| x == y)
     }
     /// The [`Lender`] version of [`Iterator::eq_by`].
+    ///
+    /// See [`cmp_by`](Lender::cmp_by) for a note on the unified lifetime constraint.
     fn eq_by<L, F>(self, other: L, mut eq: F) -> bool
     where
         Self: Sized,

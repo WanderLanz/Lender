@@ -58,6 +58,7 @@ where
     #[inline]
     fn nth(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         let a = self.lender.nth(n)?;
+        // May overflow on very large indices; matches std::iter::Enumerate.
         let i = self.count + n;
         self.count = i + 1;
         Some((i, a))
