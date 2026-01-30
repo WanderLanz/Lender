@@ -944,24 +944,22 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
 
     /// The [`FallibleLender`] version of [`Iterator::max`].
     #[inline]
-    fn max<T>(self) -> Result<Option<T>, Self::Error>
+    fn max<T: Ord>(self) -> Result<Option<T>, Self::Error>
     where
         Self: Sized,
-        T: for<'all> PartialOrd<FallibleLend<'all, Self>>,
         for<'all> FallibleLend<'all, Self>: ToOwned<Owned = T>,
     {
-        self.max_by(|x, y| Ok(x.partial_cmp(y).unwrap_or(Ordering::Equal)))
+        fallible_iterator::FallibleIterator::max(self.owned())
     }
 
     /// The [`FallibleLender`] version of [`Iterator::min`].
     #[inline]
-    fn min<T>(self) -> Result<Option<T>, Self::Error>
+    fn min<T: Ord>(self) -> Result<Option<T>, Self::Error>
     where
         Self: Sized,
-        T: for<'all> PartialOrd<FallibleLend<'all, Self>>,
         for<'all> FallibleLend<'all, Self>: ToOwned<Owned = T>,
     {
-        self.min_by(|x, y| Ok(x.partial_cmp(y).unwrap_or(Ordering::Equal)))
+        fallible_iterator::FallibleIterator::min(self.owned())
     }
 
     /// The [`FallibleLender`] version of [`Iterator::max_by_key`].

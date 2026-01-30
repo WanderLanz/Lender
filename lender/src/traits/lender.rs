@@ -949,23 +949,21 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     }
     /// The [`Lender`] version of [`Iterator::max`].
     #[inline]
-    fn max<T>(self) -> Option<T>
+    fn max<T: Ord>(self) -> Option<T>
     where
         Self: Sized,
-        T: for<'all> PartialOrd<Lend<'all, Self>>,
         for<'all> Lend<'all, Self>: ToOwned<Owned = T>,
     {
-        self.max_by(|x, y| x.partial_cmp(y).unwrap_or(Ordering::Equal))
+        self.owned().max()
     }
     /// The [`Lender`] version of [`Iterator::min`].
     #[inline]
-    fn min<T>(self) -> Option<T>
+    fn min<T: Ord>(self) -> Option<T>
     where
         Self: Sized,
-        T: for<'all> PartialOrd<Lend<'all, Self>>,
         for<'all> Lend<'all, Self>: ToOwned<Owned = T>,
     {
-        self.min_by(|x, y| x.partial_cmp(y).unwrap_or(Ordering::Equal))
+        self.owned().min()
     }
     /// The [`Lender`] version of [`Iterator::max_by_key`].
     #[inline]

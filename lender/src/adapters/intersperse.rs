@@ -92,25 +92,36 @@ where
         R: Try<Output = B>,
     {
         let mut acc = init;
-        if !self.needs_sep {
+        let mut needs_sep = self.needs_sep;
+        if !needs_sep {
             match self.lender.next() {
                 Some(x) => {
                     acc = match f(acc, x).branch() {
                         ControlFlow::Continue(v) => v,
-                        ControlFlow::Break(r) => return FromResidual::from_residual(r),
+                        ControlFlow::Break(r) => {
+                            self.needs_sep = true;
+                            return FromResidual::from_residual(r);
+                        }
                     };
+                    needs_sep = true;
                 }
                 None => return R::from_output(acc),
             }
         }
         let separator = &self.separator;
-        self.lender.try_fold(acc, move |acc, x| {
+        let result = self.lender.try_fold(acc, |acc, x| {
             let acc = match f(acc, separator.clone()).branch() {
                 ControlFlow::Continue(v) => v,
-                ControlFlow::Break(r) => return FromResidual::from_residual(r),
+                ControlFlow::Break(r) => {
+                    needs_sep = false;
+                    return FromResidual::from_residual(r);
+                }
             };
+            needs_sep = true;
             f(acc, x)
-        })
+        });
+        self.needs_sep = needs_sep;
+        result
     }
 
     #[inline]
@@ -223,25 +234,36 @@ where
         R: Try<Output = B>,
     {
         let mut acc = init;
-        if !self.needs_sep {
+        let mut needs_sep = self.needs_sep;
+        if !needs_sep {
             match self.lender.next() {
                 Some(x) => {
                     acc = match f(acc, x).branch() {
                         ControlFlow::Continue(v) => v,
-                        ControlFlow::Break(r) => return FromResidual::from_residual(r),
+                        ControlFlow::Break(r) => {
+                            self.needs_sep = true;
+                            return FromResidual::from_residual(r);
+                        }
                     };
+                    needs_sep = true;
                 }
                 None => return R::from_output(acc),
             }
         }
         let separator = &mut self.separator;
-        self.lender.try_fold(acc, move |acc, x| {
+        let result = self.lender.try_fold(acc, |acc, x| {
             let acc = match f(acc, (separator)()).branch() {
                 ControlFlow::Continue(v) => v,
-                ControlFlow::Break(r) => return FromResidual::from_residual(r),
+                ControlFlow::Break(r) => {
+                    needs_sep = false;
+                    return FromResidual::from_residual(r);
+                }
             };
+            needs_sep = true;
             f(acc, x)
-        })
+        });
+        self.needs_sep = needs_sep;
+        result
     }
 
     #[inline]
