@@ -2,7 +2,8 @@ use core::fmt;
 
 use crate::prelude::*;
 
-/// Creates a new fallible lender that endlessly repeats a single element.
+/// Creates a new fallible lender that endlessly repeats a
+/// single element.
 ///
 /// The [`FallibleLender`] version of
 /// [`iter::repeat()`](core::iter::repeat).
@@ -15,41 +16,40 @@ use crate::prelude::*;
 /// >(Ok(&0u8));
 /// assert_eq!(lender.next().unwrap(), Some(&0));
 /// ```
-pub fn fallible_repeat<'a, E, L>(elt: Result<FallibleLend<'a, L>, E>) -> FallibleRepeat<'a, E, L>
+pub fn repeat<'a, E, L>(elt: Result<FallibleLend<'a, L>, E>) -> Repeat<'a, E, L>
 where
     E: Clone,
     L: ?Sized + CovariantFallibleLending + 'a,
     for<'all> FallibleLend<'all, L>: Clone,
 {
-    FallibleRepeat { elt }
+    Repeat { elt }
 }
 
 /// A fallible lender that repeats an element endlessly.
 ///
-/// This `struct` is created by the [`fallible_repeat()`]
-/// function.
+/// This `struct` is created by the [`repeat()`] function.
 #[must_use = "lenders are lazy and do nothing unless consumed"]
-pub struct FallibleRepeat<'a, E, L>
+pub struct Repeat<'a, E, L>
 where
     L: ?Sized + CovariantFallibleLending + 'a,
 {
     elt: Result<FallibleLend<'a, L>, E>,
 }
 
-impl<'a, E, L> Clone for FallibleRepeat<'a, E, L>
+impl<'a, E, L> Clone for Repeat<'a, E, L>
 where
     E: Clone,
     L: ?Sized + CovariantFallibleLending + 'a,
     FallibleLend<'a, L>: Clone,
 {
     fn clone(&self) -> Self {
-        FallibleRepeat {
+        Repeat {
             elt: self.elt.clone(),
         }
     }
 }
 
-impl<'a, E, L> fmt::Debug for FallibleRepeat<'a, E, L>
+impl<'a, E, L> fmt::Debug for Repeat<'a, E, L>
 where
     E: fmt::Debug,
     L: ?Sized + CovariantFallibleLending + 'a,
@@ -62,7 +62,7 @@ where
     }
 }
 
-impl<'lend, 'a, E, L> FallibleLending<'lend> for FallibleRepeat<'a, E, L>
+impl<'lend, 'a, E, L> FallibleLending<'lend> for Repeat<'a, E, L>
 where
     L: ?Sized + CovariantFallibleLending + 'a,
     for<'all> FallibleLend<'all, L>: Clone,
@@ -70,7 +70,7 @@ where
     type Lend = FallibleLend<'lend, L>;
 }
 
-impl<'a, E, L> FallibleLender for FallibleRepeat<'a, E, L>
+impl<'a, E, L> FallibleLender for Repeat<'a, E, L>
 where
     E: Clone + 'a,
     L: ?Sized + CovariantFallibleLending + 'a,
@@ -80,10 +80,10 @@ where
     // SAFETY: the lend is the type parameter L
     crate::unsafe_assume_covariance_fallible!();
 
-    /// Note: if the stored value is `Err`, the error is cloned and
-    /// returned on every call to `next`. This matches the semantics
-    /// of [`Repeat`](crate::Repeat) (which yields the value forever)
-    /// applied to the fallible case.
+    /// Note: if the stored value is `Err`, the error is cloned
+    /// and returned on every call to `next`. This matches the
+    /// semantics of [`Repeat`](crate::Repeat) (which yields the
+    /// value forever) applied to the fallible case.
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.elt.clone().map(|value| {
@@ -110,7 +110,7 @@ where
     }
 }
 
-impl<'a, E, L> DoubleEndedFallibleLender for FallibleRepeat<'a, E, L>
+impl<'a, E, L> DoubleEndedFallibleLender for Repeat<'a, E, L>
 where
     E: Clone + 'a,
     L: ?Sized + CovariantFallibleLending + 'a,
@@ -133,7 +133,7 @@ where
     }
 }
 
-impl<'a, E, L> FusedFallibleLender for FallibleRepeat<'a, E, L>
+impl<'a, E, L> FusedFallibleLender for Repeat<'a, E, L>
 where
     E: Clone + 'a,
     L: ?Sized + CovariantFallibleLending + 'a,

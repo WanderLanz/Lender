@@ -31,11 +31,11 @@ use crate::{
 /// );
 /// assert_eq!(lender.next().unwrap(), Some(&mut 1));
 /// ```
-pub fn from_fallible_fn<St, E, F>(state: St, f: F) -> FromFallibleFn<St, E, F>
+pub fn from_fn<St, E, F>(state: St, f: F) -> FromFn<St, E, F>
 where
     F: for<'all> FnMutHKAResOpt<'all, &'all mut St, E>,
 {
-    FromFallibleFn {
+    FromFn {
         state,
         f,
         _marker: PhantomData,
@@ -45,17 +45,16 @@ where
 /// A lender where each iteration calls the provided closure
 /// `F: FnMut(&mut St) -> Result<Option<T>, E>`.
 ///
-/// This `struct` is created by the [`from_fallible_fn()`]
-/// function.
+/// This `struct` is created by the [`from_fn()`] function.
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
-pub struct FromFallibleFn<St, E, F> {
+pub struct FromFn<St, E, F> {
     state: St,
     f: F,
     _marker: PhantomData<E>,
 }
 
-impl<St: fmt::Debug, E, F> fmt::Debug for FromFallibleFn<St, E, F> {
+impl<St: fmt::Debug, E, F> fmt::Debug for FromFn<St, E, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("FromFallibleFn")
             .field("state", &self.state)
@@ -63,14 +62,14 @@ impl<St: fmt::Debug, E, F> fmt::Debug for FromFallibleFn<St, E, F> {
     }
 }
 
-impl<'lend, St, E, F> FallibleLending<'lend> for FromFallibleFn<St, E, F>
+impl<'lend, St, E, F> FallibleLending<'lend> for FromFn<St, E, F>
 where
     F: for<'all> FnMutHKAResOpt<'all, &'all mut St, E>,
 {
     type Lend = <F as FnMutHKAResOpt<'lend, &'lend mut St, E>>::B;
 }
 
-impl<St, E, F> FallibleLender for FromFallibleFn<St, E, F>
+impl<St, E, F> FallibleLender for FromFn<St, E, F>
 where
     F: for<'all> FnMutHKAResOpt<'all, &'all mut St, E>,
 {

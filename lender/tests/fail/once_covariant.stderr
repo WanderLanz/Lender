@@ -49,8 +49,8 @@ help: the trait `CovariantFallibleLending` is not implemented for `FallibleInvar
 note: required by a bound in `fallible_once`
   --> src/fallible_sources/once.rs
    |
-   | pub fn fallible_once<'a, E, L: ?Sized + CovariantFallibleLending>(
-   |                                         ^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `fallible_once`
+   | pub fn once<'a, E, L: ?Sized + CovariantFallibleLending>(
+   |                                ^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `once`
 
 error[E0277]: the trait bound `FallibleInvariant: CovariantFallibleLending` is not satisfied
   --> tests/fail/once_covariant.rs:24:13
@@ -66,8 +66,8 @@ help: the trait `CovariantFallibleLending` is not implemented for `FallibleInvar
 note: required by a bound in `FallibleOnce`
   --> src/fallible_sources/once.rs
    |
-   | pub struct FallibleOnce<'a, E, L>
-   |            ------------ required by a bound in this struct
+   | pub struct Once<'a, E, L>
+   |            ---- required by a bound in this struct
    | where
    |     L: ?Sized + CovariantFallibleLending,
    |                 ^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `FallibleOnce`

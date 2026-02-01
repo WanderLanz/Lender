@@ -10,39 +10,39 @@ use crate::{
 /// once.
 ///
 /// The [`FallibleLender`] version of [`core::iter::once()`].
-pub fn fallible_once<'a, E, L: ?Sized + CovariantFallibleLending>(
+pub fn once<'a, E, L: ?Sized + CovariantFallibleLending>(
     value: Result<FallibleLend<'a, L>, E>,
-) -> FallibleOnce<'a, E, L> {
-    FallibleOnce { inner: Some(value) }
+) -> Once<'a, E, L> {
+    Once { inner: Some(value) }
 }
 
 /// A fallible lender that yields an element exactly once.
 ///
-/// This `struct` is created by the [`fallible_once()`] function.
+/// This `struct` is created by the [`once()`] function.
 ///
 /// The [`FallibleLender`] version of [`core::iter::Once`].
 #[must_use = "lenders are lazy and do nothing unless consumed"]
-pub struct FallibleOnce<'a, E, L>
+pub struct Once<'a, E, L>
 where
     L: ?Sized + CovariantFallibleLending,
 {
     inner: Option<Result<FallibleLend<'a, L>, E>>,
 }
 
-impl<'a, E, L> Clone for FallibleOnce<'a, E, L>
+impl<'a, E, L> Clone for Once<'a, E, L>
 where
     L: ?Sized + CovariantFallibleLending,
     E: Clone,
     FallibleLend<'a, L>: Clone,
 {
     fn clone(&self) -> Self {
-        FallibleOnce {
+        Once {
             inner: self.inner.clone(),
         }
     }
 }
 
-impl<'a, E, L> fmt::Debug for FallibleOnce<'a, E, L>
+impl<'a, E, L> fmt::Debug for Once<'a, E, L>
 where
     L: ?Sized + CovariantFallibleLending,
     E: fmt::Debug,
@@ -55,14 +55,14 @@ where
     }
 }
 
-impl<'lend, E, L> FallibleLending<'lend> for FallibleOnce<'_, E, L>
+impl<'lend, E, L> FallibleLending<'lend> for Once<'_, E, L>
 where
     L: ?Sized + CovariantFallibleLending,
 {
     type Lend = FallibleLend<'lend, L>;
 }
 
-impl<'a, E, L> FallibleLender for FallibleOnce<'a, E, L>
+impl<'a, E, L> FallibleLender for Once<'a, E, L>
 where
     E: 'a,
     L: ?Sized + CovariantFallibleLending,
@@ -101,7 +101,7 @@ where
     }
 }
 
-impl<'a, E, L> DoubleEndedFallibleLender for FallibleOnce<'a, E, L>
+impl<'a, E, L> DoubleEndedFallibleLender for Once<'a, E, L>
 where
     E: 'a,
     L: ?Sized + CovariantFallibleLending,
@@ -112,14 +112,14 @@ where
     }
 }
 
-impl<'a, E, L> ExactSizeFallibleLender for FallibleOnce<'a, E, L>
+impl<'a, E, L> ExactSizeFallibleLender for Once<'a, E, L>
 where
     E: 'a,
     L: ?Sized + CovariantFallibleLending,
 {
 }
 
-impl<'a, E, L> FusedFallibleLender for FallibleOnce<'a, E, L>
+impl<'a, E, L> FusedFallibleLender for Once<'a, E, L>
 where
     E: 'a,
     L: ?Sized + CovariantFallibleLending,

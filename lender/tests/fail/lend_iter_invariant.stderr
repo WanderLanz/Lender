@@ -32,8 +32,8 @@ help: the trait `CovariantFallibleLending` is not implemented for `FallibleInvar
 note: required by a bound in `lend_fallible_iter`
   --> src/fallible_sources/from_iter.rs
    |
-   | pub fn lend_fallible_iter<'a, L, I>(iter: I) -> LendFallibleIter<'a, L, I>
-   |        ------------------ required by a bound in this function
+   | pub fn lend_iter<'a, L, I>(iter: I) -> LendIter<'a, L, I>
+   |        --------- required by a bound in this function
    | where
    |     L: ?Sized + CovariantFallibleLending + 'a,
-   |                 ^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `lend_fallible_iter`
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `lend_iter`

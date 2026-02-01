@@ -24,27 +24,26 @@ use crate::{
 /// assert_eq!(lender.next().unwrap(), Some(&1));
 /// ```
 #[inline]
-pub fn from_fallible_iter<I: FallibleIterator>(iter: I) -> FromFallibleIter<I> {
-    FromFallibleIter { iter }
+pub fn from_iter<I: FallibleIterator>(iter: I) -> FromIter<I> {
+    FromIter { iter }
 }
 
 /// A lender that yields elements from a fallible iterator.
 ///
-/// This `struct` is created by the [`from_fallible_iter()`]
-/// function.
+/// This `struct` is created by the [`from_iter()`] function.
 
 #[derive(Clone, Debug)]
 #[repr(transparent)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
-pub struct FromFallibleIter<I> {
+pub struct FromIter<I> {
     iter: I,
 }
 
-impl<I: FallibleIterator> FallibleLending<'_> for FromFallibleIter<I> {
+impl<I: FallibleIterator> FallibleLending<'_> for FromIter<I> {
     type Lend = I::Item;
 }
 
-impl<I: FallibleIterator> FallibleLender for FromFallibleIter<I> {
+impl<I: FallibleIterator> FallibleLender for FromIter<I> {
     type Error = I::Error;
     crate::check_covariance_fallible!();
     #[inline(always)]
@@ -58,7 +57,7 @@ impl<I: FallibleIterator> FallibleLender for FromFallibleIter<I> {
     }
 }
 
-impl<I: DoubleEndedFallibleIterator> DoubleEndedFallibleLender for FromFallibleIter<I> {
+impl<I: DoubleEndedFallibleIterator> DoubleEndedFallibleLender for FromIter<I> {
     #[inline(always)]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.iter.next_back()
@@ -66,14 +65,14 @@ impl<I: DoubleEndedFallibleIterator> DoubleEndedFallibleLender for FromFallibleI
 }
 
 // Note: FusedFallibleLender and ExactSizeFallibleLender are not
-// implemented for FromFallibleIter because the fallible_iterator
-// crate does not expose FusedFallibleIterator or
+// implemented for FromIter because the fallible_iterator crate
+// does not expose FusedFallibleIterator or
 // ExactSizeFallibleIterator marker traits.
 
-impl<I: FallibleIterator> From<I> for FromFallibleIter<I> {
+impl<I: FallibleIterator> From<I> for FromIter<I> {
     #[inline]
     fn from(iter: I) -> Self {
-        from_fallible_iter(iter)
+        from_iter(iter)
     }
 }
 
@@ -85,7 +84,7 @@ impl<I: FallibleIterator> From<I> for FromFallibleIter<I> {
 /// method added to [`IntoFallibleIterator`] by this crate.
 ///
 /// The lenders returned are obtained by applying
-/// [`from_fallible_iter`] to the iterators returned by the
+/// [`from_iter()`] to the iterators returned by the
 /// wrapped [`IntoFallibleIterator`].
 ///
 /// # Examples
@@ -100,35 +99,35 @@ impl<I: FallibleIterator> From<I> for FromFallibleIter<I> {
 /// assert_eq!(lender.next().unwrap(), Some(&1));
 /// ```
 #[inline]
-pub fn from_into_fallible_iter<I: IntoFallibleIterator>(into_iter: I) -> FromIntoFallibleIter<I> {
-    FromIntoFallibleIter { into_iter }
+pub fn from_into_iter<I: IntoFallibleIterator>(into_iter: I) -> FromIntoIter<I> {
+    FromIntoIter { into_iter }
 }
 
 /// A [`IntoFallibleLender`] that returns lenders obtained by
-/// applying [`from_fallible_iter`] to the iterators returned by
-/// the wrapped [`IntoFallibleIterator`].
+/// applying [`from_iter()`] to the iterators returned by the
+/// wrapped [`IntoFallibleIterator`].
 ///
-/// This `struct` is created by the
-/// [`from_into_fallible_iter()`] function.
+/// This `struct` is created by the [`from_into_iter()`]
+/// function.
 #[repr(transparent)]
 #[derive(Clone, Debug)]
-pub struct FromIntoFallibleIter<I> {
+pub struct FromIntoIter<I> {
     into_iter: I,
 }
 
-impl<I: IntoFallibleIterator> IntoFallibleLender for FromIntoFallibleIter<I> {
+impl<I: IntoFallibleIterator> IntoFallibleLender for FromIntoIter<I> {
     type Error = I::Error;
 
-    type FallibleLender = FromFallibleIter<I::IntoFallibleIter>;
+    type FallibleLender = FromIter<I::IntoFallibleIter>;
 
     fn into_fallible_lender(self) -> <Self as IntoFallibleLender>::FallibleLender {
         self.into_iter.into_fallible_iter().into_fallible_lender()
     }
 }
 
-impl<I: IntoFallibleIterator> From<I> for FromIntoFallibleIter<I> {
+impl<I: IntoFallibleIterator> From<I> for FromIntoIter<I> {
     fn from(into_iter: I) -> Self {
-        from_into_fallible_iter(into_iter)
+        from_into_iter(into_iter)
     }
 }
 
@@ -136,8 +135,7 @@ impl<I: IntoFallibleIterator> From<I> for FromIntoFallibleIter<I> {
 /// safely shortening the items' lifetimes with the given
 /// lending type `L`.
 ///
-/// If `I::Item` is 'static, behaves like
-/// [`from_fallible_iter`].
+/// If `I::Item` is 'static, behaves like [`from_iter()`].
 ///
 /// # Examples
 /// ```rust
@@ -158,12 +156,12 @@ impl<I: IntoFallibleIterator> From<I> for FromIntoFallibleIter<I> {
 /// let item2: u8 = item2.unwrap();
 /// ```
 #[inline]
-pub fn lend_fallible_iter<'a, L, I>(iter: I) -> LendFallibleIter<'a, L, I>
+pub fn lend_iter<'a, L, I>(iter: I) -> LendIter<'a, L, I>
 where
     L: ?Sized + CovariantFallibleLending + 'a,
     I: FallibleIterator<Item = FallibleLend<'a, L>>,
 {
-    LendFallibleIter {
+    LendIter {
         iter,
         _marker: core::marker::PhantomData,
     }
@@ -172,20 +170,18 @@ where
 /// A lender that lends elements from a fallible iterator by
 /// shortening their lifetime.
 ///
-/// If `I::Item` is 'static, behaves like
-/// [`FromFallibleIter`].
+/// If `I::Item` is 'static, behaves like [`FromIter`].
 ///
-/// This `struct` is created by the [`lend_fallible_iter()`]
-/// function.
+/// This `struct` is created by the [`lend_iter()`] function.
 
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
-pub struct LendFallibleIter<'a, L: ?Sized, I> {
+pub struct LendIter<'a, L: ?Sized, I> {
     iter: I,
     _marker: core::marker::PhantomData<fn() -> &'a L>,
 }
 
-impl<'a, 'lend, L, I> FallibleLending<'lend> for LendFallibleIter<'a, L, I>
+impl<'a, 'lend, L, I> FallibleLending<'lend> for LendIter<'a, L, I>
 where
     L: ?Sized + CovariantFallibleLending + 'a,
     I: FallibleIterator<Item = FallibleLend<'a, L>>,
@@ -193,7 +189,7 @@ where
     type Lend = FallibleLend<'lend, L>;
 }
 
-impl<'a, L, I> FallibleLender for LendFallibleIter<'a, L, I>
+impl<'a, L, I> FallibleLender for LendIter<'a, L, I>
 where
     L: ?Sized + CovariantFallibleLending + 'a,
     I: FallibleIterator<Item = FallibleLend<'a, L>>,
@@ -221,7 +217,7 @@ where
     }
 }
 
-impl<'a, L, I> DoubleEndedFallibleLender for LendFallibleIter<'a, L, I>
+impl<'a, L, I> DoubleEndedFallibleLender for LendIter<'a, L, I>
 where
     L: ?Sized + CovariantFallibleLending + 'a,
     I: DoubleEndedFallibleIterator<Item = FallibleLend<'a, L>>,
@@ -241,6 +237,6 @@ where
 }
 
 // Note: FusedFallibleLender and ExactSizeFallibleLender are not
-// implemented for LendFallibleIter because the fallible_iterator
-// crate does not expose FusedFallibleIterator or
+// implemented for LendIter because the fallible_iterator crate
+// does not expose FusedFallibleIterator or
 // ExactSizeFallibleIterator marker traits.

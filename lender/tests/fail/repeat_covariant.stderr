@@ -52,11 +52,11 @@ help: the trait `CovariantFallibleLending` is not implemented for `FallibleInvar
 note: required by a bound in `fallible_repeat`
   --> src/fallible_sources/repeat.rs
    |
-   | pub fn fallible_repeat<'a, E, L>(elt: Result<FallibleLend<'a, L>, E>) -> FallibleRepeat<'a, E, L>
-   |        --------------- required by a bound in this function
+   | pub fn repeat<'a, E, L>(elt: Result<FallibleLend<'a, L>, E>) -> Repeat<'a, E, L>
+   |        ------ required by a bound in this function
 ...
    |     L: ?Sized + CovariantFallibleLending + 'a,
-   |                 ^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `fallible_repeat`
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `repeat`
 
 error[E0277]: the trait bound `FallibleInvariant: CovariantFallibleLending` is not satisfied
   --> tests/fail/repeat_covariant.rs:30:13
@@ -72,8 +72,8 @@ help: the trait `CovariantFallibleLending` is not implemented for `FallibleInvar
 note: required by a bound in `FallibleRepeat`
   --> src/fallible_sources/repeat.rs
    |
-   | pub struct FallibleRepeat<'a, E, L>
-   |            -------------- required by a bound in this struct
+   | pub struct Repeat<'a, E, L>
+   |            ------ required by a bound in this struct
    | where
    |     L: ?Sized + CovariantFallibleLending + 'a,
    |                 ^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `FallibleRepeat`

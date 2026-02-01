@@ -6,8 +6,8 @@ use crate::prelude::*;
 /// by applying the provided closure, the repeater,
 /// `F: FnMut() -> Result<A, E>`.
 ///
-/// The [`fallible_repeat_with()`] function calls the repeater
-/// over and over again.
+/// The [`repeat_with()`] function calls the repeater over and
+/// over again.
 ///
 /// The [`FallibleLender`] version of
 /// [`iter::repeat_with()`](core::iter::repeat_with).
@@ -20,12 +20,12 @@ use crate::prelude::*;
 /// >(|| Ok(&0u8));
 /// assert_eq!(lender.next().unwrap(), Some(&0));
 /// ```
-pub fn fallible_repeat_with<'a, L, E, F>(f: F) -> FallibleRepeatWith<'a, L, E, F>
+pub fn repeat_with<'a, L, E, F>(f: F) -> RepeatWith<'a, L, E, F>
 where
     L: ?Sized + CovariantFallibleLending + 'a,
     F: FnMut() -> Result<FallibleLend<'a, L>, E>,
 {
-    FallibleRepeatWith {
+    RepeatWith {
         f,
         _marker: PhantomData,
     }
@@ -34,15 +34,14 @@ where
 /// A fallible lender that repeats an element endlessly by
 /// applying a closure.
 ///
-/// This `struct` is created by the
-/// [`fallible_repeat_with()`] function.
+/// This `struct` is created by the [`repeat_with()`] function.
 #[must_use = "lenders are lazy and do nothing unless consumed"]
-pub struct FallibleRepeatWith<'a, L: ?Sized, E, F> {
+pub struct RepeatWith<'a, L: ?Sized, E, F> {
     f: F,
     _marker: core::marker::PhantomData<(&'a L, E)>,
 }
 
-impl<L: ?Sized, E, F: Clone> Clone for FallibleRepeatWith<'_, L, E, F> {
+impl<L: ?Sized, E, F: Clone> Clone for RepeatWith<'_, L, E, F> {
     fn clone(&self) -> Self {
         Self {
             f: self.f.clone(),
@@ -51,13 +50,13 @@ impl<L: ?Sized, E, F: Clone> Clone for FallibleRepeatWith<'_, L, E, F> {
     }
 }
 
-impl<L: ?Sized, E, F> fmt::Debug for FallibleRepeatWith<'_, L, E, F> {
+impl<L: ?Sized, E, F> fmt::Debug for RepeatWith<'_, L, E, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("FallibleRepeatWith").finish()
     }
 }
 
-impl<'lend, 'a, L, E, F> FallibleLending<'lend> for FallibleRepeatWith<'a, L, E, F>
+impl<'lend, 'a, L, E, F> FallibleLending<'lend> for RepeatWith<'a, L, E, F>
 where
     L: ?Sized + CovariantFallibleLending + 'a,
     F: FnMut() -> Result<FallibleLend<'a, L>, E>,
@@ -65,7 +64,7 @@ where
     type Lend = FallibleLend<'lend, L>;
 }
 
-impl<'a, L, E, F> FallibleLender for FallibleRepeatWith<'a, L, E, F>
+impl<'a, L, E, F> FallibleLender for RepeatWith<'a, L, E, F>
 where
     L: ?Sized + CovariantFallibleLending + 'a,
     F: FnMut() -> Result<FallibleLend<'a, L>, E>,
@@ -102,7 +101,7 @@ where
     }
 }
 
-impl<'a, L, E, F> DoubleEndedFallibleLender for FallibleRepeatWith<'a, L, E, F>
+impl<'a, L, E, F> DoubleEndedFallibleLender for RepeatWith<'a, L, E, F>
 where
     L: ?Sized + CovariantFallibleLending + 'a,
     F: FnMut() -> Result<FallibleLend<'a, L>, E>,
@@ -124,7 +123,7 @@ where
     }
 }
 
-impl<'a, L, E, F> FusedFallibleLender for FallibleRepeatWith<'a, L, E, F>
+impl<'a, L, E, F> FusedFallibleLender for RepeatWith<'a, L, E, F>
 where
     L: ?Sized + CovariantFallibleLending + 'a,
     F: FnMut() -> Result<FallibleLend<'a, L>, E>,

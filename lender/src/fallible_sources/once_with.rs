@@ -32,11 +32,11 @@ use crate::{
 /// assert_eq!(lender.next().unwrap(), Some(&mut 1));
 /// assert_eq!(lender.next().unwrap(), None);
 /// ```
-pub fn fallible_once_with<St, E, F>(state: St, f: F) -> FallibleOnceWith<St, E, F>
+pub fn once_with<St, E, F>(state: St, f: F) -> OnceWith<St, E, F>
 where
     F: for<'all> FnOnceHKARes<'all, &'all mut St, E>,
 {
-    FallibleOnceWith {
+    OnceWith {
         state,
         f: Some(f),
         _marker: PhantomData,
@@ -46,16 +46,15 @@ where
 /// A fallible lender that yields a single element by applying
 /// the provided closure.
 ///
-/// This `struct` is created by the [`fallible_once_with()`]
-/// function.
+/// This `struct` is created by the [`once_with()`] function.
 #[must_use = "lenders are lazy and do nothing unless consumed"]
-pub struct FallibleOnceWith<St, E, F> {
+pub struct OnceWith<St, E, F> {
     state: St,
     f: Option<F>,
     _marker: PhantomData<E>,
 }
 
-impl<St: Clone, E, F: Clone> Clone for FallibleOnceWith<St, E, F> {
+impl<St: Clone, E, F: Clone> Clone for OnceWith<St, E, F> {
     fn clone(&self) -> Self {
         Self {
             state: self.state.clone(),
@@ -65,7 +64,7 @@ impl<St: Clone, E, F: Clone> Clone for FallibleOnceWith<St, E, F> {
     }
 }
 
-impl<St: fmt::Debug, E, F> fmt::Debug for FallibleOnceWith<St, E, F> {
+impl<St: fmt::Debug, E, F> fmt::Debug for OnceWith<St, E, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("FallibleOnceWith")
             .field("state", &self.state)
@@ -73,14 +72,14 @@ impl<St: fmt::Debug, E, F> fmt::Debug for FallibleOnceWith<St, E, F> {
     }
 }
 
-impl<'lend, St, E, F> FallibleLending<'lend> for FallibleOnceWith<St, E, F>
+impl<'lend, St, E, F> FallibleLending<'lend> for OnceWith<St, E, F>
 where
     F: for<'all> FnOnceHKARes<'all, &'all mut St, E>,
 {
     type Lend = <F as FnOnceHKARes<'lend, &'lend mut St, E>>::B;
 }
 
-impl<St, E, F> FallibleLender for FallibleOnceWith<St, E, F>
+impl<St, E, F> FallibleLender for OnceWith<St, E, F>
 where
     F: for<'all> FnOnceHKARes<'all, &'all mut St, E>,
 {
@@ -106,7 +105,7 @@ where
     }
 }
 
-impl<St, E, F> DoubleEndedFallibleLender for FallibleOnceWith<St, E, F>
+impl<St, E, F> DoubleEndedFallibleLender for OnceWith<St, E, F>
 where
     F: for<'all> FnOnceHKARes<'all, &'all mut St, E>,
 {
@@ -116,12 +115,12 @@ where
     }
 }
 
-impl<St, E, F> ExactSizeFallibleLender for FallibleOnceWith<St, E, F> where
+impl<St, E, F> ExactSizeFallibleLender for OnceWith<St, E, F> where
     F: for<'all> FnOnceHKARes<'all, &'all mut St, E>
 {
 }
 
-impl<St, E, F> FusedFallibleLender for FallibleOnceWith<St, E, F> where
+impl<St, E, F> FusedFallibleLender for OnceWith<St, E, F> where
     F: for<'all> FnOnceHKARes<'all, &'all mut St, E>
 {
 }
