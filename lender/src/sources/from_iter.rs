@@ -3,8 +3,8 @@ use core::iter::FusedIterator;
 use fallible_iterator::{DoubleEndedFallibleIterator, FallibleIterator, IntoFallibleIterator};
 
 use crate::{
-    DoubleEndedFallibleLender, FallibleLend, FallibleLender, FallibleLending, FusedLender,
-    IntoFallibleLender, prelude::*,
+    CovariantFallibleLending, CovariantLending, DoubleEndedFallibleLender, FallibleLend,
+    FallibleLender, FallibleLending, FusedLender, IntoFallibleLender, prelude::*,
 };
 
 /// Creates a lender from an iterator.
@@ -155,7 +155,7 @@ impl<I: IntoIterator> From<I> for FromIntoIter<I> {
 #[inline]
 pub fn lend_iter<'a, L, I>(iter: I) -> LendIter<'a, L, I>
 where
-    L: ?Sized + for<'all> Lending<'all> + 'a,
+    L: ?Sized + CovariantLending + 'a,
     I: Iterator<Item = Lend<'a, L>>,
 {
     LendIter {
@@ -180,7 +180,7 @@ pub struct LendIter<'a, L: ?Sized, I> {
 
 impl<'a, 'lend, L, I> Lending<'lend> for LendIter<'a, L, I>
 where
-    L: ?Sized + for<'all> Lending<'all> + 'a,
+    L: ?Sized + CovariantLending + 'a,
     I: Iterator<Item = Lend<'a, L>>,
 {
     type Lend = Lend<'lend, L>;
@@ -188,7 +188,7 @@ where
 
 impl<'a, L, I> Lender for LendIter<'a, L, I>
 where
-    L: ?Sized + for<'all> Lending<'all> + 'a,
+    L: ?Sized + CovariantLending + 'a,
     I: Iterator<Item = Lend<'a, L>>,
 {
     // SAFETY: the lend is the type parameter L
@@ -209,7 +209,7 @@ where
 
 impl<'a, L, I> DoubleEndedLender for LendIter<'a, L, I>
 where
-    L: ?Sized + for<'all> Lending<'all> + 'a,
+    L: ?Sized + CovariantLending + 'a,
     I: DoubleEndedIterator<Item = Lend<'a, L>>,
 {
     #[inline]
@@ -223,7 +223,7 @@ where
 
 impl<'a, L, I> ExactSizeLender for LendIter<'a, L, I>
 where
-    L: ?Sized + for<'all> Lending<'all> + 'a,
+    L: ?Sized + CovariantLending + 'a,
     I: ExactSizeIterator<Item = Lend<'a, L>>,
 {
     #[inline(always)]
@@ -234,7 +234,7 @@ where
 
 impl<'a, L, I> FusedLender for LendIter<'a, L, I>
 where
-    L: ?Sized + for<'all> Lending<'all> + 'a,
+    L: ?Sized + CovariantLending + 'a,
     I: FusedIterator<Item = Lend<'a, L>>,
 {
 }
@@ -385,7 +385,7 @@ impl<I: IntoFallibleIterator> From<I> for FromIntoFallibleIter<I> {
 #[inline]
 pub fn lend_fallible_iter<'a, L, I>(iter: I) -> LendFallibleIter<'a, L, I>
 where
-    L: ?Sized + for<'all> FallibleLending<'all> + 'a,
+    L: ?Sized + CovariantFallibleLending + 'a,
     I: FallibleIterator<Item = FallibleLend<'a, L>>,
 {
     LendFallibleIter {
@@ -409,7 +409,7 @@ pub struct LendFallibleIter<'a, L: ?Sized, I> {
 
 impl<'a, 'lend, L, I> FallibleLending<'lend> for LendFallibleIter<'a, L, I>
 where
-    L: ?Sized + for<'all> FallibleLending<'all> + 'a,
+    L: ?Sized + CovariantFallibleLending + 'a,
     I: FallibleIterator<Item = FallibleLend<'a, L>>,
 {
     type Lend = FallibleLend<'lend, L>;
@@ -417,7 +417,7 @@ where
 
 impl<'a, L, I> FallibleLender for LendFallibleIter<'a, L, I>
 where
-    L: ?Sized + for<'all> FallibleLending<'all> + 'a,
+    L: ?Sized + CovariantFallibleLending + 'a,
     I: FallibleIterator<Item = FallibleLend<'a, L>>,
 {
     type Error = I::Error;
@@ -445,7 +445,7 @@ where
 
 impl<'a, L, I> DoubleEndedFallibleLender for LendFallibleIter<'a, L, I>
 where
-    L: ?Sized + for<'all> FallibleLending<'all> + 'a,
+    L: ?Sized + CovariantFallibleLending + 'a,
     I: DoubleEndedFallibleIterator<Item = FallibleLend<'a, L>>,
 {
     #[inline]

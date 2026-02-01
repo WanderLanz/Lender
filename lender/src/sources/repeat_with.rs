@@ -17,7 +17,7 @@ use crate::{FusedFallibleLender, FusedLender, prelude::*};
 /// ```
 pub fn repeat_with<'a, L, F>(f: F) -> RepeatWith<'a, L, F>
 where
-    L: ?Sized + for<'all> Lending<'all> + 'a,
+    L: ?Sized + CovariantLending + 'a,
     F: FnMut() -> Lend<'a, L>,
 {
     RepeatWith {
@@ -52,7 +52,7 @@ impl<L: ?Sized, F> fmt::Debug for RepeatWith<'_, L, F> {
 
 impl<'lend, 'a, L, F> Lending<'lend> for RepeatWith<'a, L, F>
 where
-    L: ?Sized + for<'all> Lending<'all> + 'a,
+    L: ?Sized + CovariantLending + 'a,
     F: FnMut() -> Lend<'a, L>,
 {
     type Lend = Lend<'lend, L>;
@@ -60,7 +60,7 @@ where
 
 impl<'a, L, F> Lender for RepeatWith<'a, L, F>
 where
-    L: ?Sized + for<'all> Lending<'all> + 'a,
+    L: ?Sized + CovariantLending + 'a,
     F: FnMut() -> Lend<'a, L>,
 {
     // SAFETY: the lend is the return type of F
@@ -92,7 +92,7 @@ where
 
 impl<'a, L, F> DoubleEndedLender for RepeatWith<'a, L, F>
 where
-    L: ?Sized + for<'all> Lending<'all> + 'a,
+    L: ?Sized + CovariantLending + 'a,
     F: FnMut() -> Lend<'a, L>,
 {
     #[inline]
@@ -111,7 +111,7 @@ where
 
 impl<'a, L, F> FusedLender for RepeatWith<'a, L, F>
 where
-    L: ?Sized + for<'all> Lending<'all> + 'a,
+    L: ?Sized + CovariantLending + 'a,
     F: FnMut() -> Lend<'a, L>,
 {
 }
@@ -131,7 +131,7 @@ where
 /// ```
 pub fn fallible_repeat_with<'a, L, E, F>(f: F) -> FallibleRepeatWith<'a, L, E, F>
 where
-    L: ?Sized + for<'all> FallibleLending<'all> + 'a,
+    L: ?Sized + CovariantFallibleLending + 'a,
     F: FnMut() -> Result<FallibleLend<'a, L>, E>,
 {
     FallibleRepeatWith {
@@ -166,7 +166,7 @@ impl<L: ?Sized, E, F> fmt::Debug for FallibleRepeatWith<'_, L, E, F> {
 
 impl<'lend, 'a, L, E, F> FallibleLending<'lend> for FallibleRepeatWith<'a, L, E, F>
 where
-    L: ?Sized + for<'all> FallibleLending<'all> + 'a,
+    L: ?Sized + CovariantFallibleLending + 'a,
     F: FnMut() -> Result<FallibleLend<'a, L>, E>,
 {
     type Lend = FallibleLend<'lend, L>;
@@ -174,7 +174,7 @@ where
 
 impl<'a, L, E, F> FallibleLender for FallibleRepeatWith<'a, L, E, F>
 where
-    L: ?Sized + for<'all> FallibleLending<'all> + 'a,
+    L: ?Sized + CovariantFallibleLending + 'a,
     F: FnMut() -> Result<FallibleLend<'a, L>, E>,
 {
     type Error = E;
@@ -201,10 +201,7 @@ where
     /// Calls the closure `n` times because the closure may have side
     /// effects. Short-circuits on the first error.
     #[inline]
-    fn advance_by(
-        &mut self,
-        n: usize,
-    ) -> Result<Result<(), core::num::NonZeroUsize>, Self::Error> {
+    fn advance_by(&mut self, n: usize) -> Result<Result<(), core::num::NonZeroUsize>, Self::Error> {
         for _ in 0..n {
             (self.f)()?;
         }
@@ -214,7 +211,7 @@ where
 
 impl<'a, L, E, F> DoubleEndedFallibleLender for FallibleRepeatWith<'a, L, E, F>
 where
-    L: ?Sized + for<'all> FallibleLending<'all> + 'a,
+    L: ?Sized + CovariantFallibleLending + 'a,
     F: FnMut() -> Result<FallibleLend<'a, L>, E>,
 {
     #[inline]
@@ -236,7 +233,7 @@ where
 
 impl<'a, L, E, F> FusedFallibleLender for FallibleRepeatWith<'a, L, E, F>
 where
-    L: ?Sized + for<'all> FallibleLending<'all> + 'a,
+    L: ?Sized + CovariantFallibleLending + 'a,
     F: FnMut() -> Result<FallibleLend<'a, L>, E>,
 {
 }

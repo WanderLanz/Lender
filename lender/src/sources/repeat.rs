@@ -13,7 +13,7 @@ use crate::{FusedFallibleLender, FusedLender, prelude::*};
 /// ```
 pub fn repeat<'a, L>(elt: Lend<'a, L>) -> Repeat<'a, L>
 where
-    L: ?Sized + for<'all> Lending<'all> + 'a,
+    L: ?Sized + CovariantLending + 'a,
     for<'all> Lend<'all, L>: Clone,
 {
     Repeat { elt }
@@ -25,14 +25,14 @@ where
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Repeat<'a, L>
 where
-    L: ?Sized + for<'all> Lending<'all> + 'a,
+    L: ?Sized + CovariantLending + 'a,
 {
     elt: Lend<'a, L>,
 }
 
 impl<'a, L> Clone for Repeat<'a, L>
 where
-    L: ?Sized + for<'all> Lending<'all> + 'a,
+    L: ?Sized + CovariantLending + 'a,
     Lend<'a, L>: Clone,
 {
     fn clone(&self) -> Self {
@@ -44,7 +44,7 @@ where
 
 impl<'a, L> fmt::Debug for Repeat<'a, L>
 where
-    L: ?Sized + for<'all> Lending<'all> + 'a,
+    L: ?Sized + CovariantLending + 'a,
     Lend<'a, L>: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -54,7 +54,7 @@ where
 
 impl<'lend, 'a, L> Lending<'lend> for Repeat<'a, L>
 where
-    L: ?Sized + for<'all> Lending<'all> + 'a,
+    L: ?Sized + CovariantLending + 'a,
     for<'all> Lend<'all, L>: Clone,
 {
     type Lend = Lend<'lend, L>;
@@ -62,7 +62,7 @@ where
 
 impl<'a, L> Lender for Repeat<'a, L>
 where
-    L: ?Sized + for<'all> Lending<'all> + 'a,
+    L: ?Sized + CovariantLending + 'a,
     for<'all> Lend<'all, L>: Clone,
 {
     // SAFETY: the lend is the type parameter L
@@ -86,7 +86,7 @@ where
 
 impl<'a, L> DoubleEndedLender for Repeat<'a, L>
 where
-    L: ?Sized + for<'all> Lending<'all> + 'a,
+    L: ?Sized + CovariantLending + 'a,
     for<'all> Lend<'all, L>: Clone,
 {
     #[inline]
@@ -102,7 +102,7 @@ where
 
 impl<'a, L> FusedLender for Repeat<'a, L>
 where
-    L: ?Sized + for<'all> Lending<'all> + 'a,
+    L: ?Sized + CovariantLending + 'a,
     for<'all> Lend<'all, L>: Clone,
 {
 }
@@ -120,7 +120,7 @@ where
 pub fn fallible_repeat<'a, E, L>(elt: Result<FallibleLend<'a, L>, E>) -> FallibleRepeat<'a, E, L>
 where
     E: Clone,
-    L: ?Sized + for<'all> FallibleLending<'all> + 'a,
+    L: ?Sized + CovariantFallibleLending + 'a,
     for<'all> FallibleLend<'all, L>: Clone,
 {
     FallibleRepeat { elt }
@@ -132,7 +132,7 @@ where
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct FallibleRepeat<'a, E, L>
 where
-    L: ?Sized + for<'all> FallibleLending<'all> + 'a,
+    L: ?Sized + CovariantFallibleLending + 'a,
 {
     elt: Result<FallibleLend<'a, L>, E>,
 }
@@ -140,7 +140,7 @@ where
 impl<'a, E, L> Clone for FallibleRepeat<'a, E, L>
 where
     E: Clone,
-    L: ?Sized + for<'all> FallibleLending<'all> + 'a,
+    L: ?Sized + CovariantFallibleLending + 'a,
     FallibleLend<'a, L>: Clone,
 {
     fn clone(&self) -> Self {
@@ -153,7 +153,7 @@ where
 impl<'a, E, L> fmt::Debug for FallibleRepeat<'a, E, L>
 where
     E: fmt::Debug,
-    L: ?Sized + for<'all> FallibleLending<'all> + 'a,
+    L: ?Sized + CovariantFallibleLending + 'a,
     FallibleLend<'a, L>: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -165,7 +165,7 @@ where
 
 impl<'lend, 'a, E, L> FallibleLending<'lend> for FallibleRepeat<'a, E, L>
 where
-    L: ?Sized + for<'all> FallibleLending<'all> + 'a,
+    L: ?Sized + CovariantFallibleLending + 'a,
     for<'all> FallibleLend<'all, L>: Clone,
 {
     type Lend = FallibleLend<'lend, L>;
@@ -174,7 +174,7 @@ where
 impl<'a, E, L> FallibleLender for FallibleRepeat<'a, E, L>
 where
     E: Clone + 'a,
-    L: ?Sized + for<'all> FallibleLending<'all> + 'a,
+    L: ?Sized + CovariantFallibleLending + 'a,
     for<'all> FallibleLend<'all, L>: Clone,
 {
     type Error = E;
@@ -203,10 +203,7 @@ where
     }
 
     #[inline]
-    fn advance_by(
-        &mut self,
-        n: usize,
-    ) -> Result<Result<(), core::num::NonZeroUsize>, Self::Error> {
+    fn advance_by(&mut self, n: usize) -> Result<Result<(), core::num::NonZeroUsize>, Self::Error> {
         if n > 0 {
             self.elt.clone()?;
         }
@@ -217,7 +214,7 @@ where
 impl<'a, E, L> DoubleEndedFallibleLender for FallibleRepeat<'a, E, L>
 where
     E: Clone + 'a,
-    L: ?Sized + for<'all> FallibleLending<'all> + 'a,
+    L: ?Sized + CovariantFallibleLending + 'a,
     for<'all> FallibleLend<'all, L>: Clone,
 {
     #[inline]
@@ -240,7 +237,7 @@ where
 impl<'a, E, L> FusedFallibleLender for FallibleRepeat<'a, E, L>
 where
     E: Clone + 'a,
-    L: ?Sized + for<'all> FallibleLending<'all> + 'a,
+    L: ?Sized + CovariantFallibleLending + 'a,
     for<'all> FallibleLend<'all, L>: Clone,
 {
 }

@@ -8,9 +8,11 @@
   use either the (safe) `check_covariance!`/`check_covariance_fallible!` macros
   (for sources) to check covariance of the lend lifetime, or the (unsafe)
   `unsafe_assume_covariance!`/`unsafe_assume_covariance_fallible!` macros when
-  assuming covariance of underlying lends (without any check). Covariance
-  checks have also been embedded in the `hrc!`, `hrc_mut!` and `hrc_once`
-  macros.
+  assuming covariance of underlying lends (without any check). Covariance checks
+  have also been embedded in the `hrc!`, `hrc_mut!` and `hrc_once` macros.
+  Methods that used to take `for<'all> Lending<'all>` now take
+  `CovariantLending`, which depends on `for<'all> Lending<'all, L>` but
+  forces a covariance check.
 
 - Fallible lenders have now feature parity with normal lenders. In particular,
   `FallibleLender` has now `chunk` and `rposition` methods.

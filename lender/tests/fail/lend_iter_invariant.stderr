@@ -1,0 +1,39 @@
+error[E0277]: the trait bound `Invariant: CovariantLending` is not satisfied
+  --> tests/fail/lend_iter_invariant.rs:20:33
+   |
+20 |     let _ = lender::lend_iter::<Invariant, _>(iter);
+   |                                 ^^^^^^^^^ unsatisfied trait bound
+   |
+help: the trait `CovariantLending` is not implemented for `Invariant`
+  --> tests/fail/lend_iter_invariant.rs:7:1
+   |
+ 7 | struct Invariant;
+   | ^^^^^^^^^^^^^^^^
+note: required by a bound in `lend_iter`
+  --> src/sources/from_iter.rs
+   |
+   | pub fn lend_iter<'a, L, I>(iter: I) -> LendIter<'a, L, I>
+   |        --------- required by a bound in this function
+   | where
+   |     L: ?Sized + CovariantLending + 'a,
+   |                 ^^^^^^^^^^^^^^^^ required by this bound in `lend_iter`
+
+error[E0277]: the trait bound `FallibleInvariant: CovariantFallibleLending` is not satisfied
+  --> tests/fail/lend_iter_invariant.rs:29:42
+   |
+29 |     let _ = lender::lend_fallible_iter::<FallibleInvariant, _>(iter);
+   |                                          ^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+   |
+help: the trait `CovariantFallibleLending` is not implemented for `FallibleInvariant`
+  --> tests/fail/lend_iter_invariant.rs:13:1
+   |
+13 | struct FallibleInvariant;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^
+note: required by a bound in `lend_fallible_iter`
+  --> src/sources/from_iter.rs
+   |
+   | pub fn lend_fallible_iter<'a, L, I>(iter: I) -> LendFallibleIter<'a, L, I>
+   |        ------------------ required by a bound in this function
+   | where
+   |     L: ?Sized + CovariantFallibleLending + 'a,
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `lend_fallible_iter`

@@ -67,6 +67,23 @@ impl<'lend, T: ?Sized + for<'all> DynLend<'all>> Lending<'lend> for DynLendShunt
     type Lend = <T as DynLend<'lend>>::Lend;
 }
 
+/// Marker trait certifying that the [`Lend`](Lending::Lend) type is covariant
+/// in its lifetime parameter.
+///
+/// This trait is automatically implemented for types created by [`lend!`] and
+/// [`covariant_lend!`]. It is required by [`lend_iter`](crate::lend_iter) and
+/// similar functions that perform lifetime transmutes which are only sound when
+/// the lend type is covariant.
+///
+/// Users should not need to implement this trait directly. Use [`lend!`] for
+/// simple patterns or [`covariant_lend!`] for complex types.
+#[doc(hidden)]
+pub trait CovariantLending: for<'all> Lending<'all> {}
+
+// SAFETY: lend!() only accepts type patterns that are syntactically covariant
+// in 'lend (references, slices, tuples of identifiers, etc.)
+impl<T: ?Sized + for<'all> DynLend<'all>> CovariantLending for DynLendShunt<T> {}
+
 /// Internal trait used to implement [`lend!`], do not use directly.
 #[doc(hidden)]
 pub trait DynLend<'lend> {
@@ -228,7 +245,7 @@ macro_rules! check_covariance {
     };
 }
 
-/// Skips the covariance check for [`Lender`] impls.
+/// Skips the covariance chxeck for [`Lender`] impls.
 ///
 /// Use this macro for adapters whose [`Lend`](Lending::Lend) type is defined in
 /// terms of another lender's [`Lend`](Lending::Lend) type (e.g., `type Lend =
@@ -312,6 +329,9 @@ macro_rules! covariant_lend {
             type Lend = $T;
         }
 
+        // Covariance is certified by the const check below.
+        impl $crate::CovariantLending for $name {}
+
         // Covariance check: this const only compiles if $T is covariant in 'lend.
         // The check uses pointer coercion: *const &'short Lend<'long> can only
         // coerce to *const &'short Lend<'short> if Lend is covariant.
@@ -368,6 +388,9 @@ macro_rules! covariant_fallible_lend {
         impl<'lend> $crate::FallibleLending<'lend> for $name {
             type Lend = $T;
         }
+
+        // Covariance is certified by the const check below.
+        impl $crate::CovariantFallibleLending for $name {}
 
         // Covariance check: this const only compiles if $T is covariant in 'lend.
         // The check uses pointer coercion: *const &'short Lend<'long> can only
@@ -426,6 +449,17 @@ impl<'lend, T: ?Sized + for<'all> DynFallibleLend<'all>> FallibleLending<'lend>
     for DynFallibleLendShunt<T>
 {
     type Lend = <T as DynFallibleLend<'lend>>::Lend;
+}
+
+/// Fallible counterpart to [`CovariantLend`].
+#[doc(hidden)]
+pub trait CovariantFallibleLending: for<'all> FallibleLending<'all> {}
+
+// SAFETY: fallible_lend!() only accepts type patterns that are syntactically
+// covariant in 'lend
+impl<T: ?Sized + for<'all> DynFallibleLend<'all>> CovariantFallibleLending
+    for DynFallibleLendShunt<T>
+{
 }
 
 /// Internal trait used to implement [`fallible_lend!`], do not use directly.

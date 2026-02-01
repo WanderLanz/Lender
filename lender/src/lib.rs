@@ -52,13 +52,13 @@ pub mod prelude {
     pub use lender_derive::for_;
 
     pub use crate::{
-        DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender,
-        ExtendFallibleLender, ExtendLender, FallibleIteratorExt, FallibleLend, FallibleLender,
-        FallibleLending, FromFallibleLender, FromLender, FusedFallibleLender, FusedLender,
-        IntoFallibleIteratorExt, IntoFallibleLender, IntoIteratorExt, IntoLender, IteratorExt,
-        Lend, Lender, Lending, ProductFallibleLender, ProductLender, SumFallibleLender, SumLender,
-        WindowsMutExt, check_covariance, check_covariance_fallible, covariant_fallible_lend,
-        covariant_lend, fallible_lend, hrc, hrc_mut, hrc_once, lend, unsafe_assume_covariance,
-        unsafe_assume_covariance_fallible,
+        CovariantFallibleLending, CovariantLending, DoubleEndedFallibleLender, DoubleEndedLender,
+        ExactSizeFallibleLender, ExactSizeLender, ExtendFallibleLender, ExtendLender,
+        FallibleIteratorExt, FallibleLend, FallibleLender, FallibleLending, FromFallibleLender,
+        FromLender, FusedFallibleLender, FusedLender, IntoFallibleIteratorExt, IntoFallibleLender,
+        IntoIteratorExt, IntoLender, IteratorExt, Lend, Lender, Lending, ProductFallibleLender,
+        ProductLender, SumFallibleLender, SumLender, WindowsMutExt, check_covariance,
+        check_covariance_fallible, covariant_fallible_lend, covariant_lend, fallible_lend, hrc,
+        hrc_mut, hrc_once, lend, unsafe_assume_covariance, unsafe_assume_covariance_fallible,
     };
 }

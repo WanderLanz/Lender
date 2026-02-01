@@ -1,0 +1,39 @@
+error[E0277]: the trait bound `Invariant: CovariantLending` is not satisfied
+  --> tests/fail/repeat_with_covariant.rs:21:35
+   |
+21 |     let _ = lender::repeat_with::<Invariant, _>(f);
+   |                                   ^^^^^^^^^ unsatisfied trait bound
+   |
+help: the trait `CovariantLending` is not implemented for `Invariant`
+  --> tests/fail/repeat_with_covariant.rs:8:1
+   |
+ 8 | struct Invariant;
+   | ^^^^^^^^^^^^^^^^
+note: required by a bound in `lender::repeat_with`
+  --> src/sources/repeat_with.rs
+   |
+   | pub fn repeat_with<'a, L, F>(f: F) -> RepeatWith<'a, L, F>
+   |        ----------- required by a bound in this function
+   | where
+   |     L: ?Sized + CovariantLending + 'a,
+   |                 ^^^^^^^^^^^^^^^^ required by this bound in `repeat_with`
+
+error[E0277]: the trait bound `FallibleInvariant: CovariantFallibleLending` is not satisfied
+  --> tests/fail/repeat_with_covariant.rs:27:44
+   |
+27 |     let _ = lender::fallible_repeat_with::<FallibleInvariant, std::io::Error, _>(f);
+   |                                            ^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+   |
+help: the trait `CovariantFallibleLending` is not implemented for `FallibleInvariant`
+  --> tests/fail/repeat_with_covariant.rs:14:1
+   |
+14 | struct FallibleInvariant;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^
+note: required by a bound in `fallible_repeat_with`
+  --> src/sources/repeat_with.rs
+   |
+   | pub fn fallible_repeat_with<'a, L, E, F>(f: F) -> FallibleRepeatWith<'a, L, E, F>
+   |        -------------------- required by a bound in this function
+   | where
+   |     L: ?Sized + CovariantFallibleLending + 'a,
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `fallible_repeat_with`
