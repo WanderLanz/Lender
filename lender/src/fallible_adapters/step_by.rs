@@ -23,8 +23,9 @@ where
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         if self.first_take {
+            let result = self.lender.next()?;
             self.first_take = false;
-            self.lender.next()
+            Ok(result)
         } else {
             self.lender.nth(self.step)
         }
@@ -46,10 +47,12 @@ where
     #[inline]
     fn nth(&mut self, mut n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         if self.first_take {
-            self.first_take = false;
             if n == 0 {
-                return self.lender.next();
+                let result = self.lender.next()?;
+                self.first_take = false;
+                return Ok(result);
             }
+            self.first_take = false;
             n -= 1;
         }
         let mut step = self.step + 1;
@@ -87,10 +90,13 @@ where
     {
         let mut acc = init;
         if self.first_take {
-            self.first_take = false;
             match self.lender.next()? {
-                None => return Ok(R::from_output(acc)),
+                None => {
+                    self.first_take = false;
+                    return Ok(R::from_output(acc));
+                }
                 Some(x) => {
+                    self.first_take = false;
                     acc = match f(acc, x)?.branch() {
                         ControlFlow::Break(b) => return Ok(R::from_residual(b)),
                         ControlFlow::Continue(c) => c,
@@ -120,10 +126,15 @@ where
     {
         let mut acc = init;
         if self.first_take {
-            self.first_take = false;
             match self.lender.next()? {
-                None => return Ok(acc),
-                Some(x) => acc = f(acc, x)?,
+                None => {
+                    self.first_take = false;
+                    return Ok(acc);
+                }
+                Some(x) => {
+                    self.first_take = false;
+                    acc = f(acc, x)?;
+                }
             }
         }
         while let Some(x) = self.lender.nth(self.step)? {

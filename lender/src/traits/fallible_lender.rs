@@ -619,8 +619,12 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::partition`].
+    ///
+    /// On error, returns the partial results accumulated so far together
+    /// with the error, matching the convention used by
+    /// [`collect`](FallibleLender::collect).
     #[inline]
-    fn partition<'this, E, F>(mut self, mut f: F) -> Result<(E, E), Self::Error>
+    fn partition<'this, E, F>(mut self, mut f: F) -> Result<(E, E), ((E, E), Self::Error)>
     where
         Self: Sized + 'this,
         E: Default + ExtendLender<NonFallibleAdapter<'this, Self>>,
@@ -628,14 +632,17 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     {
         let mut left = E::default();
         let mut right = E::default();
-        while let Some(x) = self.next()? {
-            if f(&x)? {
-                left.extend_lender_one(x);
-            } else {
-                right.extend_lender_one(x);
+        loop {
+            match self.next() {
+                Ok(Some(x)) => match f(&x) {
+                    Ok(true) => left.extend_lender_one(x),
+                    Ok(false) => right.extend_lender_one(x),
+                    Err(e) => return Err(((left, right), e)),
+                },
+                Ok(None) => return Ok((left, right)),
+                Err(e) => return Err(((left, right), e)),
             }
         }
-        Ok((left, right))
     }
 
     /// The [`FallibleLender`] version of [`Iterator::is_partitioned`].
