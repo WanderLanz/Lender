@@ -45,6 +45,8 @@ pub use traits::*;
 pub mod higher_order;
 mod sources;
 pub use sources::*;
+mod fallible_sources;
+pub use fallible_sources::*;
 pub use stable_try_trait_v2 as try_trait_v2;
 
 pub mod prelude {

@@ -30,7 +30,7 @@ help: the trait `CovariantFallibleLending` is not implemented for `FallibleInvar
 14 | struct FallibleInvariant;
    | ^^^^^^^^^^^^^^^^^^^^^^^^
 note: required by a bound in `fallible_repeat_with`
-  --> src/sources/repeat_with.rs
+  --> src/fallible_sources/repeat_with.rs
    |
    | pub fn fallible_repeat_with<'a, L, E, F>(f: F) -> FallibleRepeatWith<'a, L, E, F>
    |        -------------------- required by a bound in this function

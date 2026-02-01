@@ -8,16 +8,15 @@ mod repeat_with;
 mod windows_mut;
 
 pub use self::{
-    empty::{Empty, FallibleEmpty, empty, fallible_empty},
-    from_fn::{FromFallibleFn, FromFn, from_fallible_fn, from_fn},
+    empty::{Empty, empty},
+    from_fn::{FromFn, from_fn},
     from_iter::{
-        FromFallibleIter, FromIntoFallibleIter, FromIntoIter, FromIter, LendFallibleIter, LendIter,
-        from_fallible_iter, from_into_fallible_iter, from_into_iter, from_iter, lend_fallible_iter,
-        lend_iter,
+        FromIntoIter, FromIter, LendIter,
+        from_into_iter, from_iter, lend_iter,
     },
-    once::{FallibleOnce, Once, fallible_once, once},
-    once_with::{FallibleOnceWith, OnceWith, fallible_once_with, once_with},
-    repeat::{FallibleRepeat, Repeat, fallible_repeat, repeat},
-    repeat_with::{FallibleRepeatWith, RepeatWith, fallible_repeat_with, repeat_with},
+    once::{Once, once},
+    once_with::{OnceWith, once_with},
+    repeat::{Repeat, repeat},
+    repeat_with::{RepeatWith, repeat_with},
     windows_mut::{ArrayWindowsMut, WindowsMut, WindowsMutExt, array_windows_mut, windows_mut},
 };
