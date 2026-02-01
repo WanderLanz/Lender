@@ -120,7 +120,6 @@ impl<B, C> FromResidual for ControlFlow<B, C> {
     fn from_residual(residual: ControlFlow<B, Infallible>) -> Self {
         match residual {
             ControlFlow::Break(b) => ControlFlow::Break(b),
-            _ => unsafe { core::hint::unreachable_unchecked() },
         }
     }
 }
@@ -174,7 +173,6 @@ impl<T, E, F: From<E>> FromResidual<Result<Infallible, E>> for Result<T, F> {
     fn from_residual(residual: Result<Infallible, E>) -> Self {
         match residual {
             Err(e) => Err(From::from(e)),
-            _ => unsafe { core::hint::unreachable_unchecked() },
         }
     }
 }
@@ -203,7 +201,6 @@ impl<T, E, F: From<E>> FromResidual<Result<Infallible, E>> for Poll<Result<T, F>
     fn from_residual(x: Result<Infallible, E>) -> Self {
         match x {
             Err(e) => Poll::Ready(Err(From::from(e))),
-            _ => unsafe { core::hint::unreachable_unchecked() },
         }
     }
 }
@@ -232,7 +229,6 @@ impl<T, E, F: From<E>> FromResidual<Result<Infallible, E>> for Poll<Option<Resul
     fn from_residual(x: Result<Infallible, E>) -> Self {
         match x {
             Err(e) => Poll::Ready(Some(Err(From::from(e)))),
-            _ => unsafe { core::hint::unreachable_unchecked() },
         }
     }
 }
