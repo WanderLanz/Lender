@@ -8,6 +8,11 @@ use crate::{
     try_trait_v2::{FromResidual, Try},
 };
 
+/// A fallible lender with a [`peek()`](Peekable::peek) method that returns an optional
+/// reference to the next element.
+///
+/// This `struct` is created by the [`peekable()`](crate::FallibleLender::peekable) method on
+/// [`FallibleLender`]. See its documentation for more.
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Peekable<'this, L>
 where

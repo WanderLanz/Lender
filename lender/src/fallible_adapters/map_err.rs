@@ -5,6 +5,10 @@ use crate::{
     FallibleLending, FusedFallibleLender,
 };
 
+/// A fallible lender that maps the errors of the underlying lender with a closure.
+///
+/// This `struct` is created by the [`map_err()`](crate::FallibleLender::map_err) method on
+/// [`FallibleLender`]. See its documentation for more.
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct MapErr<E, L, F> {

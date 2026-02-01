@@ -1,12 +1,12 @@
 use core::{iter::FusedIterator, marker::PhantomData};
 
-use crate::{
-    DoubleEndedLender, ExactSizeLender,
-    FusedLender, Lend, Lender,
-};
+use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender};
 
-#[derive(Clone, Debug)]
-#[must_use = "lenders are lazy and do nothing unless consumed"]
+/// An iterator that maps each element of the underlying lender into an owned value.
+///
+/// This `struct` is created by the [`map_into_iter()`](crate::Lender::map_into_iter) method on [`Lender`].
+#[derive(Clone)]
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct MapIntoIter<L, O, F> {
     pub(crate) lender: L,
     pub(crate) f: F,
@@ -32,6 +32,14 @@ impl<L, O, F> MapIntoIter<L, O, F> {
     #[inline(always)]
     pub fn into_parts(self) -> (L, F) {
         (self.lender, self.f)
+    }
+}
+
+impl<L: core::fmt::Debug, O, F> core::fmt::Debug for MapIntoIter<L, O, F> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("MapIntoIter")
+            .field("lender", &self.lender)
+            .finish()
     }
 }
 
@@ -65,4 +73,3 @@ impl<L: ExactSizeLender, O, F: FnMut(Lend<'_, L>) -> O> ExactSizeIterator for Ma
 }
 
 impl<L: FusedLender, O, F: FnMut(Lend<'_, L>) -> O> FusedIterator for MapIntoIter<L, O, F> {}
-

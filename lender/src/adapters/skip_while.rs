@@ -2,6 +2,9 @@ use core::{fmt, ops::ControlFlow};
 
 use crate::{FusedLender, Lend, Lender, Lending, try_trait_v2::Try};
 
+/// A lender that rejects elements while a predicate returns `true`.
+///
+/// This `struct` is created by the [`skip_while()`](crate::Lender::skip_while) method on [`Lender`].
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct SkipWhile<L, P> {

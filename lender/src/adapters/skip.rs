@@ -4,6 +4,9 @@ use crate::{
     DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending, try_trait_v2::Try,
 };
 
+/// A lender that skips over the first `n` elements of the underlying lender.
+///
+/// This `struct` is created by the [`skip()`](crate::Lender::skip) method on [`Lender`].
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Skip<L> {

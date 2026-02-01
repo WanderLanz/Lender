@@ -1,10 +1,13 @@
 use core::fmt;
 
 use crate::{
-    DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending,
-    higher_order::FnMutHKA, try_trait_v2::Try,
+    DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending, higher_order::FnMutHKA,
+    try_trait_v2::Try,
 };
 
+/// A lender that maps the values of the underlying lender with a closure.
+///
+/// This `struct` is created by the [`map()`](crate::Lender::map) method on [`Lender`].
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Map<L, F> {
@@ -108,7 +111,8 @@ where
         Self: Sized,
         Fold: FnMut(B, Lend<'_, Self>) -> B,
     {
-        self.lender.rfold(init, move |acc, x| fold(acc, (self.f)(x)))
+        self.lender
+            .rfold(init, move |acc, x| fold(acc, (self.f)(x)))
     }
 }
 

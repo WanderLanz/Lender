@@ -2,6 +2,9 @@ use core::fmt;
 
 use crate::{DoubleEndedLender, FusedLender, Lend, Lender, Lending, try_trait_v2::Try};
 
+/// A lender that filters the elements of the underlying lender with a predicate.
+///
+/// This `struct` is created by the [`filter()`](crate::Lender::filter) method on [`Lender`].
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Filter<L, P> {
@@ -84,7 +87,11 @@ where
     {
         let predicate = &mut self.predicate;
         self.lender.try_fold(init, move |acc, x| {
-            if (predicate)(&x) { f(acc, x) } else { R::from_output(acc) }
+            if (predicate)(&x) {
+                f(acc, x)
+            } else {
+                R::from_output(acc)
+            }
         })
     }
 
@@ -94,9 +101,12 @@ where
         Self: Sized,
         F: FnMut(B, Lend<'_, Self>) -> B,
     {
-        self.lender.fold(init, move |acc, x| {
-            if (self.predicate)(&x) { f(acc, x) } else { acc }
-        })
+        self.lender.fold(
+            init,
+            move |acc, x| {
+                if (self.predicate)(&x) { f(acc, x) } else { acc }
+            },
+        )
     }
 }
 
@@ -119,7 +129,11 @@ where
     {
         let predicate = &mut self.predicate;
         self.lender.try_rfold(init, move |acc, x| {
-            if (predicate)(&x) { f(acc, x) } else { R::from_output(acc) }
+            if (predicate)(&x) {
+                f(acc, x)
+            } else {
+                R::from_output(acc)
+            }
         })
     }
 
@@ -129,9 +143,12 @@ where
         Self: Sized,
         F: FnMut(B, Lend<'_, Self>) -> B,
     {
-        self.lender.rfold(init, move |acc, x| {
-            if (self.predicate)(&x) { f(acc, x) } else { acc }
-        })
+        self.lender.rfold(
+            init,
+            move |acc, x| {
+                if (self.predicate)(&x) { f(acc, x) } else { acc }
+            },
+        )
     }
 }
 

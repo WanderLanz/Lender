@@ -3,6 +3,9 @@ use core::ops::ControlFlow;
 
 use crate::{FusedLender, Lend, Lender, Lending, try_trait_v2::Try};
 
+/// A lender that yields elements while a predicate returns `true`.
+///
+/// This `struct` is created by the [`take_while()`](crate::Lender::take_while) method on [`Lender`].
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct TakeWhile<L, P> {
@@ -94,9 +97,7 @@ where
             if (predicate)(&x) {
                 match f(acc, x).branch() {
                     ControlFlow::Continue(b) => ControlFlow::Continue(b),
-                    ControlFlow::Break(residual) => {
-                        ControlFlow::Break(R::from_residual(residual))
-                    }
+                    ControlFlow::Break(residual) => ControlFlow::Break(R::from_residual(residual)),
                 }
             } else {
                 *flag = true;

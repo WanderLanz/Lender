@@ -5,6 +5,9 @@ use crate::{
     DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending, try_trait_v2::Try,
 };
 
+/// A lender that only yields the first `n` elements of the underlying lender.
+///
+/// This `struct` is created by the [`take()`](crate::Lender::take) method on [`Lender`].
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Take<L> {
@@ -116,9 +119,7 @@ where
             } else {
                 match r.branch() {
                     ControlFlow::Continue(b) => ControlFlow::Continue(b),
-                    ControlFlow::Break(residual) => {
-                        ControlFlow::Break(R::from_residual(residual))
-                    }
+                    ControlFlow::Break(residual) => ControlFlow::Break(R::from_residual(residual)),
                 }
             }
         }) {

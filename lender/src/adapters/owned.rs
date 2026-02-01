@@ -1,11 +1,11 @@
 use alloc::borrow::ToOwned;
 use core::iter::FusedIterator;
 
-use crate::{
-    DoubleEndedLender, ExactSizeLender,
-    FusedLender, Lend, Lender,
-};
+use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender};
 
+/// An iterator that converts each lent reference into an owned value.
+///
+/// This `struct` is created by the [`owned()`](crate::Lender::owned) method on [`Lender`].
 #[derive(Clone, Debug)]
 #[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Owned<L> {
@@ -78,4 +78,3 @@ where
         Self::new(L::default())
     }
 }
-

@@ -1,10 +1,10 @@
 use core::fmt;
 
-use crate::{
-    Lend, Lender, Lending,
-    higher_order::FnMutHKAOpt,
-};
+use crate::{Lend, Lender, Lending, higher_order::FnMutHKAOpt};
 
+/// A lender to maintain state while lending elements from the underlying lender.
+///
+/// This `struct` is created by the [`scan()`](crate::Lender::scan) method on [`Lender`].
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Scan<L, St, F> {

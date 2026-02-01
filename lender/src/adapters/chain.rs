@@ -1,10 +1,13 @@
 use core::{num::NonZeroUsize, ops::ControlFlow};
 
 use crate::{
-    try_trait_v2::{FromResidual, Try},
     DoubleEndedLender, Fuse, FusedLender, Lend, Lender, Lending,
+    try_trait_v2::{FromResidual, Try},
 };
 
+/// A lender that chains two lenders together, one after the other.
+///
+/// This `struct` is created by the [`chain()`](crate::Lender::chain) method on [`Lender`].
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Chain<A, B> {

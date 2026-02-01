@@ -7,6 +7,10 @@ use crate::{
     try_trait_v2::Try,
 };
 
+/// A fallible lender that flattens one level of nesting in a lender of lenders.
+///
+/// This `struct` is created by the [`flatten()`](crate::FallibleLender::flatten) method on
+/// [`FallibleLender`]. See its documentation for more.
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Flatten<'this, L: FallibleLender>
 where
@@ -106,6 +110,10 @@ impl<L: FusedFallibleLender> FusedFallibleLender for Flatten<'_, L> where
 {
 }
 
+/// A fallible lender that maps each element to a lender, and yields the elements of the produced lenders.
+///
+/// This `struct` is created by the [`flat_map()`](crate::FallibleLender::flat_map) method on
+/// [`FallibleLender`]. See its documentation for more.
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct FlatMap<'this, L: FallibleLender, F>
 where
@@ -219,6 +227,7 @@ where
 {
 }
 
+/// The internal implementation backing both [`Flatten`] and [`FlatMap`] for fallible lenders.
 pub(crate) struct FlattenCompat<'this, L: FallibleLender>
 where
     for<'all> FallibleLend<'all, L>: IntoFallibleLender,

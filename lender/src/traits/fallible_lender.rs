@@ -31,7 +31,7 @@ pub type FallibleLend<'lend, L> = <L as FallibleLending<'lend>>::Lend;
 
 /// A trait for dealing with fallible lending iterators.
 ///
-/// This is the main lender trait. For more about the concept of lenders
+/// This is the main fallible lender trait. For more about the concept of lenders
 /// generally, please see the [crate documentation](crate).
 ///
 /// For more about the concept of iterators

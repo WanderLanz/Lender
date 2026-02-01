@@ -4,6 +4,9 @@ use crate::{
     DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending, try_trait_v2::Try,
 };
 
+/// A lender that yields the current count and the element during iteration.
+///
+/// This `struct` is created by the [`enumerate()`](crate::Lender::enumerate) method on [`Lender`].
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Enumerate<L> {

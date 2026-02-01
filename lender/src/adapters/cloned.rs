@@ -1,10 +1,10 @@
 use core::iter::FusedIterator;
 
-use crate::{
-    DoubleEndedLender, ExactSizeLender,
-    FusedLender, Lender, Lending,
-};
+use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lender, Lending};
 
+/// An iterator that clones the elements of an underlying lender.
+///
+/// This `struct` is created by the [`cloned()`](crate::Lender::cloned) method on [`Lender`].
 #[derive(Clone, Debug)]
 #[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Cloned<L> {
@@ -81,4 +81,3 @@ where
         Self::new(L::default())
     }
 }
-

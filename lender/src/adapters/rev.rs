@@ -2,6 +2,10 @@ use crate::{
     DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending, try_trait_v2::Try,
 };
 
+/// A double-ended lender with the direction inverted.
+///
+/// This `struct` is created by the [`rev()`](crate::DoubleEndedLender::rev) method on
+/// [`DoubleEndedLender`]. See its documentation for more.
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Rev<L> {

@@ -5,6 +5,9 @@ use crate::{
     try_trait_v2::{FromResidual, Try},
 };
 
+/// A lender that yields [`None`] forever after the underlying lender yields [`None`] once.
+///
+/// This `struct` is created by the [`fuse()`](crate::Lender::fuse) method on [`Lender`].
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Fuse<L> {
