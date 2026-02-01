@@ -12,11 +12,11 @@ use crate::{
 /// # Examples
 /// ```rust
 /// use lender::prelude::*;
-/// let mut e = lender::fallible_empty::<String, fallible_lend!(&'lend u32)>();
+/// let mut e = lender::fallible_empty::<fallible_lend!(&'lend u32), String>();
 /// let x: Result<Option<&u32>, String> = e.next();
 /// assert_eq!(x, Ok(None));
 /// ```
-pub const fn empty<E, L: ?Sized + for<'all> FallibleLending<'all>>() -> Empty<E, L>
+pub const fn empty<L: ?Sized + for<'all> FallibleLending<'all>, E>() -> Empty<L, E>
 {
     Empty(marker::PhantomData)
 }
@@ -28,22 +28,22 @@ pub const fn empty<E, L: ?Sized + for<'all> FallibleLending<'all>>() -> Empty<E,
 /// The [`FallibleLender`] version of [`core::iter::Empty`].
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 #[derive(Clone, Copy, Default)]
-pub struct Empty<E, L: ?Sized>(marker::PhantomData<(E, L)>);
+pub struct Empty<L: ?Sized, E>(marker::PhantomData<(E, L)>);
 
-impl<E, L: ?Sized> fmt::Debug for Empty<E, L> {
+impl<L: ?Sized, E> fmt::Debug for Empty<L, E> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("FallibleEmpty").finish()
     }
 }
 
-impl<'lend, E, L> FallibleLending<'lend> for Empty<E, L>
+impl<'lend, L, E> FallibleLending<'lend> for Empty<L, E>
 where
     L: ?Sized + for<'all> FallibleLending<'all>,
 {
     type Lend = FallibleLend<'lend, L>;
 }
 
-impl<E, L> FallibleLender for Empty<E, L>
+impl<L, E> FallibleLender for Empty<L, E>
 where
     L: ?Sized + for<'all> FallibleLending<'all>,
 {
@@ -62,7 +62,7 @@ where
     }
 }
 
-impl<E, L> DoubleEndedFallibleLender for Empty<E, L>
+impl<L, E> DoubleEndedFallibleLender for Empty<L, E>
 where
     L: ?Sized + for<'all> FallibleLending<'all>,
 {
@@ -72,12 +72,12 @@ where
     }
 }
 
-impl<E, L> ExactSizeFallibleLender for Empty<E, L> where
+impl<L, E> ExactSizeFallibleLender for Empty<L, E> where
     L: ?Sized + for<'all> FallibleLending<'all>
 {
 }
 
-impl<E, L> FusedFallibleLender for Empty<E, L> where
+impl<L, E> FusedFallibleLender for Empty<L, E> where
     L: ?Sized + for<'all> FallibleLending<'all>
 {
 }

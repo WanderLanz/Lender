@@ -10,9 +10,9 @@ use crate::{
 /// once.
 ///
 /// The [`FallibleLender`] version of [`core::iter::once()`].
-pub fn once<'a, E, L: ?Sized + CovariantFallibleLending>(
+pub fn once<'a, L: ?Sized + CovariantFallibleLending, E>(
     value: Result<FallibleLend<'a, L>, E>,
-) -> Once<'a, E, L> {
+) -> Once<'a, L, E> {
     Once { inner: Some(value) }
 }
 
@@ -22,14 +22,14 @@ pub fn once<'a, E, L: ?Sized + CovariantFallibleLending>(
 ///
 /// The [`FallibleLender`] version of [`core::iter::Once`].
 #[must_use = "lenders are lazy and do nothing unless consumed"]
-pub struct Once<'a, E, L>
+pub struct Once<'a, L, E>
 where
     L: ?Sized + CovariantFallibleLending,
 {
     inner: Option<Result<FallibleLend<'a, L>, E>>,
 }
 
-impl<'a, E, L> Clone for Once<'a, E, L>
+impl<'a, L, E> Clone for Once<'a, L, E>
 where
     L: ?Sized + CovariantFallibleLending,
     E: Clone,
@@ -42,7 +42,7 @@ where
     }
 }
 
-impl<'a, E, L> fmt::Debug for Once<'a, E, L>
+impl<'a, L, E> fmt::Debug for Once<'a, L, E>
 where
     L: ?Sized + CovariantFallibleLending,
     E: fmt::Debug,
@@ -55,14 +55,14 @@ where
     }
 }
 
-impl<'lend, E, L> FallibleLending<'lend> for Once<'_, E, L>
+impl<'lend, L, E> FallibleLending<'lend> for Once<'_, L, E>
 where
     L: ?Sized + CovariantFallibleLending,
 {
     type Lend = FallibleLend<'lend, L>;
 }
 
-impl<'a, E, L> FallibleLender for Once<'a, E, L>
+impl<'a, L, E> FallibleLender for Once<'a, L, E>
 where
     E: 'a,
     L: ?Sized + CovariantFallibleLending,
@@ -101,7 +101,7 @@ where
     }
 }
 
-impl<'a, E, L> DoubleEndedFallibleLender for Once<'a, E, L>
+impl<'a, L, E> DoubleEndedFallibleLender for Once<'a, L, E>
 where
     E: 'a,
     L: ?Sized + CovariantFallibleLending,
@@ -112,14 +112,14 @@ where
     }
 }
 
-impl<'a, E, L> ExactSizeFallibleLender for Once<'a, E, L>
+impl<'a, L, E> ExactSizeFallibleLender for Once<'a, L, E>
 where
     E: 'a,
     L: ?Sized + CovariantFallibleLending,
 {
 }
 
-impl<'a, E, L> FusedFallibleLender for Once<'a, E, L>
+impl<'a, L, E> FusedFallibleLender for Once<'a, L, E>
 where
     E: 'a,
     L: ?Sized + CovariantFallibleLending,

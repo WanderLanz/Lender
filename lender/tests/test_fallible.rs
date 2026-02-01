@@ -11,31 +11,31 @@ fn fallible_empty() {
     use lender::{fallible_empty, fallible_lend};
 
     // Test basic fallible_empty lender
-    let mut empty = fallible_empty::<String, fallible_lend!(u32)>();
+    let mut empty = fallible_empty::<fallible_lend!(u32), String>();
     assert!(empty.next().unwrap().is_none());
     assert!(empty.next().unwrap().is_none()); // Should continue returning None
 
     // Test that it's fused
-    let mut empty_fused = fallible_empty::<String, fallible_lend!(i32)>();
+    let mut empty_fused = fallible_empty::<fallible_lend!(i32), String>();
     for _ in 0..10 {
         assert!(empty_fused.next().unwrap().is_none());
     }
 
     // Test fold operation
     let sum: Result<i32, String> =
-        fallible_empty::<String, fallible_lend!(i32)>().fold(0, |acc, _x: i32| Ok(acc + 1));
+        fallible_empty::<fallible_lend!(i32), String>().fold(0, |acc, _x: i32| Ok(acc + 1));
     assert_eq!(sum, Ok(0)); // Should never iterate so result is 0
 
     // Test count
-    let count: Result<usize, String> = fallible_empty::<String, fallible_lend!(i32)>().count();
+    let count: Result<usize, String> = fallible_empty::<fallible_lend!(i32), String>().count();
     assert_eq!(count, Ok(0));
 
     // Test with reference type
-    let mut empty_ref = fallible_empty::<String, fallible_lend!(&'lend str)>();
+    let mut empty_ref = fallible_empty::<fallible_lend!(&'lend str), String>();
     assert!(empty_ref.next().unwrap().is_none());
 
     // FallibleEmpty should implement ExactSizeFallibleLender
-    let empty_exact = fallible_empty::<String, fallible_lend!(i32)>();
+    let empty_exact = fallible_empty::<fallible_lend!(i32), String>();
     assert_eq!(lender::ExactSizeFallibleLender::len(&empty_exact), 0);
     assert!(lender::ExactSizeFallibleLender::is_empty(&empty_exact));
 }
@@ -45,13 +45,13 @@ fn fallible_once() {
     use lender::{fallible_lend, fallible_once};
 
     // Test with Ok value
-    let mut once = fallible_once::<String, fallible_lend!(i32)>(Ok(42));
+    let mut once = fallible_once::<fallible_lend!(i32), String>(Ok(42));
     assert_eq!(once.next().unwrap(), Some(42));
     assert!(once.next().unwrap().is_none());
     assert!(once.next().unwrap().is_none()); // Should continue returning None (fused)
 
     // Test with Err value
-    let mut once_err = fallible_once::<String, fallible_lend!(i32)>(Err("error".to_string()));
+    let mut once_err = fallible_once::<fallible_lend!(i32), String>(Err("error".to_string()));
     match once_err.next() {
         Err(e) => assert_eq!(e, "error"),
         Ok(_) => panic!("Expected error"),
@@ -61,26 +61,26 @@ fn fallible_once() {
 
     // Test fold with Ok
     let sum: Result<i32, String> =
-        fallible_once::<String, fallible_lend!(i32)>(Ok(10)).fold(0, |acc, x| Ok(acc + x));
+        fallible_once::<fallible_lend!(i32), String>(Ok(10)).fold(0, |acc, x| Ok(acc + x));
     assert_eq!(sum, Ok(10));
 
     // Test fold with Err
     let sum_err: Result<i32, String> =
-        fallible_once::<String, fallible_lend!(i32)>(Err("error".to_string()))
+        fallible_once::<fallible_lend!(i32), String>(Err("error".to_string()))
             .fold(0, |acc, x: i32| Ok(acc + x));
     assert!(sum_err.is_err());
 
     // Test count with Ok
-    let count: Result<usize, String> = fallible_once::<String, fallible_lend!(i32)>(Ok(42)).count();
+    let count: Result<usize, String> = fallible_once::<fallible_lend!(i32), String>(Ok(42)).count();
     assert_eq!(count, Ok(1));
 
     // Test count with Err
     let count_err: Result<usize, String> =
-        fallible_once::<String, fallible_lend!(i32)>(Err("error".to_string())).count();
+        fallible_once::<fallible_lend!(i32), String>(Err("error".to_string())).count();
     assert!(count_err.is_err());
 
     // FallibleOnce should implement ExactSizeFallibleLender
-    let once_exact = fallible_once::<String, fallible_lend!(i32)>(Ok(42));
+    let once_exact = fallible_once::<fallible_lend!(i32), String>(Ok(42));
     assert_eq!(lender::ExactSizeFallibleLender::len(&once_exact), 1);
     assert!(!lender::ExactSizeFallibleLender::is_empty(&once_exact));
 }
@@ -90,7 +90,7 @@ fn fallible_repeat() {
     use lender::{fallible_lend, fallible_repeat};
 
     // Test with Ok value
-    let mut repeat = fallible_repeat::<String, fallible_lend!(i32)>(Ok(42));
+    let mut repeat = fallible_repeat::<fallible_lend!(i32), String>(Ok(42));
     assert_eq!(repeat.next().unwrap(), Some(42));
     assert_eq!(repeat.next().unwrap(), Some(42));
     assert_eq!(repeat.next().unwrap(), Some(42));
@@ -100,7 +100,7 @@ fn fallible_repeat() {
     }
 
     // Test with Err value
-    let mut repeat_err = fallible_repeat::<String, fallible_lend!(i32)>(Err("error".to_string()));
+    let mut repeat_err = fallible_repeat::<fallible_lend!(i32), String>(Err("error".to_string()));
     match repeat_err.next() {
         Err(e) => assert_eq!(e, "error"),
         Ok(_) => panic!("Expected error"),
@@ -113,7 +113,7 @@ fn fallible_repeat() {
 
     // Test take with Ok - manually collect
     let mut collected = Vec::new();
-    let result = fallible_repeat::<String, fallible_lend!(i32)>(Ok(5))
+    let result = fallible_repeat::<fallible_lend!(i32), String>(Ok(5))
         .take(3)
         .for_each(|x| {
             collected.push(x);
@@ -124,7 +124,7 @@ fn fallible_repeat() {
 
     // Test take with Err - should fail on first item
     let mut collected_err = Vec::new();
-    let result_err = fallible_repeat::<String, fallible_lend!(i32)>(Err("error".to_string()))
+    let result_err = fallible_repeat::<fallible_lend!(i32), String>(Err("error".to_string()))
         .take(3)
         .for_each(|x| {
             collected_err.push(x);
@@ -134,11 +134,11 @@ fn fallible_repeat() {
     assert!(collected_err.is_empty()); // Should not have collected anything
 
     // size_hint should indicate infinite iterator
-    let repeat_hint = fallible_repeat::<String, fallible_lend!(i32)>(Ok(42));
+    let repeat_hint = fallible_repeat::<fallible_lend!(i32), String>(Ok(42));
     assert_eq!(repeat_hint.size_hint(), (usize::MAX, None));
 
     // FallibleRepeat should be double-ended (infinite both ways)
-    let mut repeat_de = fallible_repeat::<String, fallible_lend!(i32)>(Ok(7));
+    let mut repeat_de = fallible_repeat::<fallible_lend!(i32), String>(Ok(7));
     assert_eq!(repeat_de.next_back().unwrap(), Some(7));
     assert_eq!(repeat_de.next_back().unwrap(), Some(7));
     assert_eq!(repeat_de.next().unwrap(), Some(7));
@@ -275,7 +275,7 @@ fn map_err_adapter() {
     use lender::{fallible_lend, fallible_once};
 
     // Test mapping error type
-    let mut mapped = fallible_once::<i32, fallible_lend!(u32)>(Err(42))
+    let mut mapped = fallible_once::<fallible_lend!(u32), i32>(Err(42))
         .map_err(|e: i32| format!("Error: {}", e));
     match mapped.next() {
         Err(e) => assert_eq!(e, "Error: 42"),
@@ -283,7 +283,7 @@ fn map_err_adapter() {
     }
 
     // Test with Ok value (error mapper shouldn't be called)
-    let mut mapped_ok = fallible_once::<String, fallible_lend!(i32)>(Ok(100))
+    let mut mapped_ok = fallible_once::<fallible_lend!(i32), String>(Ok(100))
         .map_err(|_e: String| panic!("Should not be called"));
     assert_eq!(mapped_ok.next().unwrap(), Some(100));
 }

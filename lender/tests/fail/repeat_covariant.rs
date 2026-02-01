@@ -27,7 +27,7 @@ fn test_fallible_repeat<'a>(v: Result<&'a Cell<Option<&'a String>>, String>)
 where
     &'a Cell<Option<&'a String>>: Clone,
 {
-    let _ = lender::fallible_repeat::<String, FallibleInvariant>(v);
+    let _ = lender::fallible_repeat::<FallibleInvariant, String>(v);
 }
 
 fn main() {}

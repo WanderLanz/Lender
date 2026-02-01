@@ -211,7 +211,7 @@ where
 {
     type Error = L::Error;
 
-    type FallibleLender = FallibleEmpty<L::Error, Self>;
+    type FallibleLender = FallibleEmpty<Self, L::Error>;
     fn into_fallible_lender(self) -> <Self as IntoFallibleLender>::FallibleLender {
         fallible_empty()
     }
@@ -223,7 +223,7 @@ where
 {
     type Error = L::Error;
 
-    type FallibleLender = FallibleEmpty<L::Error, Self>;
+    type FallibleLender = FallibleEmpty<Self, L::Error>;
     fn into_fallible_lender(self) -> <Self as IntoFallibleLender>::FallibleLender {
         fallible_empty()
     }

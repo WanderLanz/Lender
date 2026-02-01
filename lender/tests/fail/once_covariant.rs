@@ -21,7 +21,7 @@ fn test_once<'a>(v: &'a Cell<Option<&'a String>>) {
 }
 
 fn test_fallible_once<'a>(v: Result<&'a Cell<Option<&'a String>>, std::io::Error>) {
-    let _ = lender::fallible_once::<std::io::Error, FallibleInvariant>(v);
+    let _ = lender::fallible_once::<FallibleInvariant, std::io::Error>(v);
 }
 
 fn main() {}

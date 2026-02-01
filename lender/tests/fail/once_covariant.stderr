@@ -36,10 +36,10 @@ note: required by a bound in `lender::Once`
    |                 ^^^^^^^^^^^^^^^^ required by this bound in `Once`
 
 error[E0277]: the trait bound `FallibleInvariant: CovariantFallibleLending` is not satisfied
-  --> tests/fail/once_covariant.rs:24:53
+  --> tests/fail/once_covariant.rs:24:37
    |
-24 |     let _ = lender::fallible_once::<std::io::Error, FallibleInvariant>(v);
-   |                                                     ^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+24 |     let _ = lender::fallible_once::<FallibleInvariant, std::io::Error>(v);
+   |                                     ^^^^^^^^^^^^^^^^^ unsatisfied trait bound
    |
 help: the trait `CovariantFallibleLending` is not implemented for `FallibleInvariant`
   --> tests/fail/once_covariant.rs:13:1
@@ -49,13 +49,13 @@ help: the trait `CovariantFallibleLending` is not implemented for `FallibleInvar
 note: required by a bound in `fallible_once`
   --> src/fallible_sources/once.rs
    |
-   | pub fn once<'a, E, L: ?Sized + CovariantFallibleLending>(
-   |                                ^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `once`
+   | pub fn once<'a, L: ?Sized + CovariantFallibleLending, E>(
+   |                             ^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `once`
 
 error[E0277]: the trait bound `FallibleInvariant: CovariantFallibleLending` is not satisfied
   --> tests/fail/once_covariant.rs:24:13
    |
-24 |     let _ = lender::fallible_once::<std::io::Error, FallibleInvariant>(v);
+24 |     let _ = lender::fallible_once::<FallibleInvariant, std::io::Error>(v);
    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
    |
 help: the trait `CovariantFallibleLending` is not implemented for `FallibleInvariant`
@@ -66,7 +66,7 @@ help: the trait `CovariantFallibleLending` is not implemented for `FallibleInvar
 note: required by a bound in `FallibleOnce`
   --> src/fallible_sources/once.rs
    |
-   | pub struct Once<'a, E, L>
+   | pub struct Once<'a, L, E>
    |            ---- required by a bound in this struct
    | where
    |     L: ?Sized + CovariantFallibleLending,
