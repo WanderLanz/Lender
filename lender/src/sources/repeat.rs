@@ -110,6 +110,13 @@ where
 /// Creates a new fallible lender that endlessly repeats a single element.
 ///
 /// The [`FallibleLender`] version of [`iter::repeat()`](core::iter::repeat).
+///
+/// # Examples
+/// ```rust
+/// # use lender::prelude::*;
+/// let mut lender = lender::fallible_repeat::<'_, String, fallible_lend!(&'lend u8)>(Ok(&0u8));
+/// assert_eq!(lender.next().unwrap(), Some(&0));
+/// ```
 pub fn fallible_repeat<'a, E, L>(elt: Result<FallibleLend<'a, L>, E>) -> FallibleRepeat<'a, E, L>
 where
     E: Clone,

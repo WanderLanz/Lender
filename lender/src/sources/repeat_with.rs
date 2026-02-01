@@ -76,6 +76,11 @@ where
         (usize::MAX, None)
     }
 
+    /// Advances the lender by `n` elements.
+    ///
+    /// Unlike [`Repeat::advance_by`](crate::Repeat), which is a no-op,
+    /// this method calls the closure `n` times (discarding the results)
+    /// because the closure may have side effects.
     #[inline]
     fn advance_by(&mut self, n: usize) -> Result<(), core::num::NonZeroUsize> {
         for _ in 0..n {
@@ -117,6 +122,13 @@ where
 /// The [`fallible_repeat_with()`] function calls the repeater over and over again.
 ///
 /// The [`FallibleLender`] version of [`iter::repeat_with()`](core::iter::repeat_with).
+///
+/// # Examples
+/// ```rust
+/// # use lender::prelude::*;
+/// let mut lender = lender::fallible_repeat_with::<'_, fallible_lend!(&'lend u8), String, _>(|| Ok(&0u8));
+/// assert_eq!(lender.next().unwrap(), Some(&0));
+/// ```
 pub fn fallible_repeat_with<'a, L, E, F>(f: F) -> FallibleRepeatWith<'a, L, E, F>
 where
     L: ?Sized + for<'all> FallibleLending<'all> + 'a,
@@ -184,6 +196,10 @@ where
         (usize::MAX, None)
     }
 
+    /// Advances the lender by `n` elements.
+    ///
+    /// Calls the closure `n` times because the closure may have side
+    /// effects. Short-circuits on the first error.
     #[inline]
     fn advance_by(
         &mut self,

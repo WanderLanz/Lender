@@ -77,6 +77,14 @@ impl<L> FusedLender for Empty<L> where L: ?Sized + for<'all> Lending<'all> {}
 /// Creates a fallible lender that yields nothing.
 ///
 /// The [`FallibleLender`] version of [`core::iter::empty()`].
+///
+/// # Examples
+/// ```rust
+/// use lender::prelude::*;
+/// let mut e = lender::fallible_empty::<String, fallible_lend!(&'lend u32)>();
+/// let x: Result<Option<&u32>, String> = e.next();
+/// assert_eq!(x, Ok(None));
+/// ```
 pub const fn fallible_empty<E, L: ?Sized + for<'all> FallibleLending<'all>>() -> FallibleEmpty<E, L>
 {
     FallibleEmpty(marker::PhantomData)

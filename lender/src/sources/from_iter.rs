@@ -13,7 +13,7 @@ use crate::{
 /// [`into_lender`](crate::traits::IteratorExt::into_lender) method
 /// added to [`Iterator`] by this crate.
 ///
-/// Does not change the behavior of the iterator, the resulting lender
+/// Does not change the behavior of the iterator: the resulting lender
 /// will yield the same items and can be adapted back into an iterator.
 ///
 /// # Examples
@@ -97,6 +97,14 @@ impl<I: Iterator> From<I> for FromIter<I> {
 /// The lenders returned are obtained by applying [`from_iter`]
 /// to the iterators returned by the wrapped [`IntoIterator`].
 ///
+/// # Examples
+/// ```rust
+/// use lender::prelude::*;
+/// let data = vec![1i32, 2, 3];
+/// let into_lender = lender::from_into_iter(&data);
+/// let mut lender = into_lender.into_lender();
+/// assert_eq!(lender.next(), Some(&1));
+/// ```
 #[inline]
 pub fn from_into_iter<I: IntoIterator>(into_iter: I) -> FromIntoIter<I> {
     FromIntoIter { into_iter }
@@ -237,8 +245,17 @@ where
 /// [`into_fallible_lender`](crate::traits::FallibleIteratorExt::into_fallible_lender) method
 /// added to [`FallibleIterator`] by this crate.
 ///
-/// Does not change the behavior of the iterator, the resulting lender
+/// Does not change the behavior of the iterator: the resulting lender
 /// will yield the same items and can be adapted back into an iterator.
+///
+/// # Examples
+/// ```rust
+/// use fallible_iterator::IteratorExt as _;
+/// use lender::prelude::*;
+/// let data = vec![1i32, 2, 3];
+/// let mut lender = lender::from_fallible_iter(data.iter().into_fallible());
+/// assert_eq!(lender.next().unwrap(), Some(&1));
+/// ```
 #[inline]
 pub fn from_fallible_iter<I: FallibleIterator>(iter: I) -> FromFallibleIter<I> {
     FromFallibleIter { iter }
@@ -300,6 +317,17 @@ impl<I: FallibleIterator> From<I> for FromFallibleIter<I> {
 /// The lenders returned are obtained by applying [`from_fallible_iter`]
 /// to the iterators returned by the wrapped [`IntoFallibleIterator`].
 ///
+/// # Examples
+/// ```rust
+/// use fallible_iterator::IteratorExt as _;
+/// use lender::prelude::*;
+/// let data = vec![1i32, 2, 3];
+/// let into_lender = lender::from_into_fallible_iter(
+///     data.iter().into_fallible(),
+/// );
+/// let mut lender = into_lender.into_fallible_lender();
+/// assert_eq!(lender.next().unwrap(), Some(&1));
+/// ```
 #[inline]
 pub fn from_into_fallible_iter<I: IntoFallibleIterator>(into_iter: I) -> FromIntoFallibleIter<I> {
     FromIntoFallibleIter { into_iter }
