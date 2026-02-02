@@ -160,7 +160,7 @@ where
         })
     }
 
-    #[inline]
+    #[inline(always)]
     fn advance_back_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {
         self.lender.advance_back_by(n)
     }

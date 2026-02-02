@@ -997,16 +997,10 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     #[inline]
     fn try_for_each<F, R>(&mut self, mut f: F) -> Result<R, Self::Error>
     where
-        Self: Sized,
         F: FnMut(FallibleLend<'_, Self>) -> Result<R, Self::Error>,
         R: Try<Output = ()>,
     {
-        while let Some(x) = self.next()? {
-            if let ControlFlow::Break(x) = f(x)?.branch() {
-                return Ok(R::from_residual(x));
-            }
-        }
-        Ok(R::from_output(()))
+        self.try_fold((), move |(), x| f(x))
     }
 
     /// The [`FallibleLender`] version of [`Iterator::fold`].

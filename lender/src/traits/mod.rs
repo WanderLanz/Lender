@@ -451,7 +451,7 @@ impl<'lend, T: ?Sized + for<'all> DynFallibleLend<'all>> FallibleLending<'lend>
     type Lend = <T as DynFallibleLend<'lend>>::Lend;
 }
 
-/// Fallible counterpart to [`CovariantLend`].
+/// Fallible counterpart to [`CovariantLending`].
 #[doc(hidden)]
 pub trait CovariantFallibleLending: for<'all> FallibleLending<'all> {}
 

@@ -14,8 +14,8 @@ pub use self::{
         LendIter as LendFallibleIter, from_into_iter as from_into_fallible_iter,
         from_iter as from_fallible_iter, lend_iter as lend_fallible_iter,
     },
-    once::{Once as FallibleOnce, once as fallible_once},
-    once_with::{OnceWith as FallibleOnceWith, once_with as fallible_once_with},
-    repeat::{Repeat as FallibleRepeat, repeat as fallible_repeat},
-    repeat_with::{RepeatWith as FallibleRepeatWith, repeat_with as fallible_repeat_with},
+    once::{Once as FallibleOnce, OnceErr as FallibleOnceErr, once as fallible_once, once_err as fallible_once_err},
+    once_with::{OnceWith as FallibleOnceWith, OnceWithErr as FallibleOnceWithErr, once_with as fallible_once_with, once_with_err as fallible_once_with_err},
+    repeat::{Repeat as FallibleRepeat, RepeatErr as FallibleRepeatErr, repeat as fallible_repeat, repeat_err as fallible_repeat_err},
+    repeat_with::{RepeatWith as FallibleRepeatWith, RepeatWithErr as FallibleRepeatWithErr, repeat_with as fallible_repeat_with, repeat_with_err as fallible_repeat_with_err},
 };

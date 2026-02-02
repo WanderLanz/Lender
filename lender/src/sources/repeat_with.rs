@@ -103,7 +103,7 @@ where
     L: ?Sized + CovariantLending + 'a,
     F: FnMut() -> Lend<'a, L>,
 {
-    #[inline]
+    #[inline(always)]
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         self.next()
     }

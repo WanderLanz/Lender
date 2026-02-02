@@ -38,7 +38,7 @@ where
 {
     // SAFETY: the lend is that of L
     crate::unsafe_assume_covariance!();
-    #[inline]
+    #[inline(always)]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.lender.next_back()
     }
@@ -48,17 +48,17 @@ where
         self.lender.size_hint()
     }
 
-    #[inline]
+    #[inline(always)]
     fn advance_by(&mut self, n: usize) -> Result<(), core::num::NonZeroUsize> {
         self.lender.advance_back_by(n)
     }
 
-    #[inline]
+    #[inline(always)]
     fn nth(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         self.lender.nth_back(n)
     }
 
-    #[inline]
+    #[inline(always)]
     fn try_fold<B, F, R>(&mut self, init: B, f: F) -> R
     where
         Self: Sized,
@@ -68,7 +68,7 @@ where
         self.lender.try_rfold(init, f)
     }
 
-    #[inline]
+    #[inline(always)]
     fn fold<B, F>(self, init: B, f: F) -> B
     where
         Self: Sized,
@@ -77,7 +77,7 @@ where
         self.lender.rfold(init, f)
     }
 
-    #[inline]
+    #[inline(always)]
     fn find<P>(&mut self, predicate: P) -> Option<Lend<'_, Self>>
     where
         Self: Sized,
@@ -91,22 +91,22 @@ impl<L> DoubleEndedLender for Rev<L>
 where
     L: DoubleEndedLender,
 {
-    #[inline]
+    #[inline(always)]
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         self.lender.next()
     }
 
-    #[inline]
+    #[inline(always)]
     fn advance_back_by(&mut self, n: usize) -> Result<(), core::num::NonZeroUsize> {
         self.lender.advance_by(n)
     }
 
-    #[inline]
+    #[inline(always)]
     fn nth_back(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         self.lender.nth(n)
     }
 
-    #[inline]
+    #[inline(always)]
     fn try_rfold<B, F, R>(&mut self, init: B, f: F) -> R
     where
         Self: Sized,
@@ -116,7 +116,7 @@ where
         self.lender.try_fold(init, f)
     }
 
-    #[inline]
+    #[inline(always)]
     fn rfold<B, F>(self, init: B, f: F) -> B
     where
         Self: Sized,
@@ -125,7 +125,7 @@ where
         self.lender.fold(init, f)
     }
 
-    #[inline]
+    #[inline(always)]
     fn rfind<P>(&mut self, predicate: P) -> Option<Lend<'_, Self>>
     where
         Self: Sized,

@@ -140,12 +140,12 @@ where
         }
     }
 
-    #[inline]
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         (self.len, Some(self.len))
     }
 
-    #[inline]
+    #[inline(always)]
     fn count(self) -> usize {
         self.len
     }

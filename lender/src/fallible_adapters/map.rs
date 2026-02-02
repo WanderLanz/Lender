@@ -20,7 +20,7 @@ where
     // SAFETY: the lend is the return type of F
     crate::unsafe_assume_covariance_fallible!();
 
-    #[inline]
+    #[inline(always)]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.lender.next()?.map(&mut self.f).transpose()
     }
@@ -56,7 +56,7 @@ impl<L: DoubleEndedFallibleLender, F> DoubleEndedFallibleLender for Map<L, F>
 where
     F: for<'all> FnMutHKARes<'all, FallibleLend<'all, L>, L::Error>,
 {
-    #[inline]
+    #[inline(always)]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.lender.next_back()?.map(&mut self.f).transpose()
     }

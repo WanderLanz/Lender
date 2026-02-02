@@ -1,12 +1,19 @@
 use core::{fmt, marker::PhantomData};
 
 use crate::{
-    DoubleEndedFallibleLender, ExactSizeFallibleLender, FallibleLend, FallibleLender,
-    FallibleLending, FusedFallibleLender, higher_order::FnOnceHKARes,
+    CovariantFallibleLending, DoubleEndedFallibleLender, ExactSizeFallibleLender, FallibleLend,
+    FallibleLender, FallibleLending, FusedFallibleLender, higher_order::FnOnceHKA,
 };
 
 /// Creates a fallible lender that lazily generates a value
 /// exactly once by invoking the provided closure.
+///
+/// This is the [`FallibleLender`] version of
+/// [`once_with()`](crate::once_with): the closure returns a
+/// value directly (not a `Result`).
+///
+/// To create a lender that lazily generates a single error,
+/// use [`once_with_err()`].
 ///
 /// Note that functions passed to this function must be built
 /// using the [`hrc!`](crate::hrc),
@@ -19,12 +26,11 @@ use crate::{
 /// # Examples
 /// ```rust
 /// # use lender::prelude::*;
-/// # use std::io::Error;
-/// let mut lender = lender::fallible_once_with::<_, Error, _>(
+/// let mut lender = lender::fallible_once_with::<_, String, _>(
 ///     0u8,
-///     hrc_once!(for<'all> |state: &'all mut u8| -> Result<&'all mut u8, Error> {
+///     hrc_once!(for<'all> |state: &'all mut u8| -> &'all mut u8 {
 ///         *state += 1;
-///         Ok(state)
+///         state
 ///     })
 /// );
 /// assert_eq!(lender.next().unwrap(), Some(&mut 1));
@@ -33,9 +39,36 @@ use crate::{
 #[inline]
 pub fn once_with<St, E, F>(state: St, f: F) -> OnceWith<St, E, F>
 where
-    F: for<'all> FnOnceHKARes<'all, &'all mut St, E>,
+    F: for<'all> FnOnceHKA<'all, &'all mut St>,
 {
     OnceWith {
+        state,
+        f: Some(f),
+        _marker: PhantomData,
+    }
+}
+
+/// Creates a fallible lender that lazily generates a single
+/// error by invoking the provided closure.
+///
+/// This is the error counterpart to [`once_with()`]: it calls
+/// the closure once and yields its return value as an error.
+///
+/// # Examples
+/// ```rust
+/// # use lender::prelude::*;
+/// let mut lender = lender::fallible_once_with_err::<
+///     _, fallible_lend!(&'lend u8), _,
+/// >(42u32, |state: &mut u32| format!("error code: {state}"));
+/// assert_eq!(lender.next(), Err("error code: 42".to_string()));
+/// assert_eq!(lender.next(), Ok(None));
+/// ```
+#[inline]
+pub fn once_with_err<St, L, F>(state: St, f: F) -> OnceWithErr<St, L, F>
+where
+    L: ?Sized + CovariantFallibleLending,
+{
+    OnceWithErr {
         state,
         f: Some(f),
         _marker: PhantomData,
@@ -73,14 +106,14 @@ impl<St: fmt::Debug, E, F> fmt::Debug for OnceWith<St, E, F> {
 
 impl<'lend, St, E, F> FallibleLending<'lend> for OnceWith<St, E, F>
 where
-    F: for<'all> FnOnceHKARes<'all, &'all mut St, E>,
+    F: for<'all> FnOnceHKA<'all, &'all mut St>,
 {
-    type Lend = <F as FnOnceHKARes<'lend, &'lend mut St, E>>::B;
+    type Lend = <F as FnOnceHKA<'lend, &'lend mut St>>::B;
 }
 
 impl<St, E, F> FallibleLender for OnceWith<St, E, F>
 where
-    F: for<'all> FnOnceHKARes<'all, &'all mut St, E>,
+    F: for<'all> FnOnceHKA<'all, &'all mut St>,
 {
     type Error = E;
     // SAFETY: the lend is the return type of F
@@ -88,10 +121,7 @@ where
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
-        match self.f.take() {
-            Some(f) => f(&mut self.state).map(Some),
-            None => Ok(None),
-        }
+        Ok(self.f.take().map(|f| f(&mut self.state)))
     }
 
     #[inline]
@@ -106,20 +136,109 @@ where
 
 impl<St, E, F> DoubleEndedFallibleLender for OnceWith<St, E, F>
 where
-    F: for<'all> FnOnceHKARes<'all, &'all mut St, E>,
+    F: for<'all> FnOnceHKA<'all, &'all mut St>,
 {
-    #[inline]
+    #[inline(always)]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.next()
     }
 }
 
 impl<St, E, F> ExactSizeFallibleLender for OnceWith<St, E, F> where
-    F: for<'all> FnOnceHKARes<'all, &'all mut St, E>
+    F: for<'all> FnOnceHKA<'all, &'all mut St>
 {
 }
 
 impl<St, E, F> FusedFallibleLender for OnceWith<St, E, F> where
-    F: for<'all> FnOnceHKARes<'all, &'all mut St, E>
+    F: for<'all> FnOnceHKA<'all, &'all mut St>
+{
+}
+
+/// A fallible lender that yields a single error by applying
+/// the provided closure.
+///
+/// This `struct` is created by the [`once_with_err()`] function.
+#[must_use = "lenders are lazy and do nothing unless consumed"]
+pub struct OnceWithErr<St, L: ?Sized, F> {
+    state: St,
+    f: Option<F>,
+    _marker: PhantomData<L>,
+}
+
+impl<St: Clone, L: ?Sized, F: Clone> Clone for OnceWithErr<St, L, F> {
+    fn clone(&self) -> Self {
+        Self {
+            state: self.state.clone(),
+            f: self.f.clone(),
+            _marker: PhantomData,
+        }
+    }
+}
+
+impl<St: fmt::Debug, L: ?Sized, F> fmt::Debug for OnceWithErr<St, L, F> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("FallibleOnceWithErr")
+            .field("state", &self.state)
+            .finish()
+    }
+}
+
+impl<'lend, St, L, E, F> FallibleLending<'lend> for OnceWithErr<St, L, F>
+where
+    L: ?Sized + CovariantFallibleLending,
+    F: FnOnce(&mut St) -> E,
+{
+    type Lend = FallibleLend<'lend, L>;
+}
+
+impl<St, L, E, F> FallibleLender for OnceWithErr<St, L, F>
+where
+    L: ?Sized + CovariantFallibleLending,
+    F: FnOnce(&mut St) -> E,
+{
+    type Error = E;
+    // SAFETY: the lend is the type parameter L
+    crate::unsafe_assume_covariance_fallible!();
+
+    #[inline]
+    fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        match self.f.take() {
+            None => Ok(None),
+            Some(f) => Err(f(&mut self.state)),
+        }
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        if self.f.is_some() {
+            (1, Some(1))
+        } else {
+            (0, Some(0))
+        }
+    }
+}
+
+impl<St, L, E, F> DoubleEndedFallibleLender for OnceWithErr<St, L, F>
+where
+    L: ?Sized + CovariantFallibleLending,
+    F: FnOnce(&mut St) -> E,
+{
+    #[inline(always)]
+    fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        self.next()
+    }
+}
+
+impl<St, L, E, F> ExactSizeFallibleLender for OnceWithErr<St, L, F>
+where
+    L: ?Sized + CovariantFallibleLending,
+    F: FnOnce(&mut St) -> E,
+{
+}
+
+impl<St, L, E, F> FusedFallibleLender for OnceWithErr<St, L, F>
+where
+    L: ?Sized + CovariantFallibleLending,
+    F: FnOnce(&mut St) -> E,
 {
 }

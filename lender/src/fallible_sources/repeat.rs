@@ -1,29 +1,61 @@
-use core::fmt;
+use core::{fmt, marker::PhantomData};
 
 use crate::prelude::*;
 
 /// Creates a new fallible lender that endlessly repeats a
 /// single element.
 ///
-/// The [`FallibleLender`] version of
+/// This is the [`FallibleLender`] version of
 /// [`iter::repeat()`](core::iter::repeat).
+///
+/// To create a lender that endlessly repeats an error, use
+/// [`repeat_err()`].
 ///
 /// # Examples
 /// ```rust
 /// # use lender::prelude::*;
 /// let mut lender = lender::fallible_repeat::<
 ///     '_, fallible_lend!(&'lend u8), String,
-/// >(Ok(&0u8));
+/// >(&0u8);
 /// assert_eq!(lender.next().unwrap(), Some(&0));
 /// ```
 #[inline]
-pub fn repeat<'a, L, E>(elt: Result<FallibleLend<'a, L>, E>) -> Repeat<'a, L, E>
+pub fn repeat<'a, L, E>(elt: FallibleLend<'a, L>) -> Repeat<'a, L, E>
 where
     L: ?Sized + CovariantFallibleLending + 'a,
-    E: Clone,
     for<'all> FallibleLend<'all, L>: Clone,
 {
-    Repeat { elt }
+    Repeat {
+        elt,
+        _marker: PhantomData,
+    }
+}
+
+/// Creates a new fallible lender that endlessly repeats an
+/// error.
+///
+/// This is the error counterpart to [`repeat()`]: it yields
+/// the given error on every call to `next`.
+///
+/// # Examples
+/// ```rust
+/// # use lender::prelude::*;
+/// let mut lender = lender::fallible_repeat_err::<
+///     fallible_lend!(&'lend u8), _,
+/// >("error".to_string());
+/// assert_eq!(lender.next(), Err("error".to_string()));
+/// assert_eq!(lender.next(), Err("error".to_string()));
+/// ```
+#[inline]
+pub fn repeat_err<L, E>(error: E) -> RepeatErr<L, E>
+where
+    L: ?Sized + CovariantFallibleLending,
+    E: Clone,
+{
+    RepeatErr {
+        err: error,
+        _marker: PhantomData,
+    }
 }
 
 /// A fallible lender that repeats an element endlessly.
@@ -34,18 +66,19 @@ pub struct Repeat<'a, L, E>
 where
     L: ?Sized + CovariantFallibleLending + 'a,
 {
-    elt: Result<FallibleLend<'a, L>, E>,
+    elt: FallibleLend<'a, L>,
+    _marker: PhantomData<E>,
 }
 
 impl<'a, L, E> Clone for Repeat<'a, L, E>
 where
     L: ?Sized + CovariantFallibleLending + 'a,
-    E: Clone,
     FallibleLend<'a, L>: Clone,
 {
     fn clone(&self) -> Self {
         Repeat {
             elt: self.elt.clone(),
+            _marker: PhantomData,
         }
     }
 }
@@ -53,7 +86,6 @@ where
 impl<'a, L, E> fmt::Debug for Repeat<'a, L, E>
 where
     L: ?Sized + CovariantFallibleLending + 'a,
-    E: fmt::Debug,
     FallibleLend<'a, L>: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -74,27 +106,123 @@ where
 impl<'a, L, E> FallibleLender for Repeat<'a, L, E>
 where
     L: ?Sized + CovariantFallibleLending + 'a,
-    E: Clone + 'a,
+    E: 'a,
     for<'all> FallibleLend<'all, L>: Clone,
 {
     type Error = E;
     // SAFETY: the lend is the type parameter L
     crate::unsafe_assume_covariance_fallible!();
 
-    /// Note: if the stored value is `Err`, the error is cloned
-    /// and returned on every call to `next`. This matches the
-    /// semantics of [`Repeat`](crate::Repeat) (which yields the
-    /// value forever) applied to the fallible case.
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
-        self.elt.clone().map(|value| {
-            Some(
-                // SAFETY: 'a: 'lend
-                unsafe {
-                    core::mem::transmute::<FallibleLend<'a, Self>, FallibleLend<'_, Self>>(value)
-                },
-            )
-        })
+        Ok(Some(
+            // SAFETY: 'a: 'lend
+            unsafe {
+                core::mem::transmute::<FallibleLend<'a, Self>, FallibleLend<'_, Self>>(
+                    self.elt.clone(),
+                )
+            },
+        ))
+    }
+
+    #[inline(always)]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (usize::MAX, None)
+    }
+
+    #[inline(always)]
+    fn advance_by(
+        &mut self,
+        _n: usize,
+    ) -> Result<Result<(), core::num::NonZeroUsize>, Self::Error> {
+        Ok(Ok(()))
+    }
+}
+
+impl<'a, L, E> DoubleEndedFallibleLender for Repeat<'a, L, E>
+where
+    L: ?Sized + CovariantFallibleLending + 'a,
+    E: 'a,
+    for<'all> FallibleLend<'all, L>: Clone,
+{
+    #[inline]
+    fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        self.next()
+    }
+
+    #[inline(always)]
+    fn advance_back_by(
+        &mut self,
+        _n: usize,
+    ) -> Result<Result<(), core::num::NonZeroUsize>, Self::Error> {
+        Ok(Ok(()))
+    }
+}
+
+impl<'a, L, E> FusedFallibleLender for Repeat<'a, L, E>
+where
+    L: ?Sized + CovariantFallibleLending + 'a,
+    E: 'a,
+    for<'all> FallibleLend<'all, L>: Clone,
+{
+}
+
+/// A fallible lender that endlessly repeats an error.
+///
+/// This `struct` is created by the [`repeat_err()`] function.
+#[must_use = "lenders are lazy and do nothing unless consumed"]
+pub struct RepeatErr<L, E>
+where
+    L: ?Sized + CovariantFallibleLending,
+{
+    err: E,
+    _marker: PhantomData<L>,
+}
+
+impl<L, E: Clone> Clone for RepeatErr<L, E>
+where
+    L: ?Sized + CovariantFallibleLending,
+{
+    fn clone(&self) -> Self {
+        RepeatErr {
+            err: self.err.clone(),
+            _marker: PhantomData,
+        }
+    }
+}
+
+impl<L, E: fmt::Debug> fmt::Debug for RepeatErr<L, E>
+where
+    L: ?Sized + CovariantFallibleLending,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("FallibleRepeatErr")
+            .field("err", &self.err)
+            .finish()
+    }
+}
+
+impl<'lend, L, E> FallibleLending<'lend> for RepeatErr<L, E>
+where
+    L: ?Sized + CovariantFallibleLending,
+{
+    type Lend = FallibleLend<'lend, L>;
+}
+
+impl<L, E> FallibleLender for RepeatErr<L, E>
+where
+    L: ?Sized + CovariantFallibleLending,
+    E: Clone,
+{
+    type Error = E;
+    // SAFETY: the lend is the type parameter L
+    crate::unsafe_assume_covariance_fallible!();
+
+    /// Note: the error is cloned and returned on every call
+    /// to `next`.
+    #[inline]
+    fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        Err(self.err.clone())
     }
 
     #[inline(always)]
@@ -103,19 +231,22 @@ where
     }
 
     #[inline]
-    fn advance_by(&mut self, n: usize) -> Result<Result<(), core::num::NonZeroUsize>, Self::Error> {
+    fn advance_by(
+        &mut self,
+        n: usize,
+    ) -> Result<Result<(), core::num::NonZeroUsize>, Self::Error> {
         if n > 0 {
-            self.elt.clone()?;
+            Err(self.err.clone())
+        } else {
+            Ok(Ok(()))
         }
-        Ok(Ok(()))
     }
 }
 
-impl<'a, L, E> DoubleEndedFallibleLender for Repeat<'a, L, E>
+impl<L, E> DoubleEndedFallibleLender for RepeatErr<L, E>
 where
-    L: ?Sized + CovariantFallibleLending + 'a,
-    E: Clone + 'a,
-    for<'all> FallibleLend<'all, L>: Clone,
+    L: ?Sized + CovariantFallibleLending,
+    E: Clone,
 {
     #[inline]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
@@ -128,16 +259,16 @@ where
         n: usize,
     ) -> Result<Result<(), core::num::NonZeroUsize>, Self::Error> {
         if n > 0 {
-            self.elt.clone()?;
+            Err(self.err.clone())
+        } else {
+            Ok(Ok(()))
         }
-        Ok(Ok(()))
     }
 }
 
-impl<'a, L, E> FusedFallibleLender for Repeat<'a, L, E>
+impl<L, E> FusedFallibleLender for RepeatErr<L, E>
 where
-    L: ?Sized + CovariantFallibleLending + 'a,
-    E: Clone + 'a,
-    for<'all> FallibleLend<'all, L>: Clone,
+    L: ?Sized + CovariantFallibleLending,
+    E: Clone,
 {
 }

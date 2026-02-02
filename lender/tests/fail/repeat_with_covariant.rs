@@ -22,9 +22,15 @@ fn test_repeat_with<'a>(f: impl FnMut() -> &'a Cell<Option<&'a String>>) {
 }
 
 fn test_fallible_repeat_with<'a>(
-    f: impl FnMut() -> Result<&'a Cell<Option<&'a String>>, std::io::Error>,
+    f: impl FnMut() -> &'a Cell<Option<&'a String>>,
 ) {
     let _ = lender::fallible_repeat_with::<FallibleInvariant, std::io::Error, _>(f);
+}
+
+fn test_fallible_repeat_with_err(
+    f: impl FnMut() -> std::io::Error,
+) {
+    let _ = lender::fallible_repeat_with_err::<FallibleInvariant, _>(f);
 }
 
 fn main() {}

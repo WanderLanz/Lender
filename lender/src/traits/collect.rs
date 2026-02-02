@@ -67,12 +67,15 @@ impl<L: Lender> IntoLender for L {
 
 /// The [`Lender`] version of [`core::iter::Extend`].
 pub trait ExtendLender<L: IntoLender> {
+    /// Extends a collection with the contents of a lender.
     fn extend_lender(&mut self, lender: L);
     /// Extends a collection with exactly one element.
     fn extend_lender_one(&mut self, item: Lend<'_, L::Lender>);
-    /// Reserves capacity in a collection for the given number of additional elements.
+    /// Reserves capacity in a collection for the given number
+    /// of additional elements.
     ///
     /// The default implementation does nothing.
+    #[inline(always)]
     fn extend_lender_reserve(&mut self, additional: usize) {
         let _ = additional;
     }
@@ -90,9 +93,11 @@ pub trait ExtendFallibleLender<L: IntoFallibleLender> {
     /// Extends a collection with exactly one element.
     fn extend_fallible_lender_one(&mut self, item: FallibleLend<'_, L::FallibleLender>);
 
-    /// Reserves capacity in a collection for the given number of additional elements.
+    /// Reserves capacity in a collection for the given number
+    /// of additional elements.
     ///
     /// The default implementation does nothing.
+    #[inline(always)]
     fn extend_fallible_lender_reserve(&mut self, additional: usize) {
         let _ = additional;
     }

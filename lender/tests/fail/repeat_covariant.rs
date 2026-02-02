@@ -23,11 +23,15 @@ where
     let _ = lender::repeat::<Invariant>(v);
 }
 
-fn test_fallible_repeat<'a>(v: Result<&'a Cell<Option<&'a String>>, String>)
+fn test_fallible_repeat<'a>(v: &'a Cell<Option<&'a String>>)
 where
     &'a Cell<Option<&'a String>>: Clone,
 {
     let _ = lender::fallible_repeat::<FallibleInvariant, String>(v);
+}
+
+fn test_fallible_repeat_err() {
+    let _ = lender::fallible_repeat_err::<FallibleInvariant, _>("error".to_string());
 }
 
 fn main() {}

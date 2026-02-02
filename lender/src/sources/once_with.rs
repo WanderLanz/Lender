@@ -92,7 +92,7 @@ impl<St, F> DoubleEndedLender for OnceWith<St, F>
 where
     F: for<'all> FnOnceHKA<'all, &'all mut St>,
 {
-    #[inline]
+    #[inline(always)]
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         self.next()
     }

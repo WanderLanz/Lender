@@ -352,6 +352,8 @@ also the lender must be `'static`. Thus, until there is some syntax that makes i
 possible to restrict the lifetime variable that appears in a higher-rank trait bound,
 GAT-based lending iterators are of little practical use.
 
+## Why Isn't [`CovariantLending`] In between [`Lending`] and [`Lender`]?
+
 ## Resources
 
 Please check out the great resources below that helped us and many others learn
@@ -376,6 +378,8 @@ but if you see any unsafe code that can be made safe, please let us know!
 [`Lender`]: https://docs.rs/lender/latest/lender/trait.Lender.html
 [`Lend`]: https://docs.rs/lender/latest/lender/type.Lend.html
 [`Lending`]: https://docs.rs/lender/latest/lender/trait.Lending.html
+[`CovariantLending`]: https://docs.rs/lender/latest/lender/trait.CovariantLending.html
+[`FallibleLender`]: https://docs.rs/lender/latest/lender/trait.FallibleLender.html
 [`IntoLender`]: https://docs.rs/lender/latest/lender/trait.IntoLender.html
 [`into_fallible`]: https://docs.rs/lender/latest/lender/trait.Lender.html#method.into_fallible
 [`lending-iterator`]: https://crates.io/crates/lending-iterator/
@@ -384,4 +388,6 @@ but if you see any unsafe code that can be made safe, please let us know!
 [Fallible lenders]: https://docs.rs/lender/latest/lender/trait.FallibleLender.html
 [obtain a fallible lender from a fallible iterator]: https://docs.rs/lender/latest/lender/trait.FallibleIteratorExt.html#tymethod.into_fallible_lender
 [`check_covariance!`]: https://docs.rs/lender/latest/lender/macro.check_covariance.html
+[`check_covariance_fallible!`]: https://docs.rs/lender/latest/lender/macro.check_covariance_fallible.html
 [`unsafe_assume_covariance!`]: https://docs.rs/lender/latest/lender/macro.unsafe_assume_covariance.html
+[`unsafe_assume_covariance_fallible!`]: https://docs.rs/lender/latest/lender/macro.unsafe_assume_covariance_fallible.html

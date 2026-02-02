@@ -48,7 +48,6 @@ pub trait DoubleEndedLender: Lender {
     #[inline]
     fn try_rfold<B, F, R>(&mut self, init: B, mut f: F) -> R
     where
-        Self: Sized,
         F: FnMut(B, Lend<'_, Self>) -> R,
         R: Try<Output = B>,
     {

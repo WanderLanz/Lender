@@ -71,3 +71,40 @@ note: required by a bound in `FallibleOnce`
    | where
    |     L: ?Sized + CovariantFallibleLending,
    |                 ^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `FallibleOnce`
+
+error[E0277]: the trait bound `FallibleInvariant: CovariantFallibleLending` is not satisfied
+  --> tests/fail/once_covariant.rs:28:41
+   |
+28 |     let _ = lender::fallible_once_err::<FallibleInvariant, _>(std::io::Error::other("test"));
+   |                                         ^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+   |
+help: the trait `CovariantFallibleLending` is not implemented for `FallibleInvariant`
+  --> tests/fail/once_covariant.rs:13:1
+   |
+13 | struct FallibleInvariant;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^
+note: required by a bound in `fallible_once_err`
+  --> src/fallible_sources/once.rs
+   |
+   | pub fn once_err<L: ?Sized + CovariantFallibleLending, E>(
+   |                             ^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `once_err`
+
+error[E0277]: the trait bound `FallibleInvariant: CovariantFallibleLending` is not satisfied
+  --> tests/fail/once_covariant.rs:28:13
+   |
+28 |     let _ = lender::fallible_once_err::<FallibleInvariant, _>(std::io::Error::other("test"));
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+   |
+help: the trait `CovariantFallibleLending` is not implemented for `FallibleInvariant`
+  --> tests/fail/once_covariant.rs:13:1
+   |
+13 | struct FallibleInvariant;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^
+note: required by a bound in `FallibleOnceErr`
+  --> src/fallible_sources/once.rs
+   |
+   | pub struct OnceErr<L, E>
+   |            ------- required by a bound in this struct
+   | where
+   |     L: ?Sized + CovariantFallibleLending,
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `FallibleOnceErr`

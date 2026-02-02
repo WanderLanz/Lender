@@ -142,7 +142,7 @@ where
         })
     }
 
-    #[inline]
+    #[inline(always)]
     fn advance_back_by(
         &mut self,
         n: usize,

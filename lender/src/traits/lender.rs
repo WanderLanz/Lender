@@ -864,7 +864,6 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     #[inline]
     fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> R
     where
-        Self: Sized,
         F: FnMut(B, Lend<'_, Self>) -> R,
         R: Try<Output = B>,
     {
@@ -890,7 +889,6 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     #[inline]
     fn try_for_each<F, R>(&mut self, mut f: F) -> R
     where
-        Self: Sized,
         F: FnMut(Lend<'_, Self>) -> R,
         R: Try<Output = ()>,
     {

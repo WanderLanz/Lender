@@ -34,7 +34,7 @@ where
         (self.len, Some(self.len))
     }
 
-    #[inline]
+    #[inline(always)]
     fn count(self) -> Result<usize, Self::Error> {
         Ok(self.len)
     }

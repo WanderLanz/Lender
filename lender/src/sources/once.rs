@@ -91,7 +91,7 @@ impl<L> DoubleEndedLender for Once<'_, L>
 where
     L: ?Sized + CovariantLending,
 {
-    #[inline]
+    #[inline(always)]
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         self.next()
     }

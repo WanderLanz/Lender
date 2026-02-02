@@ -26,11 +26,11 @@ where
         if self.flag {
             Ok(None)
         } else {
-            match self.lender.next() {
-                Ok(Some(next)) => Ok(Some(next)),
-                res @ (Ok(None) | Err(_)) => {
+            match self.lender.next()? {
+                Some(next) => Ok(Some(next)),
+                None => {
                     self.flag = true;
-                    res
+                    Ok(None)
                 }
             }
         }
@@ -41,11 +41,11 @@ where
         if self.flag {
             Ok(None)
         } else {
-            match self.lender.nth(n) {
-                Ok(Some(value)) => Ok(Some(value)),
-                res @ (Ok(None) | Err(_)) => {
+            match self.lender.nth(n)? {
+                Some(value) => Ok(Some(value)),
+                None => {
                     self.flag = true;
-                    res
+                    Ok(None)
                 }
             }
         }
@@ -59,11 +59,11 @@ where
         if self.flag {
             Ok(None)
         } else {
-            match self.lender.last() {
-                Ok(Some(value)) => Ok(Some(value)),
-                res @ (Ok(None) | Err(_)) => {
+            match self.lender.last()? {
+                x @ Some(_) => Ok(x),
+                None => {
                     self.flag = true;
-                    res
+                    Ok(None)
                 }
             }
         }
@@ -94,12 +94,7 @@ where
         R: Try<Output = Acc>,
     {
         if !self.flag {
-            acc = match self
-                .lender
-                .try_fold(acc, &mut f)
-                .inspect_err(|_| self.flag = true)?
-                .branch()
-            {
+            acc = match self.lender.try_fold(acc, &mut f)?.branch() {
                 ControlFlow::Continue(x) => x,
                 ControlFlow::Break(x) => return Ok(FromResidual::from_residual(x)),
             };
@@ -116,10 +111,7 @@ where
     {
         let mut acc = init;
         if !self.flag {
-            acc = self
-                .lender
-                .fold(acc, &mut f)
-                .inspect_err(|_| self.flag = true)?;
+            acc = self.lender.fold(acc, &mut f)?;
             self.flag = true;
         }
         Ok(acc)
@@ -131,11 +123,7 @@ where
         P: FnMut(&FallibleLend<'_, Self>) -> Result<bool, Self::Error>,
     {
         if !self.flag {
-            if let x @ Some(_) = self
-                .lender
-                .find(&mut predicate)
-                .inspect_err(|_| self.flag = true)?
-            {
+            if let x @ Some(_) = self.lender.find(&mut predicate)? {
                 return Ok(x);
             }
             self.flag = true;
@@ -151,7 +139,7 @@ where
     #[inline]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         if !self.flag {
-            if let x @ Some(_) = self.lender.next_back().inspect_err(|_| self.flag = true)? {
+            if let x @ Some(_) = self.lender.next_back()? {
                 return Ok(x);
             }
             self.flag = true;
@@ -162,7 +150,7 @@ where
     #[inline]
     fn nth_back(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         if !self.flag {
-            if let x @ Some(_) = self.lender.nth_back(n).inspect_err(|_| self.flag = true)? {
+            if let x @ Some(_) = self.lender.nth_back(n)? {
                 return Ok(x);
             }
             self.flag = true;
@@ -178,12 +166,7 @@ where
         R: Try<Output = Acc>,
     {
         if !self.flag {
-            acc = match self
-                .lender
-                .try_rfold(acc, &mut f)
-                .inspect_err(|_| self.flag = true)?
-                .branch()
-            {
+            acc = match self.lender.try_rfold(acc, &mut f)?.branch() {
                 ControlFlow::Continue(x) => x,
                 ControlFlow::Break(x) => return Ok(FromResidual::from_residual(x)),
             };
@@ -200,10 +183,7 @@ where
     {
         let mut acc = init;
         if !self.flag {
-            acc = self
-                .lender
-                .rfold(acc, &mut f)
-                .inspect_err(|_| self.flag = true)?;
+            acc = self.lender.rfold(acc, &mut f)?;
             self.flag = true;
         }
         Ok(acc)
@@ -216,11 +196,7 @@ where
         P: FnMut(&FallibleLend<'_, Self>) -> Result<bool, Self::Error>,
     {
         if !self.flag {
-            if let x @ Some(_) = self
-                .lender
-                .rfind(&mut predicate)
-                .inspect_err(|_| self.flag = true)?
-            {
+            if let x @ Some(_) = self.lender.rfind(&mut predicate)? {
                 return Ok(x);
             }
             self.flag = true;

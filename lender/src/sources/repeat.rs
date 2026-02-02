@@ -91,7 +91,7 @@ where
     L: ?Sized + CovariantLending + 'a,
     for<'all> Lend<'all, L>: Clone,
 {
-    #[inline]
+    #[inline(always)]
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         self.next()
     }

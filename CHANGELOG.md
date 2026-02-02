@@ -49,6 +49,14 @@
 - Fallible sources and adapters are now uniformly in separate modules with the
   same name of the standard ones and are renamed in `mod.rs`.
 
+- Fallible `once`, `repeat`, etc. now follow the `fallible_iterator` design,
+  with specific methods like `once_err`, `repeat_err`, etc. to generate
+  errors.
+
+- `FallibleFusedLender` guarantees `Ok(None)` to repeat, but does not
+  have anymore a guarantee of behavior after an error (like it
+  happens with `fallible_iterator`).
+
 ### Fixed
 
 - Several possible UBs are no longer possible thanks to the new covariance
