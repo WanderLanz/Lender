@@ -630,7 +630,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///     }
     /// }
     ///
-    /// let data = vec![1i32, 2, 3];
+    /// let data = vec![1, 2, 3];
     /// let mut flat = data.into_iter().into_lender().flat_map(
     ///     hrc_mut!(for<'lend> |x: i32| -> VecLender { VecLender(vec![x, x * 10]) })
     /// );

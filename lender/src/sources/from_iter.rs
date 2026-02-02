@@ -95,7 +95,7 @@ impl<I: Iterator> From<I> for FromIter<I> {
 /// # Examples
 /// ```rust
 /// use lender::prelude::*;
-/// let data = vec![1i32, 2, 3];
+/// let data = vec![1, 2, 3];
 /// let into_lender = lender::from_into_iter(&data);
 /// let mut lender = into_lender.into_lender();
 /// assert_eq!(lender.next(), Some(&1));

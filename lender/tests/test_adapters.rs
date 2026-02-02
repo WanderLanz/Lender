@@ -2699,7 +2699,7 @@ fn map_try_rfold_additional() {
 #[test]
 fn scan_basic() {
     let mut scanned = VecLender::new(vec![1, 2, 3]).scan(
-        0i32,
+        0,
         hrc_mut!(for<'all> |args: (&'all mut i32, &i32)| -> Option<i32> {
             *args.0 += *args.1;
             Some(*args.0)
@@ -2717,7 +2717,7 @@ fn scan_basic() {
 fn scan_early_termination() {
     // scan can terminate early by returning None
     let mut scanned = VecLender::new(vec![1, 2, 3, 4, 5]).scan(
-        0i32,
+        0,
         hrc_mut!(for<'all> |args: (&'all mut i32, &i32)| -> Option<i32> {
             *args.0 += *args.1;
             if *args.0 > 5 { None } else { Some(*args.0) }
@@ -2733,7 +2733,7 @@ fn scan_early_termination() {
 #[test]
 fn scan_into_inner() {
     let scan = VecLender::new(vec![1, 2, 3]).scan(
-        0i32,
+        0,
         hrc_mut!(for<'all> |args: (&'all mut i32, &i32)| -> Option<i32> { Some(*args.0 + *args.1) }),
     );
     let lender = scan.into_inner();
@@ -2743,7 +2743,7 @@ fn scan_into_inner() {
 #[test]
 fn scan_into_parts() {
     let scan = VecLender::new(vec![1, 2, 3]).scan(
-        10i32,
+        10,
         hrc_mut!(for<'all> |args: (&'all mut i32, &i32)| -> Option<i32> { Some(*args.0 + *args.1) }),
     );
     let (lender, state, _f) = scan.into_parts();
@@ -2754,7 +2754,7 @@ fn scan_into_parts() {
 #[test]
 fn scan_size_hint_additional() {
     let scan = VecLender::new(vec![1, 2, 3, 4, 5]).scan(
-        0i32,
+        0,
         hrc_mut!(for<'all> |args: (&'all mut i32, &i32)| -> Option<i32> { Some(*args.1) }),
     );
     // Scan can terminate early, so lower bound is 0
@@ -3207,7 +3207,7 @@ fn copied_rfold_empty() {
 fn owned_basic() {
     // owned() requires for<'all> Lend<'all, L>: ToOwned<Owned = T> where T is
     // lifetime-independent. Use into_lender() from an iterator yielding values.
-    let lender = [1i32, 2, 3].into_iter().into_lender();
+    let lender = [1, 2, 3].into_iter().into_lender();
     let result: Vec<i32> = lender.owned().collect();
     assert_eq!(result, vec![1, 2, 3]);
 }
@@ -3221,7 +3221,7 @@ fn owned_empty() {
 
 #[test]
 fn owned_into_inner() {
-    let lender = [1i32, 2].into_iter().into_lender();
+    let lender = [1, 2].into_iter().into_lender();
     let owned = lender.owned();
     let mut inner = owned.into_inner();
     assert_eq!(inner.next(), Some(1));
@@ -3229,7 +3229,7 @@ fn owned_into_inner() {
 
 #[test]
 fn owned_fold() {
-    let lender = [1i32, 2, 3].into_iter().into_lender();
+    let lender = [1, 2, 3].into_iter().into_lender();
     let sum = lender.owned().fold(0, |acc, x| acc + x);
     assert_eq!(sum, 6);
 }
@@ -3237,13 +3237,13 @@ fn owned_fold() {
 #[test]
 fn owned_fold_empty() {
     let lender = std::iter::empty::<i32>().into_lender();
-    let sum = lender.owned().fold(0i32, |acc, x| acc + x);
+    let sum = lender.owned().fold(0, |acc, x| acc + x);
     assert_eq!(sum, 0);
 }
 
 #[test]
 fn owned_rfold() {
-    let lender = [1i32, 2, 3].into_iter().into_lender();
+    let lender = [1, 2, 3].into_iter().into_lender();
     let result = lender.owned().rfold(Vec::new(), |mut acc, x| {
         acc.push(x);
         acc

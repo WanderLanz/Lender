@@ -210,7 +210,7 @@ fn source_repeat_with_double_ended() {
 #[test]
 fn source_from_fn_basic() {
     let mut from_fn = lender::from_fn(
-        0i32,
+        0,
         hrc_mut!(for<'all> |s: &'all mut i32| -> Option<i32> {
             *s += 1;
             if *s <= 3 { Some(*s) } else { None }
