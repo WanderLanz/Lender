@@ -46,6 +46,9 @@
 
 - Coherent use of `must_use` attribute.
 
+- Fallible sources and adapters are now uniformly in separate modules with the
+  same name of the standard ones and are renamed in `mod.rs`.
+
 ### Fixed
 
 - Several possible UBs are no longer possible thanks to the new covariance
@@ -61,6 +64,8 @@
   (previously they returned the first instance).
 
 - All repeat method return `(usize::MAX, None)` on `size_hint`, as in `Iterator`.
+
+- The order of parameters (lend/error) in a few methods was inconsistent.
 
 ## [0.4.2] - 2025-11-18
 

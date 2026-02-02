@@ -75,7 +75,9 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// ```rust
     /// # use fallible_iterator::IteratorExt as _;
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>([1, 2, 3u8].iter().into_fallible());
+    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2, 3].iter().into_fallible(),
+    /// );
     /// assert_eq!(lender.next(), Ok(Some(&1)));
     /// assert_eq!(lender.next(), Ok(Some(&2)));
     /// assert_eq!(lender.next(), Ok(Some(&3)));
@@ -91,7 +93,9 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// ```rust
     /// # use fallible_iterator::IteratorExt as _;
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>([1, 2, 3u8].iter().into_fallible());
+    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2, 3].iter().into_fallible(),
+    /// );
     /// let mut chunk_lender = lender.next_chunk(2);
     /// assert_eq!(chunk_lender.next(), Ok(Some(&1)));
     /// assert_eq!(chunk_lender.next(), Ok(Some(&2)));
@@ -114,7 +118,9 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// ```rust
     /// # use fallible_iterator::IteratorExt as _;
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>([1, 2, 3u8].iter().into_fallible());
+    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2, 3].iter().into_fallible(),
+    /// );
     /// assert_eq!(lender.size_hint(), (3, Some(3)));
     /// ```
     #[inline(always)]
@@ -128,7 +134,9 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// ```rust
     /// # use fallible_iterator::IteratorExt as _;
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>([1, 2, 3u8].iter().into_fallible());
+    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2, 3].iter().into_fallible(),
+    /// );
     /// assert_eq!(lender.count(), Ok(3));
     /// ```
     #[inline]
@@ -195,7 +203,27 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
 
     /// Chains the lender with another lender of the same type.
     ///
-    /// The resulting lender will first yield all lends from `self`, then all lends from `other`.
+    /// The resulting lender will first yield all lends from `self`, then
+    /// all lends from `other`.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// let a = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2].iter().into_fallible(),
+    /// );
+    /// let b = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [3, 4].iter().into_fallible(),
+    /// );
+    /// let mut chained = a.chain(b);
+    /// assert_eq!(chained.next(), Ok(Some(&1)));
+    /// assert_eq!(chained.next(), Ok(Some(&2)));
+    /// assert_eq!(chained.next(), Ok(Some(&3)));
+    /// assert_eq!(chained.next(), Ok(Some(&4)));
+    /// assert_eq!(chained.next(), Ok(None));
+    /// ```
     #[inline]
     fn chain<U>(self, other: U) -> Chain<Self, <U as IntoFallibleLender>::FallibleLender>
         where
@@ -206,6 +234,23 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// Zips the lender with another lender of the same or different type.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// let a = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2].iter().into_fallible(),
+    /// );
+    /// let b = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [3, 4].iter().into_fallible(),
+    /// );
+    /// let mut zipped = a.zip(b);
+    /// assert_eq!(zipped.next(), Ok(Some((&1, &3))));
+    /// assert_eq!(zipped.next(), Ok(Some((&2, &4))));
+    /// assert_eq!(zipped.next(), Ok(None));
+    /// ```
     #[inline]
     fn zip<U: IntoFallibleLender>(self, other: U) -> Zip<Self, <U as IntoFallibleLender>::FallibleLender>
     where
@@ -215,6 +260,24 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// Intersperses each lend of this lender with the given separator.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// let sep = 0;
+    /// let lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2, 3].iter().into_fallible(),
+    /// );
+    /// let mut inter = lender.intersperse(&sep);
+    /// assert_eq!(inter.next(), Ok(Some(&1)));
+    /// assert_eq!(inter.next(), Ok(Some(&0)));
+    /// assert_eq!(inter.next(), Ok(Some(&2)));
+    /// assert_eq!(inter.next(), Ok(Some(&0)));
+    /// assert_eq!(inter.next(), Ok(Some(&3)));
+    /// assert_eq!(inter.next(), Ok(None));
+    /// ```
     #[inline]
     fn intersperse<'call>(self, separator: FallibleLend<'call, Self>) -> FallibleIntersperse<'call, Self>
     where
@@ -247,12 +310,16 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// # use fallible_iterator::IteratorExt as _;
     /// # use lender::prelude::*;
     /// # use core::convert::Infallible;
-    /// let mut data = [1, 2u8];
-    /// let lender = lender::lend_fallible_iter::<fallible_lend!(&'lend mut u8), _>(data.iter_mut().into_fallible());
-    /// let mut mapped = lender.map(hrc_mut!(for<'all> |a: &'all mut u8| -> Result<&'all u8, Infallible> {
-    ///     *a += 1;
-    ///     Ok(&*a)
-    /// }));
+    /// let mut data = [1, 2];
+    /// let lender = lender::lend_fallible_iter::<fallible_lend!(&'lend mut u8), _>(
+    ///     data.iter_mut().into_fallible(),
+    /// );
+    /// let mut mapped = lender.map(hrc_mut!(
+    ///     for<'all> |a: &'all mut u8| -> Result<&'all u8, Infallible> {
+    ///         *a += 1;
+    ///         Ok(&*a)
+    ///     }
+    /// ));
     /// assert_eq!(mapped.next().unwrap(), Some(&2));
     /// ```
     #[inline]
@@ -323,11 +390,15 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// # use fallible_iterator::IteratorExt as _;
     /// # use lender::prelude::*;
     /// # use core::convert::Infallible;
-    /// let mut data = [1, 2u8];
-    /// let lender = lender::lend_fallible_iter::<fallible_lend!(&'lend mut u8), _>(data.iter_mut().into_fallible());
-    /// let mut filtered = lender.filter_map(hrc_mut!(for<'all> |a: &'all mut u8| -> Result<Option<&'all u8>, Infallible> {
-    ///     if *a > 1 { Ok(Some(&*a)) } else { Ok(None) }
-    /// }));
+    /// let mut data = [1, 2];
+    /// let lender = lender::lend_fallible_iter::<fallible_lend!(&'lend mut u8), _>(
+    ///     data.iter_mut().into_fallible(),
+    /// );
+    /// let mut filtered = lender.filter_map(hrc_mut!(
+    ///     for<'all> |a: &'all mut u8| -> Result<Option<&'all u8>, Infallible> {
+    ///         if *a > 1 { Ok(Some(&*a)) } else { Ok(None) }
+    ///     }
+    /// ));
     /// assert_eq!(filtered.next().unwrap(), Some(&2));
     /// ```
     #[inline]
@@ -339,7 +410,23 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         FilterMap::new(self, f)
     }
 
-    /// Enumerates this lender. Each lend is paired with its zero-based index.
+    /// Enumerates this lender. Each lend is paired with its zero-based
+    /// index.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2, 3].iter().into_fallible(),
+    /// );
+    /// let mut enumerated = lender.enumerate();
+    /// assert_eq!(enumerated.next(), Ok(Some((0, &1))));
+    /// assert_eq!(enumerated.next(), Ok(Some((1, &2))));
+    /// assert_eq!(enumerated.next(), Ok(Some((2, &3))));
+    /// assert_eq!(enumerated.next(), Ok(None));
+    /// ```
     #[inline]
     fn enumerate(self) -> Enumerate<Self>
     where
@@ -357,7 +444,21 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         FalliblePeekable::new(self)
     }
 
-    /// Skips the first contiguous sequence of lends of this lender that satisfy the given predicate.
+    /// Skips the first contiguous sequence of lends of this lender that
+    /// satisfy the given predicate.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2, 3].iter().into_fallible(),
+    /// );
+    /// let mut skipped = lender.skip_while(|&&x| Ok(x < 3));
+    /// assert_eq!(skipped.next(), Ok(Some(&3)));
+    /// assert_eq!(skipped.next(), Ok(None));
+    /// ```
     #[inline]
     fn skip_while<P>(self, predicate: P) -> SkipWhile<Self, P>
     where
@@ -367,7 +468,22 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         SkipWhile::new(self, predicate)
     }
 
-    /// Takes the first contiguous sequence of lends of this lender that satisfy the given predicate.
+    /// Takes the first contiguous sequence of lends of this lender that
+    /// satisfy the given predicate.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2, 3].iter().into_fallible(),
+    /// );
+    /// let mut taken = lender.take_while(|&&x| Ok(x < 3));
+    /// assert_eq!(taken.next(), Ok(Some(&1)));
+    /// assert_eq!(taken.next(), Ok(Some(&2)));
+    /// assert_eq!(taken.next(), Ok(None));
+    /// ```
     #[inline]
     fn take_while<P>(self, predicate: P) -> TakeWhile<Self, P>
     where
@@ -390,11 +506,15 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// # use fallible_iterator::IteratorExt as _;
     /// # use lender::prelude::*;
     /// # use core::convert::Infallible;
-    /// let mut data = [1, 2u8];
-    /// let lender = lender::lend_fallible_iter::<fallible_lend!(&'lend mut u8), _>(data.iter_mut().into_fallible());
-    /// let mut mapped = lender.map_while(hrc_mut!(for<'all> |a: &'all mut u8| -> Result<Option<&'all u8>, Infallible> {
-    ///     if *a < 2 { Ok(Some(&*a)) } else { Ok(None) }
-    /// }));
+    /// let mut data = [1, 2];
+    /// let lender = lender::lend_fallible_iter::<fallible_lend!(&'lend mut u8), _>(
+    ///     data.iter_mut().into_fallible(),
+    /// );
+    /// let mut mapped = lender.map_while(hrc_mut!(
+    ///     for<'all> |a: &'all mut u8| -> Result<Option<&'all u8>, Infallible> {
+    ///         if *a < 2 { Ok(Some(&*a)) } else { Ok(None) }
+    ///     }
+    /// ));
     /// assert_eq!(mapped.next().unwrap(), Some(&1));
     /// assert_eq!(mapped.next().unwrap(), None);
     /// ```
@@ -408,6 +528,19 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// Skips the first `n` lends of this lender.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2, 3].iter().into_fallible(),
+    /// );
+    /// let mut skipped = lender.skip(2);
+    /// assert_eq!(skipped.next(), Ok(Some(&3)));
+    /// assert_eq!(skipped.next(), Ok(None));
+    /// ```
     #[inline]
     fn skip(self, n: usize) -> Skip<Self>
     where
@@ -417,6 +550,20 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// Takes the first `n` lends of this lender.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2, 3].iter().into_fallible(),
+    /// );
+    /// let mut taken = lender.take(2);
+    /// assert_eq!(taken.next(), Ok(Some(&1)));
+    /// assert_eq!(taken.next(), Ok(Some(&2)));
+    /// assert_eq!(taken.next(), Ok(None));
+    /// ```
     #[inline]
     fn take(self, n: usize) -> Take<Self>
     where
@@ -438,11 +585,18 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// # use fallible_iterator::IteratorExt as _;
     /// # use lender::prelude::*;
     /// # use core::convert::Infallible;
-    /// let lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>([1u8, 2, 3].iter().into_fallible());
-    /// let mut scanned = lender.scan(0u8, hrc_mut!(for<'all> |args: (&'all mut u8, &'all u8)| -> Result<Option<&'all u8>, Infallible> {
-    ///     *args.0 += *args.1;
-    ///     Ok(Some(args.1))
-    /// }));
+    /// let lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2, 3].iter().into_fallible(),
+    /// );
+    /// let mut scanned = lender.scan(
+    ///     0,
+    ///     hrc_mut!(
+    ///         for<'all> |args: (&'all mut u8, &'all u8)| -> Result<Option<&'all u8>, Infallible> {
+    ///             *args.0 += *args.1;
+    ///             Ok(Some(args.1))
+    ///         }
+    ///     ),
+    /// );
     /// assert_eq!(scanned.next().unwrap(), Some(&1));
     /// assert_eq!(scanned.next().unwrap(), Some(&2));
     /// ```
@@ -484,7 +638,9 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     ///
     /// let data = vec![1i32, 2, 3];
     /// let mut flat = data.into_iter().into_lender().into_fallible().flat_map(
-    ///     hrc_mut!(for<'lend> |x: i32| -> Result<VecLender, Infallible> { Ok(VecLender(vec![x, x * 10])) })
+    ///     hrc_mut!(for<'lend> |x: i32| -> Result<VecLender, Infallible> {
+    ///         Ok(VecLender(vec![x, x * 10]))
+    ///     })
     /// );
     /// assert_eq!(flat.next().unwrap(), Some(1));
     /// assert_eq!(flat.next().unwrap(), Some(10));
@@ -511,6 +667,21 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::fuse`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2].iter().into_fallible(),
+    /// );
+    /// let mut fused = lender.fuse();
+    /// assert_eq!(fused.next(), Ok(Some(&1)));
+    /// assert_eq!(fused.next(), Ok(Some(&2)));
+    /// assert_eq!(fused.next(), Ok(None));
+    /// assert_eq!(fused.next(), Ok(None));
+    /// ```
     #[inline]
     fn fuse(self) -> Fuse<Self>
     where
@@ -526,7 +697,9 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// ```rust
     /// # use fallible_iterator::IteratorExt as _;
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>([1, 2, 3u8].iter().into_fallible());
+    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2, 3].iter().into_fallible(),
+    /// );
     /// let mut sum = 0;
     /// let mut inspected = lender.inspect(|&x| { sum += x; Ok(()) });
     /// assert_eq!(inspected.next(), Ok(Some(&1)));
@@ -546,6 +719,22 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
 
     // not std::iter
     /// Mutates each lend with the given function.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// let mut data = [1, 2, 3];
+    /// let lender = lender::lend_fallible_iter::<fallible_lend!(&'lend mut u8), _>(
+    ///     data.iter_mut().into_fallible(),
+    /// );
+    /// let mut mutated = lender.mutate(|x| { **x += 10; Ok(()) });
+    /// assert_eq!(mutated.next(), Ok(Some(&mut 11)));
+    /// assert_eq!(mutated.next(), Ok(Some(&mut 12)));
+    /// assert_eq!(mutated.next(), Ok(Some(&mut 13)));
+    /// assert_eq!(mutated.next(), Ok(None));
+    /// ```
     #[inline]
     fn mutate<F>(self, f: F) -> Mutate<Self, F>
     where
@@ -695,8 +884,10 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// ```rust
     /// # use fallible_iterator::IteratorExt as _;
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>([1, 2, 3u8].iter().into_fallible());
-    /// let sum = lender.fold(0u8, |acc, &x| Ok(acc + x));
+    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2, 3].iter().into_fallible(),
+    /// );
+    /// let sum = lender.fold(0, |acc, &x| Ok(acc + x));
     /// assert_eq!(sum, Ok(6));
     /// ```
     ///
@@ -705,7 +896,9 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// # use lender::prelude::*;
     /// // Example concatenating strings
     /// let data = vec!["hello", " ", "world"];
-    /// let lender = lender::lend_fallible_iter::<fallible_lend!(&&'lend str), _>(data.iter().into_fallible());
+    /// let lender = lender::lend_fallible_iter::<fallible_lend!(&&'lend str), _>(
+    ///     data.iter().into_fallible(),
+    /// );
     /// let result = lender.fold(String::new(), |mut acc, &s| {
     ///     acc.push_str(s);
     ///     Ok(acc)
@@ -769,14 +962,18 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// ```rust
     /// # use fallible_iterator::IteratorExt as _;
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>([1, 2, 3u8].iter().into_fallible());
+    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2, 3].iter().into_fallible(),
+    /// );
     /// assert_eq!(lender.all(|&x| Ok(x > 0)), Ok(true));
     /// ```
     ///
     /// ```rust
     /// # use fallible_iterator::IteratorExt as _;
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>([1, 2, 3u8].iter().into_fallible());
+    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2, 3].iter().into_fallible(),
+    /// );
     /// assert_eq!(lender.all(|&x| Ok(x > 2)), Ok(false));
     /// ```
     #[inline]
@@ -800,14 +997,18 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// ```rust
     /// # use fallible_iterator::IteratorExt as _;
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>([1, 2, 3u8].iter().into_fallible());
+    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2, 3].iter().into_fallible(),
+    /// );
     /// assert_eq!(lender.any(|&x| Ok(x == 2)), Ok(true));
     /// ```
     ///
     /// ```rust
     /// # use fallible_iterator::IteratorExt as _;
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>([1, 2, 3u8].iter().into_fallible());
+    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2, 3].iter().into_fallible(),
+    /// );
     /// assert_eq!(lender.any(|&x| Ok(x > 5)), Ok(false));
     /// ```
     #[inline]
@@ -831,14 +1032,18 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// ```rust
     /// # use fallible_iterator::IteratorExt as _;
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>([1, 2, 3u8].iter().into_fallible());
+    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2, 3].iter().into_fallible(),
+    /// );
     /// assert_eq!(lender.find(|&&x| Ok(x == 2)), Ok(Some(&2)));
     /// ```
     ///
     /// ```rust
     /// # use fallible_iterator::IteratorExt as _;
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>([1, 2, 3u8].iter().into_fallible());
+    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2, 3].iter().into_fallible(),
+    /// );
     /// assert_eq!(lender.find(|&&x| Ok(x > 10)), Ok(None));
     /// ```
     #[inline]
@@ -923,14 +1128,18 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// ```rust
     /// # use fallible_iterator::IteratorExt as _;
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>([1, 2, 3u8].iter().into_fallible());
+    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2, 3].iter().into_fallible(),
+    /// );
     /// assert_eq!(lender.position(|&x| Ok(x == 2)), Ok(Some(1)));
     /// ```
     ///
     /// ```rust
     /// # use fallible_iterator::IteratorExt as _;
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>([1, 2, 3u8].iter().into_fallible());
+    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2, 3].iter().into_fallible(),
+    /// );
     /// assert_eq!(lender.position(|&x| Ok(x > 10)), Ok(None));
     /// ```
     #[inline]
@@ -1046,7 +1255,10 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// ```rust
     /// # use fallible_iterator::IteratorExt as _;
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>([1, 2, 3u8].iter().into_fallible()).rev();
+    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2, 3].iter().into_fallible(),
+    /// )
+    /// .rev();
     /// assert_eq!(lender.next(), Ok(Some(&3)));
     /// assert_eq!(lender.next(), Ok(Some(&2)));
     /// assert_eq!(lender.next(), Ok(Some(&1)));
@@ -1084,7 +1296,9 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// ```rust
     /// # use fallible_iterator::{IteratorExt as _, FallibleIterator};
     /// # use lender::prelude::*;
-    /// let lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>([1, 2, 3u8].iter().into_fallible());
+    /// let lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2, 3].iter().into_fallible(),
+    /// );
     /// let mut copied = lender.copied();
     /// assert_eq!(copied.next()?, Some(1));
     /// assert_eq!(copied.next()?, Some(2));
@@ -1104,6 +1318,22 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// The [`FallibleLender`] version of [`Iterator::cloned`].
     ///
     /// Turns this [`FallibleLender`] into a [`FallibleIterator`](fallible_iterator::FallibleIterator).
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::{IteratorExt as _, FallibleIterator};
+    /// # use lender::prelude::*;
+    /// let lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2, 3].iter().into_fallible(),
+    /// );
+    /// let mut cloned = lender.cloned();
+    /// assert_eq!(cloned.next()?, Some(1));
+    /// assert_eq!(cloned.next()?, Some(2));
+    /// assert_eq!(cloned.next()?, Some(3));
+    /// assert_eq!(cloned.next()?, None);
+    /// # Ok::<(), core::convert::Infallible>(())
+    /// ```
     #[inline]
     fn cloned<T>(self) -> Cloned<Self>
     where
@@ -1115,6 +1345,21 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
 
     // not std::iter
     /// Turns this [`FallibleLender`] into a [`FallibleIterator`](fallible_iterator::FallibleIterator).
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::{IteratorExt as _, FallibleIterator};
+    /// # use lender::prelude::*;
+    /// let mut owned = lender::from_fallible_iter(
+    ///     [1, 2, 3].into_iter().into_fallible(),
+    /// ).owned();
+    /// assert_eq!(owned.next()?, Some(1));
+    /// assert_eq!(owned.next()?, Some(2));
+    /// assert_eq!(owned.next()?, Some(3));
+    /// assert_eq!(owned.next()?, None);
+    /// # Ok::<(), core::convert::Infallible>(())
+    /// ```
     #[inline]
     fn owned(self) -> Owned<Self>
     where
@@ -1125,6 +1370,20 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::cycle`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// let mut cycled = lender::from_fallible_iter(
+    ///     [1, 2].iter().into_fallible(),
+    /// ).cycle();
+    /// assert_eq!(cycled.next(), Ok(Some(&1)));
+    /// assert_eq!(cycled.next(), Ok(Some(&2)));
+    /// assert_eq!(cycled.next(), Ok(Some(&1)));
+    /// assert_eq!(cycled.next(), Ok(Some(&2)));
+    /// ```
     #[inline]
     fn cycle(self) -> Cycle<Self>
     where
@@ -1154,6 +1413,21 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::cmp`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// # use core::cmp::Ordering;
+    /// let a = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2].iter().into_fallible(),
+    /// );
+    /// let b = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 3].iter().into_fallible(),
+    /// );
+    /// assert_eq!(a.cmp(b), Ok(Ordering::Less));
+    /// ```
     #[inline]
     fn cmp<L>(self, other: L) -> Result<Ordering, Self::Error>
     where
@@ -1183,6 +1457,17 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::partial_cmp`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// # use core::cmp::Ordering;
+    /// let a = lender::from_fallible_iter([1i32, 2].into_iter().into_fallible());
+    /// let b = lender::from_fallible_iter([1i32, 3].into_iter().into_fallible());
+    /// assert_eq!(a.partial_cmp::<lender::FromFallibleIter<_>>(b), Ok(Some(Ordering::Less)));
+    /// ```
     #[inline]
     fn partial_cmp<L>(self, other: L) -> Result<Option<Ordering>, Self::Error>
     where
@@ -1222,6 +1507,20 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::eq_by`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// let a = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2].iter().into_fallible(),
+    /// );
+    /// let b = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2].iter().into_fallible(),
+    /// );
+    /// assert_eq!(a.eq_by(b, |x, y| Ok(x == y)), Ok(true));
+    /// ```
     #[inline]
     fn eq_by<L, F>(self, other: L, mut eq: F) -> Result<bool, Self::Error>
     where
@@ -1238,6 +1537,16 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::ne`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// let a = lender::from_fallible_iter([1i32, 2].into_iter().into_fallible());
+    /// let b = lender::from_fallible_iter([1i32, 3].into_iter().into_fallible());
+    /// assert_eq!(a.ne::<lender::FromFallibleIter<_>>(b), Ok(true));
+    /// ```
     #[inline]
     fn ne<L>(self, other: L) -> Result<bool, Self::Error>
     where
@@ -1249,6 +1558,16 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::lt`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// let a = lender::from_fallible_iter([1i32, 2].into_iter().into_fallible());
+    /// let b = lender::from_fallible_iter([1i32, 3].into_iter().into_fallible());
+    /// assert_eq!(a.lt::<lender::FromFallibleIter<_>>(b), Ok(true));
+    /// ```
     #[inline]
     fn lt<L>(self, other: L) -> Result<bool, Self::Error>
     where
@@ -1260,6 +1579,16 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::le`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// let a = lender::from_fallible_iter([1i32, 2].into_iter().into_fallible());
+    /// let b = lender::from_fallible_iter([1i32, 2].into_iter().into_fallible());
+    /// assert_eq!(a.le::<lender::FromFallibleIter<_>>(b), Ok(true));
+    /// ```
     #[inline]
     fn le<L>(self, other: L) -> Result<bool, Self::Error>
     where
@@ -1271,6 +1600,16 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::gt`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// let a = lender::from_fallible_iter([1i32, 3].into_iter().into_fallible());
+    /// let b = lender::from_fallible_iter([1i32, 2].into_iter().into_fallible());
+    /// assert_eq!(a.gt::<lender::FromFallibleIter<_>>(b), Ok(true));
+    /// ```
     #[inline]
     fn gt<L>(self, other: L) -> Result<bool, Self::Error>
     where
@@ -1282,6 +1621,16 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::ge`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// let a = lender::from_fallible_iter([1i32, 2].into_iter().into_fallible());
+    /// let b = lender::from_fallible_iter([1i32, 2].into_iter().into_fallible());
+    /// assert_eq!(a.ge::<lender::FromFallibleIter<_>>(b), Ok(true));
+    /// ```
     #[inline]
     fn ge<L>(self, other: L) -> Result<bool, Self::Error>
     where
@@ -1365,7 +1714,8 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// # use lender::prelude::*;
     /// # use std::convert::Infallible;
     /// let data = [1, 2, 3, 4, 5];
-    /// let lender = lender::lend_iter::<lend!(&'lend i32), _>(data.iter()).into_fallible::<Infallible>();
+    /// let lender = lender::lend_iter::<lend!(&'lend i32), _>(data.iter())
+    ///     .into_fallible::<Infallible>();
     /// let mut chunky = lender.chunky(2);
     /// let mut chunk1 = chunky.next().unwrap().unwrap();
     /// assert_eq!(chunk1.next().unwrap(), Some(&1));

@@ -1,8 +1,8 @@
 use fallible_iterator::{DoubleEndedFallibleIterator, FallibleIterator, IntoFallibleIterator};
 
 use crate::{
-    CovariantFallibleLending, DoubleEndedFallibleLender, FallibleLend,
-    FallibleLender, FallibleLending, IntoFallibleLender, prelude::*,
+    CovariantFallibleLending, DoubleEndedFallibleLender, FallibleLend, FallibleLender,
+    FallibleLending, IntoFallibleLender, prelude::*,
 };
 
 /// Creates a lender from a fallible iterator.
@@ -178,7 +178,7 @@ where
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct LendIter<'a, L: ?Sized, I> {
     iter: I,
-    _marker: core::marker::PhantomData<fn() -> &'a L>,
+    _marker: core::marker::PhantomData<&'a L>,
 }
 
 impl<'a, 'lend, L, I> FallibleLending<'lend> for LendIter<'a, L, I>

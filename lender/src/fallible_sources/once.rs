@@ -10,6 +10,17 @@ use crate::{
 /// once.
 ///
 /// The [`FallibleLender`] version of [`core::iter::once()`].
+///
+/// # Examples
+///
+/// ```rust
+/// # use lender::prelude::*;
+/// let mut lender = lender::fallible_once::<fallible_lend!(&'lend u32), String>(
+///     Ok(&42),
+/// );
+/// assert_eq!(lender.next(), Ok(Some(&42)));
+/// assert_eq!(lender.next(), Ok(None));
+/// ```
 pub fn once<'a, L: ?Sized + CovariantFallibleLending, E>(
     value: Result<FallibleLend<'a, L>, E>,
 ) -> Once<'a, L, E> {

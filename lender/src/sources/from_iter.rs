@@ -1,8 +1,6 @@
 use core::iter::FusedIterator;
 
-use crate::{
-    CovariantLending, FusedLender, IntoLender, prelude::*,
-};
+use crate::{CovariantLending, FusedLender, IntoLender, prelude::*};
 
 /// Creates a lender from an iterator.
 ///
@@ -174,7 +172,7 @@ where
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct LendIter<'a, L: ?Sized, I> {
     iter: I,
-    _marker: core::marker::PhantomData<fn() -> &'a L>,
+    _marker: core::marker::PhantomData<&'a L>,
 }
 
 impl<'a, 'lend, L, I> Lending<'lend> for LendIter<'a, L, I>
