@@ -22,7 +22,7 @@ where
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         // SAFETY: polonius return
-        let reborrow = unsafe { &mut *(self as *mut Self) };
+        let reborrow = unsafe { &mut *(&raw mut *self) };
         if let x @ Some(_) = reborrow.lender.next()? {
             return Ok(x);
         }

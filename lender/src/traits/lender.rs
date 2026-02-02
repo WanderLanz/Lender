@@ -1558,7 +1558,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     }
 
     /// Converts a [`Lender`] whose lend type is `Result<T, E>` into a
-    /// [`FallibleLender`] with error type `E` and lend type `T`.
+    /// [`FallibleLender`](crate::FallibleLender) with error type `E` and lend type `T`.
     ///
     /// This is the lending equivalent of
     /// [`fallible_iterator::convert`](https://docs.rs/fallible-iterator/latest/fallible_iterator/fn.convert.html).
@@ -1582,7 +1582,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         Convert::new(self)
     }
 
-    /// Converts a [`Lender`] into a [`FallibleLender`] by wrapping
+    /// Converts a [`Lender`] into a [`FallibleLender`](crate::FallibleLender) by wrapping
     /// into `Result<Lend<'_, Self>, E>` where `E` is an
     /// error that can never actually happen.
     #[inline]

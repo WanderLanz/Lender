@@ -27,6 +27,7 @@ use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lendi
 /// let mut lender = s.windows_mut(2);
 /// assert_eq!(lender.next(), Some(&mut [0, 1][..]));
 /// ```
+#[inline]
 pub fn windows_mut<T>(slice: &mut [T], size: usize) -> WindowsMut<'_, T> {
     let size = NonZero::new(size).expect("window size must be non-zero");
     WindowsMut {
@@ -157,6 +158,7 @@ impl<T> FusedLender for WindowsMut<'_, T> {}
 /// let mut lender = s.array_windows_mut::<2>();
 /// assert_eq!(lender.next(), Some(&mut [0, 1]));
 /// ```
+#[inline]
 pub fn array_windows_mut<T, const WINDOW_SIZE: usize>(
     slice: &mut [T],
 ) -> ArrayWindowsMut<'_, T, WINDOW_SIZE> {

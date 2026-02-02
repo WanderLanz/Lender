@@ -135,7 +135,7 @@ where
 {
     let mut residual = None;
     // SAFETY: residual is manually guaranteed to be the only lend alive after `f`.
-    let reborrow = unsafe { &mut *(&mut residual as *mut _) };
+    let reborrow = unsafe { &mut *(&raw mut residual) };
     let shunt = TryShunt {
         lender,
         residual: reborrow,

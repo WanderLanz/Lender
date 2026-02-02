@@ -16,6 +16,7 @@ use crate::{
 /// let x: Result<Option<&u32>, String> = e.next();
 /// assert_eq!(x, Ok(None));
 /// ```
+#[inline]
 pub const fn empty<L: ?Sized + for<'all> FallibleLending<'all>, E>() -> Empty<L, E> {
     Empty(marker::PhantomData)
 }
