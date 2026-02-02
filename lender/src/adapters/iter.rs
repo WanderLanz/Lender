@@ -5,28 +5,31 @@ use crate::{
     FusedLender, Lend, Lender,
 };
 
-/// [`Iterator`] adapter for any [`Lender`] where multiple [`Lend`]s can exist at a
-/// time, allowing on-the-fly conversion into an iterator where [`Lending`](crate::Lending) is no
-/// longer needed or inferred.
+/// [`Iterator`] adapter for any [`Lender`] where multiple [`Lend`]s can exist at
+/// a time, allowing on-the-fly conversion into an iterator where
+/// [`Lending`](crate::Lending) is no longer needed or inferred.
 ///
-/// Implementing [`Iterator`] directly on any [`Lender`] causes name conflicts, but might be
-/// possible in the future with specialization.
+/// Implementing [`Iterator`] directly on any [`Lender`] causes name conflicts,
+/// but might be possible in the future with specialization.
+///
 /// # Example
-/// ```ignore
-/// let mut vec = vec![1u8, 2, 3];
 ///
-/// // windows_mut of vec...
+/// ```rust
+/// use lender::prelude::*;
 ///
-/// let mut windows = windows_mut(vec, 2);
-/// // ...is a Lender of &mut [u8], which is not owned
+/// let mut data = [1u8, 2, 3];
 ///
-/// // let mut windows = windows.into_iterator(); // <-- this would not compile because &mut [u8] is not owned
+/// // windows_mut is a Lender of &mut [u8] (non-owned)
+/// let windows = lender::windows_mut(&mut data, 2);
 ///
-/// let mut windows = windows.map(|x| x.to_vec());
-/// // ...is a Lender of Vec<u8>, which is owned
-///
-/// let mut windows = windows.iter(); // <-- this compiles because Vec<u8> is owned
-/// // ...is an Iterator of Vec<u8>
+/// // Map to owned values, then convert to Iterator
+/// let mapped = windows.map(hrc_mut!(
+///     for<'all> |w: &'all mut [u8]| -> Vec<u8> {
+///         w.to_vec()
+///     }
+/// ));
+/// let result: Vec<Vec<u8>> = mapped.iter().collect();
+/// assert_eq!(result, vec![vec![1, 2], vec![2, 3]]);
 /// ```
 #[derive(Clone, Debug)]
 #[must_use = "iterators are lazy and do nothing unless consumed"]

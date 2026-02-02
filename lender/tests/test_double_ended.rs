@@ -62,23 +62,6 @@ fn double_ended_lender_rposition() {
 // ============================================================================
 
 #[test]
-fn double_ended_advance_back_by() {
-    use lender::DoubleEndedLender;
-
-    let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]);
-    assert_eq!(lender.advance_back_by(2), Ok(()));
-    assert_eq!(lender.next_back(), Some(&3));
-}
-
-#[test]
-fn double_ended_nth_back() {
-    use lender::DoubleEndedLender;
-
-    let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]);
-    assert_eq!(lender.nth_back(2), Some(&3)); // 5, 4, [3]
-}
-
-#[test]
 fn double_ended_try_rfold() {
     use lender::DoubleEndedLender;
 

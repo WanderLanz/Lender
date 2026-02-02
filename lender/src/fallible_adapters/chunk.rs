@@ -46,10 +46,8 @@ where
     #[inline]
     fn nth(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         if n >= self.len {
-            while self.len > 0 {
-                self.len -= 1;
-                self.lender.next()?;
-            }
+            let _ = self.lender.advance_by(self.len)?;
+            self.len = 0;
             Ok(None)
         } else {
             let result = self.lender.nth(n)?;

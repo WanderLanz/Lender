@@ -75,10 +75,7 @@ where
     #[inline]
     fn nth(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         if n >= self.len {
-            // Exhaust remaining len
-            for _ in 0..self.len {
-                self.lender.next();
-            }
+            let _ = self.lender.advance_by(self.len);
             self.len = 0;
             None
         } else {

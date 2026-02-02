@@ -949,6 +949,52 @@ fn peekable_next_back_with_peeked_exhausted() {
     assert_eq!(peekable.next(), None);
 }
 
+#[test]
+fn peekable_rfold_with_peeked() {
+    let mut peekable = VecLender::new(vec![1, 2, 3]).peekable();
+    assert_eq!(peekable.peek(), Some(&&1));
+    // rfold processes back-to-front: 3, 2, then peeked 1
+    let result = peekable.rfold(Vec::new(), |mut acc, &x| {
+        acc.push(x);
+        acc
+    });
+    assert_eq!(result, vec![3, 2, 1]);
+}
+
+#[test]
+fn peekable_try_rfold_with_peeked_complete() {
+    use lender::DoubleEndedLender;
+
+    let mut peekable = VecLender::new(vec![1, 2, 3]).peekable();
+    assert_eq!(peekable.peek(), Some(&&1));
+    // try_rfold processes back-to-front: 3, 2, then peeked 1
+    let result: Option<Vec<i32>> = peekable.try_rfold(Vec::new(), |mut acc, &x| {
+        acc.push(x);
+        Some(acc)
+    });
+    assert_eq!(result, Some(vec![3, 2, 1]));
+}
+
+// Covers the ControlFlow::Break path in try_rfold where the peeked value
+// is stored back (peekable.rs lines 266-269).
+#[test]
+fn peekable_try_rfold_with_peeked_break() {
+    use lender::DoubleEndedLender;
+
+    let mut peekable = VecLender::new(vec![1, 2, 3]).peekable();
+    assert_eq!(peekable.peek(), Some(&&1));
+    // Inner lender has [2, 3]. try_rfold processes back-to-front:
+    // 3 (continue, acc=3), then 2 (break via None).
+    let result: Option<i32> = peekable.try_rfold(0, |acc, &x| {
+        if x == 2 { None } else { Some(acc + x) }
+    });
+    assert_eq!(result, None);
+    // The peeked value should have been stored back
+    assert_eq!(peekable.next(), Some(&1));
+    // Inner lender was fully consumed by try_rfold
+    assert_eq!(peekable.next(), None);
+}
+
 // ============================================================================
 // Cycle adapter tests (Lender)
 // Semantics: cycle() repeats the lender infinitely
@@ -1030,6 +1076,42 @@ fn cycle_try_fold_additional() {
         .try_fold(0, |acc, x| Some(acc + *x));
     // 1 + 2 + 1 + 2 + 1 = 7
     assert_eq!(result, Some(7));
+}
+
+#[test]
+fn cycle_advance_by_within_first_cycle() {
+    let mut cycled = VecLender::new(vec![1, 2, 3]).cycle();
+    // Advance 2 within the first cycle
+    assert_eq!(cycled.advance_by(2), Ok(()));
+    // Next element should be 3 (remaining in first cycle)
+    assert_eq!(cycled.next(), Some(&3));
+}
+
+#[test]
+fn cycle_advance_by_across_cycles() {
+    let mut cycled = VecLender::new(vec![1, 2, 3]).cycle();
+    // Advance 5: skips [1,2,3] (first cycle) + [1,2] (second cycle)
+    assert_eq!(cycled.advance_by(5), Ok(()));
+    // Next element should be 3 (remaining in second cycle)
+    assert_eq!(cycled.next(), Some(&3));
+}
+
+#[test]
+fn cycle_advance_by_exact_cycle_boundary() {
+    let mut cycled = VecLender::new(vec![1, 2, 3]).cycle();
+    // Advance exactly one full cycle
+    assert_eq!(cycled.advance_by(3), Ok(()));
+    // Next element should be 1 (start of second cycle)
+    assert_eq!(cycled.next(), Some(&1));
+}
+
+#[test]
+fn cycle_advance_by_empty() {
+    use core::num::NonZeroUsize;
+
+    let mut cycled = VecLender::new(vec![]).cycle();
+    assert_eq!(cycled.advance_by(0), Ok(()));
+    assert_eq!(cycled.advance_by(1), Err(NonZeroUsize::new(1).unwrap()));
 }
 
 // ============================================================================
@@ -1439,6 +1521,40 @@ fn skip_rfold() {
         });
     // skip(2) leaves [3, 4, 5], rfold processes: 5, 4, 3
     assert_eq!(values, vec![5, 4, 3]);
+}
+
+#[test]
+fn skip_advance_back_by() {
+    use lender::DoubleEndedLender;
+
+    let mut skip = VecLender::new(vec![1, 2, 3, 4, 5]).skip(2);
+    // skip(2) leaves [3, 4, 5], advance_back_by(2) skips 5, 4
+    assert_eq!(skip.advance_back_by(2), Ok(()));
+    assert_eq!(skip.next(), Some(&3));
+    assert_eq!(skip.next(), None);
+}
+
+#[test]
+fn skip_advance_back_by_exact() {
+    use lender::DoubleEndedLender;
+
+    let mut skip = VecLender::new(vec![1, 2, 3, 4, 5]).skip(2);
+    // skip(2) leaves [3, 4, 5], advance_back_by(3) exhausts all
+    assert_eq!(skip.advance_back_by(3), Ok(()));
+    assert_eq!(skip.next(), None);
+}
+
+#[test]
+fn skip_advance_back_by_past_end() {
+    use core::num::NonZeroUsize;
+    use lender::DoubleEndedLender;
+
+    let mut skip = VecLender::new(vec![1, 2, 3, 4, 5]).skip(2);
+    // skip(2) leaves 3 elements, trying to advance 5 should fail with 2 remaining
+    assert_eq!(
+        skip.advance_back_by(5),
+        Err(NonZeroUsize::new(2).unwrap())
+    );
 }
 
 // ============================================================================
@@ -2792,6 +2908,20 @@ fn zip_nth_back_empty() {
     assert_eq!(zipped.nth_back(0), None);
 }
 
+#[test]
+fn zip_nth_back_first_shorter() {
+    // First lender shorter than second — tests the a_sz < b_sz branch
+    // in Zip::nth_back where b.advance_back_by() trims the excess.
+    let mut zipped = VecLender::new(vec![10, 20, 30])
+        .zip(VecLender::new(vec![1, 2, 3, 4, 5]));
+    // Zip length is min(3, 5) = 3, effective pairs: (10,1),(20,2),(30,3).
+    // nth_back(0) yields (30, 3)
+    assert_eq!(zipped.nth_back(0), Some((&30, &3)));
+    assert_eq!(zipped.nth_back(0), Some((&20, &2)));
+    assert_eq!(zipped.nth_back(0), Some((&10, &1)));
+    assert_eq!(zipped.nth_back(0), None);
+}
+
 // M6: StepBy count
 #[test]
 fn step_by_count_basic() {
@@ -2956,6 +3086,40 @@ fn cloned_into_inner() {
     assert_eq!(inner.next(), Some(&1));
 }
 
+#[test]
+fn cloned_fold() {
+    let lender = VecLender::new(vec![1, 2, 3]);
+    let sum = lender.cloned().fold(0, |acc, x| acc + x);
+    assert_eq!(sum, 6);
+}
+
+#[test]
+fn cloned_fold_empty() {
+    let lender = VecLender::new(vec![]);
+    let sum: i32 = lender.cloned().fold(0, |acc, x| acc + x);
+    assert_eq!(sum, 0);
+}
+
+#[test]
+fn cloned_rfold() {
+    let lender = VecLender::new(vec![1, 2, 3]);
+    let result = lender.cloned().rfold(Vec::new(), |mut acc, x| {
+        acc.push(x);
+        acc
+    });
+    assert_eq!(result, vec![3, 2, 1]);
+}
+
+#[test]
+fn cloned_rfold_empty() {
+    let lender = VecLender::new(vec![]);
+    let result: Vec<i32> = lender.cloned().rfold(Vec::new(), |mut acc, x| {
+        acc.push(x);
+        acc
+    });
+    assert!(result.is_empty());
+}
+
 // ============================================================================
 // Copied adapter tests
 // ============================================================================
@@ -3001,6 +3165,40 @@ fn copied_into_inner() {
     assert_eq!(inner.next(), Some(&10));
 }
 
+#[test]
+fn copied_fold() {
+    let lender = VecLender::new(vec![10, 20, 30]);
+    let sum = lender.copied().fold(0, |acc, x| acc + x);
+    assert_eq!(sum, 60);
+}
+
+#[test]
+fn copied_fold_empty() {
+    let lender = VecLender::new(vec![]);
+    let sum: i32 = lender.copied().fold(0, |acc, x| acc + x);
+    assert_eq!(sum, 0);
+}
+
+#[test]
+fn copied_rfold() {
+    let lender = VecLender::new(vec![10, 20, 30]);
+    let result = lender.copied().rfold(Vec::new(), |mut acc, x| {
+        acc.push(x);
+        acc
+    });
+    assert_eq!(result, vec![30, 20, 10]);
+}
+
+#[test]
+fn copied_rfold_empty() {
+    let lender = VecLender::new(vec![]);
+    let result: Vec<i32> = lender.copied().rfold(Vec::new(), |mut acc, x| {
+        acc.push(x);
+        acc
+    });
+    assert!(result.is_empty());
+}
+
 // ============================================================================
 // Owned adapter tests
 // ============================================================================
@@ -3027,6 +3225,40 @@ fn owned_into_inner() {
     let owned = lender.owned();
     let mut inner = owned.into_inner();
     assert_eq!(inner.next(), Some(1));
+}
+
+#[test]
+fn owned_fold() {
+    let lender = [1i32, 2, 3].into_iter().into_lender();
+    let sum = lender.owned().fold(0, |acc, x| acc + x);
+    assert_eq!(sum, 6);
+}
+
+#[test]
+fn owned_fold_empty() {
+    let lender = std::iter::empty::<i32>().into_lender();
+    let sum = lender.owned().fold(0i32, |acc, x| acc + x);
+    assert_eq!(sum, 0);
+}
+
+#[test]
+fn owned_rfold() {
+    let lender = [1i32, 2, 3].into_iter().into_lender();
+    let result = lender.owned().rfold(Vec::new(), |mut acc, x| {
+        acc.push(x);
+        acc
+    });
+    assert_eq!(result, vec![3, 2, 1]);
+}
+
+#[test]
+fn owned_rfold_empty() {
+    let lender = std::iter::empty::<i32>().into_lender();
+    let result = lender.owned().rfold(Vec::<i32>::new(), |mut acc, x| {
+        acc.push(x);
+        acc
+    });
+    assert!(result.is_empty());
 }
 
 // ============================================================================

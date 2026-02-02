@@ -312,12 +312,21 @@ impl<'this, L: DoubleEndedFallibleLender> DoubleEndedFallibleLender for Peekable
         Self: Sized,
         F: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
     {
-        let lender = *AliasableBox::into_unique(self.lender);
         match self.peeked.take() {
-            None => lender.rfold(init, f),
+            None => {
+                let lender = *AliasableBox::into_unique(self.lender);
+                lender.rfold(init, f)
+            }
             Some(None) => Ok(init),
             Some(Some(v)) => {
-                let acc = lender.rfold(init, &mut f)?;
+                // Manual loop instead of lender.rfold() to avoid
+                // consuming the lender before v is used: v borrows
+                // from the AliasableBox allocation, which must stay
+                // alive until f(acc, v) completes.
+                let mut acc = init;
+                while let Some(x) = self.lender.next_back()? {
+                    acc = f(acc, x)?;
+                }
                 f(acc, v)
             }
         }

@@ -54,6 +54,15 @@ impl<L: Lender, O, F: FnMut(Lend<'_, L>) -> O> Iterator for MapIntoIter<L, O, F>
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
+
+    #[inline]
+    fn fold<B, G>(self, init: B, mut g: G) -> B
+    where
+        G: FnMut(B, Self::Item) -> B,
+    {
+        let mut f = self.f;
+        self.lender.fold(init, |acc, x| g(acc, f(x)))
+    }
 }
 
 impl<L: DoubleEndedLender, O, F: FnMut(Lend<'_, L>) -> O> DoubleEndedIterator
@@ -62,6 +71,15 @@ impl<L: DoubleEndedLender, O, F: FnMut(Lend<'_, L>) -> O> DoubleEndedIterator
     #[inline]
     fn next_back(&mut self) -> Option<O> {
         self.lender.next_back().map(&mut self.f)
+    }
+
+    #[inline]
+    fn rfold<B, G>(self, init: B, mut g: G) -> B
+    where
+        G: FnMut(B, Self::Item) -> B,
+    {
+        let mut f = self.f;
+        self.lender.rfold(init, |acc, x| g(acc, f(x)))
     }
 }
 

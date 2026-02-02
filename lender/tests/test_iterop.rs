@@ -49,6 +49,44 @@ fn map_into_iter_into_parts() {
     assert_eq!(lender.count(), 3);
 }
 
+#[test]
+fn map_into_iter_fold() {
+    let sum = VecLender::new(vec![1, 2, 3])
+        .map_into_iter(|x| *x * 2)
+        .fold(0, |acc, x| acc + x);
+    assert_eq!(sum, 12);
+}
+
+#[test]
+fn map_into_iter_fold_empty() {
+    let sum = VecLender::new(vec![])
+        .map_into_iter(|x: &i32| *x * 2)
+        .fold(0, |acc, x| acc + x);
+    assert_eq!(sum, 0);
+}
+
+#[test]
+fn map_into_iter_rfold() {
+    let result = VecLender::new(vec![1, 2, 3])
+        .map_into_iter(|x| *x * 2)
+        .rfold(Vec::new(), |mut acc, x| {
+            acc.push(x);
+            acc
+        });
+    assert_eq!(result, vec![6, 4, 2]);
+}
+
+#[test]
+fn map_into_iter_rfold_empty() {
+    let result = VecLender::new(vec![])
+        .map_into_iter(|x: &i32| *x * 2)
+        .rfold(Vec::new(), |mut acc, x| {
+            acc.push(x);
+            acc
+        });
+    assert!(result.is_empty());
+}
+
 // ============================================================================
 // Iter adapter tests - converts lender to iterator when Lend is 'static-like
 // ============================================================================

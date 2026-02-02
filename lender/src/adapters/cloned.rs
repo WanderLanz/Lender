@@ -39,6 +39,14 @@ where
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
+
+    #[inline]
+    fn fold<B, F>(self, init: B, mut f: F) -> B
+    where
+        F: FnMut(B, Self::Item) -> B,
+    {
+        self.lender.fold(init, |acc, x| f(acc, x.clone()))
+    }
 }
 
 impl<T, L> DoubleEndedIterator for Cloned<L>
@@ -50,6 +58,14 @@ where
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
         self.lender.next_back().cloned()
+    }
+
+    #[inline]
+    fn rfold<B, F>(self, init: B, mut f: F) -> B
+    where
+        F: FnMut(B, Self::Item) -> B,
+    {
+        self.lender.rfold(init, |acc, x| f(acc, x.clone()))
     }
 }
 

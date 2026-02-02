@@ -1356,6 +1356,61 @@ fn fallible_peekable_next_if_no_match() {
     assert_eq!(peekable.next(), Ok(Some(&1)));
 }
 
+#[test]
+fn fallible_peekable_rfold_with_peeked() {
+    use lender::FallibleLender;
+    use lender::DoubleEndedFallibleLender;
+
+    let fallible: lender::IntoFallible<(), _> = VecLender::new(vec![1, 2, 3]).into_fallible();
+    let mut peekable = fallible.peekable();
+    assert_eq!(peekable.peek(), Ok(Some(&&1)));
+    // rfold processes back-to-front: 3, 2, then peeked 1
+    let result = peekable.rfold(Vec::new(), |mut acc, &x| {
+        acc.push(x);
+        Ok(acc)
+    });
+    assert_eq!(result, Ok(vec![3, 2, 1]));
+}
+
+#[test]
+fn fallible_peekable_try_rfold_with_peeked_complete() {
+    use lender::FallibleLender;
+    use lender::DoubleEndedFallibleLender;
+
+    let fallible: lender::IntoFallible<(), _> = VecLender::new(vec![1, 2, 3]).into_fallible();
+    let mut peekable = fallible.peekable();
+    assert_eq!(peekable.peek(), Ok(Some(&&1)));
+    // try_rfold processes back-to-front: 3, 2, then peeked 1
+    let result: Result<Option<Vec<i32>>, ()> =
+        peekable.try_rfold(Vec::new(), |mut acc, &x| {
+            acc.push(x);
+            Ok(Some(acc))
+        });
+    assert_eq!(result, Ok(Some(vec![3, 2, 1])));
+}
+
+// Covers the ControlFlow::Break path in fallible Peekable::try_rfold
+// where the peeked value is stored back (fallible peekable.rs lines 301-303).
+#[test]
+fn fallible_peekable_try_rfold_with_peeked_break() {
+    use lender::FallibleLender;
+    use lender::DoubleEndedFallibleLender;
+
+    let fallible: lender::IntoFallible<(), _> = VecLender::new(vec![1, 2, 3]).into_fallible();
+    let mut peekable = fallible.peekable();
+    assert_eq!(peekable.peek(), Ok(Some(&&1)));
+    // Inner lender has [2, 3]. try_rfold processes back-to-front:
+    // 3 (continue, acc=3), then 2 (break via None).
+    let result: Result<Option<i32>, ()> = peekable.try_rfold(0, |acc, &x| {
+        if x == 2 { Ok(None) } else { Ok(Some(acc + x)) }
+    });
+    assert_eq!(result, Ok(None));
+    // The peeked value should have been stored back
+    assert_eq!(peekable.next(), Ok(Some(&1)));
+    // Inner lender was fully consumed by try_rfold
+    assert_eq!(peekable.next(), Ok(None));
+}
+
 // ============================================================================
 // Iter fallible iterator
 // ============================================================================
