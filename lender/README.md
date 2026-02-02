@@ -354,6 +354,35 @@ GAT-based lending iterators are of little practical use.
 
 ## Why Isn't [`CovariantLending`] In between [`Lending`] and [`Lender`]?
 
+This is a very technical section, so feel free to skip it if you're not interested
+in the details the design choices behind this crate.
+
+To guarantee that the lend type is covariant in the lifetime parameter,
+we use an uncallable method in the [`CovariantLending`] and [`Lender`] traits:
+```rust,ignore
+fn _check_covariance<'long: 'short, 'short>(
+    lend: *const &'short <Self as Lending<'long>>::Lend, _: crate::Uncallable,
+) -> *const &'short <Self as Lending<'short>>::Lend;
+```
+
+If this method is implemented as `{ lend }`, then the compiler will check that
+the type `&'short <Self as Lending<'long>>::Lend` is convertible to `&'short
+<Self as Lending<'short>>::Lend`, which is exactly the definition of covariance.
+This is what the [`check_covariance!`] macro does for [`Lender`] impls. The
+[`unsafe_assume_covariance!`] macro, instead, implements this method as `unsafe
+{ std::mem::transmute(lend) }`, which tells the compiler to assume covariance
+without checking it: it is in this case a responsibility of the programmer to
+ensure that covariance holds (as the caller of an `unsafe` block must ensure the
+safety invariants).
+
+[`CovariantLending`] is a separate trait that depends on [`Lending`]. It
+is the trait required by methods that just required a [`Lending`] impl but
+not a [`Lender`] impl, such as [`once`]. It forces the same type of check.
+
+Now a first obvious question is: why not put this method directly in
+[`Lending``]? 
+
+
 ## Resources
 
 Please check out the great resources below that helped us and many others learn
@@ -391,3 +420,4 @@ but if you see any unsafe code that can be made safe, please let us know!
 [`check_covariance_fallible!`]: https://docs.rs/lender/latest/lender/macro.check_covariance_fallible.html
 [`unsafe_assume_covariance!`]: https://docs.rs/lender/latest/lender/macro.unsafe_assume_covariance.html
 [`unsafe_assume_covariance_fallible!`]: https://docs.rs/lender/latest/lender/macro.unsafe_assume_covariance_fallible.html
+[`once`]: https://docs.rs/lender/latest/lender/fn.once.html

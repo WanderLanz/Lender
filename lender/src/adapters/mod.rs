@@ -135,6 +135,7 @@ where
 {
     let mut residual = None;
     // SAFETY: residual is manually guaranteed to be the only lend alive after `f`.
+    #[allow(clippy::deref_addrof)]
     let reborrow = unsafe { &mut *(&raw mut residual) };
     let shunt = TryShunt {
         lender,

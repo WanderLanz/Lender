@@ -366,7 +366,7 @@ where
         F: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
     {
         let mut acc = init;
-        if let Some(inner) = (&mut *self.inner).take() {
+        if let Some(inner) = self.inner.take() {
             acc = inner.fold(acc, &mut f)?;
         }
         while let Some(l) = self.lender.next()? {

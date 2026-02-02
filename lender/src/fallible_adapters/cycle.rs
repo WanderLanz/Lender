@@ -22,6 +22,7 @@ where
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         // SAFETY: polonius return
+        #[allow(clippy::deref_addrof)]
         let reborrow = unsafe { &mut *(&raw mut *self) };
         if let x @ Some(_) = reborrow.lender.next()? {
             return Ok(x);

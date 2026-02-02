@@ -933,6 +933,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// with the error, matching the convention used by
     /// [`collect`](FallibleLender::collect).
     #[inline]
+    #[allow(clippy::type_complexity)]
     fn partition<'this, E, F>(mut self, mut f: F) -> Result<(E, E), ((E, E), Self::Error)>
     where
         Self: Sized + 'this,

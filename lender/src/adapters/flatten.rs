@@ -352,7 +352,7 @@ where
         F: FnMut(B, Lend<'_, Self>) -> B,
     {
         let mut acc = init;
-        if let Some(inner) = (&mut *self.inner).take() {
+        if let Some(inner) = self.inner.take() {
             acc = inner.fold(acc, &mut f);
         }
         while let Some(l) = self.lender.next() {
