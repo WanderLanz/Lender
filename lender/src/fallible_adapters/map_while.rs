@@ -1,6 +1,5 @@
 use crate::{
-    FallibleLend, FallibleLender, FallibleLending, MapWhile,
-    higher_order::FnMutHKAResOpt,
+    FallibleLend, FallibleLender, FallibleLending, MapWhile, higher_order::FnMutHKAResOpt,
 };
 
 impl<'lend, B, L, P> FallibleLending<'lend> for MapWhile<L, P>

@@ -2,9 +2,15 @@ use alloc::borrow::ToOwned;
 use core::{cmp::Ordering, num::NonZeroUsize, ops::ControlFlow};
 
 use crate::{
+    Chain, Chunk, Chunky, Cloned, Convert, Copied, Cycle, DoubleEndedLender, Enumerate,
+    ExactSizeLender, ExtendLender, Filter, FilterMap, FirstShunt, FlatMap, Flatten, FromLender,
+    Fuse, ImplBound, Inspect, Intersperse, IntersperseWith, IntoFallible, IntoLender, Iter, Map,
+    MapIntoIter, MapWhile, Mutate, Owned, Peekable, ProductLender, Ref, Rev, Scan, SecondShunt,
+    Skip, SkipWhile, StepBy, SumLender, Take, TakeWhile, TryShunt, TupleLend, Zip,
     higher_order::{FnMutHKA, FnMutHKAOpt},
-    try_trait_v2::{ChangeOutputType, FromResidual, Residual, Try},
-    *,
+    try_process,
+    try_trait_v2::{ChangeOutputType, FromResidual, Residual, Try, internal::NeverShortCircuit},
+    unzip,
 };
 
 /// A trait for dealing with the 'items' of lending iterators.
@@ -648,6 +654,19 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         FlatMap::new(self, f)
     }
     /// The [`Lender`] version of [`Iterator::flatten`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let data = vec![vec![1, 2], vec![3, 4]];
+    /// let mut flat = lender::from_iter(data.into_iter().map(lender::from_into_iter)).flatten();
+    /// assert_eq!(flat.next(), Some(1));
+    /// assert_eq!(flat.next(), Some(2));
+    /// assert_eq!(flat.next(), Some(3));
+    /// assert_eq!(flat.next(), Some(4));
+    /// assert_eq!(flat.next(), None);
+    /// ```
     #[inline]
     fn flatten<'call>(self) -> Flatten<'call, Self>
     where
@@ -657,6 +676,18 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         Flatten::new(self)
     }
     /// The [`Lender`] version of [`Iterator::fuse`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2u8].iter());
+    /// let mut fused = lender.fuse();
+    /// assert_eq!(fused.next(), Some(&1));
+    /// assert_eq!(fused.next(), Some(&2));
+    /// assert_eq!(fused.next(), None);
+    /// assert_eq!(fused.next(), None);
+    /// ```
     #[inline]
     fn fuse(self) -> Fuse<Self>
     where
@@ -665,6 +696,20 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         Fuse::new(self)
     }
     /// The [`Lender`] version of [`Iterator::inspect`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2, 3u8].iter());
+    /// let mut sum = 0u8;
+    /// let mut inspected = lender.inspect(|&x| sum += x);
+    /// assert_eq!(inspected.next(), Some(&1));
+    /// assert_eq!(inspected.next(), Some(&2));
+    /// assert_eq!(inspected.next(), Some(&3));
+    /// assert_eq!(inspected.next(), None);
+    /// assert_eq!(sum, 6);
+    /// ```
     #[inline]
     fn inspect<F>(self, f: F) -> Inspect<Self, F>
     where
@@ -675,6 +720,19 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     }
     // not std::iter
     /// Mutates each lend with the given function.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let mut data = [1, 2, 3u8];
+    /// let mut lender = lender::lend_iter::<lend!(&'lend mut u8), _>(data.iter_mut());
+    /// let mut mutated = lender.mutate(|x| **x += 10);
+    /// assert_eq!(mutated.next(), Some(&mut 11));
+    /// assert_eq!(mutated.next(), Some(&mut 12));
+    /// assert_eq!(mutated.next(), Some(&mut 13));
+    /// assert_eq!(mutated.next(), None);
+    /// ```
     #[inline]
     fn mutate<F>(self, f: F) -> Mutate<Self, F>
     where
@@ -684,6 +742,21 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         Mutate::new(self, f)
     }
     /// The [`Lender`] version of [`Iterator::by_ref`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2, 3, 4, 5u8].iter());
+    /// // Take the first two elements using by_ref, so the original lender is not consumed.
+    /// let mut first_two = lender.by_ref().take(2);
+    /// assert_eq!(first_two.next(), Some(&1));
+    /// assert_eq!(first_two.next(), Some(&2));
+    /// assert_eq!(first_two.next(), None);
+    /// drop(first_two);
+    /// // Continue iterating from the third element.
+    /// assert_eq!(lender.next(), Some(&3));
+    /// ```
     #[inline(always)]
     fn by_ref(&mut self) -> &mut Self
     where
@@ -692,6 +765,15 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         self
     }
     /// The [`Lender`] version of [`Iterator::collect`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3].iter());
+    /// let collected: Vec<i32> = lender.copied().collect();
+    /// assert_eq!(collected, vec![1, 2, 3]);
+    /// ```
     #[inline]
     fn collect<B>(self) -> B
     where
@@ -722,6 +804,16 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         collection
     }
     /// The [`Lender`] version of [`Iterator::partition`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3, 4, 5].iter());
+    /// let (even, odd): (Vec<i32>, Vec<i32>) = lender.copied().partition(|x| x % 2 == 0);
+    /// assert_eq!(even, vec![2, 4]);
+    /// assert_eq!(odd, vec![1, 3, 5]);
+    /// ```
     #[inline]
     fn partition<E, F>(mut self, mut f: F) -> (E, E)
     where
@@ -741,6 +833,15 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         (left, right)
     }
     /// The [`Lender`] version of [`Iterator::is_partitioned`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// // [1, 3, 2, 4] is partitioned: all odd elements come before all even elements.
+    /// let mut lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 3, 2, 4].iter());
+    /// assert!(lender.is_partitioned(|&x| x % 2 != 0));
+    /// ```
     #[inline]
     #[allow(clippy::wrong_self_convention)]
     fn is_partitioned<P>(mut self, mut predicate: P) -> bool
@@ -751,6 +852,15 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         self.all(&mut predicate) || !self.any(predicate)
     }
     /// The [`Lender`] version of [`Iterator::try_fold`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2, 3u8].iter());
+    /// let sum = lender.try_fold(0u8, |acc, &x| acc.checked_add(x));
+    /// assert_eq!(sum, Some(6));
+    /// ```
     #[inline]
     fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> R
     where
@@ -768,6 +878,15 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         R::from_output(acc)
     }
     /// The [`Lender`] version of [`Iterator::try_for_each`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2, 3u8].iter());
+    /// let result = lender.try_for_each(|&x| if x < 3 { Some(()) } else { None });
+    /// assert_eq!(result, None);
+    /// ```
     #[inline]
     fn try_for_each<F, R>(&mut self, mut f: F) -> R
     where
@@ -775,27 +894,36 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         F: FnMut(Lend<'_, Self>) -> R,
         R: Try<Output = ()>,
     {
-        while let Some(x) = self.next() {
-            if let ControlFlow::Break(x) = f(x).branch() {
-                return R::from_residual(x);
-            }
-        }
-        R::from_output(())
+        self.try_fold((), move |(), x| f(x))
     }
     /// The [`Lender`] version of [`Iterator::fold`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2, 3u8].iter());
+    /// let sum = lender.fold(0u8, |acc, &x| acc + x);
+    /// assert_eq!(sum, 6);
+    /// ```
     #[inline]
     fn fold<B, F>(mut self, init: B, mut f: F) -> B
     where
         Self: Sized,
         F: FnMut(B, Lend<'_, Self>) -> B,
     {
-        let mut accum = init;
-        while let Some(x) = self.next() {
-            accum = f(accum, x);
-        }
-        accum
+        self.try_fold(init, |acc, x| NeverShortCircuit(f(acc, x))).0
     }
     /// The [`Lender`] version of [`Iterator::reduce`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2, 3u8].iter());
+    /// let max = lender.copied().reduce(|max, x| if x > max { x } else { max });
+    /// assert_eq!(max, Some(3));
+    /// ```
     #[inline]
     fn reduce<T, F>(mut self, f: F) -> Option<T>
     where
@@ -807,6 +935,15 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         Some(self.fold(first, f))
     }
     /// The [`Lender`] version of [`Iterator::try_reduce`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let lender = lender::from_iter(vec![1u8, 2, 3].into_iter());
+    /// let sum = lender.try_reduce(|acc, x| acc.checked_add(x));
+    /// assert_eq!(sum, Some(Some(6)));
+    /// ```
     #[inline]
     fn try_reduce<T, F, R>(mut self, f: F) -> ChangeOutputType<R, Option<T>>
     where
@@ -874,6 +1011,18 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         None
     }
     /// The [`Lender`] version of [`Iterator::find_map`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let mut data = [1, 2, 3u8];
+    /// let mut lender = lender::lend_iter::<lend!(&'lend mut u8), _>(data.iter_mut());
+    /// let found = lender.find_map(hrc_mut!(for<'all> |x: &'all mut u8| -> Option<&'all u8> {
+    ///     if *x > 1 { Some(&*x) } else { None }
+    /// }));
+    /// assert_eq!(found, Some(&2));
+    /// ```
     #[inline]
     fn find_map<'a, F>(&'a mut self, mut f: F) -> Option<<F as FnMutHKAOpt<'a, Lend<'a, Self>>>::B>
     where
@@ -1030,6 +1179,16 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         Rev::new(self)
     }
     /// The [`Lender`] version of [`Iterator::unzip`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let lender = lender::lend_iter::<lend!(&'lend (i32, char)), _>([(1, 'a'), (2, 'b'), (3, 'c')].iter());
+    /// let (nums, chars): (Vec<i32>, Vec<char>) = lender.copied().unzip();
+    /// assert_eq!(nums, vec![1, 2, 3]);
+    /// assert_eq!(chars, vec!['a', 'b', 'c']);
+    /// ```
     #[inline]
     fn unzip<ExtA, ExtB>(self) -> (ExtA, ExtB)
     where
@@ -1080,6 +1239,15 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         Cycle::new(self)
     }
     /// The [`Lender`] version of [`Iterator::sum`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3i32].iter());
+    /// let total: i32 = lender.copied().sum();
+    /// assert_eq!(total, 6);
+    /// ```
     #[inline]
     fn sum<S>(self) -> S
     where
@@ -1089,6 +1257,15 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         S::sum_lender(self)
     }
     /// The [`Lender`] version of [`Iterator::product`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3i32].iter());
+    /// let total: i32 = lender.copied().product();
+    /// assert_eq!(total, 6);
+    /// ```
     #[inline]
     fn product<P>(self) -> P
     where
@@ -1113,6 +1290,16 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// Note: the closure receives both lends under a single lifetime
     /// (`for<'all>`). This is an HRTB limitation — the two lenders cannot
     /// be advanced independently within the closure.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// # use core::cmp::Ordering;
+    /// let a = lender::from_iter(vec![1, 2, 3].into_iter());
+    /// let b = lender::from_iter(vec![1, 2, 4].into_iter());
+    /// assert_eq!(a.cmp_by(b, |x: i32, y: i32| x.cmp(&y)), Ordering::Less);
+    /// ```
     #[inline]
     fn cmp_by<L, F>(self, other: L, mut cmp: F) -> Ordering
     where
@@ -1141,6 +1328,16 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// The [`Lender`] version of [`Iterator::partial_cmp_by`].
     ///
     /// See [`cmp_by`](Lender::cmp_by) for a note on the unified lifetime constraint.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// # use core::cmp::Ordering;
+    /// let a = lender::from_iter(vec![1.0, 2.0].into_iter());
+    /// let b = lender::from_iter(vec![1.0, 3.0].into_iter());
+    /// assert_eq!(a.partial_cmp_by(b, |x: f64, y: f64| x.partial_cmp(&y)), Some(Ordering::Less));
+    /// ```
     #[inline]
     fn partial_cmp_by<L, F>(self, other: L, mut partial_cmp: F) -> Option<Ordering>
     where
@@ -1169,6 +1366,15 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// The [`Lender`] version of [`Iterator::eq_by`].
     ///
     /// See [`cmp_by`](Lender::cmp_by) for a note on the unified lifetime constraint.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let a = lender::from_iter(vec![1, 2, 3].into_iter());
+    /// let b = lender::from_iter(vec![2, 3, 4].into_iter());
+    /// assert!(a.eq_by(b, |x: i32, y: i32| x + 1 == y));
+    /// ```
     #[inline]
     fn eq_by<L, F>(self, other: L, mut eq: F) -> bool
     where
@@ -1234,6 +1440,17 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         matches!(self.partial_cmp(other), Some(Ordering::Greater | Ordering::Equal))
     }
     /// The [`Lender`] version of [`Iterator::is_sorted`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let lender = lender::from_iter(vec![1, 2, 3u8].into_iter());
+    /// assert!(lender.is_sorted());
+    ///
+    /// let lender = lender::from_iter(vec![3, 1, 2u8].into_iter());
+    /// assert!(!lender.is_sorted());
+    /// ```
     #[inline]
     #[allow(clippy::wrong_self_convention)]
     fn is_sorted<T>(self) -> bool
@@ -1245,6 +1462,14 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         self.is_sorted_by(PartialOrd::partial_cmp)
     }
     /// The [`Lender`] version of [`Iterator::is_sorted_by`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let lender = lender::from_iter(vec![3, 2, 1u8].into_iter());
+    /// assert!(lender.is_sorted_by(|a, b| b.partial_cmp(a)));
+    /// ```
     #[inline]
     #[allow(clippy::wrong_self_convention)]
     fn is_sorted_by<T, F>(self, mut compare: F) -> bool
@@ -1266,6 +1491,14 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         })
     }
     /// The [`Lender`] version of [`Iterator::is_sorted_by_key`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let mut lender = lender::from_iter(vec![1i32, -2, -3].into_iter());
+    /// assert!(lender.is_sorted_by_key(|x: i32| x.unsigned_abs()));
+    /// ```
     #[inline]
     #[allow(clippy::wrong_self_convention)]
     fn is_sorted_by_key<F, K>(mut self, mut f: F) -> bool

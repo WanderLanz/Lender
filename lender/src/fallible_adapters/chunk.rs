@@ -1,7 +1,7 @@
 use core::ops::ControlFlow;
 
 use crate::{
-    try_trait_v2::Try, Chunk, FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender,
+    Chunk, FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, try_trait_v2::Try,
 };
 
 impl<'lend, T> FallibleLending<'lend> for Chunk<'_, T>

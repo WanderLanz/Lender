@@ -12,6 +12,7 @@ use crate::{FusedLender, prelude::*};
 /// let mut lender = lender::repeat::<lend!(&'lend u8)>(&0u8);
 /// assert_eq!(lender.next(), Some(&0));
 /// ```
+#[inline]
 pub fn repeat<'a, L>(elt: Lend<'a, L>) -> Repeat<'a, L>
 where
     L: ?Sized + CovariantLending + 'a,

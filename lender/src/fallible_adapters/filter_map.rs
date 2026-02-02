@@ -1,7 +1,6 @@
 use crate::{
     DoubleEndedFallibleLender, FallibleLend, FallibleLender, FallibleLending, FilterMap,
-    FusedFallibleLender,
-    higher_order::FnMutHKAResOpt,
+    FusedFallibleLender, higher_order::FnMutHKAResOpt,
 };
 
 impl<'lend, B, L, F> FallibleLending<'lend> for FilterMap<L, F>

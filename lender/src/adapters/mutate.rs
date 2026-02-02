@@ -20,6 +20,7 @@ impl<L, F> Mutate<L, F> {
         Mutate { lender, f }
     }
 
+    /// Returns the inner lender.
     #[inline(always)]
     pub fn into_inner(self) -> L {
         self.lender

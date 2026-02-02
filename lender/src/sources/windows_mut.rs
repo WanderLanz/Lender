@@ -231,7 +231,21 @@ impl<T, const WINDOW_SIZE: usize> FusedLender for ArrayWindowsMut<'_, T, WINDOW_
 /// [`windows_mut`](WindowsMutExt::windows_mut) and
 /// [`array_windows_mut`](WindowsMutExt::array_windows_mut).
 pub trait WindowsMutExt<T> {
+    /// Returns a lender over mutable contiguous overlapping windows of `size` elements.
+    ///
+    /// See [`windows_mut`] for more details.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `size` is zero.
     fn windows_mut(&mut self, size: usize) -> WindowsMut<'_, T>;
+    /// Returns a lender over mutable overlapping array windows of `WINDOW_SIZE` elements.
+    ///
+    /// See [`array_windows_mut`] for more details.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `WINDOW_SIZE` is zero.
     fn array_windows_mut<const WINDOW_SIZE: usize>(
         &mut self,
     ) -> ArrayWindowsMut<'_, T, WINDOW_SIZE>;

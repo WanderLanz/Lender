@@ -1,10 +1,8 @@
 use core::{fmt, marker::PhantomData};
 
 use crate::{
-    DoubleEndedFallibleLender, ExactSizeFallibleLender,
-    FallibleLend, FallibleLender, FallibleLending,
-    FusedFallibleLender,
-    higher_order::FnOnceHKARes,
+    DoubleEndedFallibleLender, ExactSizeFallibleLender, FallibleLend, FallibleLender,
+    FallibleLending, FusedFallibleLender, higher_order::FnOnceHKARes,
 };
 
 /// Creates a fallible lender that lazily generates a value
@@ -32,6 +30,7 @@ use crate::{
 /// assert_eq!(lender.next().unwrap(), Some(&mut 1));
 /// assert_eq!(lender.next().unwrap(), None);
 /// ```
+#[inline]
 pub fn once_with<St, E, F>(state: St, f: F) -> OnceWith<St, E, F>
 where
     F: for<'all> FnOnceHKARes<'all, &'all mut St, E>,

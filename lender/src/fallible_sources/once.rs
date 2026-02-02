@@ -1,9 +1,8 @@
 use core::fmt;
 
 use crate::{
-    CovariantFallibleLending, DoubleEndedFallibleLender,
-    ExactSizeFallibleLender, FallibleLend, FallibleLender,
-    FallibleLending, FusedFallibleLender,
+    CovariantFallibleLending, DoubleEndedFallibleLender, ExactSizeFallibleLender, FallibleLend,
+    FallibleLender, FallibleLending, FusedFallibleLender,
 };
 
 /// Creates a fallible lender that yields an element exactly
@@ -21,6 +20,7 @@ use crate::{
 /// assert_eq!(lender.next(), Ok(Some(&42)));
 /// assert_eq!(lender.next(), Ok(None));
 /// ```
+#[inline]
 pub fn once<'a, L: ?Sized + CovariantFallibleLending, E>(
     value: Result<FallibleLend<'a, L>, E>,
 ) -> Once<'a, L, E> {

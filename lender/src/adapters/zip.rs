@@ -1,6 +1,4 @@
-use crate::{
-    DoubleEndedLender, ExactSizeLender, FusedLender, IntoLender, Lend, Lender, Lending,
-};
+use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, IntoLender, Lend, Lender, Lending};
 
 /// Zips two lenders into a single lender of pairs.
 ///

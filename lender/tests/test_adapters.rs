@@ -1,6 +1,6 @@
 mod common;
-use common::*;
 use ::lender::prelude::*;
+use common::*;
 
 // ============================================================================
 // Chain adapter tests (Lender)
@@ -985,9 +985,8 @@ fn peekable_try_rfold_with_peeked_break() {
     assert_eq!(peekable.peek(), Some(&&1));
     // Inner lender has [2, 3]. try_rfold processes back-to-front:
     // 3 (continue, acc=3), then 2 (break via None).
-    let result: Option<i32> = peekable.try_rfold(0, |acc, &x| {
-        if x == 2 { None } else { Some(acc + x) }
-    });
+    let result: Option<i32> =
+        peekable.try_rfold(0, |acc, &x| if x == 2 { None } else { Some(acc + x) });
     assert_eq!(result, None);
     // The peeked value should have been stored back
     assert_eq!(peekable.next(), Some(&1));
@@ -1353,8 +1352,8 @@ fn filter_map_basic() {
 
 #[test]
 fn filter_map_all_none() {
-    let mut fm =
-        VecLender::new(vec![1, 3, 5]).filter_map(|x: &i32| if *x % 2 == 0 { Some(*x * 10) } else { None });
+    let mut fm = VecLender::new(vec![1, 3, 5])
+        .filter_map(|x: &i32| if *x % 2 == 0 { Some(*x * 10) } else { None });
     assert_eq!(fm.next(), None);
 }
 
@@ -1551,10 +1550,7 @@ fn skip_advance_back_by_past_end() {
 
     let mut skip = VecLender::new(vec![1, 2, 3, 4, 5]).skip(2);
     // skip(2) leaves 3 elements, trying to advance 5 should fail with 2 remaining
-    assert_eq!(
-        skip.advance_back_by(5),
-        Err(NonZeroUsize::new(2).unwrap())
-    );
+    assert_eq!(skip.advance_back_by(5), Err(NonZeroUsize::new(2).unwrap()));
 }
 
 // ============================================================================
@@ -2257,15 +2253,15 @@ fn intersperse_with_coverage() {
 #[test]
 fn intersperse_try_fold_early_exit() {
     // try_fold that stops early via None
-    let result: Option<i32> = VecLender::new(vec![1, 2, 3])
-        .intersperse(&10)
-        .try_fold(0, |acc, x| {
-            if acc + *x > 15 {
-                None
-            } else {
-                Some(acc + *x)
-            }
-        });
+    let result: Option<i32> =
+        VecLender::new(vec![1, 2, 3])
+            .intersperse(&10)
+            .try_fold(
+                0,
+                |acc, x| {
+                    if acc + *x > 15 { None } else { Some(acc + *x) }
+                },
+            );
     // 1 + 10 + 2 = 13, then next is 10 → 23 > 15, so None
     assert_eq!(result, None);
 }
@@ -2315,13 +2311,12 @@ fn intersperse_with_try_fold() {
 fn intersperse_with_try_fold_early_exit() {
     let result: Option<i32> = VecLender::new(vec![1, 2, 3])
         .intersperse_with(|| &10)
-        .try_fold(0, |acc, x| {
-            if acc + *x > 15 {
-                None
-            } else {
-                Some(acc + *x)
-            }
-        });
+        .try_fold(
+            0,
+            |acc, x| {
+                if acc + *x > 15 { None } else { Some(acc + *x) }
+            },
+        );
     assert_eq!(result, None);
 }
 
@@ -2734,7 +2729,9 @@ fn scan_early_termination() {
 fn scan_into_inner() {
     let scan = VecLender::new(vec![1, 2, 3]).scan(
         0,
-        hrc_mut!(for<'all> |args: (&'all mut i32, &i32)| -> Option<i32> { Some(*args.0 + *args.1) }),
+        hrc_mut!(for<'all> |args: (&'all mut i32, &i32)| -> Option<i32> {
+            Some(*args.0 + *args.1)
+        }),
     );
     let lender = scan.into_inner();
     assert_eq!(lender.count(), 3);
@@ -2744,7 +2741,9 @@ fn scan_into_inner() {
 fn scan_into_parts() {
     let scan = VecLender::new(vec![1, 2, 3]).scan(
         10,
-        hrc_mut!(for<'all> |args: (&'all mut i32, &i32)| -> Option<i32> { Some(*args.0 + *args.1) }),
+        hrc_mut!(for<'all> |args: (&'all mut i32, &i32)| -> Option<i32> {
+            Some(*args.0 + *args.1)
+        }),
     );
     let (lender, state, _f) = scan.into_parts();
     assert_eq!(lender.count(), 3);
@@ -2783,8 +2782,10 @@ fn map_while_basic() {
 
 #[test]
 fn map_while_all_mapped() {
-    let mut mw = VecLender::new(vec![1, 2, 3])
-        .map_while(hrc_mut!(for<'all> |x: &i32| -> Option<i32> { Some(*x * 2) }));
+    let mut mw =
+        VecLender::new(vec![1, 2, 3]).map_while(hrc_mut!(for<'all> |x: &i32| -> Option<i32> {
+            Some(*x * 2)
+        }));
 
     assert_eq!(mw.next(), Some(2));
     assert_eq!(mw.next(), Some(4));
@@ -2803,16 +2804,20 @@ fn map_while_immediate_none() {
 
 #[test]
 fn map_while_into_inner() {
-    let map_while = VecLender::new(vec![1, 2, 3])
-        .map_while(hrc_mut!(for<'all> |x: &i32| -> Option<i32> { Some(*x * 2) }));
+    let map_while =
+        VecLender::new(vec![1, 2, 3]).map_while(hrc_mut!(for<'all> |x: &i32| -> Option<i32> {
+            Some(*x * 2)
+        }));
     let lender = map_while.into_inner();
     assert_eq!(lender.count(), 3);
 }
 
 #[test]
 fn map_while_into_parts() {
-    let map_while = VecLender::new(vec![1, 2, 3])
-        .map_while(hrc_mut!(for<'all> |x: &i32| -> Option<i32> { Some(*x * 2) }));
+    let map_while =
+        VecLender::new(vec![1, 2, 3]).map_while(hrc_mut!(for<'all> |x: &i32| -> Option<i32> {
+            Some(*x * 2)
+        }));
     let (lender, _predicate) = map_while.into_parts();
     assert_eq!(lender.count(), 3);
 }
@@ -2831,7 +2836,9 @@ fn map_while_size_hint_additional() {
 fn map_while_all_some() {
     // When all return Some, all elements are yielded
     let values: Vec<i32> = VecLender::new(vec![1, 2, 3])
-        .map_while(hrc_mut!(for<'all> |x: &i32| -> Option<i32> { Some(*x * 10) }))
+        .map_while(hrc_mut!(for<'all> |x: &i32| -> Option<i32> {
+            Some(*x * 10)
+        }))
         .fold(Vec::new(), |mut acc, x| {
             acc.push(x);
             acc
@@ -2878,8 +2885,8 @@ fn flatten_empty_outer() {
 // M5: Zip nth_back — equal-length lenders
 #[test]
 fn zip_nth_back_equal_length() {
-    let mut zipped = VecLender::new(vec![1, 2, 3, 4, 5])
-        .zip(VecLender::new(vec![10, 20, 30, 40, 50]));
+    let mut zipped =
+        VecLender::new(vec![1, 2, 3, 4, 5]).zip(VecLender::new(vec![10, 20, 30, 40, 50]));
     // nth_back(0) yields the last pair
     assert_eq!(zipped.nth_back(0), Some((&5, &50)));
     // nth_back(1) skips (4,40) and yields (3,30)
@@ -2891,8 +2898,7 @@ fn zip_nth_back_equal_length() {
 // M5: Zip nth_back — unequal-length lenders
 #[test]
 fn zip_nth_back_unequal_length() {
-    let mut zipped = VecLender::new(vec![1, 2, 3, 4, 5])
-        .zip(VecLender::new(vec![10, 20, 30]));
+    let mut zipped = VecLender::new(vec![1, 2, 3, 4, 5]).zip(VecLender::new(vec![10, 20, 30]));
     // Zip length is min(5, 3) = 3, so effective pairs are (1,10),(2,20),(3,30).
     // nth_back(0) should yield (3,30)
     assert_eq!(zipped.nth_back(0), Some((&3, &30)));
@@ -2912,8 +2918,7 @@ fn zip_nth_back_empty() {
 fn zip_nth_back_first_shorter() {
     // First lender shorter than second — tests the a_sz < b_sz branch
     // in Zip::nth_back where b.advance_back_by() trims the excess.
-    let mut zipped = VecLender::new(vec![10, 20, 30])
-        .zip(VecLender::new(vec![1, 2, 3, 4, 5]));
+    let mut zipped = VecLender::new(vec![10, 20, 30]).zip(VecLender::new(vec![1, 2, 3, 4, 5]));
     // Zip length is min(3, 5) = 3, effective pairs: (10,1),(20,2),(30,3).
     // nth_back(0) yields (30, 3)
     assert_eq!(zipped.nth_back(0), Some((&30, &3)));
@@ -3272,10 +3277,10 @@ fn flat_map_basic() {
         .into_iter()
         .into_lender()
         .flat_map(|n| (0..n).into_lender());
-    assert_eq!(l.next(), Some(0));      // from n=1: [0]
-    assert_eq!(l.next(), Some(0));      // from n=2: [0, 1]
+    assert_eq!(l.next(), Some(0)); // from n=1: [0]
+    assert_eq!(l.next(), Some(0)); // from n=2: [0, 1]
     assert_eq!(l.next(), Some(1));
-    assert_eq!(l.next(), Some(0));      // from n=3: [0, 1, 2]
+    assert_eq!(l.next(), Some(0)); // from n=3: [0, 1, 2]
     assert_eq!(l.next(), Some(1));
     assert_eq!(l.next(), Some(2));
     assert_eq!(l.next(), None);
@@ -3305,9 +3310,9 @@ fn flat_map_mixed_empty_nonempty() {
         .into_iter()
         .into_lender()
         .flat_map(|n| (0..n).into_lender());
-    assert_eq!(l.next(), Some(0));      // from n=1
+    assert_eq!(l.next(), Some(0)); // from n=1
     // n=0 produces empty
-    assert_eq!(l.next(), Some(0));      // from n=2
+    assert_eq!(l.next(), Some(0)); // from n=2
     assert_eq!(l.next(), Some(1));
     assert_eq!(l.next(), None);
 }
@@ -3369,9 +3374,7 @@ fn compose_filter_map_fold() {
 
 #[test]
 fn compose_skip_take() {
-    let mut lender = VecLender::new(vec![1, 2, 3, 4, 5, 6, 7, 8])
-        .skip(2)
-        .take(3);
+    let mut lender = VecLender::new(vec![1, 2, 3, 4, 5, 6, 7, 8]).skip(2).take(3);
     assert_eq!(lender.next(), Some(&3));
     assert_eq!(lender.next(), Some(&4));
     assert_eq!(lender.next(), Some(&5));
@@ -3447,8 +3450,11 @@ fn compose_step_by_chain() {
 fn compose_zip_map_fold() {
     let a = VecLender::new(vec![1, 2, 3]);
     let b = VecLender::new(vec![10, 20, 30]);
-    let result = a.zip(b)
-        .map(hrc_mut!(for<'all> |pair: (&'all i32, &'all i32)| -> i32 { *pair.0 + *pair.1 }))
+    let result = a
+        .zip(b)
+        .map(hrc_mut!(for<'all> |pair: (&'all i32, &'all i32)| -> i32 {
+            *pair.0 + *pair.1
+        }))
         .fold(0, |acc, x| acc + x);
     // (1+10) + (2+20) + (3+30) = 66
     assert_eq!(result, 66);

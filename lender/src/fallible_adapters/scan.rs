@@ -1,7 +1,4 @@
-use crate::{
-    FallibleLend, FallibleLender, FallibleLending, Scan,
-    higher_order::FnMutHKAResOpt,
-};
+use crate::{FallibleLend, FallibleLender, FallibleLending, Scan, higher_order::FnMutHKAResOpt};
 
 impl<'lend, B, L, St, F> FallibleLending<'lend> for Scan<L, St, F>
 where

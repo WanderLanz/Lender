@@ -21,6 +21,7 @@ impl<L> Take<L> {
         Take { lender, n }
     }
 
+    /// Returns the inner lender.
     #[inline(always)]
     pub fn into_inner(self) -> L {
         self.lender
@@ -183,7 +184,7 @@ where
     }
 
     #[inline]
-    fn try_rfold<B, F, R>(&mut self, init: B, f: F) -> R
+    fn try_rfold<B, F, R>(&mut self, init: B, mut f: F) -> R
     where
         Self: Sized,
         F: FnMut(B, Lend<'_, Self>) -> R,
@@ -196,7 +197,11 @@ where
             if len > self.n && self.lender.nth_back(len - self.n - 1).is_none() {
                 R::from_output(init)
             } else {
-                self.lender.try_rfold(init, f)
+                let n = &mut self.n;
+                self.lender.try_rfold(init, |acc, x| {
+                    *n -= 1;
+                    f(acc, x)
+                })
             }
         }
     }

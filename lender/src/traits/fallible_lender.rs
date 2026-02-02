@@ -288,6 +288,24 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// Intersperses each lend of this lender with the separator produced by the given function.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// let sep = 0;
+    /// let lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2, 3].iter().into_fallible(),
+    /// );
+    /// let mut inter = lender.intersperse_with(|| Ok(&sep));
+    /// assert_eq!(inter.next(), Ok(Some(&1)));
+    /// assert_eq!(inter.next(), Ok(Some(&0)));
+    /// assert_eq!(inter.next(), Ok(Some(&2)));
+    /// assert_eq!(inter.next(), Ok(Some(&0)));
+    /// assert_eq!(inter.next(), Ok(Some(&3)));
+    /// assert_eq!(inter.next(), Ok(None));
+    /// ```
     #[inline]
     fn intersperse_with<'call, G>(self, separator: G) -> FallibleIntersperseWith<'call, Self, G>
     where
@@ -332,6 +350,19 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// Maps the error of this lender using the given function.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let data = vec![Ok(1), Ok(2), Err("oops")];
+    /// let mut lender = lender::from_iter(data.into_iter())
+    ///     .convert::<&str>()
+    ///     .map_err(|e| format!("error: {e}"));
+    /// assert_eq!(lender.next(), Ok(Some(1)));
+    /// assert_eq!(lender.next(), Ok(Some(2)));
+    /// assert_eq!(lender.next(), Err(String::from("error: oops")));
+    /// ```
     #[inline]
     fn map_err<E, F>(self, f: F) -> MapErr<E, Self, F>
     where
@@ -348,6 +379,21 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// of a [`FallibleLender`]. However, this behavior is very common, and so
     /// this method is included for convenience. The main advantage is better
     /// type inference for the mapping function.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::{IteratorExt as _, FallibleIterator as _};
+    /// # use lender::prelude::*;
+    /// let mut data = [1, 2u8];
+    /// let lender = lender::lend_fallible_iter::<fallible_lend!(&'lend mut u8), _>(
+    ///     data.iter_mut().into_fallible(),
+    /// );
+    /// let mut mapped_into_iter = lender.map_into_iter(|a| { Ok(*a + 10) });
+    /// assert_eq!(mapped_into_iter.next(), Ok(Some(11)));
+    /// assert_eq!(mapped_into_iter.next(), Ok(Some(12)));
+    /// assert_eq!(mapped_into_iter.next(), Ok(None));
+    /// ```
     #[inline]
     fn map_into_iter<O, F>(self, f: F) -> MapIntoIter<Self, O, F>
     where
@@ -358,6 +404,19 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// Calls the given function with each lend of this lender.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2, 3].iter().into_fallible(),
+    /// );
+    /// let mut sum = 0u8;
+    /// lender.for_each(|&x| { sum += x; Ok(()) }).unwrap();
+    /// assert_eq!(sum, 6);
+    /// ```
     #[inline]
     fn for_each<F>(self, mut f: F) -> Result<(), Self::Error>
     where
@@ -368,6 +427,20 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// Filters this lender using the given predicate.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2, 3].iter().into_fallible(),
+    /// );
+    /// let mut filtered = lender.filter(|&&x| Ok(x > 1));
+    /// assert_eq!(filtered.next(), Ok(Some(&2)));
+    /// assert_eq!(filtered.next(), Ok(Some(&3)));
+    /// assert_eq!(filtered.next(), Ok(None));
+    /// ```
     #[inline]
     fn filter<P>(self, predicate: P) -> Filter<Self, P>
     where
@@ -436,6 +509,22 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// Makes this lender peekable, so that it is possible to peek at the next lend without consuming it.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2].iter().into_fallible(),
+    /// );
+    /// let mut peekable = lender.peekable();
+    /// assert_eq!(peekable.peek(), Ok(Some(&&1)));
+    /// assert_eq!(peekable.next(), Ok(Some(&1)));
+    /// assert_eq!(peekable.peek(), Ok(Some(&&2)));
+    /// assert_eq!(peekable.next(), Ok(Some(&2)));
+    /// assert_eq!(peekable.peek(), Ok(None));
+    /// ```
     #[inline]
     fn peekable<'call>(self) -> FalliblePeekable<'call, Self>
     where
@@ -657,6 +746,25 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::flatten`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// # use core::convert::Infallible;
+    /// let data = vec![vec![1, 2], vec![3, 4]];
+    /// let lender = lender::from_iter(data.into_iter())
+    ///     .into_fallible::<core::convert::Infallible>();
+    /// let mut flat = lender.map(hrc!(for<'all> |v: Vec<i32>| -> Result<lender::FromFallibleIter<fallible_iterator::IntoFallible<std::vec::IntoIter<i32>>>, Infallible> {
+    ///     Ok(lender::from_fallible_iter(v.into_iter().into_fallible()))
+    /// })).flatten();
+    /// assert_eq!(flat.next().unwrap(), Some(1));
+    /// assert_eq!(flat.next().unwrap(), Some(2));
+    /// assert_eq!(flat.next().unwrap(), Some(3));
+    /// assert_eq!(flat.next().unwrap(), Some(4));
+    /// assert_eq!(flat.next().unwrap(), None);
+    /// ```
     #[inline]
     fn flatten<'call>(self) -> FallibleFlatten<'call, Self>
     where
@@ -762,6 +870,18 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// The return type `Result<B, (B, Self::Error)>` preserves partial
     /// results even on error: the `B` inside the `Err` variant contains
     /// whatever was accumulated before the error occurred.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::{IteratorExt as _, FallibleIterator as _};
+    /// # use lender::prelude::*;
+    /// let lender = lender::from_fallible_iter(
+    ///     [1, 2, 3].into_iter().into_fallible(),
+    /// );
+    /// let collected: Result<Vec<i32>, _> = lender.owned().collect();
+    /// assert_eq!(collected, Ok(vec![1, 2, 3]));
+    /// ```
     #[inline]
     fn collect<B>(self) -> Result<B, (B, Self::Error)>
     where
@@ -846,6 +966,18 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::try_fold`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2, 3].iter().into_fallible(),
+    /// );
+    /// let sum = lender.try_fold(0u8, |acc, &x| Ok(acc.checked_add(x)));
+    /// assert_eq!(sum, Ok(Some(6)));
+    /// ```
     #[inline]
     fn try_fold<B, F, R>(&mut self, mut init: B, mut f: F) -> Result<R, Self::Error>
     where

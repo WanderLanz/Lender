@@ -62,7 +62,11 @@ where
     {
         let predicate = &mut self.predicate;
         self.lender.try_fold(init, move |acc, x| {
-            if (predicate)(&x)? { f(acc, x) } else { Ok(R::from_output(acc)) }
+            if (predicate)(&x)? {
+                f(acc, x)
+            } else {
+                Ok(R::from_output(acc))
+            }
         })
     }
 
@@ -73,7 +77,11 @@ where
         F: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
     {
         self.lender.fold(init, move |acc, x| {
-            if (self.predicate)(&x)? { f(acc, x) } else { Ok(acc) }
+            if (self.predicate)(&x)? {
+                f(acc, x)
+            } else {
+                Ok(acc)
+            }
         })
     }
 }
@@ -96,7 +104,11 @@ where
     {
         let predicate = &mut self.predicate;
         self.lender.try_rfold(init, move |acc, x| {
-            if (predicate)(&x)? { f(acc, x) } else { Ok(R::from_output(acc)) }
+            if (predicate)(&x)? {
+                f(acc, x)
+            } else {
+                Ok(R::from_output(acc))
+            }
         })
     }
 
@@ -107,7 +119,11 @@ where
         F: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
     {
         self.lender.rfold(init, move |acc, x| {
-            if (self.predicate)(&x)? { f(acc, x) } else { Ok(acc) }
+            if (self.predicate)(&x)? {
+                f(acc, x)
+            } else {
+                Ok(acc)
+            }
         })
     }
 }

@@ -20,6 +20,7 @@ impl<L> Enumerate<L> {
         Enumerate { lender, count: 0 }
     }
 
+    /// Returns the inner lender.
     #[inline(always)]
     pub fn into_inner(self) -> L {
         self.lender

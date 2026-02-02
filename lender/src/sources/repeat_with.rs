@@ -20,6 +20,7 @@ use crate::{FusedLender, prelude::*};
 /// >(|| &0u8);
 /// assert_eq!(lender.next(), Some(&0));
 /// ```
+#[inline]
 pub fn repeat_with<'a, L, F>(f: F) -> RepeatWith<'a, L, F>
 where
     L: ?Sized + CovariantLending + 'a,

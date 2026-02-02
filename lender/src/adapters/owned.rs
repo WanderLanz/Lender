@@ -18,6 +18,7 @@ impl<L> Owned<L> {
         Self { lender }
     }
 
+    /// Returns the inner lender.
     #[inline(always)]
     pub fn into_inner(self) -> L {
         self.lender
@@ -45,8 +46,7 @@ where
     where
         F: FnMut(B, Self::Item) -> B,
     {
-        self.lender
-            .fold(init, |acc, ref x| f(acc, x.to_owned()))
+        self.lender.fold(init, |acc, ref x| f(acc, x.to_owned()))
     }
 }
 
@@ -65,8 +65,7 @@ where
     where
         F: FnMut(B, Self::Item) -> B,
     {
-        self.lender
-            .rfold(init, |acc, ref x| f(acc, x.to_owned()))
+        self.lender.rfold(init, |acc, ref x| f(acc, x.to_owned()))
     }
 }
 

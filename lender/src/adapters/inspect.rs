@@ -20,6 +20,7 @@ impl<L, F> Inspect<L, F> {
         Inspect { lender, f }
     }
 
+    /// Returns the inner lender.
     #[inline(always)]
     pub fn into_inner(self) -> L {
         self.lender

@@ -1,6 +1,6 @@
 mod common;
-use common::*;
 use ::lender::prelude::*;
+use common::*;
 
 // ============================================================================
 // Fallible sources
@@ -454,11 +454,7 @@ fn flat_map_adapters() {
 
 #[test]
 fn fallible_flatten_fold() {
-    let data = vec![
-        Wrapper(vec![1, 2]),
-        Wrapper(vec![3]),
-        Wrapper(vec![4, 5]),
-    ];
+    let data = vec![Wrapper(vec![1, 2]), Wrapper(vec![3]), Wrapper(vec![4, 5])];
     let iter = data.into_iter().into_lender().into_fallible().flatten();
     let result = iter.fold(0, |acc, x| Ok(acc + x)).unwrap();
     assert_eq!(result, 15);
@@ -474,11 +470,7 @@ fn fallible_flatten_fold_empty() {
 
 #[test]
 fn fallible_flatten_count() {
-    let data = vec![
-        Wrapper(vec![1, 2]),
-        Wrapper(vec![]),
-        Wrapper(vec![3, 4, 5]),
-    ];
+    let data = vec![Wrapper(vec![1, 2]), Wrapper(vec![]), Wrapper(vec![3, 4, 5])];
     let iter = data.into_iter().into_lender().into_fallible().flatten();
     assert_eq!(iter.count().unwrap(), 5);
 }
@@ -492,20 +484,14 @@ fn fallible_flatten_count_empty() {
 
 #[test]
 fn fallible_flatten_try_fold() {
-    let data = vec![
-        Wrapper(vec![1, 2]),
-        Wrapper(vec![3, 4]),
-        Wrapper(vec![5]),
-    ];
+    let data = vec![Wrapper(vec![1, 2]), Wrapper(vec![3, 4]), Wrapper(vec![5])];
     let mut iter = data.into_iter().into_lender().into_fallible().flatten();
-    let result: Result<i32, i32> = iter.try_fold(0, |acc, x| {
-        let new = acc + x;
-        if new > 6 {
-            Ok(Err(new))
-        } else {
-            Ok(Ok(new))
-        }
-    }).unwrap();
+    let result: Result<i32, i32> = iter
+        .try_fold(0, |acc, x| {
+            let new = acc + x;
+            if new > 6 { Ok(Err(new)) } else { Ok(Ok(new)) }
+        })
+        .unwrap();
     assert_eq!(result, Err(10));
 }
 
@@ -823,12 +809,14 @@ fn fallible_lender_max_by() {
     use lender::FallibleLender;
 
     // Use into_iter to get owned values, since max_by uses ToOwned
-    let fallible: lender::IntoFallible<(), _> = vec![1, 5, 3].into_iter().into_lender().into_fallible();
+    let fallible: lender::IntoFallible<(), _> =
+        vec![1, 5, 3].into_iter().into_lender().into_fallible();
     assert_eq!(fallible.max_by(|a, b| Ok(a.cmp(b))), Ok(Some(5)));
 
     // Per Iterator::max_by docs: "If several elements are equally maximum, the last element is returned."
     // Use abs() comparison so that -3 and 3 are equal; last should win.
-    let fallible2: lender::IntoFallible<(), _> = vec![-3i32, 1, 3].into_iter().into_lender().into_fallible();
+    let fallible2: lender::IntoFallible<(), _> =
+        vec![-3i32, 1, 3].into_iter().into_lender().into_fallible();
     assert_eq!(
         fallible2.max_by(|a, b| Ok(a.abs().cmp(&b.abs()))),
         Ok(Some(3))
@@ -839,12 +827,14 @@ fn fallible_lender_max_by() {
 fn fallible_lender_min_by() {
     use lender::FallibleLender;
 
-    let fallible: lender::IntoFallible<(), _> = vec![3, 1, 5].into_iter().into_lender().into_fallible();
+    let fallible: lender::IntoFallible<(), _> =
+        vec![3, 1, 5].into_iter().into_lender().into_fallible();
     assert_eq!(fallible.min_by(|a, b| Ok(a.cmp(b))), Ok(Some(1)));
 
     // Per Iterator::min_by docs: "If several elements are equally minimum, the first element is returned."
     // Use abs() comparison so that -1 and 1 are equal; first should win.
-    let fallible2: lender::IntoFallible<(), _> = vec![3i32, -1, 1].into_iter().into_lender().into_fallible();
+    let fallible2: lender::IntoFallible<(), _> =
+        vec![3i32, -1, 1].into_iter().into_lender().into_fallible();
     assert_eq!(
         fallible2.min_by(|a, b| Ok(a.abs().cmp(&b.abs()))),
         Ok(Some(-1))
@@ -1358,8 +1348,8 @@ fn fallible_peekable_next_if_no_match() {
 
 #[test]
 fn fallible_peekable_rfold_with_peeked() {
-    use lender::FallibleLender;
     use lender::DoubleEndedFallibleLender;
+    use lender::FallibleLender;
 
     let fallible: lender::IntoFallible<(), _> = VecLender::new(vec![1, 2, 3]).into_fallible();
     let mut peekable = fallible.peekable();
@@ -1374,18 +1364,17 @@ fn fallible_peekable_rfold_with_peeked() {
 
 #[test]
 fn fallible_peekable_try_rfold_with_peeked_complete() {
-    use lender::FallibleLender;
     use lender::DoubleEndedFallibleLender;
+    use lender::FallibleLender;
 
     let fallible: lender::IntoFallible<(), _> = VecLender::new(vec![1, 2, 3]).into_fallible();
     let mut peekable = fallible.peekable();
     assert_eq!(peekable.peek(), Ok(Some(&&1)));
     // try_rfold processes back-to-front: 3, 2, then peeked 1
-    let result: Result<Option<Vec<i32>>, ()> =
-        peekable.try_rfold(Vec::new(), |mut acc, &x| {
-            acc.push(x);
-            Ok(Some(acc))
-        });
+    let result: Result<Option<Vec<i32>>, ()> = peekable.try_rfold(Vec::new(), |mut acc, &x| {
+        acc.push(x);
+        Ok(Some(acc))
+    });
     assert_eq!(result, Ok(Some(vec![3, 2, 1])));
 }
 
@@ -1393,17 +1382,21 @@ fn fallible_peekable_try_rfold_with_peeked_complete() {
 // where the peeked value is stored back (fallible peekable.rs lines 301-303).
 #[test]
 fn fallible_peekable_try_rfold_with_peeked_break() {
-    use lender::FallibleLender;
     use lender::DoubleEndedFallibleLender;
+    use lender::FallibleLender;
 
     let fallible: lender::IntoFallible<(), _> = VecLender::new(vec![1, 2, 3]).into_fallible();
     let mut peekable = fallible.peekable();
     assert_eq!(peekable.peek(), Ok(Some(&&1)));
     // Inner lender has [2, 3]. try_rfold processes back-to-front:
     // 3 (continue, acc=3), then 2 (break via None).
-    let result: Result<Option<i32>, ()> = peekable.try_rfold(0, |acc, &x| {
-        if x == 2 { Ok(None) } else { Ok(Some(acc + x)) }
-    });
+    let result: Result<Option<i32>, ()> =
+        peekable.try_rfold(
+            0,
+            |acc, &x| {
+                if x == 2 { Ok(None) } else { Ok(Some(acc + x)) }
+            },
+        );
     assert_eq!(result, Ok(None));
     // The peeked value should have been stored back
     assert_eq!(peekable.next(), Ok(Some(&1)));
@@ -1424,7 +1417,10 @@ fn fallible_peekable_try_rfold_with_peeked_break() {
 fn iter_fallible_iterator_next() {
     use fallible_iterator::FallibleIterator;
 
-    let fallible = vec![1, 2, 3].into_iter().into_lender().into_fallible::<()>();
+    let fallible = vec![1, 2, 3]
+        .into_iter()
+        .into_lender()
+        .into_fallible::<()>();
     let mut iter = fallible.iter();
     assert_eq!(FallibleIterator::next(&mut iter), Ok(Some(1)));
     assert_eq!(FallibleIterator::next(&mut iter), Ok(Some(2)));
@@ -1437,7 +1433,10 @@ fn iter_fallible_iterator_next() {
 fn iter_double_ended_fallible_iterator_next_back() {
     use fallible_iterator::DoubleEndedFallibleIterator;
 
-    let fallible = vec![1, 2, 3].into_iter().into_lender().into_fallible::<()>();
+    let fallible = vec![1, 2, 3]
+        .into_iter()
+        .into_lender()
+        .into_fallible::<()>();
     let mut iter = fallible.iter();
     assert_eq!(
         DoubleEndedFallibleIterator::next_back(&mut iter),
@@ -1476,9 +1475,7 @@ fn cycle_fallible_next_coverage() {
 #[test]
 fn fallible_lender_nth_past_end() {
     use core::num::NonZeroUsize;
-    use lender::{
-        FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender,
-    };
+    use lender::{FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender};
 
     /// A fallible lender that always has elements but whose advance_by
     /// always reports failure without consuming anything.
@@ -1542,10 +1539,7 @@ fn double_ended_fallible_nth_back_past_end() {
             Ok(Some(self.0))
         }
 
-        fn advance_back_by(
-            &mut self,
-            n: usize,
-        ) -> Result<Result<(), NonZeroUsize>, Self::Error> {
+        fn advance_back_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
             // Report complete failure: didn't advance at all.
             Ok(NonZeroUsize::new(n).map_or(Ok(()), Err))
         }
@@ -1576,8 +1570,8 @@ fn fallible_zip_nth_back_equal_length() {
 // M5: Fallible Zip nth_back — unequal-length lenders
 #[test]
 fn fallible_zip_nth_back_unequal_length() {
-    let mut zipped = VecFallibleLender::new(vec![1, 2, 3, 4, 5])
-        .zip(VecFallibleLender::new(vec![10, 20, 30]));
+    let mut zipped =
+        VecFallibleLender::new(vec![1, 2, 3, 4, 5]).zip(VecFallibleLender::new(vec![10, 20, 30]));
     assert_eq!(zipped.nth_back(0), Ok(Some((&3, &30))));
     assert_eq!(zipped.nth_back(0), Ok(Some((&2, &20))));
     assert_eq!(zipped.nth_back(0), Ok(Some((&1, &10))));
@@ -1587,8 +1581,7 @@ fn fallible_zip_nth_back_unequal_length() {
 // M5: Fallible Zip nth_back — empty
 #[test]
 fn fallible_zip_nth_back_empty() {
-    let mut zipped = VecFallibleLender::new(vec![])
-        .zip(VecFallibleLender::new(vec![1, 2]));
+    let mut zipped = VecFallibleLender::new(vec![]).zip(VecFallibleLender::new(vec![1, 2]));
     assert_eq!(zipped.nth_back(0), Ok(None));
 }
 
@@ -1677,7 +1670,11 @@ fn fallible_intersperse_try_fold() {
 
     let interspersed = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
         *state += 1;
-        if *state <= 3 { Ok(Some(*state)) } else { Ok(None) }
+        if *state <= 3 {
+            Ok(Some(*state))
+        } else {
+            Ok(None)
+        }
     })
     .intersperse(0);
 
@@ -1699,7 +1696,11 @@ fn fallible_intersperse_fold() {
 
     let interspersed = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
         *state += 1;
-        if *state <= 4 { Ok(Some(*state)) } else { Ok(None) }
+        if *state <= 4 {
+            Ok(Some(*state))
+        } else {
+            Ok(None)
+        }
     })
     .intersperse(0);
 
@@ -1716,7 +1717,11 @@ fn fallible_intersperse_with_try_fold() {
     let mut sep_counter = 100;
     let interspersed = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
         *state += 1;
-        if *state <= 3 { Ok(Some(*state)) } else { Ok(None) }
+        if *state <= 3 {
+            Ok(Some(*state))
+        } else {
+            Ok(None)
+        }
     })
     .intersperse_with(move || {
         sep_counter += 1;
@@ -1740,7 +1745,11 @@ fn fallible_intersperse_with_fold() {
 
     let interspersed = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
         *state += 1;
-        if *state <= 3 { Ok(Some(*state)) } else { Ok(None) }
+        if *state <= 3 {
+            Ok(Some(*state))
+        } else {
+            Ok(None)
+        }
     })
     .intersperse_with(|| Ok(0));
 
@@ -1758,7 +1767,11 @@ fn fallible_try_find_found() {
 
     let mut lender = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
         *state += 1;
-        if *state <= 5 { Ok(Some(*state)) } else { Ok(None) }
+        if *state <= 5 {
+            Ok(Some(*state))
+        } else {
+            Ok(None)
+        }
     });
     // try_find with R = Option<bool>: None short-circuits, Some(true) finds, Some(false) skips
     let result = lender.try_find(|x| Ok(if *x == 3 { Some(true) } else { Some(false) }));
@@ -1773,7 +1786,11 @@ fn fallible_try_find_not_found() {
 
     let mut lender = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
         *state += 1;
-        if *state <= 3 { Ok(Some(*state)) } else { Ok(None) }
+        if *state <= 3 {
+            Ok(Some(*state))
+        } else {
+            Ok(None)
+        }
     });
     let result = lender.try_find(|x| Ok(if *x == 99 { Some(true) } else { Some(false) }));
     assert!(result.is_ok());
@@ -1787,7 +1804,11 @@ fn fallible_try_find_closure_short_circuit() {
 
     let mut lender = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
         *state += 1;
-        if *state <= 5 { Ok(Some(*state)) } else { Ok(None) }
+        if *state <= 5 {
+            Ok(Some(*state))
+        } else {
+            Ok(None)
+        }
     });
     // Short-circuit: closure returns Ok(None) which breaks the Try
     let result = lender.try_find(|x| Ok(if *x == 3 { None } else { Some(false) }));
@@ -1815,7 +1836,11 @@ fn fallible_scan_basic() {
 
     let mut lender = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
         *state += 1;
-        if *state <= 5 { Ok(Some(*state)) } else { Ok(None) }
+        if *state <= 5 {
+            Ok(Some(*state))
+        } else {
+            Ok(None)
+        }
     })
     .scan(0, |(state, x): (&mut i32, i32)| {
         *state += x;
@@ -1835,13 +1860,22 @@ fn fallible_filter_map_basic() {
 
     let lender = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
         *state += 1;
-        if *state <= 6 { Ok(Some(*state)) } else { Ok(None) }
+        if *state <= 6 {
+            Ok(Some(*state))
+        } else {
+            Ok(None)
+        }
     })
     .filter_map(|x| Ok(if x % 2 == 0 { Some(x * 10) } else { None }));
 
     // Even elements doubled: 2*10=20, 4*10=40, 6*10=60
     let mut result = Vec::new();
-    lender.for_each(|x| { result.push(x); Ok(()) }).unwrap();
+    lender
+        .for_each(|x| {
+            result.push(x);
+            Ok(())
+        })
+        .unwrap();
     assert_eq!(result, vec![20, 40, 60]);
 }
 
@@ -1851,7 +1885,11 @@ fn fallible_map_while_basic() {
 
     let mut lender = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
         *state += 1;
-        if *state <= 5 { Ok(Some(*state)) } else { Ok(None) }
+        if *state <= 5 {
+            Ok(Some(*state))
+        } else {
+            Ok(None)
+        }
     })
     .map_while(|x| Ok(if x < 4 { Some(x * 2) } else { None }));
 
@@ -1869,7 +1907,11 @@ fn fallible_mutate_basic() {
     let mut observed = Vec::new();
     let lender = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
         *state += 1;
-        if *state <= 3 { Ok(Some(*state)) } else { Ok(None) }
+        if *state <= 3 {
+            Ok(Some(*state))
+        } else {
+            Ok(None)
+        }
     })
     .mutate(|x| {
         observed.push(*x);
@@ -1877,7 +1919,12 @@ fn fallible_mutate_basic() {
     });
 
     let mut result = Vec::new();
-    lender.for_each(|x| { result.push(x); Ok(()) }).unwrap();
+    lender
+        .for_each(|x| {
+            result.push(x);
+            Ok(())
+        })
+        .unwrap();
     assert_eq!(result, vec![1, 2, 3]);
     assert_eq!(observed, vec![1, 2, 3]);
 }
@@ -2015,7 +2062,11 @@ fn fallible_compose_filter_map_fold() {
 
     let result = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
         *state += 1;
-        if *state <= 6 { Ok(Some(*state)) } else { Ok(None) }
+        if *state <= 6 {
+            Ok(Some(*state))
+        } else {
+            Ok(None)
+        }
     })
     .filter(|x| Ok(*x % 2 == 0))
     .map(|x| Ok(x * 10))
@@ -2031,7 +2082,11 @@ fn fallible_compose_skip_take() {
 
     let mut lender = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
         *state += 1;
-        if *state <= 10 { Ok(Some(*state)) } else { Ok(None) }
+        if *state <= 10 {
+            Ok(Some(*state))
+        } else {
+            Ok(None)
+        }
     })
     .skip(3)
     .take(2);
@@ -2045,7 +2100,7 @@ fn fallible_compose_skip_take() {
 fn fallible_compose_error_through_chain() {
     // Error in second half of a chain, through a filter
     let a = ErrorAtLender::new(vec![1, 2, 3], 10); // no error
-    let b = ErrorAtLender::new(vec![4, 5, 6], 1);  // errors at index 1
+    let b = ErrorAtLender::new(vec![4, 5, 6], 1); // errors at index 1
     let mut lender = a.chain(b).filter(|x| Ok(**x > 0));
     assert_eq!(lender.next().unwrap(), Some(&1));
     assert_eq!(lender.next().unwrap(), Some(&2));
@@ -2065,7 +2120,11 @@ fn fallible_is_partitioned_true() {
 
     let result = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
         *state += 1;
-        if *state <= 6 { Ok(Some(*state)) } else { Ok(None) }
+        if *state <= 6 {
+            Ok(Some(*state))
+        } else {
+            Ok(None)
+        }
     })
     .is_partitioned(|x| Ok(x <= 3));
 
@@ -2079,7 +2138,11 @@ fn fallible_is_partitioned_false() {
 
     let result = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
         *state += 1;
-        if *state <= 4 { Ok(Some(*state)) } else { Ok(None) }
+        if *state <= 4 {
+            Ok(Some(*state))
+        } else {
+            Ok(None)
+        }
     })
     .is_partitioned(|x| Ok(x % 2 == 0));
 

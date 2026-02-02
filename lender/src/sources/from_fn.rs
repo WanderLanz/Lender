@@ -1,9 +1,6 @@
 use core::fmt;
 
-use crate::{
-    Lend, Lender, Lending,
-    higher_order::FnMutHKAOpt,
-};
+use crate::{Lend, Lender, Lending, higher_order::FnMutHKAOpt};
 
 /// Creates a lender from a state and a closure
 /// `F: FnMut(&mut St) -> Option<T>`.
@@ -27,6 +24,7 @@ use crate::{
 /// }));
 /// assert_eq!(lender.next(), Some(&mut 1));
 /// ```
+#[inline]
 pub fn from_fn<St, F>(state: St, f: F) -> FromFn<St, F>
 where
     F: for<'all> FnMutHKAOpt<'all, &'all mut St>,

@@ -1,9 +1,6 @@
 use core::{fmt, marker::PhantomData};
 
-use crate::{
-    FallibleLend, FallibleLender, FallibleLending,
-    higher_order::FnMutHKAResOpt,
-};
+use crate::{FallibleLend, FallibleLender, FallibleLending, higher_order::FnMutHKAResOpt};
 
 /// Creates a fallible lender from a state and a closure
 /// `F: FnMut(&mut St) -> Result<Option<T>, E>`.
@@ -31,6 +28,7 @@ use crate::{
 /// );
 /// assert_eq!(lender.next().unwrap(), Some(&mut 1));
 /// ```
+#[inline]
 pub fn from_fn<St, E, F>(state: St, f: F) -> FromFn<St, E, F>
 where
     F: for<'all> FnMutHKAResOpt<'all, &'all mut St, E>,

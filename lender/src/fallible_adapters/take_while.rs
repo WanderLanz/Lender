@@ -1,7 +1,8 @@
 use core::ops::ControlFlow;
 
 use crate::{
-    FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, TakeWhile, try_trait_v2::Try,
+    FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, TakeWhile,
+    try_trait_v2::Try,
 };
 
 impl<'lend, L, P> FallibleLending<'lend> for TakeWhile<L, P>

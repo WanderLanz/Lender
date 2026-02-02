@@ -1,7 +1,7 @@
 mod common;
 
-use common::*;
 use ::lender::prelude::*;
+use common::*;
 
 // =================================================================
 // ExactSizeLender compliance tests
@@ -23,7 +23,8 @@ fn exact_size_enumerate() {
 
 #[test]
 fn exact_size_map() {
-    let mut lender = VecLender::new(vec![1, 2, 3]).map(lender::hrc_mut!(for<'all> |x: &i32| -> i32 { x * 2 }));
+    let mut lender =
+        VecLender::new(vec![1, 2, 3]).map(lender::hrc_mut!(for<'all> |x: &i32| -> i32 { x * 2 }));
     assert_eq!(lender.len(), 3);
     assert!(!lender.is_empty());
     lender.next();
@@ -148,7 +149,8 @@ fn fused_enumerate() {
 
 #[test]
 fn fused_map() {
-    let mut lender = VecLender::new(vec![1]).map(lender::hrc_mut!(for<'all> |x: &i32| -> i32 { x + 1 }));
+    let mut lender =
+        VecLender::new(vec![1]).map(lender::hrc_mut!(for<'all> |x: &i32| -> i32 { x + 1 }));
     assert_eq!(lender.next(), Some(2));
     assert_eq!(lender.next(), None);
     assert_eq!(lender.next(), None);
@@ -235,7 +237,9 @@ fn size_hint_filter() {
 
 #[test]
 fn size_hint_filter_map() {
-    let lender = VecLender::new(vec![1, 2, 3]).filter_map(lender::hrc_mut!(for<'all> |x: &i32| -> Option<i32> { if *x > 1 { Some(x * 10) } else { None } }));
+    let lender = VecLender::new(vec![1, 2, 3]).filter_map(lender::hrc_mut!(
+        for<'all> |x: &i32| -> Option<i32> { if *x > 1 { Some(x * 10) } else { None } }
+    ));
     let (lo, hi) = lender.size_hint();
     assert_eq!(lo, 0);
     assert_eq!(hi, Some(3));
@@ -243,7 +247,8 @@ fn size_hint_filter_map() {
 
 #[test]
 fn size_hint_map() {
-    let lender = VecLender::new(vec![1, 2, 3]).map(lender::hrc_mut!(for<'all> |x: &i32| -> i32 { x * 2 }));
+    let lender =
+        VecLender::new(vec![1, 2, 3]).map(lender::hrc_mut!(for<'all> |x: &i32| -> i32 { x * 2 }));
     let (lo, hi) = lender.size_hint();
     assert_eq!(lo, 3);
     assert_eq!(hi, Some(3));
@@ -375,7 +380,8 @@ fn size_hint_intersperse_one() {
 
 #[test]
 fn size_hint_map_constant() {
-    let lender = VecLender::new(vec![1, 2, 3]).map(lender::hrc_mut!(for<'all> |_x: &i32| -> i32 { 1 }));
+    let lender =
+        VecLender::new(vec![1, 2, 3]).map(lender::hrc_mut!(for<'all> |_x: &i32| -> i32 { 1 }));
     let (lo, hi) = lender.size_hint();
     assert_eq!(lo, 3);
     assert_eq!(hi, Some(3));

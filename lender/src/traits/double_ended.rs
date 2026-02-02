@@ -72,11 +72,8 @@ pub trait DoubleEndedLender: Lender {
         Self: Sized,
         F: FnMut(B, Lend<'_, Self>) -> B,
     {
-        let mut accum = init;
-        while let Some(x) = self.next_back() {
-            accum = f(accum, x);
-        }
-        accum
+        self.try_rfold(init, |acc, x| NeverShortCircuit(f(acc, x)))
+            .0
     }
 
     /// The reverse version of [`Lender::find`]: it searches for an element of the

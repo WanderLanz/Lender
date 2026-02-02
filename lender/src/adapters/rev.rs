@@ -4,8 +4,8 @@ use crate::{
 
 /// A double-ended lender with the direction inverted.
 ///
-/// This `struct` is created by the [`rev()`](crate::DoubleEndedLender::rev) method on
-/// [`DoubleEndedLender`]. See its documentation for more.
+/// This `struct` is created by the [`rev()`](crate::Lender::rev) method on
+/// [`Lender`]. See its documentation for more.
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Rev<L> {
@@ -18,6 +18,7 @@ impl<L> Rev<L> {
         Rev { lender }
     }
 
+    /// Returns the inner lender.
     #[inline(always)]
     pub fn into_inner(self) -> L {
         self.lender

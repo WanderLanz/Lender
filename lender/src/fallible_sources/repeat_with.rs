@@ -20,6 +20,7 @@ use crate::prelude::*;
 /// >(|| Ok(&0u8));
 /// assert_eq!(lender.next().unwrap(), Some(&0));
 /// ```
+#[inline]
 pub fn repeat_with<'a, L, E, F>(f: F) -> RepeatWith<'a, L, E, F>
 where
     L: ?Sized + CovariantFallibleLending + 'a,

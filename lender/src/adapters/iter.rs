@@ -1,9 +1,6 @@
 use core::{iter::FusedIterator, marker::PhantomData};
 
-use crate::{
-    DoubleEndedLender, ExactSizeLender,
-    FusedLender, Lend, Lender,
-};
+use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender};
 
 /// [`Iterator`] adapter for any [`Lender`] where multiple [`Lend`]s can exist at
 /// a time, allowing on-the-fly conversion into an iterator where
@@ -47,6 +44,7 @@ impl<'this, L: 'this> Iter<'this, L> {
         }
     }
 
+    /// Returns the inner lender.
     #[inline(always)]
     pub fn into_inner(self) -> L {
         self.lender
@@ -106,4 +104,3 @@ where
     for<'all> Lend<'all, L>: 'this,
 {
 }
-

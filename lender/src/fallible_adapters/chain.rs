@@ -1,9 +1,9 @@
 use core::{num::NonZeroUsize, ops::ControlFlow};
 
 use crate::{
-    try_trait_v2::{FromResidual, Try},
     Chain, DoubleEndedFallibleLender, FallibleLend, FallibleLender, FallibleLending,
     FusedFallibleLender,
+    try_trait_v2::{FromResidual, Try},
 };
 
 impl<'lend, A, B> FallibleLending<'lend> for Chain<A, B>

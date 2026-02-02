@@ -1,9 +1,7 @@
 use core::fmt;
 
 use crate::{
-    DoubleEndedLender, ExactSizeLender, FusedLender, Lend,
-    Lender, Lending,
-    higher_order::FnOnceHKA,
+    DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending, higher_order::FnOnceHKA,
 };
 
 /// Creates a lender that lazily generates a value exactly once
@@ -27,6 +25,7 @@ use crate::{
 /// assert_eq!(lender.next(), Some(&mut 1));
 /// assert_eq!(lender.next(), None);
 /// ```
+#[inline]
 pub fn once_with<St, F>(state: St, f: F) -> OnceWith<St, F>
 where
     F: for<'all> FnOnceHKA<'all, &'all mut St>,
@@ -109,7 +108,4 @@ where
     }
 }
 
-impl<St, F> FusedLender for OnceWith<St, F> where
-    F: for<'all> FnOnceHKA<'all, &'all mut St>
-{
-}
+impl<St, F> FusedLender for OnceWith<St, F> where F: for<'all> FnOnceHKA<'all, &'all mut St> {}

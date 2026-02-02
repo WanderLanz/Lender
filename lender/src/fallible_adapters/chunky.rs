@@ -1,4 +1,7 @@
-use crate::{Chunk, Chunky, FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, try_trait_v2::Try};
+use crate::{
+    Chunk, Chunky, FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender,
+    try_trait_v2::Try,
+};
 use core::ops::ControlFlow;
 
 impl<'lend, L> FallibleLending<'lend> for Chunky<L>

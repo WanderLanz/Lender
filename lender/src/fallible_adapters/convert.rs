@@ -47,6 +47,7 @@ impl<E, I> Convert<E, I> {
         }
     }
 
+    /// Returns the inner lender.
     #[inline(always)]
     pub fn into_inner(self) -> I {
         self.iter

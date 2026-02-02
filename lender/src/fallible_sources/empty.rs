@@ -1,8 +1,8 @@
 use core::{fmt, marker};
 
 use crate::{
-    DoubleEndedFallibleLender, ExactSizeFallibleLender, FallibleLend,
-    FallibleLender, FallibleLending, FusedFallibleLender,
+    DoubleEndedFallibleLender, ExactSizeFallibleLender, FallibleLend, FallibleLender,
+    FallibleLending, FusedFallibleLender,
 };
 
 /// Creates a fallible lender that yields nothing.
@@ -16,8 +16,7 @@ use crate::{
 /// let x: Result<Option<&u32>, String> = e.next();
 /// assert_eq!(x, Ok(None));
 /// ```
-pub const fn empty<L: ?Sized + for<'all> FallibleLending<'all>, E>() -> Empty<L, E>
-{
+pub const fn empty<L: ?Sized + for<'all> FallibleLending<'all>, E>() -> Empty<L, E> {
     Empty(marker::PhantomData)
 }
 
@@ -72,12 +71,6 @@ where
     }
 }
 
-impl<L, E> ExactSizeFallibleLender for Empty<L, E> where
-    L: ?Sized + for<'all> FallibleLending<'all>
-{
-}
+impl<L, E> ExactSizeFallibleLender for Empty<L, E> where L: ?Sized + for<'all> FallibleLending<'all> {}
 
-impl<L, E> FusedFallibleLender for Empty<L, E> where
-    L: ?Sized + for<'all> FallibleLending<'all>
-{
-}
+impl<L, E> FusedFallibleLender for Empty<L, E> where L: ?Sized + for<'all> FallibleLending<'all> {}

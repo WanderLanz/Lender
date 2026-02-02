@@ -16,6 +16,7 @@ use crate::prelude::*;
 /// >(Ok(&0u8));
 /// assert_eq!(lender.next().unwrap(), Some(&0));
 /// ```
+#[inline]
 pub fn repeat<'a, L, E>(elt: Result<FallibleLend<'a, L>, E>) -> Repeat<'a, L, E>
 where
     L: ?Sized + CovariantFallibleLending + 'a,

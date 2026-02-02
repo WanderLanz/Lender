@@ -1,6 +1,6 @@
 mod common;
-use common::*;
 use ::lender::prelude::*;
+use common::*;
 
 // ============================================================================
 // Misc tests
@@ -284,18 +284,30 @@ fn lender_max() {
     // For a reference-yielding lender (Lend = &'lend i32), the HRTB cannot be
     // satisfied because T would need to depend on 'lend. We test via from_iter
     // wrapping a standard iterator that yields owned i32 values.
-    assert_eq!(lender::from_iter(vec![1, 5, 3, 2, 4].into_iter()).max(), Some(5));
+    assert_eq!(
+        lender::from_iter(vec![1, 5, 3, 2, 4].into_iter()).max(),
+        Some(5)
+    );
     assert_eq!(lender::from_iter(Vec::<i32>::new().into_iter()).max(), None);
     // Per Iterator::max docs: "If several elements are equally maximum, the last element is returned."
-    assert_eq!(lender::from_iter(vec![1, 3, 3, 1].into_iter()).max(), Some(3));
+    assert_eq!(
+        lender::from_iter(vec![1, 3, 3, 1].into_iter()).max(),
+        Some(3)
+    );
 }
 
 #[test]
 fn lender_min() {
-    assert_eq!(lender::from_iter(vec![3, 1, 5, 2, 4].into_iter()).min(), Some(1));
+    assert_eq!(
+        lender::from_iter(vec![3, 1, 5, 2, 4].into_iter()).min(),
+        Some(1)
+    );
     assert_eq!(lender::from_iter(Vec::<i32>::new().into_iter()).min(), None);
     // Per Iterator::min docs: "If several elements are equally minimum, the first element is returned."
-    assert_eq!(lender::from_iter(vec![3, 1, 1, 3].into_iter()).min(), Some(1));
+    assert_eq!(
+        lender::from_iter(vec![3, 1, 1, 3].into_iter()).min(),
+        Some(1)
+    );
 }
 
 #[test]
@@ -322,7 +334,8 @@ fn lender_max_by() {
     );
     // Per Iterator::max_by docs: "If several elements are equally maximum, the last element is returned."
     assert_eq!(
-        lender::from_iter(vec![-3, 1, 3].into_iter()).max_by(|a: &i32, b: &i32| a.abs().cmp(&b.abs())),
+        lender::from_iter(vec![-3, 1, 3].into_iter())
+            .max_by(|a: &i32, b: &i32| a.abs().cmp(&b.abs())),
         Some(3)
     );
 }
@@ -335,7 +348,8 @@ fn lender_min_by() {
     );
     // Per Iterator::min_by docs: "If several elements are equally minimum, the first element is returned."
     assert_eq!(
-        lender::from_iter(vec![3, -1, 1].into_iter()).min_by(|a: &i32, b: &i32| a.abs().cmp(&b.abs())),
+        lender::from_iter(vec![3, -1, 1].into_iter())
+            .min_by(|a: &i32, b: &i32| a.abs().cmp(&b.abs())),
         Some(-1)
     );
 }
@@ -373,9 +387,15 @@ fn lender_reduce() {
         Some(10)
     );
     // Single element
-    assert_eq!(lender::from_iter(vec![42].into_iter()).reduce(|acc, x| acc + x), Some(42));
+    assert_eq!(
+        lender::from_iter(vec![42].into_iter()).reduce(|acc, x| acc + x),
+        Some(42)
+    );
     // Empty
-    assert_eq!(lender::from_iter(Vec::<i32>::new().into_iter()).reduce(|acc, x| acc + x), None);
+    assert_eq!(
+        lender::from_iter(Vec::<i32>::new().into_iter()).reduce(|acc, x| acc + x),
+        None
+    );
 }
 
 #[test]
@@ -397,8 +417,8 @@ fn lender_try_reduce() {
     assert_eq!(result, Ok(None));
 
     // Early exit on error
-    let result: Result<Option<i32>, &str> =
-        lender::from_iter(vec![1, 2, 3, 4, 5].into_iter()).try_reduce(|acc, x| {
+    let result: Result<Option<i32>, &str> = lender::from_iter(vec![1, 2, 3, 4, 5].into_iter())
+        .try_reduce(|acc, x| {
             if acc + x > 6 {
                 Err("too large")
             } else {
@@ -681,14 +701,16 @@ fn lender_try_for_each_early_exit() {
 
 #[test]
 fn lender_try_fold() {
-    let result: Result<i32, &str> = VecLender::new(vec![1, 2, 3]).try_fold(0, |acc, x| Ok(acc + *x));
+    let result: Result<i32, &str> =
+        VecLender::new(vec![1, 2, 3]).try_fold(0, |acc, x| Ok(acc + *x));
     assert_eq!(result, Ok(6));
 }
 
 #[test]
 fn lender_try_fold_early_exit() {
-    let result: Result<i32, &str> = VecLender::new(vec![1, 2, 3, 4, 5])
-        .try_fold(0, |acc, x| if *x > 3 { Err("too big") } else { Ok(acc + *x) });
+    let result: Result<i32, &str> = VecLender::new(vec![1, 2, 3, 4, 5]).try_fold(0, |acc, x| {
+        if *x > 3 { Err("too big") } else { Ok(acc + *x) }
+    });
     assert_eq!(result, Err("too big"));
 }
 

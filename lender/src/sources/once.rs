@@ -1,8 +1,7 @@
 use core::fmt;
 
 use crate::{
-    CovariantLending, DoubleEndedLender, ExactSizeLender,
-    FusedLender, Lend, Lender, Lending,
+    CovariantLending, DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending,
 };
 
 /// Creates a lender that yields an element exactly once.
@@ -17,6 +16,7 @@ use crate::{
 /// assert_eq!(o.next(), Some(&mut 42));
 /// assert_eq!(o.next(), None);
 /// ```
+#[inline]
 pub fn once<'a, L: ?Sized + CovariantLending>(value: Lend<'a, L>) -> Once<'a, L> {
     Once { inner: Some(value) }
 }

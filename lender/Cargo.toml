@@ -11,7 +11,7 @@ repository = "https://github.com/WanderLanz/Lender"
 license = "Apache-2.0 OR LGPL-2.1-or-later OR MIT"
 readme = "README.md"
 categories = ["rust-patterns", "no-std"]
-keywords = ["lending", "iterator"]
+keywords = ["iterator", "lending", "fallible"]
 rust-version = "1.85"
 
 [dependencies]

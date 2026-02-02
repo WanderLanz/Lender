@@ -1,6 +1,6 @@
 mod common;
-use common::*;
 use ::lender::prelude::*;
+use common::*;
 
 // ============================================================================
 // DoubleEndedLender trait method tests

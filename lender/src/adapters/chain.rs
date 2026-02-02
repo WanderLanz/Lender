@@ -24,6 +24,7 @@ impl<A, B> Chain<A, B> {
         }
     }
 
+    /// Returns the two inner lenders.
     #[inline(always)]
     pub fn into_inner(self) -> (A, B) {
         (self.a.into_inner(), self.b.into_inner())

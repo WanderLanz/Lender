@@ -1,6 +1,6 @@
 mod common;
-use common::*;
 use ::lender::prelude::*;
+use common::*;
 
 // ============================================================================
 // MapIntoIter adapter tests - converts lender to iterator via mapping

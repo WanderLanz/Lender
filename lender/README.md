@@ -42,6 +42,12 @@ where lend is `Clone`, [`copied`](https://docs.rs/lender/latest/lender/trait.Len
 [`owned`](https://docs.rs/lender/latest/lender/trait.Lender.html#method.owned) where lend is `ToOwned`, or
 [`iter`](https://docs.rs/lender/latest/lender/trait.Lender.html#method.iter) where the lender already satisfies the restrictions of `Iterator`.
 
+## Features
+
+The `derive` feature (enabled by default) provides the
+[`for_!`](https://docs.rs/lender-derive/latest/lender_derive/macro.for_.html) procedural macro
+from the [`lender-derive`](https://docs.rs/lender-derive) crate.
+
 ## Usage
 
 The Rust `for` syntax for iterating over types implementing `IntoIterator` will not work with lenders. The idiomatic way

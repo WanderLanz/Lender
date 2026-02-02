@@ -27,6 +27,7 @@ where
         }
     }
 
+    /// Returns the original and cloned inner lenders.
     #[inline(always)]
     pub fn into_inner(self) -> (L, L) {
         (self.orig, self.lender)
@@ -49,7 +50,7 @@ where
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         // SAFETY: polonius return
-        let reborrow = unsafe { &mut *(self as *mut Self) };
+        let reborrow = unsafe { &mut *(&raw mut *self) };
         if let x @ Some(_) = reborrow.lender.next() {
             return x;
         }

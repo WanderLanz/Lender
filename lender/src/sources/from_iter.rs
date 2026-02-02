@@ -15,17 +15,16 @@ use crate::{CovariantLending, FusedLender, IntoLender, prelude::*};
 /// # Examples
 /// ```rust
 /// use lender::prelude::*;
-/// let mut data = [1u8, 2, 3];
 ///
-/// let mut lender = lender::from_iter([1, 2, 3].iter());
+/// let mut lender = lender::from_iter([1, 2, 3u8].iter());
 /// let item: &'_ u8 = lender.next().unwrap();
 /// let item2: &'_ u8 = lender.next().unwrap();
-/// let x: u8 = *item + *item2; // == 3
+/// assert_eq!(*item + *item2, 3);
 ///
-/// let mut lender = [1, 2, 3].iter().into_lender();
+/// let mut lender = [1, 2, 3u8].iter().into_lender();
 /// let item: &'_ u8 = lender.next().unwrap();
 /// let item2: &'_ u8 = lender.next().unwrap();
-/// let x: u8 = *item + *item2; // == 3
+/// assert_eq!(*item + *item2, 3);
 /// ```
 #[inline]
 pub fn from_iter<I: Iterator>(iter: I) -> FromIter<I> {

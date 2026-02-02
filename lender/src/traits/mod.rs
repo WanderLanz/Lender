@@ -245,7 +245,7 @@ macro_rules! check_covariance {
     };
 }
 
-/// Skips the covariance chxeck for [`Lender`] impls.
+/// Skips the covariance check for [`Lender`] impls.
 ///
 /// Use this macro for adapters whose [`Lend`](Lending::Lend) type is defined in
 /// terms of another lender's [`Lend`](Lending::Lend) type (e.g., `type Lend =
