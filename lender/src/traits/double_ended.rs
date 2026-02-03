@@ -11,13 +11,13 @@ pub trait DoubleEndedLender: Lender {
     ///
     /// Returns `None` when there are no more elements.
     ///
-    /// See [`DoubleEndedIterator::next_back`](core::iter::DoubleEndedIterator::next_back).
+    /// See [`DoubleEndedIterator::next_back`].
     fn next_back(&mut self) -> Option<Lend<'_, Self>>;
 
     /// Advances the lender from the back by `n` elements.
     ///
     /// See
-    /// [`DoubleEndedIterator::advance_back_by`](core::iter::DoubleEndedIterator::advance_back_by).
+    /// [`DoubleEndedIterator::advance_back_by`].
     #[inline]
     fn advance_back_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {
         for i in 0..n {
@@ -31,7 +31,7 @@ pub trait DoubleEndedLender: Lender {
 
     /// Returns the `n`th element from the end of the lender.
     ///
-    /// See [`DoubleEndedIterator::nth_back`](core::iter::DoubleEndedIterator::nth_back).
+    /// See [`DoubleEndedIterator::nth_back`].
     #[inline]
     fn nth_back(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         if self.advance_back_by(n).is_err() {
@@ -44,7 +44,7 @@ pub trait DoubleEndedLender: Lender {
     /// the back of the lender.
     ///
     /// See
-    /// [`DoubleEndedIterator::try_rfold`](core::iter::DoubleEndedIterator::try_rfold).
+    /// [`DoubleEndedIterator::try_rfold`].
     #[inline]
     fn try_rfold<B, F, R>(&mut self, init: B, mut f: F) -> R
     where
@@ -64,7 +64,7 @@ pub trait DoubleEndedLender: Lender {
     /// The reverse version of [`Lender::fold`]: it takes elements starting from
     /// the back of the lender.
     ///
-    /// See [`DoubleEndedIterator::rfold`](core::iter::DoubleEndedIterator::rfold).
+    /// See [`DoubleEndedIterator::rfold`].
     #[inline]
     fn rfold<B, F>(mut self, init: B, mut f: F) -> B
     where
@@ -78,7 +78,7 @@ pub trait DoubleEndedLender: Lender {
     /// The reverse version of [`Lender::find`]: it searches for an element of the
     /// lender from the back that satisfies the predicate.
     ///
-    /// See [`DoubleEndedIterator::rfind`](core::iter::DoubleEndedIterator::rfind).
+    /// See [`DoubleEndedIterator::rfind`].
     #[inline]
     fn rfind<P>(&mut self, mut predicate: P) -> Option<Lend<'_, Self>>
     where

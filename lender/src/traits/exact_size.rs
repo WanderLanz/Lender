@@ -4,7 +4,7 @@ use crate::*;
 pub trait ExactSizeLender: Lender {
     /// Returns the exact remaining length of the lender.
     ///
-    /// See [`ExactSizeIterator::len`](core::iter::ExactSizeIterator::len).
+    /// See [`ExactSizeIterator::len`].
     #[inline]
     fn len(&self) -> usize {
         let (lower, upper) = self.size_hint();

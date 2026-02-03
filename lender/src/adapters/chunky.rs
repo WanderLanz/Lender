@@ -61,8 +61,8 @@ use crate::{
 /// assert_eq!(sum, 6);
 /// ```
 ///
-/// This struct is created by [`Lender::chunky`](crate::Lender::chunky) or
-/// [`FallibleLender::chunky`](crate::FallibleLender::chunky).
+/// This struct is created by [`Lender::chunky`] or
+/// [`FallibleLender::chunky`].
 #[derive(Debug, Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Chunky<L> {

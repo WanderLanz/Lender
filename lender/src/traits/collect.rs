@@ -17,7 +17,7 @@ use crate::{FallibleLend, FallibleLender, Lend, Lender};
 /// }
 /// ```
 pub trait FromLender<L: IntoLender>: Sized {
-    /// Creates a value from a [`Lender`](crate::Lender).
+    /// Creates a value from a [`Lender`].
     fn from_lender(lender: L) -> Self;
 }
 
@@ -46,7 +46,7 @@ pub trait FromLender<L: IntoLender>: Sized {
 /// }
 /// ```
 pub trait FromFallibleLender<L: IntoFallibleLender>: Sized {
-    /// Creates a value from a [`FallibleLender`](crate::FallibleLender),
+    /// Creates a value from a [`FallibleLender`],
     /// returning an error if the lender produces one.
     fn from_fallible_lender(lender: L) -> Result<Self, L::Error>;
 }

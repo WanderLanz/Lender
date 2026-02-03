@@ -1919,19 +1919,21 @@ fn fallible_mutate_basic() {
 fn fallible_scan_empty() {
     use lender::FallibleLender;
 
-    let lender = lender::fallible_empty::<lender::fallible_lend!(i32), String>()
-        .scan(0, |(state, x): (&mut i32, i32)| {
+    let lender = lender::fallible_empty::<lender::fallible_lend!(i32), String>().scan(
+        0,
+        |(state, x): (&mut i32, i32)| {
             *state += x;
             Ok(Some(*state))
-        });
+        },
+    );
 
     assert_eq!(lender.count(), Ok(0));
 }
 
 #[test]
 fn fallible_scan_error_in_source() {
-    let mut lender = ErrorAtLender::new(vec![1, 2, 3, 4, 5], 2)
-        .scan(0, |(state, x): (&mut i32, &i32)| {
+    let mut lender =
+        ErrorAtLender::new(vec![1, 2, 3, 4, 5], 2).scan(0, |(state, x): (&mut i32, &i32)| {
             *state += *x;
             Ok(Some(*state))
         });
@@ -1979,8 +1981,8 @@ fn fallible_map_while_empty() {
 
 #[test]
 fn fallible_map_while_error_in_source() {
-    let mut lender = ErrorAtLender::new(vec![1, 2, 3, 4, 5], 2)
-        .map_while(|x: &i32| Ok(Some(*x * 2)));
+    let mut lender =
+        ErrorAtLender::new(vec![1, 2, 3, 4, 5], 2).map_while(|x: &i32| Ok(Some(*x * 2)));
 
     assert_eq!(lender.next().unwrap(), Some(2));
     assert_eq!(lender.next().unwrap(), Some(4));

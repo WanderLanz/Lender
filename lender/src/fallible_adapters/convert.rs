@@ -29,7 +29,7 @@ impl<E, I> LenderResult<E> for I where I: Lender + for<'all> LendingResult<'all,
 
 /// A fallible lending iterator that wraps a normal lending iterator over [`Result`]s.
 ///
-/// This struct is created by [`Lender::convert`](crate::Lender::convert).
+/// This struct is created by [`Lender::convert`].
 #[derive(Clone, Debug)]
 #[repr(transparent)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]

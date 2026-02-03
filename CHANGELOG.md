@@ -57,6 +57,8 @@
   have anymore a guarantee of behavior after an error (like it
   happens with `fallible_iterator`).
 
+- `min`/`max` now require `Ord`, like the standard `Iterator` methods.
+
 ### Fixed
 
 - Several possible UBs are no longer possible thanks to the new covariance
@@ -74,6 +76,9 @@
 - All repeat method return `(usize::MAX, None)` on `size_hint`, as in `Iterator`.
 
 - The order of parameters (lend/error) in a few methods was inconsistent.
+
+- Removed `Clone` implementation from `Peekable` and `FlattenCompat` that could
+  lead to UB.
 
 ## [0.4.2] - 2025-11-18
 
