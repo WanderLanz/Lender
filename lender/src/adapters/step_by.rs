@@ -106,7 +106,7 @@ where
                 n -= div_step;
                 nth_step
             };
-            self.lender.nth(nth - 1);
+            self.lender.nth(nth - 1)?;
         }
     }
 

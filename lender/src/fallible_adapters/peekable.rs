@@ -44,6 +44,34 @@ where
         *AliasableBox::into_unique(self.lender)
     }
 
+    /// Returns a reference to the next element without advancing the lender.
+    ///
+    /// Like [`next`](FallibleLender::next), if there is a next value, it is borrowed from
+    /// the underlying lender and cached. Calling `peek()` multiple times without advancing
+    /// the lender returns the same cached element.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the underlying lender produces an error.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use lender::prelude::*;
+    /// # use std::convert::Infallible;
+    ///
+    /// # fn main() -> Result<(), Infallible> {
+    /// let mut lender = lender::from_iter([1, 2, 3].iter().copied())
+    ///     .into_fallible::<Infallible>()
+    ///     .peekable();
+    ///
+    /// assert_eq!(lender.peek()?, Some(&1));
+    /// assert_eq!(lender.peek()?, Some(&1)); // Doesn't advance
+    /// assert_eq!(lender.next()?, Some(1));
+    /// assert_eq!(lender.peek()?, Some(&2));
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn peek(&mut self) -> Result<Option<&'_ FallibleLend<'_, L>>, L::Error> {
         let lender = &mut self.lender;
         if self.peeked.is_none() {
@@ -68,6 +96,35 @@ where
         })
     }
 
+    /// Returns a mutable reference to the next element without advancing the lender.
+    ///
+    /// Like [`peek`](Self::peek), if there is a next value, it is borrowed from the
+    /// underlying lender and cached. The returned mutable reference allows modifying
+    /// the peeked value.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the underlying lender produces an error.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use lender::prelude::*;
+    /// # use std::convert::Infallible;
+    ///
+    /// # fn main() -> Result<(), Infallible> {
+    /// let mut lender = lender::from_iter([1, 2, 3].iter().copied())
+    ///     .into_fallible::<Infallible>()
+    ///     .peekable();
+    ///
+    /// if let Some(p) = lender.peek_mut()? {
+    ///     *p = 10;
+    /// }
+    /// assert_eq!(lender.next()?, Some(10));
+    /// assert_eq!(lender.next()?, Some(2));
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn peek_mut(&mut self) -> Result<Option<&'_ mut FallibleLend<'this, L>>, L::Error> {
         let lender = &mut self.lender;
         if self.peeked.is_none() {
@@ -88,6 +145,35 @@ where
         )
     }
 
+    /// Consumes and returns the next element if the given predicate is true.
+    ///
+    /// If `f(&next_element)` returns `true`, consumes and returns the next element.
+    /// Otherwise, returns `Ok(None)` and the element remains peeked.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the underlying lender produces an error.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use lender::prelude::*;
+    /// # use std::convert::Infallible;
+    ///
+    /// # fn main() -> Result<(), Infallible> {
+    /// let mut lender = lender::from_iter([1, 2, 3].iter().copied())
+    ///     .into_fallible::<Infallible>()
+    ///     .peekable();
+    ///
+    /// // Consume 1 since it's odd
+    /// assert_eq!(lender.next_if(|&x| x % 2 == 1)?, Some(1));
+    /// // Don't consume 2 since it's not odd
+    /// assert_eq!(lender.next_if(|&x| x % 2 == 1)?, None);
+    /// // 2 is still there
+    /// assert_eq!(lender.next()?, Some(2));
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn next_if<F>(&mut self, f: F) -> Result<Option<FallibleLend<'_, L>>, L::Error>
     where
         F: FnOnce(&FallibleLend<'_, L>) -> bool,
@@ -117,6 +203,35 @@ where
         }
     }
 
+    /// Consumes and returns the next element if it equals the given value.
+    ///
+    /// If the next element equals `t`, consumes and returns it. Otherwise,
+    /// returns `Ok(None)` and the element remains peeked.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the underlying lender produces an error.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use lender::prelude::*;
+    /// # use std::convert::Infallible;
+    ///
+    /// # fn main() -> Result<(), Infallible> {
+    /// let mut lender = lender::from_iter([1, 2, 3].iter().copied())
+    ///     .into_fallible::<Infallible>()
+    ///     .peekable();
+    ///
+    /// // Consume 1 since it equals 1
+    /// assert_eq!(lender.next_if_eq(&1)?, Some(1));
+    /// // Don't consume 2 since it doesn't equal 1
+    /// assert_eq!(lender.next_if_eq(&1)?, None);
+    /// // 2 is still there
+    /// assert_eq!(lender.next()?, Some(2));
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn next_if_eq<'a, T>(&'a mut self, t: &T) -> Result<Option<FallibleLend<'a, L>>, L::Error>
     where
         T: for<'all> PartialEq<FallibleLend<'all, L>>,

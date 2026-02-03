@@ -165,7 +165,35 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Ok(last)
     }
 
-    /// Advances the lender by `n` lends. If the lender does not have enough lends, returns the number of lends left.
+    /// Advances the lender by `n` lends.
+    ///
+    /// Returns `Ok(Ok(()))` if the lender was successfully advanced by `n` elements.
+    /// Returns `Ok(Err(k))` if the lender did not have enough elements, where `k` is
+    /// the number of elements that could not be skipped.
+    /// Returns `Err(e)` if an error occurred while advancing.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2, 3u8].iter().into_fallible(),
+    /// );
+    /// assert_eq!(lender.advance_by(2), Ok(Ok(())));
+    /// assert_eq!(lender.next(), Ok(Some(&3)));
+    /// ```
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// # use core::num::NonZeroUsize;
+    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2u8].iter().into_fallible(),
+    /// );
+    /// // Trying to advance by 5 when only 2 elements remain
+    /// assert_eq!(lender.advance_by(5), Ok(Err(NonZeroUsize::new(3).unwrap())));
+    /// ```
     #[inline]
     fn advance_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         for i in 0..n {
@@ -1106,7 +1134,6 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     #[inline]
     fn all<F>(&mut self, mut f: F) -> Result<bool, Self::Error>
     where
-        Self: Sized,
         F: FnMut(FallibleLend<'_, Self>) -> Result<bool, Self::Error>,
     {
         while let Some(x) = self.next()? {
@@ -1141,7 +1168,6 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     #[inline]
     fn any<F>(&mut self, mut f: F) -> Result<bool, Self::Error>
     where
-        Self: Sized,
         F: FnMut(FallibleLend<'_, Self>) -> Result<bool, Self::Error>,
     {
         while let Some(x) = self.next()? {

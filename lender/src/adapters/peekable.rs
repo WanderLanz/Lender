@@ -43,6 +43,24 @@ where
         *AliasableBox::into_unique(self.lender)
     }
 
+    /// Returns a reference to the next element without advancing the lender.
+    ///
+    /// Like [`next`](Lender::next), if there is a next value, it is borrowed from the
+    /// underlying lender and cached. Calling `peek()` multiple times without advancing
+    /// the lender returns the same cached element.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use lender::prelude::*;
+    ///
+    /// let mut lender = lender::from_iter([1, 2, 3].iter().copied()).peekable();
+    ///
+    /// assert_eq!(lender.peek(), Some(&1));
+    /// assert_eq!(lender.peek(), Some(&1)); // Doesn't advance
+    /// assert_eq!(lender.next(), Some(1));
+    /// assert_eq!(lender.peek(), Some(&2));
+    /// ```
     pub fn peek(&mut self) -> Option<&'_ Lend<'_, L>> {
         let lender = &mut self.lender;
         // SAFETY: Two transmutes are used here:
@@ -65,6 +83,25 @@ where
         }
     }
 
+    /// Returns a mutable reference to the next element without advancing the lender.
+    ///
+    /// Like [`peek`](Self::peek), if there is a next value, it is borrowed from the
+    /// underlying lender and cached. The returned mutable reference allows modifying
+    /// the peeked value.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use lender::prelude::*;
+    ///
+    /// let mut lender = lender::from_iter([1, 2, 3].iter().copied()).peekable();
+    ///
+    /// if let Some(p) = lender.peek_mut() {
+    ///     *p = 10;
+    /// }
+    /// assert_eq!(lender.next(), Some(10));
+    /// assert_eq!(lender.next(), Some(2));
+    /// ```
     pub fn peek_mut(&mut self) -> Option<&'_ mut Lend<'this, L>> {
         let lender = &mut self.lender;
         self.peeked
@@ -79,6 +116,25 @@ where
             .as_mut()
     }
 
+    /// Consumes and returns the next element if the given predicate is true.
+    ///
+    /// If `f(&next_element)` returns `true`, consumes and returns the next element.
+    /// Otherwise, returns `None` and the element remains peeked.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use lender::prelude::*;
+    ///
+    /// let mut lender = lender::from_iter([1, 2, 3].iter().copied()).peekable();
+    ///
+    /// // Consume 1 since it's odd
+    /// assert_eq!(lender.next_if(|&x| x % 2 == 1), Some(1));
+    /// // Don't consume 2 since it's not odd
+    /// assert_eq!(lender.next_if(|&x| x % 2 == 1), None);
+    /// // 2 is still there
+    /// assert_eq!(lender.next(), Some(2));
+    /// ```
     pub fn next_if<F>(&mut self, f: F) -> Option<Lend<'_, L>>
     where
         F: FnOnce(&Lend<'_, L>) -> bool,
@@ -103,6 +159,25 @@ where
         }
     }
 
+    /// Consumes and returns the next element if it equals the given value.
+    ///
+    /// If the next element equals `t`, consumes and returns it. Otherwise,
+    /// returns `None` and the element remains peeked.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use lender::prelude::*;
+    ///
+    /// let mut lender = lender::from_iter([1, 2, 3].iter().copied()).peekable();
+    ///
+    /// // Consume 1 since it equals 1
+    /// assert_eq!(lender.next_if_eq(&1), Some(1));
+    /// // Don't consume 2 since it doesn't equal 1
+    /// assert_eq!(lender.next_if_eq(&1), None);
+    /// // 2 is still there
+    /// assert_eq!(lender.next(), Some(2));
+    /// ```
     pub fn next_if_eq<'a, T>(&'a mut self, t: &T) -> Option<Lend<'a, L>>
     where
         T: for<'all> PartialEq<Lend<'all, L>>,

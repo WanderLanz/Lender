@@ -964,7 +964,6 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     #[inline]
     fn all<F>(&mut self, mut f: F) -> bool
     where
-        Self: Sized,
         F: FnMut(Lend<'_, Self>) -> bool,
     {
         while let Some(x) = self.next() {
@@ -978,7 +977,6 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     #[inline]
     fn any<F>(&mut self, mut f: F) -> bool
     where
-        Self: Sized,
         F: FnMut(Lend<'_, Self>) -> bool,
     {
         while let Some(x) = self.next() {

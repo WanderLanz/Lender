@@ -77,7 +77,9 @@ where
                 n -= div_step;
                 nth_step
             };
-            self.lender.nth(nth - 1)?;
+            if self.lender.nth(nth - 1)?.is_none() {
+                return Ok(None);
+            }
         }
     }
 
