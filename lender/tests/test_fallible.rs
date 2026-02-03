@@ -1307,7 +1307,7 @@ fn fallible_peekable_next_back_with_peeked_exhausted() {
     assert_eq!(peekable.next_back(), Ok(Some(&1)));
 }
 
-// FalliblePeekable::peek_mut (covers unsafe at line 57, 65)
+// FalliblePeekable::peek_mut (covers unsafe transmute in peek_mut)
 #[test]
 fn fallible_peekable_peek_mut() {
     use lender::FallibleLender;
@@ -1319,7 +1319,7 @@ fn fallible_peekable_peek_mut() {
     assert_eq!(peeked, Some(&mut &1));
 }
 
-// FalliblePeekable::next_if (covers unsafe at lines 76, 85)
+// FalliblePeekable::next_if (covers unsafe transmute in next_if)
 #[test]
 fn fallible_peekable_next_if_match() {
     use lender::FallibleLender;
@@ -1377,7 +1377,7 @@ fn fallible_peekable_try_rfold_with_peeked_complete() {
 }
 
 // Covers the ControlFlow::Break path in fallible Peekable::try_rfold
-// where the peeked value is stored back (fallible peekable.rs lines 301-303).
+// where the peeked value is stored back.
 #[test]
 fn fallible_peekable_try_rfold_with_peeked_break() {
     use lender::DoubleEndedFallibleLender;
@@ -1406,7 +1406,7 @@ fn fallible_peekable_try_rfold_with_peeked_break() {
 // Iter fallible iterator
 // ============================================================================
 
-// Iter adapter FallibleIterator next (covers unsafe at line 101-102)
+// Iter adapter FallibleIterator next (covers unsafe transmute in next)
 // Note: .iter() requires the Lend type to satisfy complex higher-ranked trait bounds.
 // With VecFallibleLender yielding &'lend i32, there are lifetime issues that prevent
 // it from working with .iter(). We test with owned values via into_iter().into_lender().into_fallible()
@@ -1426,7 +1426,7 @@ fn iter_fallible_iterator_next() {
     assert_eq!(FallibleIterator::next(&mut iter), Ok(None));
 }
 
-// Iter adapter DoubleEndedFallibleIterator next_back (covers unsafe at line 120-121)
+// Iter adapter DoubleEndedFallibleIterator next_back (covers unsafe transmute in next_back)
 #[test]
 fn iter_double_ended_fallible_iterator_next_back() {
     use fallible_iterator::DoubleEndedFallibleIterator;
@@ -1450,7 +1450,7 @@ fn iter_double_ended_fallible_iterator_next_back() {
 // Cycle fallible coverage
 // ============================================================================
 
-// Cycle fallible next (covers unsafe reborrow at line 129)
+// Cycle fallible next (covers unsafe reborrow in next)
 #[test]
 fn cycle_fallible_next_coverage() {
     use lender::FallibleLender;
@@ -1916,6 +1916,103 @@ fn fallible_mutate_basic() {
 }
 
 #[test]
+fn fallible_scan_empty() {
+    use lender::FallibleLender;
+
+    let lender = lender::fallible_empty::<lender::fallible_lend!(i32), String>()
+        .scan(0, |(state, x): (&mut i32, i32)| {
+            *state += x;
+            Ok(Some(*state))
+        });
+
+    assert_eq!(lender.count(), Ok(0));
+}
+
+#[test]
+fn fallible_scan_error_in_source() {
+    let mut lender = ErrorAtLender::new(vec![1, 2, 3, 4, 5], 2)
+        .scan(0, |(state, x): (&mut i32, &i32)| {
+            *state += *x;
+            Ok(Some(*state))
+        });
+
+    assert_eq!(lender.next().unwrap(), Some(1)); // 0 + 1
+    assert_eq!(lender.next().unwrap(), Some(3)); // 1 + 2
+    assert!(lender.next().is_err()); // error at index 2
+}
+
+#[test]
+fn fallible_scan_error_in_closure() {
+    use lender::from_fallible_fn;
+
+    let mut lender = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
+        *state += 1;
+        if *state <= 5 {
+            Ok(Some(*state))
+        } else {
+            Ok(None)
+        }
+    })
+    .scan(0, |(state, x): (&mut i32, i32)| {
+        *state += x;
+        if *state > 5 {
+            Err("sum too large".to_string())
+        } else {
+            Ok(Some(*state))
+        }
+    });
+
+    assert_eq!(lender.next().unwrap(), Some(1)); // sum = 1
+    assert_eq!(lender.next().unwrap(), Some(3)); // sum = 3
+    assert!(lender.next().is_err()); // sum = 6 > 5
+}
+
+#[test]
+fn fallible_map_while_empty() {
+    use lender::FallibleLender;
+
+    let lender = lender::fallible_empty::<lender::fallible_lend!(i32), String>()
+        .map_while(|x| Ok(Some(x * 2)));
+
+    assert_eq!(lender.count(), Ok(0));
+}
+
+#[test]
+fn fallible_map_while_error_in_source() {
+    let mut lender = ErrorAtLender::new(vec![1, 2, 3, 4, 5], 2)
+        .map_while(|x: &i32| Ok(Some(*x * 2)));
+
+    assert_eq!(lender.next().unwrap(), Some(2));
+    assert_eq!(lender.next().unwrap(), Some(4));
+    assert!(lender.next().is_err()); // error at index 2
+}
+
+#[test]
+fn fallible_map_while_error_in_closure() {
+    use lender::from_fallible_fn;
+
+    let mut lender = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
+        *state += 1;
+        if *state <= 5 {
+            Ok(Some(*state))
+        } else {
+            Ok(None)
+        }
+    })
+    .map_while(|x| {
+        if x > 2 {
+            Err("value too large".to_string())
+        } else {
+            Ok(Some(x * 10))
+        }
+    });
+
+    assert_eq!(lender.next().unwrap(), Some(10)); // 1 * 10
+    assert_eq!(lender.next().unwrap(), Some(20)); // 2 * 10
+    assert!(lender.next().is_err()); // 3 > 2, error
+}
+
+#[test]
 fn fallible_chunky_specific() {
     // chunky() requires ExactSizeFallibleLender, so use VecFallibleLender
     let mut chunky = VecFallibleLender::new(vec![1, 2, 3, 4, 5, 6]).chunky(2);
@@ -2157,4 +2254,170 @@ fn fallible_collect_into_error() {
     let (collection, err) = out.unwrap_err();
     assert_eq!(collection.0, vec![1, 2]); // collected before error
     assert_eq!(err, "error at index 2");
+}
+
+// ============================================================================
+// Fallible iterator adapters (cloned, copied, iter, map_into_iter)
+// ============================================================================
+
+#[test]
+fn fallible_cloned_basic() {
+    use fallible_iterator::FallibleIterator;
+
+    let lender = VecFallibleLender::new(vec![1, 2, 3]);
+    let mut cloned = lender.cloned();
+
+    assert_eq!(cloned.next().unwrap(), Some(1));
+    assert_eq!(cloned.next().unwrap(), Some(2));
+    assert_eq!(cloned.next().unwrap(), Some(3));
+    assert_eq!(cloned.next().unwrap(), None);
+}
+
+#[test]
+fn fallible_cloned_double_ended() {
+    use fallible_iterator::{DoubleEndedFallibleIterator, FallibleIterator};
+
+    let lender = VecFallibleLender::new(vec![1, 2, 3]);
+    let mut cloned = lender.cloned();
+
+    assert_eq!(cloned.next_back().unwrap(), Some(3));
+    assert_eq!(cloned.next().unwrap(), Some(1));
+    assert_eq!(cloned.next_back().unwrap(), Some(2));
+    assert_eq!(cloned.next().unwrap(), None);
+}
+
+#[test]
+fn fallible_cloned_size_hint() {
+    use fallible_iterator::FallibleIterator;
+
+    let lender = VecFallibleLender::new(vec![1, 2, 3]);
+    let cloned = lender.cloned();
+
+    assert_eq!(cloned.size_hint(), (3, Some(3)));
+}
+
+#[test]
+fn fallible_cloned_error_propagation() {
+    use fallible_iterator::FallibleIterator;
+
+    let lender = ErrorAtLender::new(vec![1, 2, 3, 4], 2);
+    let mut cloned = lender.cloned();
+
+    assert_eq!(cloned.next().unwrap(), Some(1));
+    assert_eq!(cloned.next().unwrap(), Some(2));
+    assert!(cloned.next().is_err());
+}
+
+#[test]
+fn fallible_copied_basic() {
+    use fallible_iterator::FallibleIterator;
+
+    let lender = VecFallibleLender::new(vec![10, 20, 30]);
+    let mut copied = lender.copied();
+
+    assert_eq!(copied.next().unwrap(), Some(10));
+    assert_eq!(copied.next().unwrap(), Some(20));
+    assert_eq!(copied.next().unwrap(), Some(30));
+    assert_eq!(copied.next().unwrap(), None);
+}
+
+#[test]
+fn fallible_copied_double_ended() {
+    use fallible_iterator::{DoubleEndedFallibleIterator, FallibleIterator};
+
+    let lender = VecFallibleLender::new(vec![10, 20, 30]);
+    let mut copied = lender.copied();
+
+    assert_eq!(copied.next_back().unwrap(), Some(30));
+    assert_eq!(copied.next().unwrap(), Some(10));
+    assert_eq!(copied.next_back().unwrap(), Some(20));
+    assert_eq!(copied.next().unwrap(), None);
+}
+
+#[test]
+fn fallible_copied_size_hint() {
+    use fallible_iterator::FallibleIterator;
+
+    let lender = VecFallibleLender::new(vec![10, 20, 30]);
+    let copied = lender.copied();
+
+    assert_eq!(copied.size_hint(), (3, Some(3)));
+}
+
+#[test]
+fn fallible_copied_error_propagation() {
+    use fallible_iterator::FallibleIterator;
+
+    let lender = ErrorAtLender::new(vec![10, 20, 30, 40], 1);
+    let mut copied = lender.copied();
+
+    assert_eq!(copied.next().unwrap(), Some(10));
+    assert!(copied.next().is_err());
+}
+
+#[test]
+fn fallible_map_into_iter_basic() {
+    use fallible_iterator::FallibleIterator;
+
+    let lender = VecFallibleLender::new(vec![1, 2, 3]);
+    let mut iter = lender.map_into_iter(|x: &i32| Ok(*x * 2));
+
+    assert_eq!(iter.next().unwrap(), Some(2));
+    assert_eq!(iter.next().unwrap(), Some(4));
+    assert_eq!(iter.next().unwrap(), Some(6));
+    assert_eq!(iter.next().unwrap(), None);
+}
+
+#[test]
+fn fallible_map_into_iter_double_ended() {
+    use fallible_iterator::{DoubleEndedFallibleIterator, FallibleIterator};
+
+    let lender = VecFallibleLender::new(vec![1, 2, 3]);
+    let mut iter = lender.map_into_iter(|x: &i32| Ok(*x * 2));
+
+    assert_eq!(iter.next_back().unwrap(), Some(6));
+    assert_eq!(iter.next().unwrap(), Some(2));
+    assert_eq!(iter.next_back().unwrap(), Some(4));
+    assert_eq!(iter.next().unwrap(), None);
+}
+
+#[test]
+fn fallible_map_into_iter_size_hint() {
+    use fallible_iterator::FallibleIterator;
+
+    let lender = VecFallibleLender::new(vec![1, 2, 3]);
+    let iter = lender.map_into_iter(|x: &i32| Ok(*x * 2));
+
+    assert_eq!(iter.size_hint(), (3, Some(3)));
+}
+
+#[test]
+fn fallible_map_into_iter_closure_error() {
+    use fallible_iterator::FallibleIterator;
+
+    // Use ErrorAtLender which has String error type to allow closure errors
+    let lender = ErrorAtLender::new(vec![1, 2, 3, 4, 5, 6], 100); // error_at beyond range
+    let mut iter = lender.map_into_iter(|x: &i32| {
+        if *x == 3 {
+            Err::<i32, _>("closure error".to_string())
+        } else {
+            Ok(*x * 2)
+        }
+    });
+
+    assert_eq!(iter.next().unwrap(), Some(2));
+    assert_eq!(iter.next().unwrap(), Some(4));
+    assert!(iter.next().is_err()); // closure error at x == 3
+}
+
+#[test]
+fn fallible_map_into_iter_lender_error() {
+    use fallible_iterator::FallibleIterator;
+
+    let lender = ErrorAtLender::new(vec![1, 2, 3, 4], 2);
+    let mut iter = lender.map_into_iter(|x: &i32| Ok::<_, String>(*x * 2));
+
+    assert_eq!(iter.next().unwrap(), Some(2));
+    assert_eq!(iter.next().unwrap(), Some(4));
+    assert!(iter.next().is_err());
 }

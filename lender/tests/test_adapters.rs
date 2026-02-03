@@ -913,7 +913,7 @@ fn peekable_size_hint_after_peek() {
     assert_eq!(peekable.size_hint(), (2, Some(2)));
 }
 
-// Peekable::nth with peeked value when n == 0 (covers unsafe transmute at line 138-139)
+// Peekable::nth with peeked value when n == 0 (covers unsafe transmute in nth)
 #[test]
 fn peekable_nth_zero_with_peeked() {
     let mut peekable = VecLender::new(vec![1, 2, 3]).peekable();
@@ -924,7 +924,7 @@ fn peekable_nth_zero_with_peeked() {
     assert_eq!(peekable.next(), Some(&2));
 }
 
-// Peekable::last with peeked value (covers unsafe transmute at line 153)
+// Peekable::last with peeked value (covers unsafe transmute in last)
 #[test]
 fn peekable_last_with_peeked_only() {
     let mut peekable = VecLender::new(vec![1]).peekable();
@@ -936,7 +936,7 @@ fn peekable_last_with_peeked_only() {
 }
 
 // Peekable::next_back with peeked value when underlying lender is empty
-// (covers unsafe transmute at line 208)
+// (covers unsafe transmute in next_back)
 #[test]
 fn peekable_next_back_with_peeked_exhausted() {
     use lender::DoubleEndedLender;
@@ -976,7 +976,7 @@ fn peekable_try_rfold_with_peeked_complete() {
 }
 
 // Covers the ControlFlow::Break path in try_rfold where the peeked value
-// is stored back (peekable.rs lines 266-269).
+// is stored back.
 #[test]
 fn peekable_try_rfold_with_peeked_break() {
     use lender::DoubleEndedLender;
@@ -2227,7 +2227,7 @@ fn intersperse_try_fold_additional() {
     assert_eq!(result, Some(26));
 }
 
-// Intersperse with separator clone (covers unsafe at line 62)
+// Intersperse with separator clone (covers unsafe transmute in next)
 #[test]
 fn intersperse_separator_coverage() {
     let mut intersperse = VecLender::new(vec![1, 2, 3]).intersperse(&0);
@@ -2239,7 +2239,7 @@ fn intersperse_separator_coverage() {
     assert_eq!(results, vec![1, 0, 2, 0, 3]);
 }
 
-// IntersperseWith (covers unsafe at line 142)
+// IntersperseWith (covers unsafe transmute in next)
 #[test]
 fn intersperse_with_coverage() {
     let mut intersperse = VecLender::new(vec![1, 2, 3]).intersperse_with(|| &0);

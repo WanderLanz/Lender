@@ -208,13 +208,9 @@ where
         }
     }
 
-    #[inline]
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
-        if self.f.is_some() {
-            (1, Some(1))
-        } else {
-            (0, Some(0))
-        }
+        (0, Some(0))
     }
 }
 
@@ -230,6 +226,13 @@ where
 }
 
 impl<St, L, E, F> FusedFallibleLender for OnceWithErr<St, L, F>
+where
+    L: ?Sized + CovariantFallibleLending,
+    F: FnOnce(&mut St) -> E,
+{
+}
+
+impl<St, L, E, F> ExactSizeFallibleLender for OnceWithErr<St, L, F>
 where
     L: ?Sized + CovariantFallibleLending,
     F: FnOnce(&mut St) -> E,

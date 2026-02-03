@@ -227,7 +227,7 @@ where
 
     #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
-        (usize::MAX, None)
+        (0, Some(0))
     }
 
     #[inline]
@@ -264,6 +264,13 @@ where
 }
 
 impl<L, E> FusedFallibleLender for RepeatErr<L, E>
+where
+    L: ?Sized + CovariantFallibleLending,
+    E: Clone,
+{
+}
+
+impl<L, E> ExactSizeFallibleLender for RepeatErr<L, E>
 where
     L: ?Sized + CovariantFallibleLending,
     E: Clone,
