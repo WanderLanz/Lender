@@ -57,6 +57,9 @@
   have anymore a guarantee of behavior after an error (like it
   happens with `fallible_iterator`).
 
+- Fused wrappers now use `Option` to make niche optimization possible.
+  We however lose (like in `std`) the `into_inner` method.
+
 ### Fixed
 
 - Several possible UBs are no longer possible thanks to the new covariance
