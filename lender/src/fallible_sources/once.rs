@@ -208,8 +208,8 @@ where
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         match self.inner.take() {
-            None => Ok(None),
             Some(err) => Err(err),
+            None => Ok(None),
         }
     }
 
