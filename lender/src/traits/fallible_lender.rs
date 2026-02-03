@@ -67,8 +67,8 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     ///
     /// The behavior of calling this method after a previous call has returned
     /// `Ok(None)` or `Err` is implementation defined. See
-    /// [`FusedFallibleLender`] for lenders that guarantee `Ok(None)` is
-    /// repeated after `Ok(None)`.
+    /// [`FusedFallibleLender`](crate::FusedFallibleLender) for lenders that
+    /// guarantee `Ok(None)` is repeated after `Ok(None)`.
     ///
     /// Every lend is only guaranteed to be valid one at a time for any kind of
     /// lender.
