@@ -18,7 +18,7 @@ impl<'s, T> Chunk<'s, T> {
         Self { lender, len }
     }
 
-    /// Returns the inner slice.
+    /// Returns the inner lender.
     #[inline(always)]
     pub fn into_inner(self) -> &'s mut T {
         self.lender

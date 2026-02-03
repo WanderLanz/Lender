@@ -256,13 +256,24 @@ where
         Self: Sized,
         F: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
     {
-        let lender = *AliasableBox::into_unique(self.lender);
-        let acc = match self.peeked.take() {
-            Some(None) => return Ok(init),
-            Some(Some(v)) => f(init, v)?,
-            None => init,
-        };
-        lender.fold(acc, f)
+        match self.peeked.take() {
+            Some(None) => Ok(init),
+            Some(Some(v)) => {
+                // Manual loop instead of lender.fold() to avoid
+                // consuming the lender before v is used: v borrows
+                // from the AliasableBox allocation, which must stay
+                // alive until f(acc, v) completes.
+                let mut acc = f(init, v)?;
+                while let Some(x) = self.lender.next()? {
+                    acc = f(acc, x)?;
+                }
+                Ok(acc)
+            }
+            None => {
+                let lender = *AliasableBox::into_unique(self.lender);
+                lender.fold(init, f)
+            }
+        }
     }
 }
 

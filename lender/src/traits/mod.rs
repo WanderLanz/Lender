@@ -21,7 +21,10 @@ pub use self::{
     marker::{FusedFallibleLender, FusedLender},
 };
 
-/// Marker trait for tuple lends, used by [`Lender::unzip()`].
+/// Trait for lend types that can be destructured into two components,
+/// used by [`Lender::unzip()`] and [`FallibleLender::unzip()`](crate::FallibleLender::unzip).
+///
+/// Implemented for `(A, B)`, `&(A, B)`, and `&mut (A, B)`.
 pub trait TupleLend<'a> {
     type First: 'a;
     type Second: 'a;

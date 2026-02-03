@@ -229,13 +229,6 @@ where
     }
 }
 
-impl<St, L, E, F> ExactSizeFallibleLender for OnceWithErr<St, L, F>
-where
-    L: ?Sized + CovariantFallibleLending,
-    F: FnOnce(&mut St) -> E,
-{
-}
-
 impl<St, L, E, F> FusedFallibleLender for OnceWithErr<St, L, F>
 where
     L: ?Sized + CovariantFallibleLending,

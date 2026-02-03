@@ -76,11 +76,11 @@ Finally, you can use the `for_each` method, which takes a closure as argument, b
 challenging:
 
 ```text
-lender.for_each{
+lender.for_each(
     hrc_mut!(for<'lend> |item: &'lend mut TYPE| {
         // do something with item of type TYPE 
     })
-};
+);
 ```
 
 ## Fallible Lenders
@@ -376,12 +376,37 @@ ensure that covariance holds (as the caller of an `unsafe` block must ensure the
 safety invariants).
 
 [`CovariantLending`] is a separate trait that depends on [`Lending`]. It
-is the trait required by methods that just required a [`Lending`] impl but
-not a [`Lender`] impl, such as [`once`]. It forces the same type of check.
+is the trait required by methods that just require a [`Lending`] impl but
+not a [`Lender`] impl, such as [`once`]. It forces the same type of check,
+and it is automatically implemented by the [`lend`] and [`covariant_lend`]
+macros.
 
-Now a first obvious question is: why not put this method directly in
-[`Lending``]? 
+Now, a first obvious question is: why not put this method directly in
+[`Lending`]? The problem is that in the implementation of [`Lending`] for `T`,
+the compiler can only normalize `<T as Lending<'lend>>::Lend` for the specific
+`'lend` from the impl header. The `_check_covariance` method introduces new
+lifetimes `'long` and `'short` and projects `<Self as Lending<'long>>::Lend` and
+`<Self as Lending<'short>>::Lend`; the compiler can't resolve these
+projections because `'long`/`'short` don't match `'lend`.
 
+When `_check_covariance` is in [`Lender`] or [`CovariantLending`], instead, it
+works because `for<'all> Lending<'all>` is a supertrait, and the compiler can
+normalize associated type projections through supertraits.
+
+The second obvious question is: why isn't [`CovariantLending`] as a supertrait of
+[`Lender`] depending on [`Lending`] (via a `for<'all> Lending<'all>` bound)?
+That would be logical, as there would be only one instance of
+`_check_covariance`. The problem is just of ergonomics: [`Lender`] is already
+enough complicated, requiring a supporting [`Lending`] to specify its lend.
+Having a third trait in the hierarchy would make it even more complicated to
+use. A macro in the vein of [`check_covariance!`] would not help, as it would
+introduce surreptitiously and invisibly an implementation of [`CovariantLending`]
+that [`Lender`] would depend on later, making it hard to understand the trait
+hierarchy.
+
+In the end, having [`CovariantLending`] as a separate trait is a compromise that
+makes it possible to have covariance checks where needed without complicating
+the [`Lender`] trait too much.
 
 ## Resources
 
@@ -421,3 +446,5 @@ but if you see any unsafe code that can be made safe, please let us know!
 [`unsafe_assume_covariance!`]: https://docs.rs/lender/latest/lender/macro.unsafe_assume_covariance.html
 [`unsafe_assume_covariance_fallible!`]: https://docs.rs/lender/latest/lender/macro.unsafe_assume_covariance_fallible.html
 [`once`]: https://docs.rs/lender/latest/lender/fn.once.html
+[`lend`]: https://docs.rs/lender/latest/lender/macro.lend.html
+[`covariant_lend`]: https://docs.rs/lender/latest/lender/macro.covariant_lend.html

@@ -1,6 +1,11 @@
 use crate::*;
 
 /// The [`Lender`] version of [`core::iter::FusedIterator`].
+///
+/// A lender that always continues to yield `None` when exhausted.
+///
+/// Calling [`next`](Lender::next) on a fused lender that has returned `None`
+/// once is guaranteed to return `None` again.
 pub trait FusedLender: Lender {}
 impl<L: FusedLender> FusedLender for &mut L {}
 

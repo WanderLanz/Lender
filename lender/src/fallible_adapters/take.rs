@@ -160,7 +160,7 @@ where
     }
 
     #[inline]
-    fn try_rfold<B, F, R>(&mut self, init: B, f: F) -> Result<R, Self::Error>
+    fn try_rfold<B, F, R>(&mut self, init: B, mut f: F) -> Result<R, Self::Error>
     where
         Self: Sized,
         F: FnMut(B, FallibleLend<'_, Self>) -> Result<R, Self::Error>,
@@ -173,7 +173,11 @@ where
             if len > self.n && self.lender.nth_back(len - self.n - 1)?.is_none() {
                 Ok(R::from_output(init))
             } else {
-                self.lender.try_rfold(init, f)
+                let n = &mut self.n;
+                self.lender.try_rfold(init, |acc, x| {
+                    *n -= 1;
+                    f(acc, x)
+                })
             }
         }
     }

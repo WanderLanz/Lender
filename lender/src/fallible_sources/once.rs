@@ -237,12 +237,6 @@ where
     }
 }
 
-impl<L, E> ExactSizeFallibleLender for OnceErr<L, E>
-where
-    L: ?Sized + CovariantFallibleLending,
-{
-}
-
 impl<L, E> FusedFallibleLender for OnceErr<L, E>
 where
     L: ?Sized + CovariantFallibleLending,

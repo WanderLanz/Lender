@@ -51,9 +51,15 @@ pub trait FromFallibleLender<L: IntoFallibleLender>: Sized {
     fn from_fallible_lender(lender: L) -> Result<Self, L::Error>;
 }
 
-/// The [`Lender`] version of [`core::iter::IntoIterator`].
+/// Conversion into a [`Lender`].
+///
+/// This is the [`Lender`] version of [`core::iter::IntoIterator`].
+///
+/// Every [`Lender`] implements `IntoLender` for itself (returning `self`).
 pub trait IntoLender {
+    /// The lender type that this type converts into.
     type Lender: Lender;
+    /// Converts this type into a [`Lender`].
     fn into_lender(self) -> <Self as IntoLender>::Lender;
 }
 
@@ -103,10 +109,20 @@ pub trait ExtendFallibleLender<L: IntoFallibleLender> {
     }
 }
 
-/// The [`FallibleLender`] version of [`core::iter::IntoIterator`].
+/// Conversion into a [`FallibleLender`].
+///
+/// This is the [`FallibleLender`] version of [`core::iter::IntoIterator`].
+///
+/// By implementing `IntoFallibleLender` for a type, you define how it will be
+/// converted to a fallible lender.
+///
+/// Every [`FallibleLender`] implements `IntoFallibleLender` for itself (returning `self`).
 pub trait IntoFallibleLender {
+    /// The error type of the resulting fallible lender.
     type Error;
+    /// The fallible lender type that this type converts into.
     type FallibleLender: FallibleLender<Error = Self::Error>;
+    /// Converts this type into a [`FallibleLender`].
     fn into_fallible_lender(self) -> Self::FallibleLender;
 }
 

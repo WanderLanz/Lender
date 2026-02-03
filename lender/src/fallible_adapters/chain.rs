@@ -167,6 +167,7 @@ where
         }
     }
 
+    #[inline]
     fn try_rfold<Acc, F, R>(&mut self, init: Acc, mut f: F) -> Result<R, Self::Error>
     where
         Self: Sized,
@@ -184,6 +185,7 @@ where
         Ok(Try::from_output(acc))
     }
 
+    #[inline]
     fn rfold<Acc, F>(self, init: Acc, mut f: F) -> Result<Acc, Self::Error>
     where
         Self: Sized,

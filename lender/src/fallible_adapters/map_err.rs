@@ -1,4 +1,4 @@
-use core::{fmt, marker::PhantomData};
+use core::{fmt, marker::PhantomData, num::NonZeroUsize};
 
 use crate::{
     DoubleEndedFallibleLender, ExactSizeFallibleLender, FallibleLend, FallibleLender,
@@ -73,6 +73,32 @@ where
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
+
+    #[inline]
+    fn count(mut self) -> Result<usize, Self::Error>
+    where
+        Self: Sized,
+    {
+        self.lender.count().map_err(&mut self.f)
+    }
+
+    #[inline]
+    fn advance_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
+        self.lender.advance_by(n).map_err(&mut self.f)
+    }
+
+    #[inline]
+    fn nth(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        self.lender.nth(n).map_err(&mut self.f)
+    }
+
+    #[inline]
+    fn last<'call>(&'call mut self) -> Result<Option<FallibleLend<'call, Self>>, Self::Error>
+    where
+        Self: Sized,
+    {
+        self.lender.last().map_err(&mut self.f)
+    }
 }
 
 impl<E, L: DoubleEndedFallibleLender, F> DoubleEndedFallibleLender for MapErr<E, L, F>
@@ -82,6 +108,16 @@ where
     #[inline(always)]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.lender.next_back().map_err(&mut self.f)
+    }
+
+    #[inline]
+    fn advance_back_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
+        self.lender.advance_back_by(n).map_err(&mut self.f)
+    }
+
+    #[inline]
+    fn nth_back(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        self.lender.nth_back(n).map_err(&mut self.f)
     }
 }
 
