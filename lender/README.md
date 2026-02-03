@@ -1,4 +1,4 @@
-# `lender` 🙂
+# `lender`
 
 [![downloads](https://img.shields.io/crates/d/lender)](https://crates.io/crates/lender)
 [![dependents](https://img.shields.io/librariesio/dependents/cargo/lender)](https://crates.io/crates/lender/reverse_dependencies)
@@ -30,9 +30,12 @@ to implement the [lender design based on higher-rank trait bounds proposed by Sa
 Similarly to what happens with standard iterators, besides the fundamental  [`Lender`] trait there is an
 [`IntoLender`] trait, and methods such as [`for_each`](https://docs.rs/lender/latest/lender/trait.Lender.html#method.for_each).
 
-Indeed, the crate implements for [`Lender`]
-all of the methods as `Iterator`, except `partition_in_place` and `array_chunks` (the latter being replaced by [`chunky`](https://docs.rs/lender/latest/lender/trait.Lender.html#method.chunky)),
-and most methods provide the same functionality as the equivalent `Iterator` method.
+Indeed, the crate implements for [`Lender`] all of the methods of [`Iterator`],
+except `partition_in_place`, `map_windows`, and `array_chunks` (the latter being
+replaced by
+[`chunky`](https://docs.rs/lender/latest/lender/trait.Lender.html#method.chunky)),
+and most methods provide the same functionality as the equivalent `Iterator`
+method.
 
 Notable differences in behavior include [`next_chunk`](https://docs.rs/lender/latest/lender/trait.Lender.html#method.next_chunk) providing a lender instead of an array
 and certain closures requiring usage of the [`hrc!`](https://docs.rs/lender/latest/lender/macro.hrc.html), [`hrc_mut!`](https://docs.rs/lender/latest/lender/macro.hrc_mut.html), [`hrc_once!`](https://docs.rs/lender/latest/lender/macro.hrc_once.html) (higher-rank closure) macros, which provide a stable replacement for the `closure_lifetime_binder` feature.
@@ -212,10 +215,10 @@ data.array_windows_mut::<3>()
 assert_eq!(data, [0, 1, 1, 2, 3, 5, 8, 13, 21]);
 ```
 
-This is a quite contrived example, but it shows how lenders can be used to mutate a slice in place.
+This is quite a contrived example, but it shows how lenders can be used to mutate a slice in place.
 
 So, let's look at a slightly more interesting example, `LinesStr`, an `io::Lines` with an `Item` of `&str` instead of `String`.
-It's a good example of borrowing from the iterator itself.
+It's a good example of borrowing from the lender itself, and also a natural use case for a fallible lender.
 
 ```rust
 use std::io;
@@ -225,17 +228,17 @@ struct LinesStr<B> {
     buf: B,
     line: String,
 }
-impl<'lend, B: io::BufRead> Lending<'lend> for LinesStr<B> {
-    type Lend = io::Result<&'lend str>;
+impl<'lend, B: io::BufRead> FallibleLending<'lend> for LinesStr<B> {
+    type Lend = &'lend str;
 }
-impl<B: io::BufRead> Lender for LinesStr<B> {
-    check_covariance!();
-    fn next(&mut self) -> Option<io::Result<&'_ str>> {
+impl<B: io::BufRead> FallibleLender for LinesStr<B> {
+    type Error = io::Error;
+    check_covariance_fallible!();
+    fn next(&mut self) -> Result<Option<&'_ str>, Self::Error> {
         self.line.clear();
-        match self.buf.read_line(&mut self.line) {
-            Err(e) => return Some(Err(e)),
-            Ok(0) => return None,
-            Ok(_nread) => (),
+        match self.buf.read_line(&mut self.line)? {
+            0 => return Ok(None),
+            _nread => (),
         };
         if self.line.ends_with('\n') {
             self.line.pop();
@@ -243,17 +246,17 @@ impl<B: io::BufRead> Lender for LinesStr<B> {
                 self.line.pop();
             }
         }
-        Some(Ok(&self.line))
+        Ok(Some(&self.line))
     }
 }
 
 let buf = io::BufReader::with_capacity(10, "Hello\nWorld\n".as_bytes());
 let mut lines = LinesStr { buf, line: String::new() };
-assert_eq!(lines.next().unwrap().unwrap(), "Hello");
-assert_eq!(lines.next().unwrap().unwrap(), "World");
+assert_eq!(lines.next().unwrap(), Some("Hello"));
+assert_eq!(lines.next().unwrap(), Some("World"));
 ```
 
-Note the [`check_covariance!`] macro invocation, which ensures that the lend is
+Note the [`check_covariance_fallible!`] macro invocation, which ensures that the lend is
 covariant.
 
 ## Implementing Lender
@@ -448,3 +451,4 @@ but if you see any unsafe code that can be made safe, please let us know!
 [`once`]: https://docs.rs/lender/latest/lender/fn.once.html
 [`lend`]: https://docs.rs/lender/latest/lender/macro.lend.html
 [`covariant_lend`]: https://docs.rs/lender/latest/lender/macro.covariant_lend.html
+[`Iterator`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html
