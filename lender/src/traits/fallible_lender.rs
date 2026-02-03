@@ -224,6 +224,23 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// # Panics
     ///
     /// Panics if `step` is zero.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// let lender = lender::lend_fallible_iter::<fallible_lend!(&'lend u8), _>(
+    ///     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].iter().into_fallible(),
+    /// );
+    /// let mut step_lender = lender.step_by(2);
+    /// assert_eq!(step_lender.next(), Ok(Some(&1)));
+    /// assert_eq!(step_lender.next(), Ok(Some(&3)));
+    /// assert_eq!(step_lender.next(), Ok(Some(&5)));
+    /// assert_eq!(step_lender.next(), Ok(Some(&7)));
+    /// assert_eq!(step_lender.next(), Ok(Some(&9)));
+    /// assert_eq!(step_lender.next(), Ok(None));
+    /// ```
     #[inline]
     fn step_by(self, step: usize) -> StepBy<Self>
     where
