@@ -55,7 +55,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// - In all other cases (e.g., when implementing adapters), use
     ///   [`unsafe_assume_covariance_fallible!`](crate::unsafe_assume_covariance_fallible)
     ///   in the [`FallibleLender`] impl. The macro implements the method as
-    ///   `unsafe { core::mem::transmute(lend) }`, which is a no-op. This is
+    ///   `{ unsafe { core::mem::transmute(lend) } }`, which is a no-op. This is
     ///   unsafe because it is up to the implementor to guarantee that the
     ///   [`Lend`](FallibleLending::Lend) type is covariant in its lifetime.
     fn _check_covariance<'long: 'short, 'short>(
@@ -64,11 +64,14 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
 
     /// Yields the next lend, if any, of the lender, or `Ok(None)` when iteration
     /// is finished.
-    /// 
-    /// The behavior of calling this method after a previous call has returned
-    /// Ok(None) or Err is implementation defined.
     ///
-    /// Every lend is only guaranteed to be valid one at a time for any kind of lender.
+    /// The behavior of calling this method after a previous call has returned
+    /// `Ok(None)` or `Err` is implementation defined. See
+    /// [`FusedFallibleLender`] for lenders that guarantee `Ok(None)` is
+    /// repeated after `Ok(None)`.
+    ///
+    /// Every lend is only guaranteed to be valid one at a time for any kind of
+    /// lender.
     /// 
     /// # Examples
     ///
@@ -451,7 +454,10 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Self: Sized,
         F: FnMut(FallibleLend<'_, Self>) -> Result<(), Self::Error>,
     {
-        self.fold((), |(), item| { f(item)?; Ok(()) })
+        self.fold((), |(), item| {
+            f(item)?;
+            Ok(())
+        })
     }
 
     /// Filters this lender using the given predicate.
@@ -924,6 +930,9 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// and `Try` failures.
     ///
     /// The [`FallibleLender`] version of [`Lender::try_collect`](crate::Lender::try_collect).
+    ///
+    /// On error, returns the collection (with partial results) together with
+    /// the error.
     #[inline]
     fn try_collect<'a, B, T>(&'a mut self) -> Result<T, (T, Self::Error)>
     where
@@ -984,6 +993,18 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::is_partitioned`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// // [1, 3, 2, 4] is partitioned: all odd elements come before all even.
+    /// let mut lender = lender::lend_fallible_iter::<fallible_lend!(&'lend i32), _>(
+    ///     [1, 3, 2, 4].iter().into_fallible(),
+    /// );
+    /// assert!(lender.is_partitioned(|&x| Ok(x % 2 != 0)).unwrap());
+    /// ```
     #[inline]
     #[allow(clippy::wrong_self_convention)]
     fn is_partitioned<P>(mut self, mut predicate: P) -> Result<bool, Self::Error>
@@ -1593,6 +1614,24 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::cmp_by`].
+    ///
+    /// Note: the closure receives both lends under a single lifetime
+    /// (`for<'all>`). This is an HRTB limitation: the two lenders cannot
+    /// be advanced independently within the closure.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// # use core::cmp::Ordering;
+    /// let a = lender::from_fallible_iter([1, 2, 3].into_iter().into_fallible());
+    /// let b = lender::from_fallible_iter([1, 2, 4].into_iter().into_fallible());
+    /// assert_eq!(
+    ///     a.cmp_by::<lender::FromFallibleIter<_>, _>(b, |x: i32, y: i32| Ok(x.cmp(&y))),
+    ///     Ok(Ordering::Less)
+    /// );
+    /// ```
     #[inline]
     fn cmp_by<L, F>(self, other: L, mut cmp: F) -> Result<Ordering, Self::Error>
     where
@@ -1632,6 +1671,26 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::partial_cmp_by`].
+    ///
+    /// See [`cmp_by`](FallibleLender::cmp_by) for a note on the unified
+    /// lifetime constraint.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// # use core::cmp::Ordering;
+    /// let a = lender::from_fallible_iter([1.0, 2.0].into_iter().into_fallible());
+    /// let b = lender::from_fallible_iter([1.0, 3.0].into_iter().into_fallible());
+    /// assert_eq!(
+    ///     a.partial_cmp_by::<lender::FromFallibleIter<_>, _>(
+    ///         b,
+    ///         |x: f64, y: f64| Ok(x.partial_cmp(&y))
+    ///     ),
+    ///     Ok(Some(Ordering::Less))
+    /// );
+    /// ```
     #[inline]
     fn partial_cmp_by<L, F>(self, other: L, mut partial_cmp: F) -> Result<Option<Ordering>, Self::Error>
     where
@@ -1660,6 +1719,9 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::eq_by`].
+    ///
+    /// See [`cmp_by`](FallibleLender::cmp_by) for a note on the unified
+    /// lifetime constraint.
     ///
     /// # Examples
     ///

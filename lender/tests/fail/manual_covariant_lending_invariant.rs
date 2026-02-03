@@ -3,7 +3,7 @@
 // required _check_covariance method.
 //
 // Before the _check_covariance method was added to the traits, this would have
-// compiled silently — the traits were empty markers with no enforcement.
+// compiled silently; the traits were empty markers with no enforcement.
 
 use std::cell::Cell;
 

@@ -50,9 +50,7 @@ pub fn once<'a, L: ?Sized + CovariantFallibleLending, E>(
 /// assert_eq!(lender.next(), Ok(None));
 /// ```
 #[inline]
-pub fn once_err<L: ?Sized + CovariantFallibleLending, E>(
-    error: E,
-) -> OnceErr<L, E> {
+pub fn once_err<L: ?Sized + CovariantFallibleLending, E>(error: E) -> OnceErr<L, E> {
     OnceErr {
         inner: Some(error),
         _marker: PhantomData,
@@ -118,9 +116,7 @@ where
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         Ok(self.inner.take().map(|value| {
             // SAFETY: 'a: 'lend
-            unsafe {
-                core::mem::transmute::<FallibleLend<'a, Self>, FallibleLend<'_, Self>>(value)
-            }
+            unsafe { core::mem::transmute::<FallibleLend<'a, Self>, FallibleLend<'_, Self>>(value) }
         }))
     }
 
@@ -237,8 +233,4 @@ where
     }
 }
 
-impl<L, E> FusedFallibleLender for OnceErr<L, E>
-where
-    L: ?Sized + CovariantFallibleLending,
-{
-}
+impl<L, E> FusedFallibleLender for OnceErr<L, E> where L: ?Sized + CovariantFallibleLending {}

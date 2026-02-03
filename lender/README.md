@@ -369,8 +369,8 @@ If this method is implemented as `{ lend }`, then the compiler will check that
 the type `&'short <Self as Lending<'long>>::Lend` is convertible to `&'short
 <Self as Lending<'short>>::Lend`, which is exactly the definition of covariance.
 This is what the [`check_covariance!`] macro does for [`Lender`] impls. The
-[`unsafe_assume_covariance!`] macro, instead, implements this method as `unsafe
-{ std::mem::transmute(lend) }`, which tells the compiler to assume covariance
+[`unsafe_assume_covariance!`] macro, instead, implements this method as `{ unsafe
+{ core::mem::transmute(lend) } }`, which tells the compiler to assume covariance
 without checking it: it is in this case a responsibility of the programmer to
 ensure that covariance holds (as the caller of an `unsafe` block must ensure the
 safety invariants).

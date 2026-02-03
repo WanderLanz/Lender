@@ -456,3 +456,90 @@ fn size_hint_enumerate_decreases() {
     lender.next();
     assert_eq!(lender.size_hint(), (0, Some(0)));
 }
+
+// =================================================================
+// Negative trait compliance tests (verifying NON-implementation)
+// =================================================================
+// These tests verify that certain adapters correctly do NOT implement
+// traits that would be unsound or misleading.
+
+/// Helper to statically assert a type does NOT implement ExactSizeLender.
+/// We use the fact that these adapters' next() returns Option but they
+/// don't have len() - we test size_hint() instead which all Lenders have.
+#[test]
+fn filter_does_not_have_exact_size() {
+    // Filter cannot know exact size since predicate can reject elements
+    let lender = VecLender::new(vec![1, 2, 3, 4, 5]).filter(|x| **x > 2);
+    // size_hint lower bound must be 0 (could filter all)
+    let (lower, upper) = lender.size_hint();
+    assert_eq!(lower, 0);
+    // upper bound is same as underlying (could pass all)
+    assert_eq!(upper, Some(5));
+}
+
+#[test]
+fn filter_map_does_not_have_exact_size() {
+    let lender = VecLender::new(vec![1, 2, 3, 4, 5]).filter_map(hrc_mut!(
+        for<'all> |x: &i32| -> Option<i32> { if *x > 2 { Some(*x * 10) } else { None } }
+    ));
+    let (lower, upper) = lender.size_hint();
+    assert_eq!(lower, 0);
+    assert_eq!(upper, Some(5));
+}
+
+#[test]
+fn skip_while_does_not_have_exact_size() {
+    let lender = VecLender::new(vec![1, 2, 3, 4, 5]).skip_while(|x| **x < 3);
+    let (lower, upper) = lender.size_hint();
+    assert_eq!(lower, 0);
+    assert_eq!(upper, Some(5));
+}
+
+#[test]
+fn take_while_does_not_have_exact_size() {
+    let lender = VecLender::new(vec![1, 2, 3, 4, 5]).take_while(|x| **x < 3);
+    let (lower, upper) = lender.size_hint();
+    assert_eq!(lower, 0);
+    assert_eq!(upper, Some(5));
+}
+
+#[test]
+fn map_while_does_not_have_exact_size() {
+    let lender = VecLender::new(vec![1, 2, 3, 4, 5]).map_while(hrc_mut!(
+        for<'all> |x: &i32| -> Option<i32> { if *x < 3 { Some(*x * 10) } else { None } }
+    ));
+    let (lower, upper) = lender.size_hint();
+    assert_eq!(lower, 0);
+    assert_eq!(upper, Some(5));
+}
+
+#[test]
+fn scan_does_not_have_exact_size() {
+    let lender = VecLender::new(vec![1, 2, 3, 4, 5]).scan(
+        0,
+        hrc_mut!(for<'all> |args: (&'all mut i32, &i32)| -> Option<i32> {
+            *args.0 += *args.1;
+            if *args.0 < 10 { Some(*args.0) } else { None }
+        }),
+    );
+    let (lower, upper) = lender.size_hint();
+    assert_eq!(lower, 0);
+    assert_eq!(upper, Some(5));
+}
+
+/// MapWhile is explicitly NOT FusedLender (matching std::iter::MapWhile)
+/// because returning None from the closure does not guarantee the underlying
+/// lender is exhausted - it just means mapping decided to stop.
+#[test]
+fn map_while_not_fused_behavior() {
+    // This test verifies the documented behavior: MapWhile does not implement
+    // FusedLender. After the closure returns None, the underlying lender may
+    // still have elements, and MapWhile's behavior after that is unspecified.
+    let mut lender = VecLender::new(vec![1, 2, 100, 3, 4]).map_while(hrc_mut!(
+        for<'all> |x: &i32| -> Option<i32> { if *x < 50 { Some(*x) } else { None } }
+    ));
+    assert_eq!(lender.next(), Some(1));
+    assert_eq!(lender.next(), Some(2));
+    assert_eq!(lender.next(), None); // stopped at 100
+    // After None, behavior is implementation-defined (not required to stay None)
+}

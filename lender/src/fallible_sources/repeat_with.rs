@@ -110,9 +110,7 @@ where
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         Ok(Some(
             // SAFETY: 'a: 'lend
-            unsafe {
-                core::mem::transmute::<FallibleLend<'a, L>, FallibleLend<'_, L>>((self.f)())
-            },
+            unsafe { core::mem::transmute::<FallibleLend<'a, L>, FallibleLend<'_, L>>((self.f)()) },
         ))
     }
 
@@ -220,11 +218,7 @@ where
 
     #[inline]
     fn advance_by(&mut self, n: usize) -> Result<Result<(), core::num::NonZeroUsize>, Self::Error> {
-        if n > 0 {
-            Err((self.f)())
-        } else {
-            Ok(Ok(()))
-        }
+        if n > 0 { Err((self.f)()) } else { Ok(Ok(())) }
     }
 }
 
@@ -243,11 +237,7 @@ where
         &mut self,
         n: usize,
     ) -> Result<Result<(), core::num::NonZeroUsize>, Self::Error> {
-        if n > 0 {
-            Err((self.f)())
-        } else {
-            Ok(Ok(()))
-        }
+        if n > 0 { Err((self.f)()) } else { Ok(Ok(())) }
     }
 }
 

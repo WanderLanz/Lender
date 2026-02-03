@@ -149,18 +149,17 @@ fn fallible_once_with() {
     use lender::{fallible_once_with, fallible_once_with_err, hrc_once};
 
     // Test with value from closure
-    let mut once_with = fallible_once_with::<_, String, _>(
-        42,
-        hrc_once!(move |x: &mut i32| -> i32 { *x }),
-    );
+    let mut once_with =
+        fallible_once_with::<_, String, _>(42, hrc_once!(move |x: &mut i32| -> i32 { *x }));
     assert_eq!(once_with.next().unwrap(), Some(42));
     assert!(once_with.next().unwrap().is_none());
     assert!(once_with.next().unwrap().is_none()); // Should be fused
 
     // Test with error from closure
-    let mut once_with_err = fallible_once_with_err::<
-        _, lender::fallible_lend!(i32), _,
-    >(42, |_x: &mut i32| "error".to_string());
+    let mut once_with_err =
+        fallible_once_with_err::<_, lender::fallible_lend!(i32), _>(42, |_x: &mut i32| {
+            "error".to_string()
+        });
     match once_with_err.next() {
         Err(e) => assert_eq!(e, "error"),
         Ok(_) => panic!("Expected error"),
@@ -196,13 +195,11 @@ fn fallible_repeat_with() {
     }
 
     // size_hint should indicate infinite iterator
-    let repeat_with_hint =
-        fallible_repeat_with::<'_, fallible_lend!(i32), String, _>(|| 1);
+    let repeat_with_hint = fallible_repeat_with::<'_, fallible_lend!(i32), String, _>(|| 1);
     assert_eq!(repeat_with_hint.size_hint(), (usize::MAX, None));
 
     // FallibleRepeatWith should be double-ended (infinite both ways)
-    let mut repeat_with_de =
-        fallible_repeat_with::<'_, fallible_lend!(i32), String, _>(|| 99);
+    let mut repeat_with_de = fallible_repeat_with::<'_, fallible_lend!(i32), String, _>(|| 99);
     assert_eq!(repeat_with_de.next_back().unwrap(), Some(99));
     assert_eq!(repeat_with_de.next_back().unwrap(), Some(99));
     assert_eq!(repeat_with_de.next().unwrap(), Some(99));
@@ -276,8 +273,8 @@ fn map_err_adapter() {
     use lender::{fallible_lend, fallible_once, fallible_once_err};
 
     // Test mapping error type
-    let mut mapped = fallible_once_err::<fallible_lend!(u32), _>(42)
-        .map_err(|e: i32| format!("Error: {}", e));
+    let mut mapped =
+        fallible_once_err::<fallible_lend!(u32), _>(42).map_err(|e: i32| format!("Error: {}", e));
     match mapped.next() {
         Err(e) => assert_eq!(e, "Error: 42"),
         Ok(_) => panic!("Expected error"),
@@ -1558,7 +1555,6 @@ fn double_ended_fallible_nth_back_past_end() {
 // New method tests (M5–M7, M11)
 // ============================================================================
 
-// M5: Fallible Zip nth_back — equal-length lenders
 #[test]
 fn fallible_zip_nth_back_equal_length() {
     let mut zipped = VecFallibleLender::new(vec![1, 2, 3, 4, 5])
@@ -1568,7 +1564,6 @@ fn fallible_zip_nth_back_equal_length() {
     assert_eq!(zipped.nth_back(2), Ok(None));
 }
 
-// M5: Fallible Zip nth_back — unequal-length lenders
 #[test]
 fn fallible_zip_nth_back_unequal_length() {
     let mut zipped =
@@ -1579,14 +1574,12 @@ fn fallible_zip_nth_back_unequal_length() {
     assert_eq!(zipped.nth_back(0), Ok(None));
 }
 
-// M5: Fallible Zip nth_back — empty
 #[test]
 fn fallible_zip_nth_back_empty() {
     let mut zipped = VecFallibleLender::new(vec![]).zip(VecFallibleLender::new(vec![1, 2]));
     assert_eq!(zipped.nth_back(0), Ok(None));
 }
 
-// M6: Fallible StepBy count
 #[test]
 fn fallible_step_by_count() {
     let lender = VecFallibleLender::new(vec![1, 2, 3, 4, 5, 6, 7]);
@@ -1606,7 +1599,6 @@ fn fallible_step_by_count_empty() {
     assert_eq!(lender.step_by(3).count(), Ok(0));
 }
 
-// M7: Fallible Chunk count
 #[test]
 fn fallible_chunk_count() {
     let mut lender = VecFallibleLender::new(vec![1, 2, 3, 4, 5]);
@@ -1628,7 +1620,6 @@ fn fallible_chunk_count_empty() {
     assert_eq!(chunk.count(), Ok(0));
 }
 
-// M7: Fallible Chunk nth
 #[test]
 fn fallible_chunk_nth_within_range() {
     let mut lender = VecFallibleLender::new(vec![10, 20, 30, 40, 50]);
@@ -1646,7 +1637,6 @@ fn fallible_chunk_nth_past_end() {
     assert_eq!(chunk.next(), Ok(None));
 }
 
-// M7: Fallible Chunk try_fold
 #[test]
 fn fallible_chunk_try_fold() {
     let mut lender = VecFallibleLender::new(vec![1, 2, 3, 4, 5]);
@@ -1655,7 +1645,6 @@ fn fallible_chunk_try_fold() {
     assert_eq!(result, Ok(Ok(10)));
 }
 
-// M7: Fallible Chunk fold
 #[test]
 fn fallible_chunk_fold() {
     let mut lender = VecFallibleLender::new(vec![1, 2, 3, 4, 5]);
@@ -1664,7 +1653,6 @@ fn fallible_chunk_fold() {
     assert_eq!(result, Ok(10));
 }
 
-// M11: Fallible Intersperse try_fold
 #[test]
 fn fallible_intersperse_try_fold() {
     use lender::from_fallible_fn;
@@ -1690,7 +1678,6 @@ fn fallible_intersperse_try_fold() {
     assert_eq!(collected, vec![1, 0, 2, 0, 3]);
 }
 
-// M11: Fallible Intersperse try_fold with fold (full consumption)
 #[test]
 fn fallible_intersperse_fold() {
     use lender::from_fallible_fn;
@@ -1710,7 +1697,6 @@ fn fallible_intersperse_fold() {
     assert_eq!(sum, 10);
 }
 
-// M11: Fallible IntersperseWith try_fold
 #[test]
 fn fallible_intersperse_with_try_fold() {
     use lender::from_fallible_fn;
@@ -1739,7 +1725,6 @@ fn fallible_intersperse_with_try_fold() {
     assert_eq!(collected, vec![1, 101, 2, 102, 3]);
 }
 
-// M11: Fallible IntersperseWith fold
 #[test]
 fn fallible_intersperse_with_fold() {
     use lender::from_fallible_fn;
@@ -1759,7 +1744,7 @@ fn fallible_intersperse_with_fold() {
 }
 
 // ============================================================================
-// T1: try_find tests (fallible)
+// try_find tests (fallible)
 // ============================================================================
 
 #[test]
@@ -1828,7 +1813,7 @@ fn fallible_try_find_lender_error() {
 }
 
 // ============================================================================
-// T2: Fallible adapter-specific tests
+// Fallible adapter-specific tests
 // ============================================================================
 
 #[test]
@@ -1958,7 +1943,7 @@ fn fallible_chunky_specific() {
 }
 
 // ============================================================================
-// T3: Error propagation through adapter chains
+// Error propagation through adapter chains
 // ============================================================================
 
 #[test]
@@ -2054,7 +2039,7 @@ fn error_propagation_for_each() {
 }
 
 // ============================================================================
-// T4: Multi-adapter composition tests (fallible)
+// Multi-adapter composition tests (fallible)
 // ============================================================================
 
 #[test]
@@ -2112,7 +2097,7 @@ fn fallible_compose_error_through_chain() {
 }
 
 // ============================================================================
-// T5: is_partitioned and collect_into (fallible)
+// is_partitioned and collect_into (fallible)
 // ============================================================================
 
 #[test]

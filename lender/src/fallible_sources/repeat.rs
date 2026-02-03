@@ -231,10 +231,7 @@ where
     }
 
     #[inline]
-    fn advance_by(
-        &mut self,
-        n: usize,
-    ) -> Result<Result<(), core::num::NonZeroUsize>, Self::Error> {
+    fn advance_by(&mut self, n: usize) -> Result<Result<(), core::num::NonZeroUsize>, Self::Error> {
         if n > 0 {
             Err(self.err.clone())
         } else {

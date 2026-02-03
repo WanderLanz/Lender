@@ -3,7 +3,7 @@
 use ::lender::prelude::*;
 
 // ============================================================================
-// Helper struct for Lender tests — yields &i32 references, exercising
+// Helper struct for Lender tests: it yields &i32 references, exercising
 // the core lending pattern (items that borrow from the lender).
 // ============================================================================
 #[derive(Clone)]
@@ -84,7 +84,7 @@ impl<T> Lender for WindowsMut<'_, T> {
     }
 }
 
-// Helper struct for testing fallible traits — yields &i32 references.
+// Helper struct for testing fallible traits (yields &i32 references).
 pub struct VecFallibleLender {
     data: Vec<i32>,
     front: usize,

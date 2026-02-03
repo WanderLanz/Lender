@@ -62,8 +62,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// - In all other cases (e.g., when implementing adapters), use
     ///   [`unsafe_assume_covariance!`](crate::unsafe_assume_covariance) in the
-    ///   [`Lender`] impl. The macro implements the method as `unsafe {
-    ///   core::mem::transmute(lend) }`, which is a no-op. This is unsafe because
+    ///   [`Lender`] impl. The macro implements the method as `{ unsafe {
+    ///   core::mem::transmute(lend) } }`, which is a no-op. This is unsafe because
     ///   it is up to the implementor to guarantee that the [`Lend`](Lending::Lend)
     ///   type is covariant in its lifetime.
     fn _check_covariance<'long: 'short, 'short>(
@@ -161,15 +161,28 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         }
         last
     }
-    /// Advances the lender by `n` lends. If the lender does not have enough lends, returns the number of lends left.
+    /// Advances the lender by `n` lends.
+    ///
+    /// Returns `Ok(())` if `n` lends were successfully skipped.
+    ///
+    /// Returns `Err(NonZeroUsize)` if the lender did not have enough lends,
+    /// where the value is the number of lends that could not be skipped.
     ///
     /// # Examples
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2, 3u8].iter());
+    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2, 3].iter());
     /// assert_eq!(lender.advance_by(2), Ok(()));
     /// assert_eq!(lender.next(), Some(&3));
+    /// ```
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// # use core::num::NonZeroUsize;
+    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2].iter());
+    /// // Trying to advance by 5 when only 2 elements remain
+    /// assert_eq!(lender.advance_by(5), Err(NonZeroUsize::new(3).unwrap()));
     /// ```
     #[inline]
     fn advance_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {
@@ -1284,7 +1297,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// The [`Lender`] version of [`Iterator::cmp_by`].
     ///
     /// Note: the closure receives both lends under a single lifetime
-    /// (`for<'all>`). This is an HRTB limitation — the two lenders cannot
+    /// (`for<'all>`). This is an HRTB limitation: the two lenders cannot
     /// be advanced independently within the closure.
     ///
     /// # Examples

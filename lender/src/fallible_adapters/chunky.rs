@@ -39,6 +39,7 @@ where
         Ok(self.len)
     }
 
+    #[inline]
     fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> Result<R, Self::Error>
     where
         Self: Sized,
