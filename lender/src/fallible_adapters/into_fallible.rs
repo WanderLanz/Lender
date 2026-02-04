@@ -105,12 +105,12 @@ where
         R: stable_try_trait_v2::Try<Output = B>,
     {
         // Since Self::Error = Infallible, f can never return Err
-        Ok(self.lender.try_rfold(init, |acc, value| {
-            match f(acc, value) {
+        Ok(self
+            .lender
+            .try_rfold(init, |acc, value| match f(acc, value) {
                 Ok(r) => r,
                 Err(e) => match e {},
-            }
-        }))
+            }))
     }
 }
 

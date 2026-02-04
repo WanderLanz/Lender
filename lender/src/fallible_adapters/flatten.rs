@@ -445,9 +445,7 @@ mod test {
         moved_flatten(flatten)
     }
 
-    fn moved_flatten(
-        mut flatten: Flatten<IntoFallible<Parent>>,
-    ) -> Result<(), Infallible> {
+    fn moved_flatten(mut flatten: Flatten<IntoFallible<Parent>>) -> Result<(), Infallible> {
         let next_array_ref = flatten.next()?.unwrap() as *const _;
         let array_ref = &flatten.inner.lender.lender.0 as *const _;
         assert_eq!(

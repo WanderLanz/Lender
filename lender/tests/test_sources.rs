@@ -307,7 +307,10 @@ fn from_iter_double_ended() {
 
 #[test]
 fn from_iter_fold_additional() {
-    let sum = vec![1, 2, 3, 4, 5].into_iter().into_lender().fold(0, |acc, x| acc + x);
+    let sum = vec![1, 2, 3, 4, 5]
+        .into_iter()
+        .into_lender()
+        .fold(0, |acc, x| acc + x);
     assert_eq!(sum, 15);
 }
 
@@ -316,17 +319,22 @@ fn from_iter_rfold_additional() {
     use lender::DoubleEndedLender;
 
     let values: Vec<i32> =
-        vec![1, 2, 3].into_iter().into_lender().rfold(Vec::new(), |mut acc, x| {
-            acc.push(x);
-            acc
-        });
+        vec![1, 2, 3]
+            .into_iter()
+            .into_lender()
+            .rfold(Vec::new(), |mut acc, x| {
+                acc.push(x);
+                acc
+            });
     assert_eq!(values, vec![3, 2, 1]);
 }
 
 #[test]
 fn from_iter_try_fold_additional() {
-    let result: Option<i32> =
-        vec![1, 2, 3].into_iter().into_lender().try_fold(0, |acc, x| Some(acc + x));
+    let result: Option<i32> = vec![1, 2, 3]
+        .into_iter()
+        .into_lender()
+        .try_fold(0, |acc, x| Some(acc + x));
     assert_eq!(result, Some(6));
 }
 
@@ -334,8 +342,10 @@ fn from_iter_try_fold_additional() {
 fn from_iter_try_rfold_additional() {
     use lender::DoubleEndedLender;
 
-    let result: Option<i32> =
-        vec![1, 2, 3].into_iter().into_lender().try_rfold(0, |acc, x| Some(acc + x));
+    let result: Option<i32> = vec![1, 2, 3]
+        .into_iter()
+        .into_lender()
+        .try_rfold(0, |acc, x| Some(acc + x));
     assert_eq!(result, Some(6));
 }
 

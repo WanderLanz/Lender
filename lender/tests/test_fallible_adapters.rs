@@ -139,14 +139,9 @@ fn intersperse_adapters() {
 fn map_adapters() {
     let data = vec![1, 2, 3];
 
-    let mut iter = data
-        .into_iter()
-        .into_lender()
-        .into_fallible()
-        .map(hrc_mut!(for<'lend> |x: i32| -> Result<
-            i32,
-            std::convert::Infallible,
-        > { Ok(x * 2) }));
+    let mut iter = data.into_iter().into_lender().into_fallible().map(hrc_mut!(
+        for<'lend> |x: i32| -> Result<i32, std::convert::Infallible> { Ok(x * 2) }
+    ));
 
     assert_eq!(iter.next().unwrap(), Some(2));
     assert_eq!(iter.next().unwrap(), Some(4));
@@ -569,8 +564,7 @@ fn fallible_lender_max_by() {
     use lender::FallibleLender;
 
     // Use into_iter to get owned values, since max_by uses ToOwned
-    let fallible: lender::IntoFallible<_> =
-        vec![1, 5, 3].into_iter().into_lender().into_fallible();
+    let fallible: lender::IntoFallible<_> = vec![1, 5, 3].into_iter().into_lender().into_fallible();
     assert_eq!(fallible.max_by(|a, b| Ok(a.cmp(b))), Ok(Some(5)));
 
     // Per Iterator::max_by docs: "If several elements are equally maximum, the last element is returned."
@@ -587,8 +581,7 @@ fn fallible_lender_max_by() {
 fn fallible_lender_min_by() {
     use lender::FallibleLender;
 
-    let fallible: lender::IntoFallible<_> =
-        vec![3, 1, 5].into_iter().into_lender().into_fallible();
+    let fallible: lender::IntoFallible<_> = vec![3, 1, 5].into_iter().into_lender().into_fallible();
     assert_eq!(fallible.min_by(|a, b| Ok(a.cmp(b))), Ok(Some(1)));
 
     // Per Iterator::min_by docs: "If several elements are equally minimum, the first element is returned."
@@ -649,7 +642,8 @@ fn fallible_into_fallible_try_fold() {
 
     let mut fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3]).into_fallible();
 
-    let result: Result<Option<i32>, core::convert::Infallible> = fallible.try_fold(0, |acc, x| Ok(Some(acc + *x)));
+    let result: Result<Option<i32>, core::convert::Infallible> =
+        fallible.try_fold(0, |acc, x| Ok(Some(acc + *x)));
     assert_eq!(result, Ok(Some(6)));
 }
 
@@ -659,7 +653,8 @@ fn fallible_into_fallible_try_rfold() {
 
     let mut fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3]).into_fallible();
 
-    let result: Result<Option<i32>, core::convert::Infallible> = fallible.try_rfold(0, |acc, x| Ok(Some(acc + *x)));
+    let result: Result<Option<i32>, core::convert::Infallible> =
+        fallible.try_rfold(0, |acc, x| Ok(Some(acc + *x)));
     assert_eq!(result, Ok(Some(6)));
 }
 

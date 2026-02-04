@@ -710,4 +710,3 @@ fn rev_try_rfold_additional() {
         .try_rfold(0, |acc, x| Some(acc + *x));
     assert_eq!(result, Some(6));
 }
-

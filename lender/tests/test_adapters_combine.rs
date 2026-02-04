@@ -473,4 +473,3 @@ fn flatten_count_empty() {
     let lender = VecOfVecLender::new(vec![]);
     assert_eq!(lender.flatten().count(), 0);
 }
-

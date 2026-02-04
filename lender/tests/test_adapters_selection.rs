@@ -798,4 +798,3 @@ fn take_while_try_fold_additional() {
     // Takes 1, 2, 3 (until 4 fails condition)
     assert_eq!(result, Some(6));
 }
-

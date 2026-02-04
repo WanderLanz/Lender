@@ -241,7 +241,9 @@ fn mutate_basic() {
 #[test]
 fn mutate_fold() {
     let mut data = [1, 2, 3];
-    let sum = data.iter_mut().into_lender()
+    let sum = data
+        .iter_mut()
+        .into_lender()
         .mutate(|x| **x *= 10)
         .fold(0, |acc, x| acc + *x);
     assert_eq!(sum, 60);
@@ -267,7 +269,9 @@ fn mutate_size_hint_additional() {
 #[test]
 fn mutate_try_fold_additional() {
     let mut data = [1, 2, 3];
-    let result: Option<i32> = data.iter_mut().into_lender()
+    let result: Option<i32> = data
+        .iter_mut()
+        .into_lender()
         .mutate(|x| **x *= 2)
         .try_fold(0, |acc, x| Some(acc + *x));
     assert_eq!(result, Some(12));
@@ -750,4 +754,3 @@ fn owned_rfold_empty() {
     });
     assert!(result.is_empty());
 }
-

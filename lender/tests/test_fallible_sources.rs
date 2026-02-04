@@ -241,4 +241,3 @@ fn from_fallible_fn() {
         Ok(_) => panic!("Expected error"),
     }
 }
-

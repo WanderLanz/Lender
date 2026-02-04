@@ -480,4 +480,3 @@ fn chunky_into_inner() {
 fn chunky_zero_panics() {
     let _ = VecLender::new(vec![1, 2, 3]).chunky(0);
 }
-
