@@ -14,16 +14,26 @@
   `CovariantLending`, which depends on `for<'all> Lending<'all, L>` but
   forces a covariance check.
 
-- Fallible lenders have now feature parity with normal lenders. In particular,
-  `FallibleLender` has now `chunk` and `rposition` methods.
-
 - Added missing `FromFallibleLender`/`ExtendFallibleLender` traits.
 
 - The `Convert` adapter is now accessible through the `Lender::convert` method.
 
-### Changed
+### Improved
 
 - `windows_mut` is now double-ended.
+
+- Fallible lenders have now feature parity with normal lenders. In particular,
+  `FallibleLender` has now `chunk` and `rposition` methods.
+
+- Thanks to `AliasableBox` and `MaybeDangling` we now pass miri.
+
+- `FallibleLender::advance_by`/`FallibleLender::advance_back_by` have now a 
+  signature aligned with `Lender::advance_by`/`Lender::advance_back_by`.
+
+- Completed implementation of standard traits (`Debug`, `Clone`, `Default`, etc.)
+  where possible.
+
+### Changed
 
 - Windows and array windows must have a non-zero length, as in `Iterator`,
   and they implement `FusedLender` and `ExactSizeLender`.
@@ -35,14 +45,6 @@
   to use more complex types, you can use the `covariant_lend!` macro, which
   however requires that you define a type name (it cannot be inlined). The same
   applies to `fallible_lend!` and `covariant_fallible_lend!`.
-
-- Thanks to `AliasableBox` and `MaybeDangling` we now pass miri.
-
-- `FallibleLender::advance_by`/`FallibleLender::advance_back_by` have now a 
-  signature aligned with `Lender::advance_by`/`Lender::advance_back_by`.
-
-- Completed implementation of standard traits (`Debug`, `Clone`, `Default`, etc.)
-  where possible.
 
 - Coherent use of `must_use` attribute.
 
