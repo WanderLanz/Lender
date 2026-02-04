@@ -53,7 +53,7 @@ fn map_into_iter_into_parts() {
 fn map_into_iter_fold() {
     let sum = VecLender::new(vec![1, 2, 3])
         .map_into_iter(|x| *x * 2)
-        .fold(0, |acc, x| acc + x);
+        .sum::<i32>();
     assert_eq!(sum, 12);
 }
 
@@ -61,7 +61,7 @@ fn map_into_iter_fold() {
 fn map_into_iter_fold_empty() {
     let sum = VecLender::new(vec![])
         .map_into_iter(|x: &i32| *x * 2)
-        .fold(0, |acc, x| acc + x);
+        .sum::<i32>();
     assert_eq!(sum, 0);
 }
 

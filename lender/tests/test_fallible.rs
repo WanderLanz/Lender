@@ -2214,7 +2214,7 @@ fn fallible_is_partitioned_true() {
     .is_partitioned(|x| Ok(x <= 3));
 
     // 1,2,3 are true, then 4,5,6 are false — partitioned
-    assert_eq!(result.unwrap(), true);
+    assert!(result.unwrap());
 }
 
 #[test]
@@ -2232,7 +2232,7 @@ fn fallible_is_partitioned_false() {
     .is_partitioned(|x| Ok(x % 2 == 0));
 
     // 1(f), 2(t), 3(f), 4(t) — not partitioned
-    assert_eq!(result.unwrap(), false);
+    assert!(!result.unwrap());
 }
 
 #[test]

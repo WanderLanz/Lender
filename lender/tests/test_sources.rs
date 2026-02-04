@@ -357,7 +357,7 @@ fn from_iter_nth_back_additional() {
 fn from_iter_fallible_coverage() {
     use lender::{DoubleEndedFallibleLender, FallibleLender};
 
-    let data = vec![1, 2, 3];
+    let data = [1, 2, 3];
     let fallible: lender::IntoFallible<(), _> = lender::from_iter(data.iter()).into_fallible();
     let mut lender = fallible;
     assert_eq!(lender.next(), Ok(Some(&1)));
@@ -370,7 +370,7 @@ fn from_iter_fallible_coverage() {
 
 #[test]
 fn lend_iter_basic() {
-    let data = vec![1, 2, 3];
+    let data = [1, 2, 3];
     let mut lender = lender::lend_iter::<lend!(&'lend i32), _>(data.iter());
 
     assert_eq!(lender.next(), Some(&1));
@@ -385,7 +385,7 @@ fn lend_iter_basic() {
 
 #[test]
 fn lend_iter_fold_additional() {
-    let data = vec![1, 2, 3, 4, 5];
+    let data = [1, 2, 3, 4, 5];
     let sum = lender::lend_iter::<lend!(&'lend i32), _>(data.iter()).fold(0, |acc, &x| acc + x);
     assert_eq!(sum, 15);
 }
@@ -394,7 +394,7 @@ fn lend_iter_fold_additional() {
 fn lend_iter_rfold_additional() {
     use lender::DoubleEndedLender;
 
-    let data = vec![1, 2, 3];
+    let data = [1, 2, 3];
     let values: Vec<i32> =
         lender::lend_iter::<lend!(&'lend i32), _>(data.iter()).rfold(Vec::new(), |mut acc, &x| {
             acc.push(x);
@@ -405,7 +405,7 @@ fn lend_iter_rfold_additional() {
 
 #[test]
 fn lend_iter_try_fold_additional() {
-    let data = vec![1, 2, 3];
+    let data = [1, 2, 3];
     let result: Option<i32> =
         lender::lend_iter::<lend!(&'lend i32), _>(data.iter()).try_fold(0, |acc, &x| Some(acc + x));
     assert_eq!(result, Some(6));
@@ -413,7 +413,7 @@ fn lend_iter_try_fold_additional() {
 
 #[test]
 fn lend_iter_nth_additional() {
-    let data = vec![1, 2, 3, 4, 5];
+    let data = [1, 2, 3, 4, 5];
     let mut lender = lender::lend_iter::<lend!(&'lend i32), _>(data.iter());
     assert_eq!(lender.nth(2), Some(&3));
 }

@@ -1,11 +1,11 @@
+#![allow(clippy::unnecessary_fold)]
+
 mod common;
 use ::lender::prelude::*;
 use common::*;
-
 // ============================================================================
 // Chain adapter tests (Lender)
 // ============================================================================
-
 #[test]
 fn chain_basic_forward_iteration() {
     // Documented semantics: "first yield all lends from self, then all lends from other"
@@ -2081,7 +2081,7 @@ fn inspect_try_rfold_additional() {
 
 #[test]
 fn mutate_basic() {
-    let mut data = vec![1, 2, 3];
+    let mut data = [1, 2, 3];
     let mut lender = lender::from_iter(data.iter_mut()).mutate(|x| **x *= 10);
 
     assert_eq!(lender.next().map(|x| *x), Some(10));
@@ -2091,7 +2091,7 @@ fn mutate_basic() {
 
 #[test]
 fn mutate_fold() {
-    let mut data = vec![1, 2, 3];
+    let mut data = [1, 2, 3];
     let sum = lender::from_iter(data.iter_mut())
         .mutate(|x| **x *= 10)
         .fold(0, |acc, x| acc + *x);
@@ -2100,7 +2100,7 @@ fn mutate_fold() {
 
 #[test]
 fn mutate_double_ended() {
-    let mut data = vec![1, 2, 3];
+    let mut data = [1, 2, 3];
     let mut mutated = lender::from_iter(data.iter_mut()).mutate(|x| **x += 100);
 
     assert_eq!(mutated.next_back().map(|x| *x), Some(103));
@@ -2110,14 +2110,14 @@ fn mutate_double_ended() {
 
 #[test]
 fn mutate_size_hint_additional() {
-    let data = vec![1, 2, 3];
+    let data = [1, 2, 3];
     let lender = lender::from_iter(data.iter()).mutate(|_| {});
     assert_eq!(lender.size_hint(), (3, Some(3)));
 }
 
 #[test]
 fn mutate_try_fold_additional() {
-    let mut data = vec![1, 2, 3];
+    let mut data = [1, 2, 3];
     let result: Option<i32> = lender::from_iter(data.iter_mut())
         .mutate(|x| **x *= 2)
         .try_fold(0, |acc, x| Some(acc + *x));
@@ -2126,7 +2126,7 @@ fn mutate_try_fold_additional() {
 
 #[test]
 fn mutate_into_inner_additional() {
-    let data = vec![1, 2, 3];
+    let data = [1, 2, 3];
     let mutate = lender::from_iter(data.iter()).mutate(|_| {});
     let lender = mutate.into_inner();
     assert_eq!(lender.count(), 3);
@@ -2134,7 +2134,7 @@ fn mutate_into_inner_additional() {
 
 #[test]
 fn mutate_into_parts_additional() {
-    let data = vec![1, 2, 3];
+    let data = [1, 2, 3];
     let mutate = lender::from_iter(data.iter()).mutate(|_| {});
     let (lender, _f) = mutate.into_parts();
     assert_eq!(lender.count(), 3);
@@ -3172,7 +3172,7 @@ fn copied_fold() {
 #[test]
 fn copied_fold_empty() {
     let lender = VecLender::new(vec![]);
-    let sum: i32 = lender.copied().fold(0, |acc, x| acc + x);
+    let sum = lender.copied().fold(0, |acc, x| acc + x);
     assert_eq!(sum, 0);
 }
 
@@ -3470,9 +3470,9 @@ fn compose_take_while_skip_while() {
 #[test]
 fn chain_size_hint_no_overflow() {
     // Chain two lenders with size hints that would overflow if added naively
-    use std::iter::repeat;
-    let a = repeat(&1).take(usize::MAX / 2 + 1).into_lender();
-    let b = repeat(&2).take(usize::MAX / 2 + 1).into_lender();
+
+    let a = std::iter::repeat_n(&1, usize::MAX / 2 + 1).into_lender();
+    let b = std::iter::repeat_n(&2, usize::MAX / 2 + 1).into_lender();
     let chained = a.chain(b);
     let (lower, upper) = chained.size_hint();
     // Should saturate rather than overflow
@@ -3483,12 +3483,13 @@ fn chain_size_hint_no_overflow() {
 #[test]
 fn intersperse_size_hint_no_overflow() {
     // Intersperse doubles size minus 1; test with large size hints
-    use std::iter::repeat;
-    let lender = repeat(&1).take(usize::MAX / 2 + 10).into_lender();
+    // that would overflow if not handled with saturating arithmetic
+
+    let lender = std::iter::repeat_n(&1, usize::MAX / 2 + 10).into_lender();
     let interspersed = lender.intersperse(&0);
     let (lower, _upper) = interspersed.size_hint();
-    // Should saturate rather than overflow
-    assert!(lower <= usize::MAX);
+    // Should saturate to usize::MAX rather than overflow
+    assert_eq!(lower, usize::MAX);
 }
 
 #[test]

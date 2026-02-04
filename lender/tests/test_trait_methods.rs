@@ -430,13 +430,10 @@ fn lender_try_reduce() {
 
 #[test]
 fn lender_partition() {
+    #[derive(Default)]
     struct I32Vec(Vec<i32>);
 
-    impl Default for I32Vec {
-        fn default() -> Self {
-            I32Vec(Vec::new())
-        }
-    }
+    
 
     impl<L: IntoLender> lender::ExtendLender<L> for I32Vec
     where
@@ -587,7 +584,7 @@ fn lender_cmp_by() {
         Ordering::Equal
     );
     assert_eq!(
-        VecLender::new(vec![1]).cmp_by(VecLender::new(vec![2]), |a, b| a.cmp(&b)),
+        VecLender::new(vec![1]).cmp_by(VecLender::new(vec![2]), |a, b| a.cmp(b)),
         Ordering::Less
     );
 }
@@ -598,23 +595,23 @@ fn lender_partial_cmp_by() {
 
     assert_eq!(
         VecLender::new(vec![1, 2, 3])
-            .partial_cmp_by(VecLender::new(vec![1, 2, 3]), |a, b| a.partial_cmp(&b)),
+            .partial_cmp_by(VecLender::new(vec![1, 2, 3]), |a, b| a.partial_cmp(b)),
         Some(Ordering::Equal)
     );
     assert_eq!(
         VecLender::new(vec![1, 2])
-            .partial_cmp_by(VecLender::new(vec![1, 3]), |a, b| a.partial_cmp(&b)),
+            .partial_cmp_by(VecLender::new(vec![1, 3]), |a, b| a.partial_cmp(b)),
         Some(Ordering::Less)
     );
     assert_eq!(
         VecLender::new(vec![1, 3])
-            .partial_cmp_by(VecLender::new(vec![1, 2]), |a, b| a.partial_cmp(&b)),
+            .partial_cmp_by(VecLender::new(vec![1, 2]), |a, b| a.partial_cmp(b)),
         Some(Ordering::Greater)
     );
     // Different lengths
     assert_eq!(
         VecLender::new(vec![1])
-            .partial_cmp_by(VecLender::new(vec![1, 2]), |a, b| a.partial_cmp(&b)),
+            .partial_cmp_by(VecLender::new(vec![1, 2]), |a, b| a.partial_cmp(b)),
         Some(Ordering::Less)
     );
 }
@@ -646,25 +643,25 @@ fn lender_ordering_via_partial_cmp_by() {
     // lt: a < b
     assert_eq!(
         VecLender::new(vec![1, 2])
-            .partial_cmp_by(VecLender::new(vec![1, 3]), |a, b| a.partial_cmp(&b)),
+            .partial_cmp_by(VecLender::new(vec![1, 3]), |a, b| a.partial_cmp(b)),
         Some(Ordering::Less)
     );
     // le: a <= b (equal)
     assert_eq!(
         VecLender::new(vec![1, 2])
-            .partial_cmp_by(VecLender::new(vec![1, 2]), |a, b| a.partial_cmp(&b)),
+            .partial_cmp_by(VecLender::new(vec![1, 2]), |a, b| a.partial_cmp(b)),
         Some(Ordering::Equal)
     );
     // gt: a > b
     assert_eq!(
         VecLender::new(vec![1, 3])
-            .partial_cmp_by(VecLender::new(vec![1, 2]), |a, b| a.partial_cmp(&b)),
+            .partial_cmp_by(VecLender::new(vec![1, 2]), |a, b| a.partial_cmp(b)),
         Some(Ordering::Greater)
     );
     // ge: a >= b (equal)
     assert_eq!(
         VecLender::new(vec![1, 2])
-            .partial_cmp_by(VecLender::new(vec![1, 2]), |a, b| a.partial_cmp(&b)),
+            .partial_cmp_by(VecLender::new(vec![1, 2]), |a, b| a.partial_cmp(b)),
         Some(Ordering::Equal)
     );
 }
