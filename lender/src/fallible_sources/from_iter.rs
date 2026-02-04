@@ -17,10 +17,9 @@ use crate::{
 ///
 /// # Examples
 /// ```rust
-/// use fallible_iterator::IteratorExt as _;
 /// use lender::prelude::*;
-/// let data = vec![1, 2, 3];
-/// let mut lender = lender::from_fallible_iter(data.iter().into_fallible());
+/// let data = [1, 2, 3];
+/// let mut lender = data.iter().into_lender().into_fallible();
 /// assert_eq!(lender.next().unwrap(), Some(&1));
 /// ```
 #[inline]
@@ -91,7 +90,7 @@ impl<I: FallibleIterator> From<I> for FromIter<I> {
 /// ```rust
 /// use fallible_iterator::IteratorExt as _;
 /// use lender::prelude::*;
-/// let data = vec![1, 2, 3];
+/// let data = [1, 2, 3];
 /// let into_lender = lender::from_into_fallible_iter(
 ///     data.iter().into_fallible(),
 /// );

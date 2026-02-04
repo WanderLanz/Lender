@@ -277,7 +277,7 @@ fn source_once_rfold_additional() {
 
 #[test]
 fn from_iter_basic() {
-    let mut lender = lender::from_iter(vec![1, 2, 3].into_iter());
+    let mut lender = vec![1, 2, 3].into_iter().into_lender();
 
     assert_eq!(lender.next(), Some(1));
     assert_eq!(lender.next(), Some(2));
@@ -287,13 +287,13 @@ fn from_iter_basic() {
 
 #[test]
 fn from_iter_size_hint() {
-    let lender = lender::from_iter(vec![1, 2, 3].into_iter());
+    let lender = vec![1, 2, 3].into_iter().into_lender();
     assert_eq!(lender.size_hint(), (3, Some(3)));
 }
 
 #[test]
 fn from_iter_double_ended() {
-    let mut lender = lender::from_iter(vec![1, 2, 3].into_iter());
+    let mut lender = vec![1, 2, 3].into_iter().into_lender();
 
     assert_eq!(lender.next_back(), Some(3));
     assert_eq!(lender.next(), Some(1));
@@ -307,7 +307,7 @@ fn from_iter_double_ended() {
 
 #[test]
 fn from_iter_fold_additional() {
-    let sum = lender::from_iter(vec![1, 2, 3, 4, 5].into_iter()).fold(0, |acc, x| acc + x);
+    let sum = vec![1, 2, 3, 4, 5].into_iter().into_lender().fold(0, |acc, x| acc + x);
     assert_eq!(sum, 15);
 }
 
@@ -316,7 +316,7 @@ fn from_iter_rfold_additional() {
     use lender::DoubleEndedLender;
 
     let values: Vec<i32> =
-        lender::from_iter(vec![1, 2, 3].into_iter()).rfold(Vec::new(), |mut acc, x| {
+        vec![1, 2, 3].into_iter().into_lender().rfold(Vec::new(), |mut acc, x| {
             acc.push(x);
             acc
         });
@@ -326,7 +326,7 @@ fn from_iter_rfold_additional() {
 #[test]
 fn from_iter_try_fold_additional() {
     let result: Option<i32> =
-        lender::from_iter(vec![1, 2, 3].into_iter()).try_fold(0, |acc, x| Some(acc + x));
+        vec![1, 2, 3].into_iter().into_lender().try_fold(0, |acc, x| Some(acc + x));
     assert_eq!(result, Some(6));
 }
 
@@ -335,13 +335,13 @@ fn from_iter_try_rfold_additional() {
     use lender::DoubleEndedLender;
 
     let result: Option<i32> =
-        lender::from_iter(vec![1, 2, 3].into_iter()).try_rfold(0, |acc, x| Some(acc + x));
+        vec![1, 2, 3].into_iter().into_lender().try_rfold(0, |acc, x| Some(acc + x));
     assert_eq!(result, Some(6));
 }
 
 #[test]
 fn from_iter_nth_additional() {
-    let mut lender = lender::from_iter(vec![1, 2, 3, 4, 5].into_iter());
+    let mut lender = vec![1, 2, 3, 4, 5].into_iter().into_lender();
     assert_eq!(lender.nth(2), Some(3));
 }
 
@@ -349,7 +349,7 @@ fn from_iter_nth_additional() {
 fn from_iter_nth_back_additional() {
     use lender::DoubleEndedLender;
 
-    let mut lender = lender::from_iter(vec![1, 2, 3, 4, 5].into_iter());
+    let mut lender = vec![1, 2, 3, 4, 5].into_iter().into_lender();
     assert_eq!(lender.nth_back(2), Some(3));
 }
 
@@ -358,7 +358,7 @@ fn from_iter_fallible_coverage() {
     use lender::{DoubleEndedFallibleLender, FallibleLender};
 
     let data = [1, 2, 3];
-    let fallible: lender::IntoFallible<(), _> = lender::from_iter(data.iter()).into_fallible();
+    let fallible: lender::IntoFallible<_> = data.iter().into_lender().into_fallible();
     let mut lender = fallible;
     assert_eq!(lender.next(), Ok(Some(&1)));
     assert_eq!(lender.next_back(), Ok(Some(&3)));

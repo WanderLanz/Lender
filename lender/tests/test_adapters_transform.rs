@@ -231,7 +231,7 @@ fn inspect_try_rfold_additional() {
 #[test]
 fn mutate_basic() {
     let mut data = [1, 2, 3];
-    let mut lender = lender::from_iter(data.iter_mut()).mutate(|x| **x *= 10);
+    let mut lender = data.iter_mut().into_lender().mutate(|x| **x *= 10);
 
     assert_eq!(lender.next().map(|x| *x), Some(10));
     assert_eq!(lender.next().map(|x| *x), Some(20));
@@ -241,7 +241,7 @@ fn mutate_basic() {
 #[test]
 fn mutate_fold() {
     let mut data = [1, 2, 3];
-    let sum = lender::from_iter(data.iter_mut())
+    let sum = data.iter_mut().into_lender()
         .mutate(|x| **x *= 10)
         .fold(0, |acc, x| acc + *x);
     assert_eq!(sum, 60);
@@ -250,7 +250,7 @@ fn mutate_fold() {
 #[test]
 fn mutate_double_ended() {
     let mut data = [1, 2, 3];
-    let mut mutated = lender::from_iter(data.iter_mut()).mutate(|x| **x += 100);
+    let mut mutated = data.iter_mut().into_lender().mutate(|x| **x += 100);
 
     assert_eq!(mutated.next_back().map(|x| *x), Some(103));
     assert_eq!(mutated.next().map(|x| *x), Some(101));
@@ -260,14 +260,14 @@ fn mutate_double_ended() {
 #[test]
 fn mutate_size_hint_additional() {
     let data = [1, 2, 3];
-    let lender = lender::from_iter(data.iter()).mutate(|_| {});
+    let lender = data.iter().into_lender().mutate(|_| {});
     assert_eq!(lender.size_hint(), (3, Some(3)));
 }
 
 #[test]
 fn mutate_try_fold_additional() {
     let mut data = [1, 2, 3];
-    let result: Option<i32> = lender::from_iter(data.iter_mut())
+    let result: Option<i32> = data.iter_mut().into_lender()
         .mutate(|x| **x *= 2)
         .try_fold(0, |acc, x| Some(acc + *x));
     assert_eq!(result, Some(12));
@@ -276,7 +276,7 @@ fn mutate_try_fold_additional() {
 #[test]
 fn mutate_into_inner_additional() {
     let data = [1, 2, 3];
-    let mutate = lender::from_iter(data.iter()).mutate(|_| {});
+    let mutate = data.iter().into_lender().mutate(|_| {});
     let lender = mutate.into_inner();
     assert_eq!(lender.count(), 3);
 }
@@ -284,7 +284,7 @@ fn mutate_into_inner_additional() {
 #[test]
 fn mutate_into_parts_additional() {
     let data = [1, 2, 3];
-    let mutate = lender::from_iter(data.iter()).mutate(|_| {});
+    let mutate = data.iter().into_lender().mutate(|_| {});
     let (lender, _f) = mutate.into_parts();
     assert_eq!(lender.count(), 3);
 }

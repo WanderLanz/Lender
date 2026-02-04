@@ -61,6 +61,9 @@
 
 - `min`/`max` now require `Ord`, like the standard `Iterator` methods.
 
+- `IntoFallible` now uses `Infallible` as fixed error type, like
+  `fallible_iterator`.
+
 ### Fixed
 
 - Several possible UBs are no longer possible thanks to the new covariance

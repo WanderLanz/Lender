@@ -649,7 +649,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///     }
     /// }
     ///
-    /// let data = vec![1, 2, 3];
+    /// let data = [1, 2, 3];
     /// let mut flat = data.into_iter().into_lender().flat_map(
     ///     hrc_mut!(for<'lend> |x: i32| -> VecLender { VecLender(vec![x, x * 10]) })
     /// );
@@ -672,8 +672,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let data = vec![vec![1, 2], vec![3, 4]];
-    /// let mut flat = lender::from_iter(data.into_iter().map(lender::from_into_iter)).flatten();
+    /// let data = [vec![1, 2], vec![3, 4]];
+    /// let mut flat = data.into_iter().map(|v| v.into_iter().into_lender()).into_lender().flatten();
     /// assert_eq!(flat.next(), Some(1));
     /// assert_eq!(flat.next(), Some(2));
     /// assert_eq!(flat.next(), Some(3));
@@ -951,8 +951,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let lender = lender::from_iter(vec![1u8, 2, 3].into_iter());
-    /// let sum = lender.try_reduce(|acc, x| acc.checked_add(x));
+    /// let lender = [1, 2, 3].into_iter().into_lender();
+    /// let sum = lender.try_reduce(|acc: u8, x| acc.checked_add(x));
     /// assert_eq!(sum, Some(Some(6)));
     /// ```
     #[inline]
@@ -1305,8 +1305,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// ```rust
     /// # use lender::prelude::*;
     /// # use core::cmp::Ordering;
-    /// let a = lender::from_iter(vec![1, 2, 3].into_iter());
-    /// let b = lender::from_iter(vec![1, 2, 4].into_iter());
+    /// let a = [1, 2, 3].into_iter().into_lender();
+    /// let b = [1, 2, 4].into_iter().into_lender();
     /// assert_eq!(a.cmp_by(b, |x: i32, y: i32| x.cmp(&y)), Ordering::Less);
     /// ```
     #[inline]
@@ -1343,8 +1343,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// ```rust
     /// # use lender::prelude::*;
     /// # use core::cmp::Ordering;
-    /// let a = lender::from_iter(vec![1.0, 2.0].into_iter());
-    /// let b = lender::from_iter(vec![1.0, 3.0].into_iter());
+    /// let a = [1.0, 2.0].into_iter().into_lender();
+    /// let b = [1.0, 3.0].into_iter().into_lender();
     /// assert_eq!(a.partial_cmp_by(b, |x: f64, y: f64| x.partial_cmp(&y)), Some(Ordering::Less));
     /// ```
     #[inline]
@@ -1380,8 +1380,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let a = lender::from_iter(vec![1, 2, 3].into_iter());
-    /// let b = lender::from_iter(vec![2, 3, 4].into_iter());
+    /// let a = [1, 2, 3].into_iter().into_lender();
+    /// let b = [2, 3, 4].into_iter().into_lender();
     /// assert!(a.eq_by(b, |x: i32, y: i32| x + 1 == y));
     /// ```
     #[inline]
@@ -1454,10 +1454,10 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let lender = lender::from_iter(vec![1, 2, 3u8].into_iter());
+    /// let lender = [1, 2, 3].into_iter().into_lender();
     /// assert!(lender.is_sorted());
     ///
-    /// let lender = lender::from_iter(vec![3, 1, 2u8].into_iter());
+    /// let lender = [3, 1, 2].into_iter().into_lender();
     /// assert!(!lender.is_sorted());
     /// ```
     #[inline]
@@ -1476,7 +1476,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let lender = lender::from_iter(vec![3, 2, 1u8].into_iter());
+    /// let lender = [3, 2, 1].into_iter().into_lender();
     /// assert!(lender.is_sorted_by(|a, b| b.partial_cmp(a)));
     /// ```
     #[inline]
@@ -1505,7 +1505,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut lender = lender::from_iter(vec![1i32, -2, -3].into_iter());
+    /// let mut lender = [1, -2, -3].into_iter().into_lender();
     /// assert!(lender.is_sorted_by_key(|x: i32| x.unsigned_abs()));
     /// ```
     #[inline]
@@ -1576,8 +1576,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let data = vec![Ok(1), Ok(2), Err("oops")];
-    /// let mut lender = lender::from_iter(data.into_iter())
+    /// let data = [Ok(1), Ok(2), Err("oops")];
+    /// let mut lender = data.into_iter().into_lender()
     ///     .convert::<&str>();
     /// assert_eq!(lender.next(), Ok(Some(1)));
     /// assert_eq!(lender.next(), Ok(Some(2)));
@@ -1592,10 +1592,10 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     }
 
     /// Converts a [`Lender`] into a [`FallibleLender`](crate::FallibleLender) by wrapping
-    /// into `Result<Lend<'_, Self>, E>` where `E` is an
+    /// into `Result<Lend<'_, Self>, Infallible>` where `Infallible` is an
     /// error that can never actually happen.
     #[inline]
-    fn into_fallible<E>(self) -> IntoFallible<E, Self> where Self: Sized {
+    fn into_fallible(self) -> IntoFallible<Self> where Self: Sized {
         IntoFallible::new(self)
     }
 }

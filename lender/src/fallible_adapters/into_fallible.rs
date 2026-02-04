@@ -1,6 +1,4 @@
-use core::{marker::PhantomData, num::NonZeroUsize, ops::ControlFlow};
-
-use stable_try_trait_v2::{FromResidual, Try};
+use core::{convert::Infallible, num::NonZeroUsize};
 
 use crate::{
     DoubleEndedFallibleLender, DoubleEndedLender, ExactSizeFallibleLender, ExactSizeLender,
@@ -8,52 +6,21 @@ use crate::{
     Lending,
 };
 
-/// Wrapper for Try types wrapped in outer Result
-#[repr(transparent)]
-struct ResTry<T, E>(Result<T, E>);
-
-impl<T, E> FromResidual<Result<T::Residual, E>> for ResTry<T, E>
-where
-    T: Try,
-{
-    fn from_residual(residual: Result<T::Residual, E>) -> Self {
-        Self(residual.map(T::from_residual))
-    }
-}
-
-impl<T, E> Try for ResTry<T, E>
-where
-    T: Try,
-{
-    type Output = T::Output;
-    type Residual = Result<T::Residual, E>;
-    fn from_output(output: Self::Output) -> Self {
-        Self(Ok(T::from_output(output)))
-    }
-    fn branch(self) -> ControlFlow<Self::Residual, Self::Output> {
-        match self.0 {
-            Ok(output) => output.branch().map_break(Ok),
-            Err(err) => ControlFlow::Break(Err(err)),
-        }
-    }
-}
-
 /// A fallible lender that wraps a normal lender.
+///
+/// The error type is always [`Infallible`] since the underlying
+/// lender cannot fail.
 #[derive(Clone, Debug)]
 #[repr(transparent)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
-pub struct IntoFallible<E, L> {
+pub struct IntoFallible<L> {
     pub(crate) lender: L,
-    _marker: PhantomData<E>,
 }
 
-impl<E, L> IntoFallible<E, L> {
+impl<L> IntoFallible<L> {
     #[inline(always)]
     pub(crate) fn new(lender: L) -> Self {
-        Self {
-            lender,
-            _marker: PhantomData,
-        }
+        Self { lender }
     }
 
     /// Returns the inner lender.
@@ -63,18 +30,18 @@ impl<E, L> IntoFallible<E, L> {
     }
 }
 
-impl<'lend, E, L> FallibleLending<'lend> for IntoFallible<E, L>
+impl<'lend, L> FallibleLending<'lend> for IntoFallible<L>
 where
     L: Lending<'lend>,
 {
     type Lend = L::Lend;
 }
 
-impl<E, L> FallibleLender for IntoFallible<E, L>
+impl<L> FallibleLender for IntoFallible<L>
 where
     L: Lender,
 {
-    type Error = E;
+    type Error = Infallible;
     // SAFETY: the lend is that of L
     crate::unsafe_assume_covariance_fallible!();
 
@@ -99,19 +66,25 @@ where
         F: FnMut(B, FallibleLend<'_, Self>) -> Result<R, Self::Error>,
         R: stable_try_trait_v2::Try<Output = B>,
     {
-        self.lender
-            .try_fold(init, |acc, value| ResTry(f(acc, value)))
-            .0
+        // Since Self::Error = Infallible, f can never return Err, so we can
+        // safely unwrap and delegate to the inner lender's try_fold
+        Ok(self.lender.try_fold(init, |acc, value| {
+            // f returns Result<R, Infallible>, which is always Ok
+            match f(acc, value) {
+                Ok(r) => r,
+                Err(e) => match e {},
+            }
+        }))
     }
 }
 
-impl<E, L: Lender> From<L> for IntoFallible<E, L> {
+impl<L: Lender> From<L> for IntoFallible<L> {
     fn from(lender: L) -> Self {
         Self::new(lender)
     }
 }
 
-impl<E, L> DoubleEndedFallibleLender for IntoFallible<E, L>
+impl<L> DoubleEndedFallibleLender for IntoFallible<L>
 where
     L: DoubleEndedLender,
 {
@@ -131,13 +104,17 @@ where
         F: FnMut(B, FallibleLend<'_, Self>) -> Result<R, Self::Error>,
         R: stable_try_trait_v2::Try<Output = B>,
     {
-        self.lender
-            .try_rfold(init, |acc, value| ResTry(f(acc, value)))
-            .0
+        // Since Self::Error = Infallible, f can never return Err
+        Ok(self.lender.try_rfold(init, |acc, value| {
+            match f(acc, value) {
+                Ok(r) => r,
+                Err(e) => match e {},
+            }
+        }))
     }
 }
 
-impl<E, L> ExactSizeFallibleLender for IntoFallible<E, L>
+impl<L> ExactSizeFallibleLender for IntoFallible<L>
 where
     L: Lender + ExactSizeLender,
 {
@@ -147,4 +124,4 @@ where
     }
 }
 
-impl<E, L> FusedFallibleLender for IntoFallible<E, L> where L: FusedLender {}
+impl<L> FusedFallibleLender for IntoFallible<L> where L: FusedLender {}

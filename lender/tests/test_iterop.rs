@@ -95,20 +95,20 @@ fn map_into_iter_rfold_empty() {
 fn iter_adapter_basic() {
     // Iter works when the lend type can outlive the lender borrow
     // Using from_iter which yields owned values
-    let iter = lender::from_iter(vec![1, 2, 3].into_iter()).iter();
+    let iter = vec![1, 2, 3].into_iter().into_lender().iter();
     let collected: Vec<i32> = iter.collect();
     assert_eq!(collected, vec![1, 2, 3]);
 }
 
 #[test]
 fn iter_adapter_size_hint() {
-    let iter = lender::from_iter(vec![1, 2, 3, 4, 5].into_iter()).iter();
+    let iter = vec![1, 2, 3, 4, 5].into_iter().into_lender().iter();
     assert_eq!(iter.size_hint(), (5, Some(5)));
 }
 
 #[test]
 fn iter_adapter_double_ended() {
-    let mut iter = lender::from_iter(vec![1, 2, 3].into_iter()).iter();
+    let mut iter = vec![1, 2, 3].into_iter().into_lender().iter();
     assert_eq!(iter.next_back(), Some(3));
     assert_eq!(iter.next(), Some(1));
     assert_eq!(iter.next_back(), Some(2));
@@ -117,13 +117,13 @@ fn iter_adapter_double_ended() {
 
 #[test]
 fn iter_adapter_exact_size() {
-    let iter = lender::from_iter(vec![1, 2, 3].into_iter()).iter();
+    let iter = vec![1, 2, 3].into_iter().into_lender().iter();
     assert_eq!(iter.len(), 3);
 }
 
 #[test]
 fn iter_adapter_into_inner() {
-    let iter = lender::from_iter(vec![1, 2, 3].into_iter()).iter();
+    let iter = vec![1, 2, 3].into_iter().into_lender().iter();
     let lender = iter.into_inner();
     assert_eq!(lender.count(), 3);
 }

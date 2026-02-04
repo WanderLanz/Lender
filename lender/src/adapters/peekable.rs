@@ -54,12 +54,12 @@ where
     /// ```
     /// use lender::prelude::*;
     ///
-    /// let mut lender = lender::from_iter([1, 2, 3].iter().copied()).peekable();
+    /// let mut lender = [1, 2, 3].iter().into_lender().peekable();
     ///
-    /// assert_eq!(lender.peek(), Some(&1));
-    /// assert_eq!(lender.peek(), Some(&1)); // Doesn't advance
-    /// assert_eq!(lender.next(), Some(1));
-    /// assert_eq!(lender.peek(), Some(&2));
+    /// assert_eq!(lender.peek(), Some(&&1));
+    /// assert_eq!(lender.peek(), Some(&&1)); // Doesn't advance
+    /// assert_eq!(lender.next(), Some(&1));
+    /// assert_eq!(lender.peek(), Some(&&2));
     /// ```
     pub fn peek(&mut self) -> Option<&'_ Lend<'_, L>> {
         let lender = &mut self.lender;
@@ -94,13 +94,14 @@ where
     /// ```
     /// use lender::prelude::*;
     ///
-    /// let mut lender = lender::from_iter([1, 2, 3].iter().copied()).peekable();
+    /// let mut lender = [1, 2, 3].iter().into_lender().peekable();
     ///
     /// if let Some(p) = lender.peek_mut() {
-    ///     *p = 10;
+    ///     // p is &mut &i32, so we replace the reference
+    ///     *p = &10;
     /// }
-    /// assert_eq!(lender.next(), Some(10));
-    /// assert_eq!(lender.next(), Some(2));
+    /// assert_eq!(lender.next(), Some(&10));
+    /// assert_eq!(lender.next(), Some(&2));
     /// ```
     pub fn peek_mut(&mut self) -> Option<&'_ mut Lend<'this, L>> {
         let lender = &mut self.lender;
@@ -126,14 +127,14 @@ where
     /// ```
     /// use lender::prelude::*;
     ///
-    /// let mut lender = lender::from_iter([1, 2, 3].iter().copied()).peekable();
+    /// let mut lender = [1, 2, 3].iter().into_lender().peekable();
     ///
     /// // Consume 1 since it's odd
-    /// assert_eq!(lender.next_if(|&x| x % 2 == 1), Some(1));
+    /// assert_eq!(lender.next_if(|&x| *x % 2 == 1), Some(&1));
     /// // Don't consume 2 since it's not odd
-    /// assert_eq!(lender.next_if(|&x| x % 2 == 1), None);
+    /// assert_eq!(lender.next_if(|&x| *x % 2 == 1), None);
     /// // 2 is still there
-    /// assert_eq!(lender.next(), Some(2));
+    /// assert_eq!(lender.next(), Some(&2));
     /// ```
     pub fn next_if<F>(&mut self, f: F) -> Option<Lend<'_, L>>
     where
@@ -169,14 +170,14 @@ where
     /// ```
     /// use lender::prelude::*;
     ///
-    /// let mut lender = lender::from_iter([1, 2, 3].iter().copied()).peekable();
+    /// let mut lender = [1, 2, 3].iter().into_lender().peekable();
     ///
     /// // Consume 1 since it equals 1
-    /// assert_eq!(lender.next_if_eq(&1), Some(1));
+    /// assert_eq!(lender.next_if_eq(&&1), Some(&1));
     /// // Don't consume 2 since it doesn't equal 1
-    /// assert_eq!(lender.next_if_eq(&1), None);
+    /// assert_eq!(lender.next_if_eq(&&1), None);
     /// // 2 is still there
-    /// assert_eq!(lender.next(), Some(2));
+    /// assert_eq!(lender.next(), Some(&2));
     /// ```
     pub fn next_if_eq<'a, T>(&'a mut self, t: &T) -> Option<Lend<'a, L>>
     where

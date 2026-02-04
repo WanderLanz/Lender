@@ -285,13 +285,13 @@ fn lender_max() {
     // satisfied because T would need to depend on 'lend. We test via from_iter
     // wrapping a standard iterator that yields owned i32 values.
     assert_eq!(
-        lender::from_iter(vec![1, 5, 3, 2, 4].into_iter()).max(),
+        vec![1, 5, 3, 2, 4].into_iter().into_lender().max(),
         Some(5)
     );
-    assert_eq!(lender::from_iter(Vec::<i32>::new().into_iter()).max(), None);
+    assert_eq!(Vec::<i32>::new().into_iter().into_lender().max(), None);
     // Per Iterator::max docs: "If several elements are equally maximum, the last element is returned."
     assert_eq!(
-        lender::from_iter(vec![1, 3, 3, 1].into_iter()).max(),
+        vec![1, 3, 3, 1].into_iter().into_lender().max(),
         Some(3)
     );
 }
@@ -299,13 +299,13 @@ fn lender_max() {
 #[test]
 fn lender_min() {
     assert_eq!(
-        lender::from_iter(vec![3, 1, 5, 2, 4].into_iter()).min(),
+        vec![3, 1, 5, 2, 4].into_iter().into_lender().min(),
         Some(1)
     );
-    assert_eq!(lender::from_iter(Vec::<i32>::new().into_iter()).min(), None);
+    assert_eq!(Vec::<i32>::new().into_iter().into_lender().min(), None);
     // Per Iterator::min docs: "If several elements are equally minimum, the first element is returned."
     assert_eq!(
-        lender::from_iter(vec![3, 1, 1, 3].into_iter()).min(),
+        vec![3, 1, 1, 3].into_iter().into_lender().min(),
         Some(1)
     );
 }
@@ -313,7 +313,7 @@ fn lender_min() {
 #[test]
 fn lender_max_by_key() {
     assert_eq!(
-        lender::from_iter(vec![-3, 0, 1, 5, -2].into_iter()).max_by_key(|x: &i32| x.abs()),
+        vec![-3, 0, 1, 5, -2].into_iter().into_lender().max_by_key(|x: &i32| x.abs()),
         Some(5)
     );
 }
@@ -321,7 +321,7 @@ fn lender_max_by_key() {
 #[test]
 fn lender_min_by_key() {
     assert_eq!(
-        lender::from_iter(vec![-3, 0, 1, 5, -2].into_iter()).min_by_key(|x: &i32| x.abs()),
+        vec![-3, 0, 1, 5, -2].into_iter().into_lender().min_by_key(|x: &i32| x.abs()),
         Some(0)
     );
 }
@@ -329,12 +329,12 @@ fn lender_min_by_key() {
 #[test]
 fn lender_max_by() {
     assert_eq!(
-        lender::from_iter(vec![1, 5, 3].into_iter()).max_by(|a, b| a.cmp(b)),
+        vec![1, 5, 3].into_iter().into_lender().max_by(|a, b| a.cmp(b)),
         Some(5)
     );
     // Per Iterator::max_by docs: "If several elements are equally maximum, the last element is returned."
     assert_eq!(
-        lender::from_iter(vec![-3, 1, 3].into_iter())
+        vec![-3, 1, 3].into_iter().into_lender()
             .max_by(|a: &i32, b: &i32| a.abs().cmp(&b.abs())),
         Some(3)
     );
@@ -343,12 +343,12 @@ fn lender_max_by() {
 #[test]
 fn lender_min_by() {
     assert_eq!(
-        lender::from_iter(vec![3, 1, 5].into_iter()).min_by(|a, b| a.cmp(b)),
+        vec![3, 1, 5].into_iter().into_lender().min_by(|a, b| a.cmp(b)),
         Some(1)
     );
     // Per Iterator::min_by docs: "If several elements are equally minimum, the first element is returned."
     assert_eq!(
-        lender::from_iter(vec![3, -1, 1].into_iter())
+        vec![3, -1, 1].into_iter().into_lender()
             .min_by(|a: &i32, b: &i32| a.abs().cmp(&b.abs())),
         Some(-1)
     );
@@ -356,23 +356,23 @@ fn lender_min_by() {
 
 #[test]
 fn lender_is_sorted() {
-    assert!(lender::from_iter(vec![1, 2, 3, 4].into_iter()).is_sorted());
-    assert!(lender::from_iter(vec![1, 1, 2, 2].into_iter()).is_sorted());
-    assert!(!lender::from_iter(vec![1, 3, 2].into_iter()).is_sorted());
-    assert!(lender::from_iter(Vec::<i32>::new().into_iter()).is_sorted());
-    assert!(lender::from_iter(vec![1].into_iter()).is_sorted());
+    assert!(vec![1, 2, 3, 4].into_iter().into_lender().is_sorted());
+    assert!(vec![1, 1, 2, 2].into_iter().into_lender().is_sorted());
+    assert!(!vec![1, 3, 2].into_iter().into_lender().is_sorted());
+    assert!(Vec::<i32>::new().into_iter().into_lender().is_sorted());
+    assert!(vec![1].into_iter().into_lender().is_sorted());
 }
 
 #[test]
 fn lender_is_sorted_by() {
     // Sorted in reverse order
-    assert!(lender::from_iter(vec![4, 3, 2, 1].into_iter()).is_sorted_by(|a, b| Some(b.cmp(a))));
+    assert!(vec![4, 3, 2, 1].into_iter().into_lender().is_sorted_by(|a, b| Some(b.cmp(a))));
 }
 
 #[test]
 fn lender_is_sorted_by_key() {
     // Sorted by absolute value
-    assert!(lender::from_iter(vec![0, -1, 2, -3].into_iter()).is_sorted_by_key(|x: i32| x.abs()));
+    assert!(vec![0, -1, 2, -3].into_iter().into_lender().is_sorted_by_key(|x: i32| x.abs()));
 }
 
 // ============================================================================
@@ -383,17 +383,17 @@ fn lender_is_sorted_by_key() {
 fn lender_reduce() {
     // reduce requires `for<'all> Lend<'all, Self>: ToOwned<Owned = T>`, use from_iter
     assert_eq!(
-        lender::from_iter(vec![1, 2, 3, 4].into_iter()).reduce(|acc, x| acc + x),
+        vec![1, 2, 3, 4].into_iter().into_lender().reduce(|acc, x| acc + x),
         Some(10)
     );
     // Single element
     assert_eq!(
-        lender::from_iter(vec![42].into_iter()).reduce(|acc, x| acc + x),
+        vec![42].into_iter().into_lender().reduce(|acc, x| acc + x),
         Some(42)
     );
     // Empty
     assert_eq!(
-        lender::from_iter(Vec::<i32>::new().into_iter()).reduce(|acc, x| acc + x),
+        Vec::<i32>::new().into_iter().into_lender().reduce(|acc, x| acc + x),
         None
     );
 }
@@ -403,21 +403,21 @@ fn lender_try_reduce() {
     // try_reduce requires ToOwned, so use from_iter with owned values.
     // Return type is ChangeOutputType<R, Option<T>> = Result<Option<i32>, &str>.
     let result: Result<Option<i32>, &str> =
-        lender::from_iter(vec![1, 2, 3].into_iter()).try_reduce(|acc, x| Ok(acc + x));
+        vec![1, 2, 3].into_iter().into_lender().try_reduce(|acc, x| Ok(acc + x));
     assert_eq!(result, Ok(Some(6)));
 
     // Single element (closure is never called)
     let result: Result<Option<i32>, &str> =
-        lender::from_iter(vec![42].into_iter()).try_reduce(|acc, x| Ok(acc + x));
+        vec![42].into_iter().into_lender().try_reduce(|acc, x| Ok(acc + x));
     assert_eq!(result, Ok(Some(42)));
 
     // Empty lender
     let result: Result<Option<i32>, &str> =
-        lender::from_iter(Vec::<i32>::new().into_iter()).try_reduce(|acc, x| Ok(acc + x));
+        Vec::<i32>::new().into_iter().into_lender().try_reduce(|acc, x| Ok(acc + x));
     assert_eq!(result, Ok(None));
 
     // Early exit on error
-    let result: Result<Option<i32>, &str> = lender::from_iter(vec![1, 2, 3, 4, 5].into_iter())
+    let result: Result<Option<i32>, &str> = vec![1, 2, 3, 4, 5].into_iter().into_lender()
         .try_reduce(|acc, x| {
             if acc + x > 6 {
                 Err("too large")

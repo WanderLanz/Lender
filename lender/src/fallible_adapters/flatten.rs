@@ -446,7 +446,7 @@ mod test {
     }
 
     fn moved_flatten(
-        mut flatten: Flatten<IntoFallible<Infallible, Parent>>,
+        mut flatten: Flatten<IntoFallible<Parent>>,
     ) -> Result<(), Infallible> {
         let next_array_ref = flatten.next()?.unwrap() as *const _;
         let array_ref = &flatten.inner.lender.lender.0 as *const _;
@@ -464,7 +464,7 @@ mod test {
         let mut l = [1, 0, 2]
             .into_iter()
             .into_lender()
-            .into_fallible::<Infallible>()
+            .into_fallible()
             .flat_map(|n| Ok((0..n).into_lender().into_fallible()));
         assert_eq!(l.next(), Ok(Some(0)));
         assert_eq!(l.next(), Ok(Some(0)));

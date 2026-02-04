@@ -1,4 +1,4 @@
-use lender::{from_into_iter, from_iter, prelude::*};
+use lender::{from_into_iter, prelude::*};
 
 #[test]
 // Test with Lender and IntoLender. Note that iterators are converted automagically.
@@ -10,7 +10,7 @@ fn test_for_lender() {
     assert_eq!(sum, 45);
 
     let mut sum = 0;
-    for_!(x in from_iter(0..10) {
+    for_!(x in (0..10).into_lender() {
         sum += x;
     });
     assert_eq!(sum, 45);
@@ -44,7 +44,7 @@ fn test_bar() {
 // Test that we parse without eager brace
 // https://docs.rs/syn/latest/syn/enum.Expr.html#method.parse_without_eager_brace
 fn test_brace() {
-    let lender = from_iter(0..10);
+    let lender = (0..10).into_lender();
     let mut sum = 0;
     for_!(x in lender {
         sum += x;

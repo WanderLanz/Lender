@@ -364,8 +364,8 @@ macro_rules! hrc_mut {($($t:tt)+) => ($crate::__hrc__!(FnMut, $($t)+))}
 /// use lender::prelude::*;
 ///
 /// // hrc! can be used where Fn is sufficient, but hrc_mut! also works
-/// let data = vec![1, 2, 3];
-/// let lender = lender::from_iter(data.iter());
+/// let data = [1, 2, 3];
+/// let lender = data.iter().into_lender();
 /// let mapped = lender.map(hrc!(for<'lend> |x: &'lend i32| -> i32 { *x * 2 }));
 /// ```
 ///

@@ -61,14 +61,14 @@ where
     /// # use std::convert::Infallible;
     ///
     /// # fn main() -> Result<(), Infallible> {
-    /// let mut lender = lender::from_iter([1, 2, 3].iter().copied())
-    ///     .into_fallible::<Infallible>()
+    /// let mut lender = [1, 2, 3].iter().into_lender()
+    ///     .into_fallible()
     ///     .peekable();
     ///
-    /// assert_eq!(lender.peek()?, Some(&1));
-    /// assert_eq!(lender.peek()?, Some(&1)); // Doesn't advance
-    /// assert_eq!(lender.next()?, Some(1));
-    /// assert_eq!(lender.peek()?, Some(&2));
+    /// assert_eq!(lender.peek()?, Some(&&1));
+    /// assert_eq!(lender.peek()?, Some(&&1)); // Doesn't advance
+    /// assert_eq!(lender.next()?, Some(&1));
+    /// assert_eq!(lender.peek()?, Some(&&2));
     /// # Ok(())
     /// # }
     /// ```
@@ -113,15 +113,16 @@ where
     /// # use std::convert::Infallible;
     ///
     /// # fn main() -> Result<(), Infallible> {
-    /// let mut lender = lender::from_iter([1, 2, 3].iter().copied())
-    ///     .into_fallible::<Infallible>()
+    /// let mut lender = [1, 2, 3].iter().into_lender()
+    ///     .into_fallible()
     ///     .peekable();
     ///
     /// if let Some(p) = lender.peek_mut()? {
-    ///     *p = 10;
+    ///     // p is &mut &i32, so we replace the reference
+    ///     *p = &10;
     /// }
-    /// assert_eq!(lender.next()?, Some(10));
-    /// assert_eq!(lender.next()?, Some(2));
+    /// assert_eq!(lender.next()?, Some(&10));
+    /// assert_eq!(lender.next()?, Some(&2));
     /// # Ok(())
     /// # }
     /// ```
@@ -161,16 +162,16 @@ where
     /// # use std::convert::Infallible;
     ///
     /// # fn main() -> Result<(), Infallible> {
-    /// let mut lender = lender::from_iter([1, 2, 3].iter().copied())
-    ///     .into_fallible::<Infallible>()
+    /// let mut lender = [1, 2, 3].iter().into_lender()
+    ///     .into_fallible()
     ///     .peekable();
     ///
     /// // Consume 1 since it's odd
-    /// assert_eq!(lender.next_if(|&x| x % 2 == 1)?, Some(1));
+    /// assert_eq!(lender.next_if(|&x| *x % 2 == 1)?, Some(&1));
     /// // Don't consume 2 since it's not odd
-    /// assert_eq!(lender.next_if(|&x| x % 2 == 1)?, None);
+    /// assert_eq!(lender.next_if(|&x| *x % 2 == 1)?, None);
     /// // 2 is still there
-    /// assert_eq!(lender.next()?, Some(2));
+    /// assert_eq!(lender.next()?, Some(&2));
     /// # Ok(())
     /// # }
     /// ```
@@ -219,16 +220,16 @@ where
     /// # use std::convert::Infallible;
     ///
     /// # fn main() -> Result<(), Infallible> {
-    /// let mut lender = lender::from_iter([1, 2, 3].iter().copied())
-    ///     .into_fallible::<Infallible>()
+    /// let mut lender = [1, 2, 3].iter().into_lender()
+    ///     .into_fallible()
     ///     .peekable();
     ///
     /// // Consume 1 since it equals 1
-    /// assert_eq!(lender.next_if_eq(&1)?, Some(1));
+    /// assert_eq!(lender.next_if_eq(&&1)?, Some(&1));
     /// // Don't consume 2 since it doesn't equal 1
-    /// assert_eq!(lender.next_if_eq(&1)?, None);
+    /// assert_eq!(lender.next_if_eq(&&1)?, None);
     /// // 2 is still there
-    /// assert_eq!(lender.next()?, Some(2));
+    /// assert_eq!(lender.next()?, Some(&2));
     /// # Ok(())
     /// # }
     /// ```
@@ -505,7 +506,7 @@ mod test {
         Ok(())
     }
 
-    fn moved_peekable(peekable: Peekable<IntoFallible<Infallible, ArrayLender>>) {
+    fn moved_peekable(peekable: Peekable<IntoFallible<ArrayLender>>) {
         let peeked = peekable.peeked.unwrap().unwrap() as *const _;
         let array = &peekable.lender.lender.array[0] as *const _;
         assert_eq!(

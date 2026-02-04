@@ -46,9 +46,9 @@ use crate::{
 /// Partial consumption (demonstrating the behavior):
 /// ```rust
 /// # use lender::prelude::*;
-/// let data = vec![1, 2, 3, 4, 5, 6];
+/// let data = [1, 2, 3, 4, 5, 6];
 /// // Sum the first element of each chunk (partial consumption)
-/// let sum = lender::from_iter(data.iter())
+/// let sum = data.iter().into_lender()
 ///     .chunky(2)
 ///     .fold(0, |acc, mut chunk| {
 ///         // Only consume first element of each chunk
