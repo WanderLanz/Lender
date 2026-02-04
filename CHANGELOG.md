@@ -73,12 +73,13 @@
 - `max`/`max_by` return the last instance in case of ties, as in `Iterator`
   (previously they returned the first instance).
 
-- All repeat method return `(usize::MAX, None)` on `size_hint`, as in `Iterator`.
+- All repeat method return `(usize::MAX, None)` on `size_hint`, as in `Iterator`,
+  if they return a value, or `(0, Some(0))` if they return an error.
 
 - The order of parameters (lend/error) in a few methods was inconsistent.
 
-- Removed `Clone` implementation from `Peekable` and `FlattenCompat` that could
-  lead to UB.
+- Removed `Clone` implementation that could lead to UB from `Peekable` and
+  `FlattenCompat`.
 
 ## [0.4.2] - 2025-11-18
 
