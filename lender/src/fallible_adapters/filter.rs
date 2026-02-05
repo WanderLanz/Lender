@@ -20,7 +20,7 @@ where
     // SAFETY: the lend is that of L
     crate::unsafe_assume_covariance_fallible!();
 
-    #[inline(always)]
+    #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.lender.find(&mut self.predicate)
     }
@@ -95,7 +95,7 @@ where
     P: FnMut(&FallibleLend<'_, L>) -> Result<bool, L::Error>,
     L: DoubleEndedFallibleLender,
 {
-    #[inline(always)]
+    #[inline]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.lender.rfind(&mut self.predicate)
     }

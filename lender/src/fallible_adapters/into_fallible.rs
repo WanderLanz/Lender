@@ -45,7 +45,7 @@ where
     // SAFETY: the lend is that of L
     crate::unsafe_assume_covariance_fallible!();
 
-    #[inline(always)]
+    #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         Ok(self.lender.next())
     }
@@ -55,7 +55,7 @@ where
         self.lender.size_hint()
     }
 
-    #[inline(always)]
+    #[inline]
     fn advance_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         Ok(self.lender.advance_by(n))
     }
@@ -88,12 +88,12 @@ impl<L> DoubleEndedFallibleLender for IntoFallible<L>
 where
     L: DoubleEndedLender,
 {
-    #[inline(always)]
+    #[inline]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         Ok(self.lender.next_back())
     }
 
-    #[inline(always)]
+    #[inline]
     fn advance_back_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         Ok(self.lender.advance_back_by(n))
     }

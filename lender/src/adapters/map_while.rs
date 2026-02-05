@@ -35,7 +35,7 @@ impl<L: fmt::Debug, P> fmt::Debug for MapWhile<L, P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("MapWhile")
             .field("lender", &self.lender)
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 

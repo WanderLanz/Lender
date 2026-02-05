@@ -1,10 +1,6 @@
 use core::fmt;
-use core::ops::ControlFlow;
 
-use crate::{
-    FusedLender, Lend, Lender, Lending, Peekable,
-    try_trait_v2::{FromResidual, Try},
-};
+use crate::{FusedLender, Lend, Lender, Lending, Peekable};
 
 /// A lender that inserts a separator between adjacent elements of the underlying lender.
 ///
@@ -16,9 +12,10 @@ where
     for<'all> Lend<'all, L>: Clone,
     L: Lender,
 {
-    lender: Peekable<'this, L>,
+    // Field order ensures lender drops last
     separator: Lend<'this, L>,
     needs_sep: bool,
+    lender: Peekable<'this, L>,
 }
 
 impl<'this, L> Intersperse<'this, L>
@@ -29,9 +26,9 @@ where
     #[inline(always)]
     pub(crate) fn new(lender: L, separator: Lend<'this, L>) -> Self {
         Self {
-            lender: lender.peekable(),
             separator,
             needs_sep: false,
+            lender: lender.peekable(),
         }
     }
 
@@ -89,46 +86,6 @@ where
             self.needs_sep = true;
             self.lender.next()
         }
-    }
-
-    #[inline]
-    fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> R
-    where
-        Self: Sized,
-        F: FnMut(B, Lend<'_, Self>) -> R,
-        R: Try<Output = B>,
-    {
-        let mut acc = init;
-        let mut needs_sep = self.needs_sep;
-        if !needs_sep {
-            match self.lender.next() {
-                Some(x) => {
-                    acc = match f(acc, x).branch() {
-                        ControlFlow::Continue(v) => v,
-                        ControlFlow::Break(r) => {
-                            self.needs_sep = true;
-                            return FromResidual::from_residual(r);
-                        }
-                    };
-                    needs_sep = true;
-                }
-                None => return R::from_output(acc),
-            }
-        }
-        let separator = &self.separator;
-        let result = self.lender.try_fold(acc, |acc, x| {
-            let acc = match f(acc, separator.clone()).branch() {
-                ControlFlow::Continue(v) => v,
-                ControlFlow::Break(r) => {
-                    needs_sep = false;
-                    return FromResidual::from_residual(r);
-                }
-            };
-            needs_sep = true;
-            f(acc, x)
-        });
-        self.needs_sep = needs_sep;
-        result
     }
 
     #[inline]
@@ -238,46 +195,6 @@ where
             self.needs_sep = true;
             self.lender.next()
         }
-    }
-
-    #[inline]
-    fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> R
-    where
-        Self: Sized,
-        F: FnMut(B, Lend<'_, Self>) -> R,
-        R: Try<Output = B>,
-    {
-        let mut acc = init;
-        let mut needs_sep = self.needs_sep;
-        if !needs_sep {
-            match self.lender.next() {
-                Some(x) => {
-                    acc = match f(acc, x).branch() {
-                        ControlFlow::Continue(v) => v,
-                        ControlFlow::Break(r) => {
-                            self.needs_sep = true;
-                            return FromResidual::from_residual(r);
-                        }
-                    };
-                    needs_sep = true;
-                }
-                None => return R::from_output(acc),
-            }
-        }
-        let separator = &mut self.separator;
-        let result = self.lender.try_fold(acc, |acc, x| {
-            let acc = match f(acc, (separator)()).branch() {
-                ControlFlow::Continue(v) => v,
-                ControlFlow::Break(r) => {
-                    needs_sep = false;
-                    return FromResidual::from_residual(r);
-                }
-            };
-            needs_sep = true;
-            f(acc, x)
-        });
-        self.needs_sep = needs_sep;
-        result
     }
 
     #[inline]

@@ -273,6 +273,7 @@ where
     // SAFETY: the lend is that of L
     crate::unsafe_assume_covariance_fallible!();
 
+    #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         match self.peeked.take() {
             Some(peeked) => Ok(

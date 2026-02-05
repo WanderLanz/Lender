@@ -132,16 +132,16 @@ impl<I: IntoIterator> From<I> for FromIntoIter<I> {
 /// # Examples
 /// ```rust
 /// use lender::prelude::*;
-/// let mut data = [1u8, 2, 3];
+/// let mut data = [1, 2, 3];
 ///
 /// // properly shortens the lifetime of non-static items and lends them
-/// let mut lender = lender::lend_iter::<'_, lend!(&'lend u8), _>(data.iter());
-/// let lend: &'_ u8 = lender.next().unwrap();
+/// let mut lender = lender::lend_iter::<'_, lend!(&'lend i32), _>(data.iter());
+/// let lend: &'_ i32 = lender.next().unwrap();
 ///
 /// // does not shorten the lifetime of 'static items, behaves like `from_iter`
-/// let mut lender = lender::lend_iter::<'_, lend!(u8), _>([1, 2, 3].into_iter());
-/// let item: u8 = lender.next().unwrap();
-/// let item2: u8 = lender.next().unwrap();
+/// let mut lender = lender::lend_iter::<'_, lend!(i32), _>([1, 2, 3].into_iter());
+/// let item: i32 = lender.next().unwrap();
+/// let item2: i32 = lender.next().unwrap();
 /// ```
 #[inline]
 pub fn lend_iter<'a, L, I>(iter: I) -> LendIter<'a, L, I>

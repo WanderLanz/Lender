@@ -1,8 +1,7 @@
-use core::{fmt, ops::ControlFlow};
+use core::fmt;
 
 use crate::{
     FallibleLend, FallibleLender, FallibleLending, FalliblePeekable, FusedFallibleLender,
-    try_trait_v2::Try,
 };
 
 /// A fallible lender that inserts a separator between adjacent elements of the underlying lender.
@@ -16,9 +15,10 @@ where
     for<'all> FallibleLend<'all, L>: Clone,
     L: FallibleLender,
 {
-    lender: FalliblePeekable<'this, L>,
+    // Field order ensures lender drops last
     separator: FallibleLend<'this, L>,
     needs_sep: bool,
+    lender: FalliblePeekable<'this, L>,
 }
 
 impl<'this, L> Intersperse<'this, L>
@@ -29,9 +29,9 @@ where
     #[inline(always)]
     pub(crate) fn new(lender: L, separator: FallibleLend<'this, L>) -> Self {
         Self {
-            lender: lender.peekable(),
             separator,
             needs_sep: false,
+            lender: lender.peekable(),
         }
     }
 
@@ -94,34 +94,6 @@ where
             self.needs_sep = true;
             self.lender.next()
         }
-    }
-
-    fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> Result<R, Self::Error>
-    where
-        Self: Sized,
-        F: FnMut(B, FallibleLend<'_, Self>) -> Result<R, Self::Error>,
-        R: Try<Output = B>,
-    {
-        let mut acc = init;
-        if !self.needs_sep {
-            match self.lender.next()? {
-                None => return Ok(R::from_output(acc)),
-                Some(x) => {
-                    acc = match f(acc, x)?.branch() {
-                        ControlFlow::Continue(b) => b,
-                        ControlFlow::Break(residual) => return Ok(R::from_residual(residual)),
-                    };
-                }
-            }
-        }
-        let separator = &self.separator;
-        self.lender.try_fold(acc, move |acc, x| {
-            let acc = match f(acc, separator.clone())?.branch() {
-                ControlFlow::Continue(b) => b,
-                ControlFlow::Break(residual) => return Ok(R::from_residual(residual)),
-            };
-            f(acc, x)
-        })
     }
 
     fn fold<B, F>(mut self, init: B, mut f: F) -> Result<B, Self::Error>
@@ -236,34 +208,6 @@ where
             self.needs_sep = true;
             self.lender.next()
         }
-    }
-
-    fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> Result<R, Self::Error>
-    where
-        Self: Sized,
-        F: FnMut(B, FallibleLend<'_, Self>) -> Result<R, Self::Error>,
-        R: Try<Output = B>,
-    {
-        let mut acc = init;
-        if !self.needs_sep {
-            match self.lender.next()? {
-                None => return Ok(R::from_output(acc)),
-                Some(x) => {
-                    acc = match f(acc, x)?.branch() {
-                        ControlFlow::Continue(b) => b,
-                        ControlFlow::Break(residual) => return Ok(R::from_residual(residual)),
-                    };
-                }
-            }
-        }
-        let separator = &mut self.separator;
-        self.lender.try_fold(acc, move |acc, x| {
-            let acc = match f(acc, (separator)()?)?.branch() {
-                ControlFlow::Continue(b) => b,
-                ControlFlow::Break(residual) => return Ok(R::from_residual(residual)),
-            };
-            f(acc, x)
-        })
     }
 
     fn fold<B, F>(mut self, init: B, mut f: F) -> Result<B, Self::Error>

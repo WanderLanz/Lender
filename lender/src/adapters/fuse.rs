@@ -119,11 +119,11 @@ where
         Self: Sized,
         F: FnMut(B, Lend<'_, Self>) -> B,
     {
-        let mut acc = init;
         if !self.flag {
-            acc = self.lender.fold(acc, &mut f);
+            self.lender.fold(init, &mut f)
+        } else {
+            init
         }
-        acc
     }
 
     #[inline]
@@ -186,17 +186,16 @@ where
     }
 
     #[inline]
-    fn rfold<B, F>(mut self, init: B, mut f: F) -> B
+    fn rfold<B, F>(self, init: B, mut f: F) -> B
     where
         Self: Sized,
         F: FnMut(B, Lend<'_, Self>) -> B,
     {
-        let mut acc = init;
         if !self.flag {
-            acc = self.lender.rfold(acc, &mut f);
-            self.flag = true;
+            self.lender.rfold(init, &mut f)
+        } else {
+            init
         }
-        acc
     }
 
     #[inline]

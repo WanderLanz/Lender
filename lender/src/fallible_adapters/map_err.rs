@@ -44,7 +44,7 @@ impl<E, L: fmt::Debug, F> fmt::Debug for MapErr<E, L, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("MapErr")
             .field("lender", &self.lender)
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 
@@ -64,7 +64,7 @@ where
     // SAFETY: the lend is that of L
     crate::unsafe_assume_covariance_fallible!();
 
-    #[inline(always)]
+    #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.lender.next().map_err(&mut self.f)
     }
@@ -105,7 +105,7 @@ impl<E, L: DoubleEndedFallibleLender, F> DoubleEndedFallibleLender for MapErr<E,
 where
     F: FnMut(L::Error) -> E,
 {
-    #[inline(always)]
+    #[inline]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.lender.next_back().map_err(&mut self.f)
     }

@@ -5,61 +5,27 @@ use crate::{
     Lending, try_trait_v2::Try,
 };
 
-/// A lender yielding lenders ([`Chunk`]s) returning the next `chunk_size` lends.
+/// A lender yielding lenders ([`Chunk`]s) returning the next
+/// `chunk_size` lends.
 ///
-/// This is the closest lending approximation to `core::iter::ArrayChunks` (unstable), as
-/// we cannot accumulate the lends into an array. Unlike `ArrayChunks`, which
-/// yields fixed-size arrays, `Chunky` yields [`Chunk`] lenders that must be
-/// consumed to access the elements.
+/// This is the closest lending approximation to
+/// `core::iter::ArrayChunks` (unstable), as we cannot accumulate
+/// the lends into an array. Unlike `ArrayChunks`, which yields
+/// fixed-size arrays, `Chunky` yields [`Chunk`] lenders that
+/// must be consumed to access the elements.
 ///
 /// # Important: Partial Chunk Consumption
 ///
-/// **Each [`Chunk`] yielded by `Chunky` must be fully consumed before requesting
-/// the next chunk.** If a chunk is not fully consumed, the unconsumed elements
-/// are effectively skipped, and the next chunk will start from whatever position
-/// the underlying lender is at.
+/// **Each [`Chunk`] yielded by `Chunky` must be fully consumed
+/// before requesting the next chunk.** If a chunk is not fully
+/// consumed, the unconsumed elements are effectively skipped,
+/// and the next chunk will start from whatever position the
+/// underlying lender is at.
 ///
-/// This behavior differs from [`core::slice::Chunks`] where each chunk is a
-/// complete view. With `Chunky`, you are borrowing from a single underlying
-/// lender, so partial consumption affects subsequent chunks.
-///
-/// # Examples
-///
-/// Correct usage (fully consuming each chunk):
-/// ```rust
-/// # use lender::prelude::*;
-/// let mut data = [1, 2, 3, 4, 5, 6];
-/// let mut chunky = lender::windows_mut(&mut data, 1).chunky(2);
-///
-/// // First chunk: elements 1, 2
-/// let mut chunk1 = chunky.next().unwrap();
-/// assert_eq!(chunk1.next().map(|s| s[0]), Some(1));
-/// assert_eq!(chunk1.next().map(|s| s[0]), Some(2));
-/// assert_eq!(chunk1.next(), None); // Chunk exhausted
-///
-/// // Second chunk: elements 3, 4
-/// let mut chunk2 = chunky.next().unwrap();
-/// assert_eq!(chunk2.next().map(|s| s[0]), Some(3));
-/// assert_eq!(chunk2.next().map(|s| s[0]), Some(4));
-/// ```
-///
-/// Partial consumption (demonstrating the behavior):
-/// ```rust
-/// # use lender::prelude::*;
-/// let data = [1, 2, 3, 4, 5, 6];
-/// // Sum the first element of each chunk (partial consumption)
-/// let sum = data.iter().into_lender()
-///     .chunky(2)
-///     .fold(0, |acc, mut chunk| {
-///         // Only consume first element of each chunk
-///         acc + chunk.next().copied().unwrap_or(0)
-///     });
-/// // Since we only consume 1 element per chunk iteration,
-/// // and chunky tracks chunk count (not element position),
-/// // we get: 1 (chunk 1), 2 (chunk 2), 3 (chunk 3) = 6
-/// // NOT: 1, 3, 5 as you might expect!
-/// assert_eq!(sum, 6);
-/// ```
+/// This behavior differs from [`core::slice::Chunks`] where
+/// each chunk is a complete view. With `Chunky`, you are
+/// borrowing from a single underlying lender, so partial
+/// consumption affects subsequent chunks.
 ///
 /// This struct is created by [`Lender::chunky`] or
 /// [`FallibleLender::chunky`].
@@ -136,6 +102,28 @@ where
             self.len -= 1;
             Some(self.lender.next_chunk(self.chunk_size))
         } else {
+            None
+        }
+    }
+
+    #[inline]
+    fn nth(&mut self, n: usize) -> Option<Lend<'_, Self>> {
+        if n < self.len {
+            // Skip n chunks by advancing the inner lender
+            let skip = n * self.chunk_size;
+            self.len -= n;
+            if self.lender.advance_by(skip).is_err() {
+                self.len = 0;
+                return None;
+            }
+            self.next()
+        } else {
+            // Exhaust
+            if self.len > 0 {
+                let skip = self.len * self.chunk_size;
+                let _ = self.lender.advance_by(skip);
+                self.len = 0;
+            }
             None
         }
     }

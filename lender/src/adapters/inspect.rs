@@ -37,7 +37,7 @@ impl<I: fmt::Debug, F> fmt::Debug for Inspect<I, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Inspect")
             .field("lender", &self.lender)
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 

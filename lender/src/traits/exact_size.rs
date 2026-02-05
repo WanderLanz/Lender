@@ -5,7 +5,7 @@ pub trait ExactSizeLender: Lender {
     /// Returns the exact remaining length of the lender.
     ///
     /// See [`ExactSizeIterator::len`].
-    #[inline]
+    #[inline(always)]
     fn len(&self) -> usize {
         let (lower, upper) = self.size_hint();
         assert_eq!(upper, Some(lower));
@@ -13,7 +13,7 @@ pub trait ExactSizeLender: Lender {
     }
 
     /// Returns `true` if the lender has no more elements.
-    #[inline]
+    #[inline(always)]
     fn is_empty(&self) -> bool {
         self.len() == 0
     }
@@ -36,7 +36,7 @@ pub trait ExactSizeFallibleLender: FallibleLender {
     /// Returns the exact remaining length of the lender.
     ///
     /// See [`ExactSizeLender::len`].
-    #[inline]
+    #[inline(always)]
     fn len(&self) -> usize {
         let (lower, upper) = self.size_hint();
         assert_eq!(upper, Some(lower));
@@ -44,7 +44,7 @@ pub trait ExactSizeFallibleLender: FallibleLender {
     }
 
     /// Returns `true` if the lender has no more elements.
-    #[inline]
+    #[inline(always)]
     fn is_empty(&self) -> bool {
         self.len() == 0
     }

@@ -11,7 +11,7 @@ use crate::{
 // so that it can be used as a bound for methods in `FallibleLender`.
 /// An adapter to use a [`FallibleLender`] as a [`Lender`] or [`Iterator`] over items.
 #[derive(Debug)]
-#[must_use = "iterators/lenders are lazy and do nothing unless consumed"]
+#[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct NonFallibleAdapter<'this, L>
 where
     L: FallibleLender + 'this,

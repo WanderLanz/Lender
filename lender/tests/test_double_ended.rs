@@ -224,3 +224,58 @@ fn double_ended_peekable() {
     assert_eq!(lender.next(), Some(&1));
     assert_eq!(lender.next(), None);
 }
+
+#[test]
+fn double_ended_filter() {
+    let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]).filter(|&x| x % 2 == 0);
+    // From back: 4, 2
+    assert_eq!(lender.next_back(), Some(&4));
+    assert_eq!(lender.next(), Some(&2));
+    assert_eq!(lender.next(), None);
+    assert_eq!(lender.next_back(), None);
+}
+
+#[test]
+fn double_ended_filter_map() {
+    let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]).filter_map(
+        covar_mut!(for<'lend> |x: &'lend i32| -> Option<i32> {
+            if *x % 2 == 0 { Some(*x * 10) } else { None }
+        }),
+    );
+    assert_eq!(lender.next_back(), Some(40));
+    assert_eq!(lender.next(), Some(20));
+    assert_eq!(lender.next(), None);
+}
+
+#[test]
+fn double_ended_map() {
+    let mut lender = VecLender::new(vec![1, 2, 3]).map(
+        covar_mut!(for<'lend> |x: &'lend i32| -> i32 { *x * 2 }),
+    );
+    assert_eq!(lender.next_back(), Some(6));
+    assert_eq!(lender.next(), Some(2));
+    assert_eq!(lender.next_back(), Some(4));
+    assert_eq!(lender.next(), None);
+}
+
+#[test]
+fn double_ended_inspect() {
+    let mut seen = Vec::new();
+    let mut lender = VecLender::new(vec![1, 2, 3]).inspect(|&x| seen.push(*x));
+    assert_eq!(lender.next_back(), Some(&3));
+    assert_eq!(lender.next(), Some(&1));
+    assert_eq!(lender.next_back(), Some(&2));
+    assert_eq!(lender.next(), None);
+    assert_eq!(seen, vec![3, 1, 2]);
+}
+
+#[test]
+fn double_ended_mutate() {
+    let mut seen = Vec::new();
+    let mut lender = VecLender::new(vec![1, 2, 3]).mutate(|x| seen.push(**x));
+    assert_eq!(lender.next_back(), Some(&3));
+    assert_eq!(lender.next(), Some(&1));
+    assert_eq!(lender.next_back(), Some(&2));
+    assert_eq!(lender.next(), None);
+    assert_eq!(seen, vec![3, 1, 2]);
+}

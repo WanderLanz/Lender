@@ -20,17 +20,18 @@ use crate::{
 /// It implicitly restricts the lifetime `'lend` used in [`Lending<'lend>`](Lending) to be
 /// `where Self: 'lend`.
 ///
-/// This is a result of Higher-Rank Trait Bounds (HRTBs) not having a way to express qualifiers
-/// (`for<'any where Self: 'any> Self: Trait`) and effectively making HRTBs only useful when you
-/// want to express a trait constraint on ALL lifetimes, including 'static
-/// (`for<'all> Self: trait`).
+/// This is a result of Higher-Rank Trait Bounds (HRTBs) not having a way to
+/// express qualifiers (`for<'any where Self: 'any> Self: Trait`) and
+/// effectively making HRTBs only useful when you want to express a trait
+/// constraint on ALL lifetimes, including 'static (`for<'all> Self: trait`).
 ///
 /// Although the common example of implementing your own lending iterator uses a
-/// (`type Item<'a> where Self: 'a;`) GAT, that generally only works within a small subset of the
-/// features that a lending iterator needs to provide to be comparable to [`Iterator`].
+/// (`type Item<'a> where Self: 'a;`) GAT, that generally only works within a
+/// small subset of the features that a lending iterator needs to provide to be
+/// comparable to [`Iterator`].
 ///
-/// Please see [Sabrina Jewson's Blog][1] for more information, and how a trait like this can be
-/// used to solve it by implicitly restricting HRTBs.
+/// Please see [Sabrina Jewson's Blog][1] for more information, and how a trait
+/// like this can be used to solve it by implicitly restricting HRTBs.
 ///
 /// [1]: https://sabrinajewson.org/blog/the-better-alternative-to-lifetime-gats
 pub trait Lending<'lend, __ImplBound: ImplBound = Ref<'lend, Self>> {
@@ -85,7 +86,9 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(lender.next(), None);
     /// ```
     fn next(&mut self) -> Option<Lend<'_, Self>>;
-    /// Takes the next `chunk_size` lends of the lender with temporary lender [`Chunk`]. This is equivalent to cloning the lender and calling [`take(chunk_size)`](Lender::take) on it.
+    /// Takes the next `chunk_size` lends of the lender with temporary lender
+    /// [`Chunk`]. This is equivalent to cloning the lender and calling
+    /// [`take(chunk_size)`](Lender::take) on it.
     ///
     /// # Examples
     ///
@@ -104,7 +107,9 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         Chunk::new(self, chunk_size)
     }
-    /// Gets the estimated minimum and maximum length of the lender. Use [`.len()`](ExactSizeLender::len) for the exact length if the lender implements [`ExactSizeLender`].
+    /// Gets the estimated minimum and maximum length of the lender. Use
+    /// [`.len()`](ExactSizeLender::len) for the exact length if the lender
+    /// implements [`ExactSizeLender`].
     ///
     /// # Examples
     ///
@@ -194,7 +199,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         }
         Ok(())
     }
-    /// Yields the nth lend of the lender, if any, by consuming it. If the lender does not have enough lends, returns [`None`].
+    /// Yields the nth lend of the lender, if any, by consuming it. If the
+    /// lender does not have enough lends, returns [`None`].
     ///
     /// n is zero-indexed.
     ///
@@ -238,7 +244,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     }
     /// Chains the lender with another lender of the same type.
     ///
-    /// The resulting lender will first yield all lends from `self`, then all lends from `other`.
+    /// The resulting lender will first yield all lends from `self`, then all
+    /// lends from `other`.
     ///
     /// # Examples
     ///
@@ -302,7 +309,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         Intersperse::new(self, separator)
     }
-    /// Intersperses each lend of this lender with the separator produced by the given function.
+    /// Intersperses each lend of this lender with the separator produced by
+    /// the given function.
     ///
     /// # Examples
     ///
@@ -353,8 +361,9 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     }
     /// Maps each lend of this lender into an owned value using the given function.
     ///
-    /// This is a weaker version of [`Lender::map`] that returns an [`Iterator`] instead of a [`Lender`].
-    /// However, this behavior is very common, and so this method is included for convenience.
+    /// This is a weaker version of [`Lender::map`] that returns an
+    /// [`Iterator`] instead of a [`Lender`]. However, this behavior is very
+    /// common, and so this method is included for convenience.
     /// The main advantage is better type inference for the mapping function.
     ///
     /// # Examples
@@ -464,7 +473,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         Enumerate::new(self)
     }
-    /// Makes this lender peekable, so that it is possible to peek at the next lend without consuming it.
+    /// Makes this lender peekable, so that it is possible to peek at the next
+    /// lend without consuming it.
     ///
     /// # Examples
     ///
@@ -485,7 +495,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         Peekable::new(self)
     }
-    /// Skips the first contiguous sequence of lends of this lender that satisfy the given predicate.
+    /// Skips the first contiguous sequence of lends of this lender that
+    /// satisfy the given predicate.
     ///
     /// # Examples
     ///
@@ -506,7 +517,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         SkipWhile::new(self, predicate)
     }
-    /// Takes the first contiguous sequence of lends of this lender that satisfy the given predicate.
+    /// Takes the first contiguous sequence of lends of this lender that
+    /// satisfy the given predicate.
     ///
     /// # Examples
     ///
@@ -969,6 +981,17 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         }
     }
     /// The [`Lender`] version of [`Iterator::all`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let mut lender = [1, 2, 3].iter().into_lender();
+    /// assert!(lender.all(|&x| x > 0));
+    ///
+    /// let mut lender = [1, 2, 3].iter().into_lender();
+    /// assert!(!lender.all(|&x| x > 2));
+    /// ```
     #[inline]
     fn all<F>(&mut self, mut f: F) -> bool
     where
@@ -982,6 +1005,17 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         true
     }
     /// The [`Lender`] version of [`Iterator::any`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let mut lender = [1, 2, 3].iter().into_lender();
+    /// assert!(lender.any(|&x| x == 2));
+    ///
+    /// let mut lender = [1, 2, 3].iter().into_lender();
+    /// assert!(!lender.any(|&x| x > 5));
+    /// ```
     #[inline]
     fn any<F>(&mut self, mut f: F) -> bool
     where
@@ -995,6 +1029,17 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         false
     }
     /// The [`Lender`] version of [`Iterator::find`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let mut lender = [1, 2, 3].iter().into_lender();
+    /// assert_eq!(lender.find(|&x| *x == 2), Some(&2));
+    ///
+    /// let mut lender = [1, 2, 3].iter().into_lender();
+    /// assert_eq!(lender.find(|&x| *x > 5), None);
+    /// ```
     #[inline]
     fn find<P>(&mut self, mut predicate: P) -> Option<Lend<'_, Self>>
     where
@@ -1047,6 +1092,16 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         None
     }
     /// The [`Lender`] version of [`Iterator::try_find`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let mut lender = [1, 2, 3].iter().into_lender();
+    /// let result: Option<Option<&i32>> =
+    ///     lender.try_find(|&x| Some(*x > 1));
+    /// assert_eq!(result, Some(Some(&2)));
+    /// ```
     #[inline]
     fn try_find<F, R>(&mut self, mut f: F) -> ChangeOutputType<R, Option<Lend<'_, Self>>>
     where
@@ -1076,6 +1131,17 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         <ChangeOutputType<R, Option<Lend<'_, Self>>>>::from_output(None)
     }
     /// The [`Lender`] version of [`Iterator::position`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let mut lender = [1, 2, 3].iter().into_lender();
+    /// assert_eq!(lender.position(|&x| x == 2), Some(1));
+    ///
+    /// let mut lender = [1, 2, 3].iter().into_lender();
+    /// assert_eq!(lender.position(|&x| x > 5), None);
+    /// ```
     #[inline]
     fn position<P>(&mut self, mut predicate: P) -> Option<usize>
     where
@@ -1092,6 +1158,14 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         None
     }
     /// The [`Lender`] version of [`Iterator::rposition`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let mut lender = [1, 2, 3, 2, 1].iter().into_lender();
+    /// assert_eq!(lender.rposition(|&x| x == 2), Some(3));
+    /// ```
     #[inline]
     fn rposition<P>(&mut self, mut predicate: P) -> Option<usize>
     where
@@ -1107,6 +1181,14 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         }
     }
     /// The [`Lender`] version of [`Iterator::max`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let lender = [1, 3, 2].into_iter().into_lender();
+    /// assert_eq!(lender.max(), Some(3));
+    /// ```
     #[inline]
     fn max<T: Ord>(self) -> Option<T>
     where
@@ -1116,6 +1198,14 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         self.owned().max()
     }
     /// The [`Lender`] version of [`Iterator::min`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let lender = [3, 1, 2].into_iter().into_lender();
+    /// assert_eq!(lender.min(), Some(1));
+    /// ```
     #[inline]
     fn min<T: Ord>(self) -> Option<T>
     where
@@ -1125,6 +1215,18 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         self.owned().min()
     }
     /// The [`Lender`] version of [`Iterator::max_by_key`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let lender =
+    ///     ["a", "bbb", "cc"].into_iter().into_lender();
+    /// assert_eq!(
+    ///     lender.max_by_key(|s| s.len()),
+    ///     Some("bbb")
+    /// );
+    /// ```
     #[inline]
     fn max_by_key<B: Ord, T, F>(self, f: F) -> Option<T>
     where
@@ -1135,6 +1237,18 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         self.owned().max_by_key::<B, F>(f)
     }
     /// The [`Lender`] version of [`Iterator::max_by`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let lender =
+    ///     ["a", "bbb", "cc"].into_iter().into_lender();
+    /// assert_eq!(
+    ///     lender.max_by(|a, b| a.len().cmp(&b.len())),
+    ///     Some("bbb")
+    /// );
+    /// ```
     #[inline]
     fn max_by<T, F>(self, mut compare: F) -> Option<T>
     where
@@ -1150,6 +1264,18 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         })
     }
     /// The [`Lender`] version of [`Iterator::min_by_key`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let lender =
+    ///     ["a", "bbb", "cc"].into_iter().into_lender();
+    /// assert_eq!(
+    ///     lender.min_by_key(|s| s.len()),
+    ///     Some("a")
+    /// );
+    /// ```
     #[inline]
     fn min_by_key<B: Ord, T, F>(self, f: F) -> Option<T>
     where
@@ -1160,6 +1286,18 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         self.owned().min_by_key::<B, F>(f)
     }
     /// The [`Lender`] version of [`Iterator::min_by`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let lender =
+    ///     ["a", "bbb", "cc"].into_iter().into_lender();
+    /// assert_eq!(
+    ///     lender.min_by(|a, b| a.len().cmp(&b.len())),
+    ///     Some("a")
+    /// );
+    /// ```
     #[inline]
     fn min_by<T, F>(self, mut compare: F) -> Option<T>
     where
@@ -1175,6 +1313,18 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         })
     }
     /// The [`Lender`] version of [`Iterator::rev`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let lender = lender::lend_iter::<lend!(&'lend i32), _>(
+    ///     [1, 2, 3].iter(),
+    /// );
+    /// let result: Vec<i32> =
+    ///     lender.rev().copied().collect();
+    /// assert_eq!(result, vec![3, 2, 1]);
+    /// ```
     #[inline]
     fn rev(self) -> Rev<Self>
     where
@@ -1205,6 +1355,17 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// The [`Lender`] version of [`Iterator::copied`].
     ///
     /// Turns this [`Lender`] into an [`Iterator`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let lender = lender::lend_iter::<lend!(&'lend i32), _>(
+    ///     [1, 2, 3].iter(),
+    /// );
+    /// let result: Vec<i32> = lender.copied().collect();
+    /// assert_eq!(result, vec![1, 2, 3]);
+    /// ```
     #[inline]
     fn copied<T>(self) -> Copied<Self>
     where
@@ -1216,6 +1377,24 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// The [`Lender`] version of [`Iterator::cloned`].
     ///
     /// Turns this [`Lender`] into an [`Iterator`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let data =
+    ///     [String::from("a"), String::from("b")];
+    /// let lender = lender::lend_iter::<
+    ///     lend!(&'lend String),
+    ///     _,
+    /// >(data.iter());
+    /// let result: Vec<String> =
+    ///     lender.cloned().collect();
+    /// assert_eq!(
+    ///     result,
+    ///     vec![String::from("a"), String::from("b")]
+    /// );
+    /// ```
     #[inline]
     fn cloned<T>(self) -> Cloned<Self>
     where
@@ -1226,6 +1405,15 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     }
     // not std::iter
     /// Turns this [`Lender`] into an [`Iterator`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let lender = [1, 2, 3].into_iter().into_lender();
+    /// let result: Vec<i32> = lender.owned().collect();
+    /// assert_eq!(result, vec![1, 2, 3]);
+    /// ```
     #[inline]
     fn owned(self) -> Owned<Self>
     where
@@ -1235,6 +1423,17 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         Owned::new(self)
     }
     /// The [`Lender`] version of [`Iterator::cycle`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let mut lender = [1, 2].iter().into_lender().cycle();
+    /// assert_eq!(lender.next(), Some(&1));
+    /// assert_eq!(lender.next(), Some(&2));
+    /// assert_eq!(lender.next(), Some(&1));
+    /// assert_eq!(lender.next(), Some(&2));
+    /// ```
     #[inline]
     fn cycle(self) -> Cycle<Self>
     where
@@ -1279,6 +1478,9 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         P::product_lender(self)
     }
     /// The [`Lender`] version of [`Iterator::cmp`].
+    ///
+    /// Note: Due to HRTB limitations, consider using
+    /// [`cmp_by`](Lender::cmp_by) instead.
     #[inline]
     fn cmp<L>(self, other: L) -> Ordering
     where
@@ -1320,6 +1522,9 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         }
     }
     /// The [`Lender`] version of [`Iterator::partial_cmp`].
+    ///
+    /// Note: Due to HRTB limitations, consider using
+    /// [`partial_cmp_by`](Lender::partial_cmp_by) instead.
     #[inline]
     fn partial_cmp<L>(self, other: L) -> Option<Ordering>
     where
@@ -1358,6 +1563,9 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         }
     }
     /// The [`Lender`] version of [`Iterator::eq`].
+    ///
+    /// Note: Due to HRTB limitations, consider using
+    /// [`eq_by`](Lender::eq_by) instead.
     #[inline]
     fn eq<L>(self, other: L) -> bool
     where
@@ -1394,6 +1602,9 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         }
     }
     /// The [`Lender`] version of [`Iterator::ne`].
+    ///
+    /// Note: Due to HRTB limitations, consider using
+    /// [`eq_by`](Lender::eq_by) instead.
     #[inline]
     fn ne<L>(self, other: L) -> bool
     where
@@ -1404,6 +1615,9 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         !self.eq(other)
     }
     /// The [`Lender`] version of [`Iterator::lt`].
+    ///
+    /// Note: Due to HRTB limitations, consider using
+    /// [`partial_cmp_by`](Lender::partial_cmp_by) instead.
     #[inline]
     fn lt<L>(self, other: L) -> bool
     where
@@ -1414,6 +1628,9 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         self.partial_cmp(other) == Some(Ordering::Less)
     }
     /// The [`Lender`] version of [`Iterator::le`].
+    ///
+    /// Note: Due to HRTB limitations, consider using
+    /// [`partial_cmp_by`](Lender::partial_cmp_by) instead.
     #[inline]
     fn le<L>(self, other: L) -> bool
     where
@@ -1424,6 +1641,9 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         matches!(self.partial_cmp(other), Some(Ordering::Less | Ordering::Equal))
     }
     /// The [`Lender`] version of [`Iterator::gt`].
+    ///
+    /// Note: Due to HRTB limitations, consider using
+    /// [`partial_cmp_by`](Lender::partial_cmp_by) instead.
     #[inline]
     fn gt<L>(self, other: L) -> bool
     where
@@ -1434,6 +1654,9 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         self.partial_cmp(other) == Some(Ordering::Greater)
     }
     /// The [`Lender`] version of [`Iterator::ge`].
+    ///
+    /// Note: Due to HRTB limitations, consider using
+    /// [`partial_cmp_by`](Lender::partial_cmp_by) instead.
     #[inline]
     fn ge<L>(self, other: L) -> bool
     where
@@ -1524,7 +1747,14 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         }
         true
     }
-    /// Turns this [`Lender`] into an [`Iterator`] where it has already fulfilled the requirements of the [`Iterator`] trait.
+    /// Turns this [`Lender`] into an [`Iterator`] where it has
+    /// already fulfilled the requirements of the [`Iterator`]
+    /// trait.
+    ///
+    /// Note: Due to HRTB limitations, consider using
+    /// [`copied`](Lender::copied) or
+    /// [`cloned`](Lender::cloned) instead if you need to
+    /// collect into a container.
     #[inline]
     fn iter<'this>(self) -> Iter<'this, Self>
     where

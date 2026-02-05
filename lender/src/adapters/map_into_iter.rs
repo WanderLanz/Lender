@@ -40,7 +40,7 @@ impl<L: core::fmt::Debug, O, F> core::fmt::Debug for MapIntoIter<L, O, F> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("MapIntoIter")
             .field("lender", &self.lender)
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 

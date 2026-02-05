@@ -37,7 +37,7 @@ impl<L: fmt::Debug, F> fmt::Debug for Mutate<L, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Mutate")
             .field("lender", &self.lender)
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 

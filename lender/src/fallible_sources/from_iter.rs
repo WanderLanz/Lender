@@ -140,19 +140,19 @@ impl<I: IntoFallibleIterator> From<I> for FromIntoIter<I> {
 /// ```rust
 /// use fallible_iterator::IteratorExt as _;
 /// use lender::prelude::*;
-/// let mut data = [1u8, 2, 3];
+/// let mut data = [1, 2, 3];
 ///
 /// // properly shortens the lifetime of non-static items and lends them
-/// let mut lender = lender::lend_fallible_iter::<'_, fallible_lend!(&'lend u8), _>(data.iter().into_fallible());
-/// let lend: Option<&'_ u8> = lender.next().unwrap();
-/// let lend: &'_ u8 = lend.unwrap();
+/// let mut lender = lender::lend_fallible_iter::<'_, fallible_lend!(&'lend i32), _>(data.iter().into_fallible());
+/// let lend: Option<&'_ i32> = lender.next().unwrap();
+/// let lend: &'_ i32 = lend.unwrap();
 ///
 /// // does not shorten the lifetime of 'static items, behaves like `from_iter`
-/// let mut lender = lender::lend_fallible_iter::<'_, fallible_lend!(u8), _>([1, 2, 3].into_iter().into_fallible());
-/// let item: Option<u8> = lender.next().unwrap();
-/// let item: u8 = item.unwrap();
-/// let item2: Option<u8> = lender.next().unwrap();
-/// let item2: u8 = item2.unwrap();
+/// let mut lender = lender::lend_fallible_iter::<'_, fallible_lend!(i32), _>([1, 2, 3].into_iter().into_fallible());
+/// let item: Option<i32> = lender.next().unwrap();
+/// let item: i32 = item.unwrap();
+/// let item2: Option<i32> = lender.next().unwrap();
+/// let item2: i32 = item2.unwrap();
 /// ```
 #[inline]
 pub fn lend_iter<'a, L, I>(iter: I) -> LendIter<'a, L, I>

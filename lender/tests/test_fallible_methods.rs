@@ -634,3 +634,346 @@ fn double_ended_fallible_nth_back_past_end() {
     // nth_back(3) must therefore return Ok(None), not call next_back().
     assert_eq!(lender.nth_back(3), Ok(None));
 }
+
+// ============================================================================
+// FallibleLender comparison method tests
+// ============================================================================
+
+#[test]
+fn fallible_lender_cmp() {
+    use core::cmp::Ordering;
+    use lender::FallibleLender;
+
+    let a = [1, 2, 3].into_iter().into_lender().into_fallible();
+    let b = [1, 2, 3].into_iter().into_lender().into_fallible();
+    assert_eq!(a.cmp(b), Ok(Ordering::Equal));
+
+    let a = [1, 2, 3].into_iter().into_lender().into_fallible();
+    let b = [1, 2, 4].into_iter().into_lender().into_fallible();
+    assert_eq!(a.cmp(b), Ok(Ordering::Less));
+
+    let a = [1, 2, 4].into_iter().into_lender().into_fallible();
+    let b = [1, 2, 3].into_iter().into_lender().into_fallible();
+    assert_eq!(a.cmp(b), Ok(Ordering::Greater));
+
+    let a = [1, 2].into_iter().into_lender().into_fallible();
+    let b = [1, 2, 3].into_iter().into_lender().into_fallible();
+    assert_eq!(a.cmp(b), Ok(Ordering::Less));
+}
+
+#[test]
+fn fallible_lender_partial_cmp() {
+    use core::cmp::Ordering;
+    use lender::FallibleLender;
+
+    let a = [1, 2, 3].into_iter().into_lender().into_fallible();
+    let b = [1, 2, 3].into_iter().into_lender().into_fallible();
+    assert_eq!(
+        a.partial_cmp::<lender::IntoFallible<_>>(b),
+        Ok(Some(Ordering::Equal))
+    );
+
+    let a = [1, 2].into_iter().into_lender().into_fallible();
+    let b = [1, 3].into_iter().into_lender().into_fallible();
+    assert_eq!(
+        a.partial_cmp::<lender::IntoFallible<_>>(b),
+        Ok(Some(Ordering::Less))
+    );
+}
+
+#[test]
+fn fallible_lender_eq() {
+    use lender::FallibleLender;
+
+    let a = [1, 2, 3].into_iter().into_lender().into_fallible();
+    let b = [1, 2, 3].into_iter().into_lender().into_fallible();
+    assert_eq!(a.eq::<lender::IntoFallible<_>>(b), Ok(true));
+
+    let a = [1, 2, 3].into_iter().into_lender().into_fallible();
+    let b = [1, 2, 4].into_iter().into_lender().into_fallible();
+    assert_eq!(a.eq::<lender::IntoFallible<_>>(b), Ok(false));
+
+    let a = [1, 2].into_iter().into_lender().into_fallible();
+    let b = [1, 2, 3].into_iter().into_lender().into_fallible();
+    assert_eq!(a.eq::<lender::IntoFallible<_>>(b), Ok(false));
+}
+
+#[test]
+fn fallible_lender_ne() {
+    use lender::FallibleLender;
+
+    let a = [1, 2, 3].into_iter().into_lender().into_fallible();
+    let b = [1, 2, 4].into_iter().into_lender().into_fallible();
+    assert_eq!(a.ne::<lender::IntoFallible<_>>(b), Ok(true));
+
+    let a = [1, 2, 3].into_iter().into_lender().into_fallible();
+    let b = [1, 2, 3].into_iter().into_lender().into_fallible();
+    assert_eq!(a.ne::<lender::IntoFallible<_>>(b), Ok(false));
+}
+
+#[test]
+fn fallible_lender_lt() {
+    use lender::FallibleLender;
+
+    let a = [1, 2].into_iter().into_lender().into_fallible();
+    let b = [1, 3].into_iter().into_lender().into_fallible();
+    assert_eq!(a.lt::<lender::IntoFallible<_>>(b), Ok(true));
+
+    let a = [1, 3].into_iter().into_lender().into_fallible();
+    let b = [1, 2].into_iter().into_lender().into_fallible();
+    assert_eq!(a.lt::<lender::IntoFallible<_>>(b), Ok(false));
+
+    let a = [1, 2].into_iter().into_lender().into_fallible();
+    let b = [1, 2].into_iter().into_lender().into_fallible();
+    assert_eq!(a.lt::<lender::IntoFallible<_>>(b), Ok(false));
+}
+
+#[test]
+fn fallible_lender_le() {
+    use lender::FallibleLender;
+
+    let a = [1, 2].into_iter().into_lender().into_fallible();
+    let b = [1, 3].into_iter().into_lender().into_fallible();
+    assert_eq!(a.le::<lender::IntoFallible<_>>(b), Ok(true));
+
+    let a = [1, 2].into_iter().into_lender().into_fallible();
+    let b = [1, 2].into_iter().into_lender().into_fallible();
+    assert_eq!(a.le::<lender::IntoFallible<_>>(b), Ok(true));
+
+    let a = [1, 3].into_iter().into_lender().into_fallible();
+    let b = [1, 2].into_iter().into_lender().into_fallible();
+    assert_eq!(a.le::<lender::IntoFallible<_>>(b), Ok(false));
+}
+
+#[test]
+fn fallible_lender_gt() {
+    use lender::FallibleLender;
+
+    let a = [1, 3].into_iter().into_lender().into_fallible();
+    let b = [1, 2].into_iter().into_lender().into_fallible();
+    assert_eq!(a.gt::<lender::IntoFallible<_>>(b), Ok(true));
+
+    let a = [1, 2].into_iter().into_lender().into_fallible();
+    let b = [1, 3].into_iter().into_lender().into_fallible();
+    assert_eq!(a.gt::<lender::IntoFallible<_>>(b), Ok(false));
+}
+
+#[test]
+fn fallible_lender_ge() {
+    use lender::FallibleLender;
+
+    let a = [1, 3].into_iter().into_lender().into_fallible();
+    let b = [1, 2].into_iter().into_lender().into_fallible();
+    assert_eq!(a.ge::<lender::IntoFallible<_>>(b), Ok(true));
+
+    let a = [1, 2].into_iter().into_lender().into_fallible();
+    let b = [1, 2].into_iter().into_lender().into_fallible();
+    assert_eq!(a.ge::<lender::IntoFallible<_>>(b), Ok(true));
+
+    let a = [1, 2].into_iter().into_lender().into_fallible();
+    let b = [1, 3].into_iter().into_lender().into_fallible();
+    assert_eq!(a.ge::<lender::IntoFallible<_>>(b), Ok(false));
+}
+
+// ============================================================================
+// FallibleLender reduce, max, min, is_sorted tests
+// ============================================================================
+
+#[test]
+fn fallible_lender_reduce() {
+    use lender::FallibleLender;
+
+    let result = vec![1i32, 2, 3, 4]
+        .into_iter()
+        .into_lender()
+        .into_fallible()
+        .reduce(|acc, x| Ok(acc + x));
+    assert_eq!(result, Ok(Some(10)));
+
+    let result = Vec::<i32>::new()
+        .into_iter()
+        .into_lender()
+        .into_fallible()
+        .reduce(|acc, x| Ok(acc + x));
+    assert_eq!(result, Ok(None));
+}
+
+#[test]
+fn fallible_lender_max() {
+    use lender::FallibleLender;
+
+    assert_eq!(
+        vec![1i32, 5, 3, 2, 4]
+            .into_iter()
+            .into_lender()
+            .into_fallible()
+            .max(),
+        Ok(Some(5))
+    );
+    assert_eq!(
+        Vec::<i32>::new()
+            .into_iter()
+            .into_lender()
+            .into_fallible()
+            .max(),
+        Ok(None)
+    );
+}
+
+#[test]
+fn fallible_lender_min() {
+    use lender::FallibleLender;
+
+    assert_eq!(
+        vec![3i32, 1, 5, 2, 4]
+            .into_iter()
+            .into_lender()
+            .into_fallible()
+            .min(),
+        Ok(Some(1))
+    );
+}
+
+#[test]
+fn fallible_lender_max_by() {
+    use lender::FallibleLender;
+
+    assert_eq!(
+        vec![1i32, 5, 3]
+            .into_iter()
+            .into_lender()
+            .into_fallible()
+            .max_by(|a, b| Ok(a.cmp(b))),
+        Ok(Some(5))
+    );
+}
+
+#[test]
+fn fallible_lender_min_by() {
+    use lender::FallibleLender;
+
+    assert_eq!(
+        vec![3i32, 1, 5]
+            .into_iter()
+            .into_lender()
+            .into_fallible()
+            .min_by(|a, b| Ok(a.cmp(b))),
+        Ok(Some(1))
+    );
+}
+
+#[test]
+fn fallible_lender_max_by_key() {
+    use lender::FallibleLender;
+
+    assert_eq!(
+        vec![-3i32, 0, 1, 5, -2]
+            .into_iter()
+            .into_lender()
+            .into_fallible()
+            .max_by_key(|x: &i32| Ok(x.abs())),
+        Ok(Some(5))
+    );
+}
+
+#[test]
+fn fallible_lender_min_by_key() {
+    use lender::FallibleLender;
+
+    assert_eq!(
+        vec![-3i32, 0, 1, 5, -2]
+            .into_iter()
+            .into_lender()
+            .into_fallible()
+            .min_by_key(|x: &i32| Ok(x.abs())),
+        Ok(Some(0))
+    );
+}
+
+#[test]
+fn fallible_lender_is_sorted() {
+    use lender::FallibleLender;
+
+    assert_eq!(
+        vec![1i32, 2, 3, 4]
+            .into_iter()
+            .into_lender()
+            .into_fallible()
+            .is_sorted(),
+        Ok(true)
+    );
+    assert_eq!(
+        vec![1i32, 3, 2]
+            .into_iter()
+            .into_lender()
+            .into_fallible()
+            .is_sorted(),
+        Ok(false)
+    );
+}
+
+#[test]
+fn fallible_lender_is_sorted_by() {
+    use lender::FallibleLender;
+
+    assert_eq!(
+        vec![4i32, 3, 2, 1]
+            .into_iter()
+            .into_lender()
+            .into_fallible()
+            .is_sorted_by(|a, b| Ok(Some(b.cmp(a)))),
+        Ok(true)
+    );
+}
+
+#[test]
+fn fallible_lender_is_sorted_by_key() {
+    use lender::FallibleLender;
+
+    assert_eq!(
+        vec![0i32, -1, 2, -3]
+            .into_iter()
+            .into_lender()
+            .into_fallible()
+            .is_sorted_by_key(|x: i32| Ok(x.abs())),
+        Ok(true)
+    );
+}
+
+// ============================================================================
+// FallibleLender by_ref test
+// ============================================================================
+
+#[test]
+fn fallible_lender_by_ref() {
+    use lender::FallibleLender;
+
+    let mut fallible: lender::IntoFallible<_> =
+        VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
+    // Take 2 via by_ref
+    {
+        let by_ref = fallible.by_ref();
+        let mut taken = by_ref.take(2);
+        assert_eq!(taken.next(), Ok(Some(&1)));
+        assert_eq!(taken.next(), Ok(Some(&2)));
+        assert_eq!(taken.next(), Ok(None));
+    }
+    // Remaining elements still available
+    assert_eq!(fallible.next(), Ok(Some(&3)));
+    assert_eq!(fallible.next(), Ok(Some(&4)));
+    assert_eq!(fallible.next(), Ok(Some(&5)));
+    assert_eq!(fallible.next(), Ok(None));
+}
+
+// ============================================================================
+// FallibleLender find_map test
+// ============================================================================
+
+#[test]
+fn fallible_lender_find_map() {
+    use lender::FallibleLender;
+
+    let mut fallible = VecFallibleLender::new(vec![1, 2, 3, 4, 5]);
+    let result = fallible.find_map(|x: &i32| Ok(if *x > 3 { Some(*x * 10) } else { None }));
+    assert_eq!(result, Ok(Some(40)));
+}

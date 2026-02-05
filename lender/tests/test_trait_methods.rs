@@ -913,3 +913,46 @@ fn lender_collect_into_existing() {
     lender.collect_into(&mut result);
     assert_eq!(result.0, vec![1, 2, 3, 4, 5, 6]);
 }
+
+// ============================================================================
+// by_ref tests
+// ============================================================================
+//
+// Note: Infallible comparison methods (partial_cmp, eq, ne, lt, le, gt, ge)
+// cannot be tested due to Rust compiler limitations with HRTB trait bounds.
+// These methods require `for<'all> Lend<'all, Self>: PartialOrd<Lend<'all, L::Lender>>`
+// or `PartialEq` bounds, which the trait solver cannot currently satisfy even
+// with owned types. Use the `_by` variants (partial_cmp_by, eq_by, etc.)
+// instead - these are tested in the "Comparison method tests" section above.
+//
+// ============================================================================
+
+#[test]
+fn lender_by_ref() {
+    let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]);
+    // Use by_ref to take 2 elements without consuming the lender
+    {
+        let by_ref = lender.by_ref();
+        let mut taken = by_ref.take(2);
+        assert_eq!(taken.next(), Some(&1));
+        assert_eq!(taken.next(), Some(&2));
+        assert_eq!(taken.next(), None);
+    }
+    // Remaining elements still available
+    assert_eq!(lender.next(), Some(&3));
+    assert_eq!(lender.next(), Some(&4));
+    assert_eq!(lender.next(), Some(&5));
+    assert_eq!(lender.next(), None);
+}
+
+#[test]
+fn lender_by_ref_with_skip() {
+    let mut lender = VecLender::new(vec![1, 2, 3, 4, 5, 6]);
+    // Skip 2 via by_ref
+    {
+        let by_ref = lender.by_ref();
+        let _ = by_ref.skip(2).next(); // consumes 1, 2, returns 3
+    }
+    // After skip(2).next(), 1, 2, 3 consumed
+    assert_eq!(lender.next(), Some(&4));
+}

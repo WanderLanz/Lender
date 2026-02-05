@@ -48,6 +48,16 @@ where
     {
         self.lender.fold(init, |acc, ref x| f(acc, x.to_owned()))
     }
+
+    #[inline]
+    fn count(self) -> usize {
+        self.lender.count()
+    }
+
+    #[inline]
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.lender.nth(n).map(|ref x| x.to_owned())
+    }
 }
 
 impl<T, L> DoubleEndedIterator for Owned<L>

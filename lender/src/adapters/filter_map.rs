@@ -37,7 +37,7 @@ impl<L: fmt::Debug, F> fmt::Debug for FilterMap<L, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("FilterMap")
             .field("lender", &self.lender)
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 
@@ -67,6 +67,17 @@ where
             }
         }
         None
+    }
+
+    #[inline]
+    fn count(mut self) -> usize {
+        let mut count = 0;
+        while let Some(x) = self.lender.next() {
+            if (self.f.as_inner_mut())(x).is_some() {
+                count += 1;
+            }
+        }
+        count
     }
 
     #[inline]

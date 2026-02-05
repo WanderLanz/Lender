@@ -48,6 +48,16 @@ where
     {
         self.lender.fold(init, |acc, x| f(acc, x.clone()))
     }
+
+    #[inline]
+    fn count(self) -> usize {
+        self.lender.count()
+    }
+
+    #[inline]
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.lender.nth(n).cloned()
+    }
 }
 
 impl<T, L> DoubleEndedIterator for Cloned<L>

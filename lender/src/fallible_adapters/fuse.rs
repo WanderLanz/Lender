@@ -104,17 +104,16 @@ where
     }
 
     #[inline]
-    fn fold<B, F>(mut self, init: B, mut f: F) -> Result<B, Self::Error>
+    fn fold<B, F>(self, init: B, mut f: F) -> Result<B, Self::Error>
     where
         Self: Sized,
         F: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
     {
-        let mut acc = init;
         if !self.flag {
-            acc = self.lender.fold(acc, &mut f)?;
-            self.flag = true;
+            self.lender.fold(init, &mut f)
+        } else {
+            Ok(init)
         }
-        Ok(acc)
     }
 
     #[inline]
@@ -176,17 +175,16 @@ where
     }
 
     #[inline]
-    fn rfold<B, F>(mut self, init: B, mut f: F) -> Result<B, Self::Error>
+    fn rfold<B, F>(self, init: B, mut f: F) -> Result<B, Self::Error>
     where
         Self: Sized,
         F: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
     {
-        let mut acc = init;
         if !self.flag {
-            acc = self.lender.rfold(acc, &mut f)?;
-            self.flag = true;
+            self.lender.rfold(init, &mut f)
+        } else {
+            Ok(init)
         }
-        Ok(acc)
     }
 
     #[inline]

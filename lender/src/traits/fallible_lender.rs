@@ -88,8 +88,9 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// ```
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error>;
 
-    /// Takes the next `len` lends of the lender with temporary lender [`Chunk`].
-    /// This is equivalent to cloning the lender and calling [`take(len)`](FallibleLender::take) on it.
+    /// Takes the next `len` lends of the lender with temporary lender
+    /// [`Chunk`]. This is equivalent to cloning the lender and calling
+    /// [`take(len)`](FallibleLender::take) on it.
     /// 
     /// # Examples
     ///
@@ -112,9 +113,11 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Chunk::new(self, chunk_size)
     }
 
-    /// Gets the estimated minimum and maximum length of the lender.
-    /// Both bounds assume that all remaining calls to [`next()`](FallibleLender::next) succeed.
-    /// That is, [`next()`](FallibleLender::next) could return an [`Err`] in fewer calls than specified by the lower bound.
+    /// Gets the estimated minimum and maximum length of the lender. Both
+    /// bounds assume that all remaining calls to
+    /// [`next()`](FallibleLender::next) succeed. That is,
+    /// [`next()`](FallibleLender::next) could return an [`Err`] in fewer
+    /// calls than specified by the lower bound.
     /// 
     /// # Examples
     ///
@@ -208,9 +211,23 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Ok(Ok(()))
     }
 
-    /// Yields the nth lend of the lender, if any, by consuming it. If the lender does not have enough lends, returns [`None`].
+    /// Yields the nth lend of the lender, if any, by
+    /// consuming it. If the lender does not have enough
+    /// lends, returns [`None`].
     ///
     /// `n` is zero-indexed.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let data = [1, 2, 3, 4, 5];
+    /// let mut lender =
+    ///     data.iter().into_lender().into_fallible();
+    /// assert_eq!(lender.nth(2), Ok(Some(&3)));
+    /// assert_eq!(lender.nth(0), Ok(Some(&4)));
+    /// assert_eq!(lender.nth(5), Ok(None));
+    /// ```
     #[inline]
     fn nth(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         if self.advance_by(n)?.is_err() {
@@ -335,7 +352,8 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         FallibleIntersperse::new(self, separator)
     }
 
-    /// Intersperses each lend of this lender with the separator produced by the given function.
+    /// Intersperses each lend of this lender with the separator produced by
+    /// the given function.
     ///
     /// # Examples
     ///
@@ -557,7 +575,8 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Enumerate::new(self)
     }
 
-    /// Makes this lender peekable, so that it is possible to peek at the next lend without consuming it.
+    /// Makes this lender peekable, so that it is possible to peek at the next
+    /// lend without consuming it.
     ///
     /// # Examples
     ///
@@ -897,7 +916,29 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Mutate::new(self, f)
     }
 
-    /// The [`FallibleLender`] version of [`Iterator::by_ref`].
+    /// The [`FallibleLender`] version of
+    /// [`Iterator::by_ref`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let data = [1, 2, 3, 4, 5];
+    /// let mut lender =
+    ///     data.iter().into_lender().into_fallible();
+    /// // Consume two elements through by_ref.
+    /// assert_eq!(
+    ///     lender.by_ref().next(),
+    ///     Ok(Some(&1))
+    /// );
+    /// assert_eq!(
+    ///     lender.by_ref().next(),
+    ///     Ok(Some(&2))
+    /// );
+    /// // The original lender continues from where
+    /// // we left off.
+    /// assert_eq!(lender.next(), Ok(Some(&3)));
+    /// ```
     #[inline(always)]
     fn by_ref(&mut self) -> &mut Self
     where
@@ -938,7 +979,8 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// into a collection of their outputs, short-circuiting on both lender errors
     /// and `Try` failures.
     ///
-    /// The [`FallibleLender`] version of [`Lender::try_collect`](crate::Lender::try_collect).
+    /// The [`FallibleLender`] version of
+    /// [`Lender::try_collect`](crate::Lender::try_collect).
     ///
     /// On error, returns the collection (with partial results) together with
     /// the error.
@@ -957,7 +999,8 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
 
     /// Extends an existing collection with lends from this fallible lender.
     ///
-    /// The [`FallibleLender`] version of [`Lender::collect_into`](crate::Lender::collect_into).
+    /// The [`FallibleLender`] version of
+    /// [`Lender::collect_into`](crate::Lender::collect_into).
     /// On error, returns the collection (with partial results) together with the error.
     #[inline]
     fn collect_into<E>(self, collection: &mut E) -> Result<&mut E, (&mut E, Self::Error)>
@@ -1358,6 +1401,15 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::max`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let lender =
+    ///     [1, 3, 2].into_iter().into_lender().into_fallible();
+    /// assert_eq!(lender.max(), Ok(Some(3)));
+    /// ```
     #[inline]
     fn max<T: Ord>(self) -> Result<Option<T>, Self::Error>
     where
@@ -1368,6 +1420,15 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::min`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let lender =
+    ///     [3, 1, 2].into_iter().into_lender().into_fallible();
+    /// assert_eq!(lender.min(), Ok(Some(1)));
+    /// ```
     #[inline]
     fn min<T: Ord>(self) -> Result<Option<T>, Self::Error>
     where
@@ -1378,6 +1439,15 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::max_by_key`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let lender =
+    ///     ["a", "bbb", "cc"].into_iter().into_lender().into_fallible();
+    /// assert_eq!(lender.max_by_key(|s| Ok(s.len())), Ok(Some("bbb")));
+    /// ```
     #[inline]
     fn max_by_key<B: Ord, T, F>(self, f: F) -> Result<Option<T>, Self::Error>
     where
@@ -1389,6 +1459,18 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::max_by`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let lender =
+    ///     ["a", "bbb", "cc"].into_iter().into_lender().into_fallible();
+    /// assert_eq!(
+    ///     lender.max_by(|x, y| Ok(x.len().cmp(&y.len()))),
+    ///     Ok(Some("bbb"))
+    /// );
+    /// ```
     #[inline]
     fn max_by<T, F>(self, mut compare: F) -> Result<Option<T>, Self::Error>
     where
@@ -1405,6 +1487,15 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::min_by_key`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let lender =
+    ///     ["a", "bbb", "cc"].into_iter().into_lender().into_fallible();
+    /// assert_eq!(lender.min_by_key(|s| Ok(s.len())), Ok(Some("a")));
+    /// ```
     #[inline]
     fn min_by_key<B: Ord, T, F>(self, f: F) -> Result<Option<T>, Self::Error>
     where
@@ -1416,6 +1507,18 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::min_by`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let lender =
+    ///     ["a", "bbb", "cc"].into_iter().into_lender().into_fallible();
+    /// assert_eq!(
+    ///     lender.min_by(|x, y| Ok(x.len().cmp(&y.len()))),
+    ///     Ok(Some("a"))
+    /// );
+    /// ```
     #[inline]
     fn min_by<T, F>(self, mut compare: F) -> Result<Option<T>, Self::Error>
     where
@@ -1472,7 +1575,8 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
 
     /// The [`FallibleLender`] version of [`Iterator::copied`].
     ///
-    /// Turns this [`FallibleLender`] into a [`FallibleIterator`](fallible_iterator::FallibleIterator).
+    /// Turns this [`FallibleLender`] into a
+    /// [`FallibleIterator`](fallible_iterator::FallibleIterator).
     ///
     /// # Examples
     ///
@@ -1500,7 +1604,8 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
 
     /// The [`FallibleLender`] version of [`Iterator::cloned`].
     ///
-    /// Turns this [`FallibleLender`] into a [`FallibleIterator`](fallible_iterator::FallibleIterator).
+    /// Turns this [`FallibleLender`] into a
+    /// [`FallibleIterator`](fallible_iterator::FallibleIterator).
     ///
     /// # Examples
     ///
@@ -1527,7 +1632,8 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     // not std::iter
-    /// Turns this [`FallibleLender`] into a [`FallibleIterator`](fallible_iterator::FallibleIterator).
+    /// Turns this [`FallibleLender`] into a
+    /// [`FallibleIterator`](fallible_iterator::FallibleIterator).
     ///
     /// # Examples
     ///
@@ -1572,6 +1678,11 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::sum`].
+    ///
+    /// Note: This method requires a type implementing
+    /// [`SumFallibleLender`](crate::SumFallibleLender). For simple numeric
+    /// sums, consider using [`owned()`](FallibleLender::owned) and then
+    /// [`FallibleIterator::sum()`](fallible_iterator::FallibleIterator::sum).
     #[inline]
     fn sum<S>(self) -> Result<S, Self::Error>
     where
@@ -1582,6 +1693,12 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::product`].
+    ///
+    /// Note: This method requires a type implementing
+    /// [`ProductFallibleLender`](crate::ProductFallibleLender). For simple
+    /// numeric products, consider using [`owned()`](FallibleLender::owned)
+    /// and then
+    /// [`FallibleIterator::product()`](fallible_iterator::FallibleIterator::product).
     #[inline]
     fn product<P>(self) -> Result<P, Self::Error>
     where
@@ -1862,6 +1979,17 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::is_sorted`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let lender = [1, 2, 3].into_iter().into_lender().into_fallible();
+    /// assert_eq!(lender.is_sorted(), Ok(true));
+    ///
+    /// let lender = [1, 3, 2].into_iter().into_lender().into_fallible();
+    /// assert_eq!(lender.is_sorted(), Ok(false));
+    /// ```
     #[inline]
     #[allow(clippy::wrong_self_convention)]
     fn is_sorted<T>(self) -> Result<bool, Self::Error>
@@ -1874,6 +2002,18 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::is_sorted_by`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// // Sorted in descending order.
+    /// let lender = [3, 2, 1].into_iter().into_lender().into_fallible();
+    /// assert_eq!(
+    ///     lender.is_sorted_by(|a, b| Ok(b.partial_cmp(a))),
+    ///     Ok(true)
+    /// );
+    /// ```
     #[inline]
     #[allow(clippy::wrong_self_convention)]
     fn is_sorted_by<T, F>(self, mut compare: F) -> Result<bool, Self::Error>
@@ -1897,6 +2037,25 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::is_sorted_by_key`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let lender =
+    ///     ["a", "bbb", "cc"].into_iter().into_lender().into_fallible();
+    /// assert_eq!(
+    ///     lender.is_sorted_by_key(|s| Ok(s.len())),
+    ///     Ok(false)
+    /// );
+    ///
+    /// let lender =
+    ///     ["a", "cc", "bbb"].into_iter().into_lender().into_fallible();
+    /// assert_eq!(
+    ///     lender.is_sorted_by_key(|s| Ok(s.len())),
+    ///     Ok(true)
+    /// );
+    /// ```
     #[inline]
     #[allow(clippy::wrong_self_convention)]
     fn is_sorted_by_key<F, K>(mut self, mut f: F) -> Result<bool, Self::Error>
@@ -1934,8 +2093,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// # use lender::prelude::*;
     /// # use std::convert::Infallible;
     /// let data = [1, 2, 3, 4, 5];
-    /// let lender = lender::lend_iter::<lend!(&'lend i32), _>(data.iter())
-    ///     .into_fallible();
+    /// let lender = data.iter().into_lender().into_fallible();
     /// let mut chunky = lender.chunky(2);
     /// let mut chunk1 = chunky.next().unwrap().unwrap();
     /// assert_eq!(chunk1.next().unwrap(), Some(&1));
@@ -1957,7 +2115,14 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Chunky::new_fallible(self, chunk_size)
     }
 
-    /// Turns this [`FallibleLender`] into a [`FallibleIterator`](fallible_iterator::FallibleIterator) where it has already fulfilled the requirements of the [`FallibleIterator`](fallible_iterator::FallibleIterator) trait.
+    /// Turns this [`FallibleLender`] into a
+    /// [`FallibleIterator`](fallible_iterator::FallibleIterator) where it has
+    /// already fulfilled the requirements of the
+    /// [`FallibleIterator`](fallible_iterator::FallibleIterator) trait.
+    ///
+    /// Note: Due to HRTB limitations, consider using
+    /// [`copied`](FallibleLender::copied), [`cloned`](FallibleLender::cloned),
+    /// or [`owned`](FallibleLender::owned) instead when applicable.
     #[inline]
     fn iter<'this>(self) -> Iter<'this, Self>
     where

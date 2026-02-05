@@ -23,10 +23,7 @@ where
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         if self.n > 0 {
-            let n = self.n;
-            let result = self.lender.nth(n)?;
-            self.n = 0;
-            Ok(result)
+            self.lender.nth(core::mem::take(&mut self.n))
         } else {
             self.lender.next()
         }
@@ -35,18 +32,15 @@ where
     #[inline]
     fn nth(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         if self.n > 0 {
-            let skip = self.n;
+            let skip = core::mem::take(&mut self.n);
             let n = match skip.checked_add(n) {
                 Some(nth) => nth,
                 None => {
                     self.lender.nth(skip - 1)?;
-                    self.n = 0;
                     n
                 }
             };
-            let result = self.lender.nth(n)?;
-            self.n = 0;
-            Ok(result)
+            self.lender.nth(n)
         } else {
             self.lender.nth(n)
         }
@@ -66,12 +60,9 @@ where
         Self: Sized,
     {
         if self.n > 0 {
-            let n = self.n;
-            if self.lender.nth(n - 1)?.is_none() {
-                self.n = 0;
+            if self.lender.nth(core::mem::take(&mut self.n) - 1)?.is_none() {
                 return Ok(None);
             }
-            self.n = 0;
         }
         self.lender.last()
     }
@@ -93,13 +84,9 @@ where
         F: FnMut(B, FallibleLend<'_, Self>) -> Result<R, Self::Error>,
         R: Try<Output = B>,
     {
-        if self.n > 0 {
-            let n = self.n;
-            if self.lender.nth(n - 1)?.is_none() {
-                self.n = 0;
-                return Ok(R::from_output(init));
-            }
-            self.n = 0;
+        let n = core::mem::take(&mut self.n);
+        if n > 0 && self.lender.nth(n - 1)?.is_none() {
+            return Ok(R::from_output(init));
         }
         self.lender.try_fold(init, f)
     }

@@ -68,7 +68,7 @@ where
     // SAFETY: the lend is that of the inner lender
     crate::unsafe_assume_covariance_fallible!();
 
-    #[inline(always)]
+    #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.inner.next()
     }
@@ -184,7 +184,7 @@ where
     // SAFETY: the lend is that of the inner lender
     crate::unsafe_assume_covariance_fallible!();
 
-    #[inline(always)]
+    #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.inner.next()
     }

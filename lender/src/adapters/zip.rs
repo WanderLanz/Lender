@@ -9,8 +9,8 @@ use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, IntoLender, Lend, L
 /// ```
 /// use lender::prelude::*;
 ///
-/// let a = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3].iter());
-/// let b = lender::lend_iter::<lend!(&'lend i32), _>([4, 5, 6].iter());
+/// let a = [1, 2, 3].iter().into_lender();
+/// let b = [4, 5, 6].iter().into_lender();
 ///
 /// let mut zipped = lender::zip(a, b);
 ///
@@ -51,8 +51,8 @@ impl<A, B> Zip<A, B> {
     /// ```
     /// use lender::prelude::*;
     ///
-    /// let a = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3].iter());
-    /// let b = lender::lend_iter::<lend!(&'lend i32), _>([4, 5, 6].iter());
+    /// let a = [1, 2, 3].iter().into_lender();
+    /// let b = [4, 5, 6].iter().into_lender();
     ///
     /// let mut zipped = lender::zip(a, b);
     ///
