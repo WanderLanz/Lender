@@ -1,0 +1,15 @@
+error[E0308]: mismatched types
+  --> tests/fail/map_bare_closure.rs:10:30
+   |
+10 |     let _mapped = lender.map(|x: &i32| *x * 2);
+   |                          --- ^^^^^^^^^^^^^^^^ expected `Covar<_>`, found closure
+   |                          |
+   |                          arguments to this method are incorrect
+   |
+   = note: expected struct `Covar<_>`
+             found closure `{closure@$DIR/tests/fail/map_bare_closure.rs:10:30: 10:39}`
+note: method defined here
+  --> src/traits/lender.rs
+   |
+   |     fn map<F>(self, f: Covar<F>) -> Map<Self, F>
+   |        ^^^

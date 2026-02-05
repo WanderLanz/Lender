@@ -24,9 +24,7 @@
 /// constructor is unsafe, and also hidden to discourage usage).
 #[derive(Clone, Copy)]
 #[repr(transparent)]
-pub struct Covar<F> {
-    f: F,
-}
+pub struct Covar<F>(F);
 
 impl<F> Covar<F> {
     /// Creates a new `Covar<F>`.
@@ -41,25 +39,25 @@ impl<F> Covar<F> {
     #[doc(hidden)]
     #[inline(always)]
     pub unsafe fn __new(f: F) -> Self {
-        Covar { f }
+        Covar(f)
     }
 
     /// Returns a reference to the inner closure.
     #[inline(always)]
     pub fn as_inner(&self) -> &F {
-        &self.f
+        &self.0
     }
 
     /// Returns a mutable reference to the inner closure.
     #[inline(always)]
     pub fn as_inner_mut(&mut self) -> &mut F {
-        &mut self.f
+        &mut self.0
     }
 
     /// Unwraps and returns the inner closure.
     #[inline(always)]
     pub fn into_inner(self) -> F {
-        self.f
+        self.0
     }
 }
 
