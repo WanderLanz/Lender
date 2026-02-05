@@ -38,6 +38,9 @@
 
 ### Changed
 
+- Macros `hrc`, `hrc_mut` and `hrc_once` have been renamed to `covar`, `covar_mut`
+  and `covar_once`, respectively.
+
 - Windows and array windows must have a non-zero length, as in `Iterator`,
   and they implement `FusedLender` and `ExactSizeLender`.
 
