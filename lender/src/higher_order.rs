@@ -164,14 +164,14 @@ macro_rules! __covar__ {
             )?
         ])?
 
-        for<$($hr:lifetime),+ $(,)?>
+        for<$hr:lifetime>
         $( move $(@$move:tt)?)?
         | $($arg:tt : $Arg:ty),* $(,)?|
         -> $Ret:ty
         $body:block
     ) => (
         // SAFETY: the covariance check inside __funnel__ guarantees
-        // that the return type is covariant in the bound lifetime(s).
+        // that the return type is covariant in the bound lifetime.
         unsafe { $crate::higher_order::Covar::__new(
         ({
             fn __funnel__<
@@ -196,20 +196,19 @@ macro_rules! __covar__ {
                 f: __Closure,
             ) -> __Closure
             where
-                __Closure : for<$($hr),+> ::core::ops::$F($($Arg),*) -> $Ret,
+                __Closure : for<$hr> ::core::ops::$F($($Arg),*) -> $Ret,
                 $($($($wc)*)?)?
             {
                 // Covariance check: this struct has the same variance as $Ret
-                // with respect to the bound lifetime(s). The PhantomData<&'a ()>
+                // with respect to the bound lifetime. The PhantomData<&'a ()>
                 // ensures the lifetime is used even if $Ret doesn't contain it.
                 #[allow(dead_code)]
-                struct __CovarCheck<$($hr),+>(
-                    ::core::marker::PhantomData<($Ret, $(&$hr ()),+)>
+                struct __CovarCheck<$hr>(
+                    ::core::marker::PhantomData<($Ret, &$hr ())>
                 );
 
                 // This function only compiles if __CovarCheck (and thus $Ret)
-                // is covariant in the lifetime parameter(s).
-                // Using `x` directly (not panic!) ensures the type conversion is checked.
+                // is covariant in the lifetime parameter.
                 #[allow(dead_code)]
                 fn __check_covariance<'__long: '__short, '__short>(
                     x: *const __CovarCheck<'__long>,
@@ -254,7 +253,7 @@ macro_rules! __covar__ {
             )?
         ])?
 
-        $( for<$($hr:lifetime),* $(,)?> )?
+        $( for<$hr:lifetime> )?
         $( move $(@$move:tt)?)?
         | $($arg:tt : $Arg:ty),* $(,)?|
         $( -> $Ret:ty)?
@@ -287,7 +286,7 @@ macro_rules! __covar__ {
                 f: __Closure,
             ) -> __Closure
             where
-                __Closure : for<$($($hr ,)*)?> ::core::ops::$F($($Arg),*)$( -> $Ret)?,
+                __Closure : $(for<$hr>)? ::core::ops::$F($($Arg),*)$( -> $Ret)?,
                 $($($($wc)*)?)?
             {
                 f
