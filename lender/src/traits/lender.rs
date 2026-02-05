@@ -804,6 +804,13 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         B::from_lender(self)
     }
     /// The [`Lender`] version of [`Iterator::try_collect`].
+    ///
+    /// Collects the lends of a lender that are themselves [`Try`] types into a
+    /// collection of their outputs, short-circuiting on `Try` failures.
+    ///
+    /// This method requires the target collection type `B` to implement
+    /// [`FromLender`] for the [`TryShunt`](crate::TryShunt) adapter. See
+    /// [`FromLender`] for how to implement this trait.
     #[inline]
     fn try_collect<'a, B>(&'a mut self) -> ChangeOutputType<Lend<'a, Self>, B>
     where
@@ -815,6 +822,9 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         try_process::<&'a mut Self, _, B>(self.by_ref(),|shunt: TryShunt<'_, &'a mut Self>| B::from_lender(shunt))
     }
     /// The [`Lender`] version of [`Iterator::collect_into`].
+    ///
+    /// Extends an existing collection with lends from this lender. The
+    /// collection type must implement [`ExtendLender`] for this lender type.
     #[inline]
     fn collect_into<E>(self, collection: &mut E) -> &mut E
     where

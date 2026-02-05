@@ -87,6 +87,28 @@ fn map_into_iter_rfold_empty() {
     assert!(result.is_empty());
 }
 
+#[test]
+fn map_into_iter_nth() {
+    let mut iter = VecLender::new(vec![1, 2, 3, 4, 5]).map_into_iter(|x| *x * 10);
+    assert_eq!(iter.nth(0), Some(10));
+    assert_eq!(iter.nth(2), Some(40));
+    assert_eq!(iter.nth(1), None);
+}
+
+#[test]
+fn map_into_iter_nth_back() {
+    let mut iter = VecLender::new(vec![1, 2, 3, 4, 5]).map_into_iter(|x| *x * 10);
+    assert_eq!(iter.nth_back(0), Some(50));
+    assert_eq!(iter.nth_back(2), Some(20));
+    assert_eq!(iter.nth_back(1), None);
+}
+
+#[test]
+fn map_into_iter_nth_out_of_bounds() {
+    let mut iter = VecLender::new(vec![1, 2]).map_into_iter(|x| *x);
+    assert_eq!(iter.nth(10), None);
+}
+
 // ============================================================================
 // Iter adapter tests - converts lender to iterator when Lend is 'static-like
 // ============================================================================

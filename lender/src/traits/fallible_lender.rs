@@ -1010,7 +1010,8 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     ///
     /// The [`FallibleLender`] version of
     /// [`Lender::collect_into`](crate::Lender::collect_into).
-    /// On error, returns the collection (with partial results) together with the error.
+    /// On error, returns the collection (with partial results) together with
+    /// the error.
     #[inline]
     fn collect_into<E>(self, collection: &mut E) -> Result<&mut E, (&mut E, Self::Error)>
     where

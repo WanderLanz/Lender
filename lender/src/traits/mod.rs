@@ -325,7 +325,7 @@ macro_rules! unsafe_assume_covariance {
 /// // Define a covariance-checked lending type for &'lend Vec<u8>.
 /// // This type cannot be expressed with lend!() because Vec<u8>
 /// // has generics.
-/// lender::covariant_lend!(RefVec = &'lend Vec<u8>);
+/// covariant_lend!(RefVec = &'lend Vec<u8>);
 ///
 /// let data = [vec![1u8, 2], vec![3, 4]];
 /// let mut lender = lender::lend_iter::<'_, RefVec, _>(data.iter());
@@ -343,7 +343,7 @@ macro_rules! unsafe_assume_covariance {
 /// use lender::prelude::*;
 ///
 /// // This fails to compile - Cell makes the type invariant!
-/// lender::covariant_lend!(
+/// covariant_lend!(
 ///     InvariantLend = &'lend Cell<Option<&'lend String>>
 /// );
 /// ```
@@ -385,7 +385,7 @@ macro_rules! covariant_lend {
 /// // Define a covariance-checked fallible lending type for
 /// // Option<&'lend str>. This type cannot be expressed with
 /// // fallible_lend!() because Option has generics.
-/// lender::covariant_fallible_lend!(OptStr = Option<&'lend str>);
+/// covariant_fallible_lend!(OptStr = Option<&'lend str>);
 ///
 /// let data = [Some("hello"), None, Some("world")];
 /// let mut lender = lender::lend_fallible_iter::<'_, OptStr, _>(
@@ -405,7 +405,7 @@ macro_rules! covariant_lend {
 /// use lender::prelude::*;
 ///
 /// // This fails to compile - Cell makes the type invariant!
-/// lender::covariant_fallible_lend!(
+/// covariant_fallible_lend!(
 ///     InvariantLend = &'lend Cell<Option<&'lend String>>
 /// );
 /// ```

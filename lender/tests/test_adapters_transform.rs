@@ -617,6 +617,34 @@ fn cloned_rfold_empty() {
     assert!(result.is_empty());
 }
 
+#[test]
+fn cloned_count() {
+    let lender = VecLender::new(vec![1, 2, 3, 4, 5]);
+    assert_eq!(lender.cloned().count(), 5);
+}
+
+#[test]
+fn cloned_count_empty() {
+    let lender = VecLender::new(vec![]);
+    assert_eq!(lender.cloned().count(), 0);
+}
+
+#[test]
+fn cloned_nth() {
+    let lender = VecLender::new(vec![10, 20, 30, 40, 50]);
+    let mut iter = lender.cloned();
+    assert_eq!(iter.nth(0), Some(10));
+    assert_eq!(iter.nth(1), Some(30));
+    assert_eq!(iter.nth(2), None);
+}
+
+#[test]
+fn cloned_nth_out_of_bounds() {
+    let lender = VecLender::new(vec![1, 2, 3]);
+    let mut iter = lender.cloned();
+    assert_eq!(iter.nth(10), None);
+}
+
 // ============================================================================
 // Copied adapter tests
 // ============================================================================
@@ -696,6 +724,34 @@ fn copied_rfold_empty() {
     assert!(result.is_empty());
 }
 
+#[test]
+fn copied_count() {
+    let lender = VecLender::new(vec![10, 20, 30, 40]);
+    assert_eq!(lender.copied().count(), 4);
+}
+
+#[test]
+fn copied_count_empty() {
+    let lender = VecLender::new(vec![]);
+    assert_eq!(lender.copied().count(), 0);
+}
+
+#[test]
+fn copied_nth() {
+    let lender = VecLender::new(vec![100, 200, 300, 400, 500]);
+    let mut iter = lender.copied();
+    assert_eq!(iter.nth(0), Some(100));
+    assert_eq!(iter.nth(2), Some(400));
+    assert_eq!(iter.nth(1), None);
+}
+
+#[test]
+fn copied_nth_out_of_bounds() {
+    let lender = VecLender::new(vec![1, 2]);
+    let mut iter = lender.copied();
+    assert_eq!(iter.nth(5), None);
+}
+
 // ============================================================================
 // Owned adapter tests
 // ============================================================================
@@ -756,4 +812,33 @@ fn owned_rfold_empty() {
         acc
     });
     assert!(result.is_empty());
+}
+
+#[test]
+fn owned_count() {
+    let lender = [1, 2, 3, 4, 5, 6].into_iter().into_lender();
+    assert_eq!(lender.owned().count(), 6);
+}
+
+#[test]
+fn owned_count_empty() {
+    let lender = std::iter::empty::<i32>().into_lender();
+    assert_eq!(lender.owned().count(), 0);
+}
+
+#[test]
+fn owned_nth() {
+    let lender = [10, 20, 30, 40, 50].into_iter().into_lender();
+    let mut iter = lender.owned();
+    assert_eq!(iter.nth(1), Some(20));
+    assert_eq!(iter.nth(1), Some(40));
+    assert_eq!(iter.nth(0), Some(50));
+    assert_eq!(iter.nth(0), None);
+}
+
+#[test]
+fn owned_nth_out_of_bounds() {
+    let lender = [1, 2, 3].into_iter().into_lender();
+    let mut iter = lender.owned();
+    assert_eq!(iter.nth(100), None);
 }
