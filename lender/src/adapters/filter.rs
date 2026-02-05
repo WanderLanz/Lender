@@ -31,7 +31,7 @@ impl<L, P> Filter<L, P> {
     }
 }
 
-impl<I: fmt::Debug, P> fmt::Debug for Filter<I, P> {
+impl<L: fmt::Debug, P> fmt::Debug for Filter<L, P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Filter")
             .field("lender", &self.lender)

@@ -79,6 +79,7 @@ where
     // SAFETY: the lend is that of L
     crate::unsafe_assume_covariance_fallible!();
 
+    #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         if self.needs_sep && self.lender.peek()?.is_some() {
             self.needs_sep = false;
@@ -96,6 +97,7 @@ where
         }
     }
 
+    #[inline]
     fn fold<B, F>(mut self, init: B, mut f: F) -> Result<B, Self::Error>
     where
         Self: Sized,
@@ -116,6 +118,7 @@ where
         })
     }
 
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         intersperse_size_hint(&self.lender, self.needs_sep)
     }
@@ -194,6 +197,7 @@ where
     // SAFETY: the lend is that of L
     crate::unsafe_assume_covariance_fallible!();
 
+    #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         if self.needs_sep && self.lender.peek()?.is_some() {
             self.needs_sep = false;
@@ -210,6 +214,7 @@ where
         }
     }
 
+    #[inline]
     fn fold<B, F>(mut self, init: B, mut f: F) -> Result<B, Self::Error>
     where
         Self: Sized,
@@ -230,6 +235,7 @@ where
         })
     }
 
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         intersperse_size_hint(&self.lender, self.needs_sep)
     }

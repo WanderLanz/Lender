@@ -61,6 +61,7 @@ where
     /// assert_eq!(lender.next(), Some(&1));
     /// assert_eq!(lender.peek(), Some(&&2));
     /// ```
+    #[inline]
     pub fn peek(&mut self) -> Option<&'_ Lend<'_, L>> {
         let lender = &mut self.lender;
         // SAFETY: Two transmutes are used here:
@@ -103,6 +104,7 @@ where
     /// assert_eq!(lender.next(), Some(&10));
     /// assert_eq!(lender.next(), Some(&2));
     /// ```
+    #[inline]
     pub fn peek_mut(&mut self) -> Option<&'_ mut Lend<'this, L>> {
         let lender = &mut self.lender;
         self.peeked
@@ -136,6 +138,7 @@ where
     /// // 2 is still there
     /// assert_eq!(lender.next(), Some(&2));
     /// ```
+    #[inline]
     pub fn next_if<F>(&mut self, f: F) -> Option<Lend<'_, L>>
     where
         F: FnOnce(&Lend<'_, L>) -> bool,
@@ -179,6 +182,7 @@ where
     /// // 2 is still there
     /// assert_eq!(lender.next(), Some(&2));
     /// ```
+    #[inline]
     pub fn next_if_eq<'a, T>(&'a mut self, t: &T) -> Option<Lend<'a, L>>
     where
         T: for<'all> PartialEq<Lend<'all, L>>,

@@ -72,6 +72,7 @@ where
     /// # Ok(())
     /// # }
     /// ```
+    #[inline]
     pub fn peek(&mut self) -> Result<Option<&'_ FallibleLend<'_, L>>, L::Error> {
         let lender = &mut self.lender;
         if self.peeked.is_none() {
@@ -126,6 +127,7 @@ where
     /// # Ok(())
     /// # }
     /// ```
+    #[inline]
     pub fn peek_mut(&mut self) -> Result<Option<&'_ mut FallibleLend<'this, L>>, L::Error> {
         let lender = &mut self.lender;
         if self.peeked.is_none() {
@@ -175,6 +177,7 @@ where
     /// # Ok(())
     /// # }
     /// ```
+    #[inline]
     pub fn next_if<F>(&mut self, f: F) -> Result<Option<FallibleLend<'_, L>>, L::Error>
     where
         F: FnOnce(&FallibleLend<'_, L>) -> bool,
@@ -233,6 +236,7 @@ where
     /// # Ok(())
     /// # }
     /// ```
+    #[inline]
     pub fn next_if_eq<'a, T>(&'a mut self, t: &T) -> Result<Option<FallibleLend<'a, L>>, L::Error>
     where
         T: for<'all> PartialEq<FallibleLend<'all, L>>,

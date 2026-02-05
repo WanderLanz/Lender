@@ -977,3 +977,81 @@ fn fallible_lender_find_map() {
     let result = fallible.find_map(|x: &i32| Ok(if *x > 3 { Some(*x * 10) } else { None }));
     assert_eq!(result, Ok(Some(40)));
 }
+
+// ============================================================================
+// FallibleLender partition tests
+// ============================================================================
+// Note: partition() requires E: ExtendLender<NonFallibleAdapter<'this, Self>>,
+// which uses the crate-private NonFallibleAdapter type. Testing partition()
+// directly requires implementing ExtendLender for that private type, which
+// cannot be done from outside the crate. The is_partitioned() method (tested
+// in test_fallible_coverage.rs) exercises the partition logic indirectly.
+
+// ============================================================================
+// FallibleLender sum tests
+// ============================================================================
+
+#[test]
+fn fallible_lender_sum() {
+    use lender::{FallibleLender, SumFallibleLender};
+
+    struct I32Sum(i32);
+
+    impl SumFallibleLender<VecFallibleLender> for I32Sum {
+        fn sum_lender(lender: VecFallibleLender) -> Result<Self, core::convert::Infallible> {
+            Ok(I32Sum(lender.fold(0, |acc, x| Ok(acc + *x))?))
+        }
+    }
+
+    let sum: I32Sum = VecFallibleLender::new(vec![1, 2, 3, 4]).sum().unwrap();
+    assert_eq!(sum.0, 10);
+
+    let sum_empty: I32Sum = VecFallibleLender::new(vec![]).sum().unwrap();
+    assert_eq!(sum_empty.0, 0);
+}
+
+// ============================================================================
+// FallibleLender product tests
+// ============================================================================
+
+#[test]
+fn fallible_lender_product() {
+    use lender::{FallibleLender, ProductFallibleLender};
+
+    struct I32Product(i32);
+
+    impl ProductFallibleLender<VecFallibleLender> for I32Product {
+        fn product_lender(lender: VecFallibleLender) -> Result<Self, core::convert::Infallible> {
+            Ok(I32Product(lender.fold(1, |acc, x| Ok(acc * *x))?))
+        }
+    }
+
+    let product: I32Product = VecFallibleLender::new(vec![1, 2, 3, 4]).product().unwrap();
+    assert_eq!(product.0, 24);
+
+    let product_empty: I32Product = VecFallibleLender::new(vec![]).product().unwrap();
+    assert_eq!(product_empty.0, 1);
+}
+
+// ============================================================================
+// FallibleLender unzip tests
+// ============================================================================
+
+#[test]
+fn fallible_lender_unzip() {
+    use fallible_iterator::FallibleIterator;
+    use lender::FallibleLender;
+
+    // Create a fallible lender over tuples via owned() which delegates to Iterator::unzip
+    let (a, b): (Vec<i32>, Vec<i32>) = vec![(1, 4), (2, 5), (3, 6)]
+        .into_iter()
+        .into_lender()
+        .into_fallible()
+        .owned()
+        .collect::<Vec<_>>()
+        .unwrap()
+        .into_iter()
+        .unzip();
+    assert_eq!(a, vec![1, 2, 3]);
+    assert_eq!(b, vec![4, 5, 6]);
+}
