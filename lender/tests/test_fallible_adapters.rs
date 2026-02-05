@@ -591,7 +591,7 @@ fn fallible_lender_max_by() {
     let fallible2: lender::IntoFallible<_> =
         vec![-3, 1, 3].into_iter().into_lender().into_fallible();
     assert_eq!(
-        fallible2.max_by(|a, b| Ok(a.abs().cmp(&b.abs()))),
+        fallible2.max_by(|a: &i32, b: &i32| Ok(a.abs().cmp(&b.abs()))),
         Ok(Some(3))
     );
 }
@@ -608,7 +608,7 @@ fn fallible_lender_min_by() {
     let fallible2: lender::IntoFallible<_> =
         vec![3, -1, 1].into_iter().into_lender().into_fallible();
     assert_eq!(
-        fallible2.min_by(|a, b| Ok(a.abs().cmp(&b.abs()))),
+        fallible2.min_by(|a: &i32, b: &i32| Ok(a.abs().cmp(&b.abs()))),
         Ok(Some(-1))
     );
 }
