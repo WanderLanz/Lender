@@ -76,7 +76,7 @@ where
 /// A fallible lender that yields a single element by applying
 /// the provided closure.
 ///
-/// This `struct` is created by the [`fallible_once_with()`] function.
+/// This `struct` is created by the [`fallible_once_with()`](crate::fallible_once_with) function.
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct OnceWith<St, E, F> {
     state: St,

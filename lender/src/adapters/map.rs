@@ -37,7 +37,9 @@ impl<L, F> Map<L, F> {
 
 impl<L: fmt::Debug, F> fmt::Debug for Map<L, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Map").field("lender", &self.lender).finish_non_exhaustive()
+        f.debug_struct("Map")
+            .field("lender", &self.lender)
+            .finish_non_exhaustive()
     }
 }
 

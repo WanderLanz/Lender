@@ -1,8 +1,6 @@
 use core::fmt;
 
-use crate::{
-    FallibleLend, FallibleLender, FallibleLending, FalliblePeekable, FusedFallibleLender,
-};
+use crate::{FallibleLend, FallibleLender, FallibleLending, FalliblePeekable, FusedFallibleLender};
 
 /// A fallible lender that inserts a separator between adjacent elements of the underlying lender.
 ///

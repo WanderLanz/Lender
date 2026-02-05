@@ -948,8 +948,7 @@ fn fallible_lender_is_sorted_by_key() {
 fn fallible_lender_by_ref() {
     use lender::FallibleLender;
 
-    let mut fallible: lender::IntoFallible<_> =
-        VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
+    let mut fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
     // Take 2 via by_ref
     {
         let by_ref = fallible.by_ref();

@@ -237,11 +237,11 @@ fn double_ended_filter() {
 
 #[test]
 fn double_ended_filter_map() {
-    let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]).filter_map(
-        covar_mut!(for<'lend> |x: &'lend i32| -> Option<i32> {
+    let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]).filter_map(covar_mut!(
+        for<'lend> |x: &'lend i32| -> Option<i32> {
             if *x % 2 == 0 { Some(*x * 10) } else { None }
-        }),
-    );
+        }
+    ));
     assert_eq!(lender.next_back(), Some(40));
     assert_eq!(lender.next(), Some(20));
     assert_eq!(lender.next(), None);
@@ -249,9 +249,8 @@ fn double_ended_filter_map() {
 
 #[test]
 fn double_ended_map() {
-    let mut lender = VecLender::new(vec![1, 2, 3]).map(
-        covar_mut!(for<'lend> |x: &'lend i32| -> i32 { *x * 2 }),
-    );
+    let mut lender =
+        VecLender::new(vec![1, 2, 3]).map(covar_mut!(for<'lend> |x: &'lend i32| -> i32 { *x * 2 }));
     assert_eq!(lender.next_back(), Some(6));
     assert_eq!(lender.next(), Some(2));
     assert_eq!(lender.next_back(), Some(4));

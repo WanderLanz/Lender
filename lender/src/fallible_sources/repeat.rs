@@ -60,7 +60,7 @@ where
 
 /// A fallible lender that repeats an element endlessly.
 ///
-/// This `struct` is created by the [`fallible_repeat()`] function.
+/// This `struct` is created by the [`fallible_repeat()`](crate::fallible_repeat) function.
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Repeat<'a, L, E>
 where
