@@ -1,12 +1,12 @@
 use core::{fmt, marker::PhantomData};
 
-use crate::{FallibleLend, FallibleLender, FallibleLending, higher_order::FnMutHKAResOpt};
+use crate::{Covar, FallibleLend, FallibleLender, FallibleLending, higher_order::FnMutHKAResOpt};
 
 /// Creates a fallible lender from a state and a closure
 /// `F: FnMut(&mut St) -> Result<Option<T>, E>`.
 ///
 /// Note that functions passed to this function must be built
-/// using the [`hrc!`](crate::hrc) or [`hrc_mut!`](crate::hrc_mut)
+/// using the [`covar!`](crate::covar) or [`covar_mut!`](crate::covar_mut)
 /// macro, which also checks for covariance of the returned type.
 /// Circumventing the macro may result in undefined behavior if
 /// the return type is not covariant.
@@ -17,7 +17,7 @@ use crate::{FallibleLend, FallibleLender, FallibleLending, higher_order::FnMutHK
 /// # use std::io::Error;
 /// let mut lender = lender::from_fallible_fn::<_, Error, _>(
 ///     0u8,
-///     hrc_mut!(for<'all> |state: &'all mut u8| -> Result<Option<&'all mut u8>, Error> {
+///     covar_mut!(for<'all> |state: &'all mut u8| -> Result<Option<&'all mut u8>, Error> {
 ///         if *state < 3 {
 ///             *state += 1;
 ///             Ok(Some(state))
@@ -29,7 +29,7 @@ use crate::{FallibleLend, FallibleLender, FallibleLending, higher_order::FnMutHK
 /// assert_eq!(lender.next().unwrap(), Some(&mut 1));
 /// ```
 #[inline]
-pub fn from_fn<St, E, F>(state: St, f: F) -> FromFn<St, E, F>
+pub fn from_fn<St, E, F>(state: St, f: Covar<F>) -> FromFn<St, E, F>
 where
     F: for<'all> FnMutHKAResOpt<'all, &'all mut St, E>,
 {
@@ -48,7 +48,7 @@ where
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct FromFn<St, E, F> {
     state: St,
-    f: F,
+    f: Covar<F>,
     _marker: PhantomData<E>,
 }
 
@@ -72,11 +72,12 @@ where
     F: for<'all> FnMutHKAResOpt<'all, &'all mut St, E>,
 {
     type Error = E;
-    // SAFETY: the lend is the return type of F
+    // SAFETY: the lend is the return type of F, whose covariance
+    // has been checked at Covar construction time.
     crate::unsafe_assume_covariance_fallible!();
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
-        (self.f)(&mut self.state)
+        (self.f.as_inner_mut())(&mut self.state)
     }
 }

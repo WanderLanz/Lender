@@ -20,7 +20,7 @@ use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender};
 /// let windows = lender::windows_mut(&mut data, 2);
 ///
 /// // Map to owned values, then convert to Iterator
-/// let mapped = windows.map(hrc_mut!(
+/// let mapped = windows.map(covar_mut!(
 ///     for<'all> |w: &'all mut [u8]| -> Vec<u8> {
 ///         w.to_vec()
 ///     }

@@ -64,7 +64,7 @@ fn simple_lender() {
     let mut bar = bar
         .into_lender()
         .mutate(|y| **y += 1)
-        .map(|x: &mut u32| *x + 1)
+        .map(covar_mut!(for<'lend> |x: &'lend mut u32| -> u32 { *x + 1 }))
         .iter();
     let _ = bar.find_map(|x| if x > 0 { Some(vec![1, 2, 3]) } else { None });
 }
@@ -783,7 +783,7 @@ fn take_exact_size() {
 
 #[test]
 fn map_size_hint() {
-    let mapped = VecLender::new(vec![1, 2, 3]).map(|x: &i32| *x * 2);
+    let mapped = VecLender::new(vec![1, 2, 3]).map(covar_mut!(for<'lend> |x: &'lend i32| -> i32 { *x * 2 }));
     assert_eq!(mapped.size_hint(), (3, Some(3)));
 }
 

@@ -1,8 +1,8 @@
 use core::{fmt, marker::PhantomData};
 
 use crate::{
-    CovariantFallibleLending, DoubleEndedFallibleLender, ExactSizeFallibleLender, FallibleLend,
-    FallibleLender, FallibleLending, FusedFallibleLender, higher_order::FnOnceHKA,
+    Covar, CovariantFallibleLending, DoubleEndedFallibleLender, ExactSizeFallibleLender,
+    FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, higher_order::FnOnceHKA,
 };
 
 /// Creates a fallible lender that lazily generates a value
@@ -16,9 +16,9 @@ use crate::{
 /// use [`once_with_err()`].
 ///
 /// Note that functions passed to this function must be built
-/// using the [`hrc!`](crate::hrc),
-/// [`hrc_mut!`](crate::hrc_mut), or
-/// [`hrc_once!`](crate::hrc_once) macro, which also checks for
+/// using the [`covar!`](crate::covar),
+/// [`covar_mut!`](crate::covar_mut), or
+/// [`covar_once!`](crate::covar_once) macro, which also checks for
 /// covariance of the returned type. Circumventing the macro may
 /// result in undefined behavior if the return type is not
 /// covariant.
@@ -28,7 +28,7 @@ use crate::{
 /// # use lender::prelude::*;
 /// let mut lender = lender::fallible_once_with::<_, String, _>(
 ///     0u8,
-///     hrc_once!(for<'all> |state: &'all mut u8| -> &'all mut u8 {
+///     covar_once!(for<'all> |state: &'all mut u8| -> &'all mut u8 {
 ///         *state += 1;
 ///         state
 ///     })
@@ -37,7 +37,7 @@ use crate::{
 /// assert_eq!(lender.next().unwrap(), None);
 /// ```
 #[inline]
-pub fn once_with<St, E, F>(state: St, f: F) -> OnceWith<St, E, F>
+pub fn once_with<St, E, F>(state: St, f: Covar<F>) -> OnceWith<St, E, F>
 where
     F: for<'all> FnOnceHKA<'all, &'all mut St>,
 {
@@ -82,7 +82,7 @@ where
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct OnceWith<St, E, F> {
     state: St,
-    f: Option<F>,
+    f: Option<Covar<F>>,
     _marker: PhantomData<E>,
 }
 
@@ -116,12 +116,13 @@ where
     F: for<'all> FnOnceHKA<'all, &'all mut St>,
 {
     type Error = E;
-    // SAFETY: the lend is the return type of F
+    // SAFETY: the lend is the return type of F, whose covariance
+    // has been checked at Covar construction time.
     crate::unsafe_assume_covariance_fallible!();
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
-        Ok(self.f.take().map(|f| f(&mut self.state)))
+        Ok(self.f.take().map(|f| f.into_inner()(&mut self.state)))
     }
 
     #[inline]

@@ -110,14 +110,14 @@ fn fallible_chunk_fold() {
 fn fallible_intersperse_try_fold() {
     use lender::from_fallible_fn;
 
-    let interspersed = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
+    let interspersed = from_fallible_fn(0, covar_mut!(for<'lend> |state: &'lend mut i32| -> Result<Option<i32>, String> {
         *state += 1;
         if *state <= 3 {
             Ok(Some(*state))
         } else {
             Ok(None)
         }
-    })
+    }))
     .intersperse(0);
 
     // try_fold to collect into a Vec via for_each (which calls try_fold internally)
@@ -135,14 +135,14 @@ fn fallible_intersperse_try_fold() {
 fn fallible_intersperse_fold() {
     use lender::from_fallible_fn;
 
-    let interspersed = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
+    let interspersed = from_fallible_fn(0, covar_mut!(for<'lend> |state: &'lend mut i32| -> Result<Option<i32>, String> {
         *state += 1;
         if *state <= 4 {
             Ok(Some(*state))
         } else {
             Ok(None)
         }
-    })
+    }))
     .intersperse(0);
 
     // fold sums all elements: 1 + 0 + 2 + 0 + 3 + 0 + 4 = 10
@@ -155,14 +155,14 @@ fn fallible_intersperse_with_try_fold() {
     use lender::from_fallible_fn;
 
     let mut sep_counter = 100;
-    let interspersed = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
+    let interspersed = from_fallible_fn(0, covar_mut!(for<'lend> |state: &'lend mut i32| -> Result<Option<i32>, String> {
         *state += 1;
         if *state <= 3 {
             Ok(Some(*state))
         } else {
             Ok(None)
         }
-    })
+    }))
     .intersperse_with(move || {
         sep_counter += 1;
         Ok(sep_counter)
@@ -182,14 +182,14 @@ fn fallible_intersperse_with_try_fold() {
 fn fallible_intersperse_with_fold() {
     use lender::from_fallible_fn;
 
-    let interspersed = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
+    let interspersed = from_fallible_fn(0, covar_mut!(for<'lend> |state: &'lend mut i32| -> Result<Option<i32>, String> {
         *state += 1;
         if *state <= 3 {
             Ok(Some(*state))
         } else {
             Ok(None)
         }
-    })
+    }))
     .intersperse_with(|| Ok(0));
 
     let sum = interspersed.fold(0, |acc, x| Ok(acc + x)).unwrap();
@@ -204,14 +204,14 @@ fn fallible_intersperse_with_fold() {
 fn fallible_try_find_found() {
     use lender::from_fallible_fn;
 
-    let mut lender = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
+    let mut lender = from_fallible_fn(0, covar_mut!(for<'lend> |state: &'lend mut i32| -> Result<Option<i32>, String> {
         *state += 1;
         if *state <= 5 {
             Ok(Some(*state))
         } else {
             Ok(None)
         }
-    });
+    }));
     // try_find with R = Option<bool>: None short-circuits, Some(true) finds, Some(false) skips
     let result = lender.try_find(|x| Ok(if *x == 3 { Some(true) } else { Some(false) }));
     assert!(result.is_ok());
@@ -223,14 +223,14 @@ fn fallible_try_find_found() {
 fn fallible_try_find_not_found() {
     use lender::from_fallible_fn;
 
-    let mut lender = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
+    let mut lender = from_fallible_fn(0, covar_mut!(for<'lend> |state: &'lend mut i32| -> Result<Option<i32>, String> {
         *state += 1;
         if *state <= 3 {
             Ok(Some(*state))
         } else {
             Ok(None)
         }
-    });
+    }));
     let result = lender.try_find(|x| Ok(if *x == 99 { Some(true) } else { Some(false) }));
     assert!(result.is_ok());
     let inner = result.unwrap();
@@ -241,14 +241,14 @@ fn fallible_try_find_not_found() {
 fn fallible_try_find_closure_short_circuit() {
     use lender::from_fallible_fn;
 
-    let mut lender = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
+    let mut lender = from_fallible_fn(0, covar_mut!(for<'lend> |state: &'lend mut i32| -> Result<Option<i32>, String> {
         *state += 1;
         if *state <= 5 {
             Ok(Some(*state))
         } else {
             Ok(None)
         }
-    });
+    }));
     // Short-circuit: closure returns Ok(None) which breaks the Try
     let result = lender.try_find(|x| Ok(if *x == 3 { None } else { Some(false) }));
     assert!(result.is_ok());
@@ -273,18 +273,18 @@ fn fallible_try_find_lender_error() {
 fn fallible_scan_basic() {
     use lender::from_fallible_fn;
 
-    let mut lender = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
+    let mut lender = from_fallible_fn(0, covar_mut!(for<'all> |state: &'all mut i32| -> Result<Option<i32>, String> {
         *state += 1;
         if *state <= 5 {
             Ok(Some(*state))
         } else {
             Ok(None)
         }
-    })
-    .scan(0, |(state, x): (&mut i32, i32)| {
+    }))
+    .scan(0, covar_mut!(for<'all> |(state, x): (&'all mut i32, i32)| -> Result<Option<i32>, String> {
         *state += x;
         Ok(if *state > 6 { None } else { Some(*state) })
-    });
+    }));
 
     // Running sum: 1, 3, 6 — next would be 10 > 6, so stops
     assert_eq!(lender.next().unwrap(), Some(1));
@@ -297,15 +297,15 @@ fn fallible_scan_basic() {
 fn fallible_filter_map_basic() {
     use lender::from_fallible_fn;
 
-    let lender = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
+    let lender = from_fallible_fn(0, covar_mut!(for<'lend> |state: &'lend mut i32| -> Result<Option<i32>, String> {
         *state += 1;
         if *state <= 6 {
             Ok(Some(*state))
         } else {
             Ok(None)
         }
-    })
-    .filter_map(|x| Ok(if x % 2 == 0 { Some(x * 10) } else { None }));
+    }))
+    .filter_map(covar_mut!(for<'lend> |x: i32| -> Result<Option<i32>, String> { Ok(if x % 2 == 0 { Some(x * 10) } else { None }) }));
 
     // Even elements doubled: 2*10=20, 4*10=40, 6*10=60
     let mut result = Vec::new();
@@ -322,15 +322,15 @@ fn fallible_filter_map_basic() {
 fn fallible_map_while_basic() {
     use lender::from_fallible_fn;
 
-    let mut lender = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
+    let mut lender = from_fallible_fn(0, covar_mut!(for<'lend> |state: &'lend mut i32| -> Result<Option<i32>, String> {
         *state += 1;
         if *state <= 5 {
             Ok(Some(*state))
         } else {
             Ok(None)
         }
-    })
-    .map_while(|x| Ok(if x < 4 { Some(x * 2) } else { None }));
+    }))
+    .map_while(covar_mut!(for<'lend> |x: i32| -> Result<Option<i32>, String> { Ok(if x < 4 { Some(x * 2) } else { None }) }));
 
     // Doubles elements while < 4: 2, 4, 6 — then 4 >= 4, stops
     assert_eq!(lender.next().unwrap(), Some(2));
@@ -344,14 +344,14 @@ fn fallible_mutate_basic() {
     use lender::from_fallible_fn;
 
     let mut observed = Vec::new();
-    let lender = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
+    let lender = from_fallible_fn(0, covar_mut!(for<'lend> |state: &'lend mut i32| -> Result<Option<i32>, String> {
         *state += 1;
         if *state <= 3 {
             Ok(Some(*state))
         } else {
             Ok(None)
         }
-    })
+    }))
     .mutate(|x| {
         observed.push(*x);
         Ok(())
@@ -374,10 +374,10 @@ fn fallible_scan_empty() {
 
     let lender = lender::fallible_empty::<lender::fallible_lend!(i32), String>().scan(
         0,
-        |(state, x): (&mut i32, i32)| {
+        covar_mut!(for<'all> |(state, x): (&'all mut i32, i32)| -> Result<Option<i32>, String> {
             *state += x;
             Ok(Some(*state))
-        },
+        }),
     );
 
     assert_eq!(lender.count(), Ok(0));
@@ -386,10 +386,10 @@ fn fallible_scan_empty() {
 #[test]
 fn fallible_scan_error_in_source() {
     let mut lender =
-        ErrorAtLender::new(vec![1, 2, 3, 4, 5], 2).scan(0, |(state, x): (&mut i32, &i32)| {
+        ErrorAtLender::new(vec![1, 2, 3, 4, 5], 2).scan(0, covar_mut!(for<'all> |(state, x): (&'all mut i32, &'all i32)| -> Result<Option<i32>, String> {
             *state += *x;
             Ok(Some(*state))
-        });
+        }));
 
     assert_eq!(lender.next().unwrap(), Some(1)); // 0 + 1
     assert_eq!(lender.next().unwrap(), Some(3)); // 1 + 2
@@ -400,22 +400,22 @@ fn fallible_scan_error_in_source() {
 fn fallible_scan_error_in_closure() {
     use lender::from_fallible_fn;
 
-    let mut lender = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
+    let mut lender = from_fallible_fn(0, covar_mut!(for<'all> |state: &'all mut i32| -> Result<Option<i32>, String> {
         *state += 1;
         if *state <= 5 {
             Ok(Some(*state))
         } else {
             Ok(None)
         }
-    })
-    .scan(0, |(state, x): (&mut i32, i32)| {
+    }))
+    .scan(0, covar_mut!(for<'all> |(state, x): (&'all mut i32, i32)| -> Result<Option<i32>, String> {
         *state += x;
         if *state > 5 {
             Err("sum too large".to_string())
         } else {
             Ok(Some(*state))
         }
-    });
+    }));
 
     assert_eq!(lender.next().unwrap(), Some(1)); // sum = 1
     assert_eq!(lender.next().unwrap(), Some(3)); // sum = 3
@@ -427,7 +427,7 @@ fn fallible_map_while_empty() {
     use lender::FallibleLender;
 
     let lender = lender::fallible_empty::<lender::fallible_lend!(i32), String>()
-        .map_while(|x| Ok(Some(x * 2)));
+        .map_while(covar_mut!(for<'lend> |x: i32| -> Result<Option<i32>, String> { Ok(Some(x * 2)) }));
 
     assert_eq!(lender.count(), Ok(0));
 }
@@ -435,7 +435,7 @@ fn fallible_map_while_empty() {
 #[test]
 fn fallible_map_while_error_in_source() {
     let mut lender =
-        ErrorAtLender::new(vec![1, 2, 3, 4, 5], 2).map_while(|x: &i32| Ok(Some(*x * 2)));
+        ErrorAtLender::new(vec![1, 2, 3, 4, 5], 2).map_while(covar_mut!(for<'lend> |x: &'lend i32| -> Result<Option<i32>, String> { Ok(Some(*x * 2)) }));
 
     assert_eq!(lender.next().unwrap(), Some(2));
     assert_eq!(lender.next().unwrap(), Some(4));
@@ -446,21 +446,21 @@ fn fallible_map_while_error_in_source() {
 fn fallible_map_while_error_in_closure() {
     use lender::from_fallible_fn;
 
-    let mut lender = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
+    let mut lender = from_fallible_fn(0, covar_mut!(for<'lend> |state: &'lend mut i32| -> Result<Option<i32>, String> {
         *state += 1;
         if *state <= 5 {
             Ok(Some(*state))
         } else {
             Ok(None)
         }
-    })
-    .map_while(|x| {
+    }))
+    .map_while(covar_mut!(for<'lend> |x: i32| -> Result<Option<i32>, String> {
         if x > 2 {
             Err("value too large".to_string())
         } else {
             Ok(Some(x * 10))
         }
-    });
+    }));
 
     assert_eq!(lender.next().unwrap(), Some(10)); // 1 * 10
     assert_eq!(lender.next().unwrap(), Some(20)); // 2 * 10
@@ -509,7 +509,7 @@ fn error_propagation_filter() {
 
 #[test]
 fn error_propagation_map() {
-    let mut lender = ErrorAtLender::new(vec![10, 20, 30, 40], 1).map(|x: &i32| Ok(*x * 2));
+    let mut lender = ErrorAtLender::new(vec![10, 20, 30, 40], 1).map(covar_mut!(for<'lend> |x: &'lend i32| -> Result<i32, String> { Ok(*x * 2) }));
     assert_eq!(lender.next().unwrap(), Some(20));
     // Index 1 errors
     assert_eq!(lender.next().unwrap_err(), "error at index 1");
@@ -598,16 +598,16 @@ fn error_propagation_for_each() {
 fn fallible_compose_filter_map_fold() {
     use lender::from_fallible_fn;
 
-    let result = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
+    let result = from_fallible_fn(0, covar_mut!(for<'lend> |state: &'lend mut i32| -> Result<Option<i32>, String> {
         *state += 1;
         if *state <= 6 {
             Ok(Some(*state))
         } else {
             Ok(None)
         }
-    })
+    }))
     .filter(|x| Ok(*x % 2 == 0))
-    .map(|x| Ok(x * 10))
+    .map(covar_mut!(for<'lend> |x: i32| -> Result<i32, String> { Ok(x * 10) }))
     .fold(0, |acc, x| Ok(acc + x));
 
     // Even elements: 2, 4, 6; mapped to 20, 40, 60; sum = 120
@@ -618,14 +618,14 @@ fn fallible_compose_filter_map_fold() {
 fn fallible_compose_skip_take() {
     use lender::from_fallible_fn;
 
-    let mut lender = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
+    let mut lender = from_fallible_fn(0, covar_mut!(for<'lend> |state: &'lend mut i32| -> Result<Option<i32>, String> {
         *state += 1;
         if *state <= 10 {
             Ok(Some(*state))
         } else {
             Ok(None)
         }
-    })
+    }))
     .skip(3)
     .take(2);
 
@@ -656,14 +656,14 @@ fn fallible_compose_error_through_chain() {
 fn fallible_is_partitioned_true() {
     use lender::from_fallible_fn;
 
-    let result = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
+    let result = from_fallible_fn(0, covar_mut!(for<'lend> |state: &'lend mut i32| -> Result<Option<i32>, String> {
         *state += 1;
         if *state <= 6 {
             Ok(Some(*state))
         } else {
             Ok(None)
         }
-    })
+    }))
     .is_partitioned(|x| Ok(x <= 3));
 
     // 1,2,3 are true, then 4,5,6 are false — partitioned
@@ -674,14 +674,14 @@ fn fallible_is_partitioned_true() {
 fn fallible_is_partitioned_false() {
     use lender::from_fallible_fn;
 
-    let result = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
+    let result = from_fallible_fn(0, covar_mut!(for<'lend> |state: &'lend mut i32| -> Result<Option<i32>, String> {
         *state += 1;
         if *state <= 4 {
             Ok(Some(*state))
         } else {
             Ok(None)
         }
-    })
+    }))
     .is_partitioned(|x| Ok(x % 2 == 0));
 
     // 1(f), 2(t), 3(f), 4(t) — not partitioned

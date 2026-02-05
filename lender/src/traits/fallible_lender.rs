@@ -6,7 +6,7 @@ use stable_try_trait_v2::{
 };
 
 use crate::{
-    Chain, Chunk, Chunky, Cloned, Copied, Cycle, DoubleEndedFallibleLender, Enumerate,
+    Chain, Chunk, Chunky, Cloned, Copied, Covar, Cycle, DoubleEndedFallibleLender, Enumerate,
     ExactSizeFallibleLender, ExtendLender, FallibleFlatMap, FallibleFlatten, FallibleIntersperse,
     FallibleIntersperseWith, FalliblePeekable, FallibleTryShuntAdapter, Filter, FilterMap,
     FirstShunt, FromLender, Fuse, ImplBound, Inspect, Iter, Map, MapErr, MapIntoIter, MapWhile,
@@ -366,7 +366,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// Maps each lend of this lender using the given function.
     ///
     /// Note that functions passed to this method must be built using the
-    /// [`hrc!`](crate::hrc) or [`hrc_mut!`](crate::hrc_mut) macro, which also
+    /// [`covar!`](crate::covar) or [`covar_mut!`](crate::covar_mut) macro, which also
     /// checks for covariance of the returned type. Circumventing the macro may
     /// result in undefined behavior if the return type is not covariant.
     ///
@@ -380,7 +380,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// let lender = lender::lend_fallible_iter::<fallible_lend!(&'lend mut u8), _>(
     ///     data.iter_mut().into_fallible(),
     /// );
-    /// let mut mapped = lender.map(hrc_mut!(
+    /// let mut mapped = lender.map(covar_mut!(
     ///     for<'all> |a: &'all mut u8| -> Result<&'all u8, Infallible> {
     ///         *a += 1;
     ///         Ok(&*a)
@@ -389,7 +389,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(mapped.next().unwrap(), Some(&2));
     /// ```
     #[inline]
-    fn map<F>(self, f: F) -> Map<Self, F>
+    fn map<F>(self, f: Covar<F>) -> Map<Self, F>
     where
         Self: Sized,
         F: for<'all> FnMutHKARes<'all, FallibleLend<'all, Self>, Self::Error>,
@@ -504,7 +504,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// Filters and maps this lender using the given function.
     ///
     /// Note that functions passed to this method must be built using the
-    /// [`hrc!`](crate::hrc) or [`hrc_mut!`](crate::hrc_mut) macro, which also
+    /// [`covar!`](crate::covar) or [`covar_mut!`](crate::covar_mut) macro, which also
     /// checks for covariance of the returned type. Circumventing the macro may
     /// result in undefined behavior if the return type is not covariant.
     ///
@@ -518,7 +518,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// let lender = lender::lend_fallible_iter::<fallible_lend!(&'lend mut u8), _>(
     ///     data.iter_mut().into_fallible(),
     /// );
-    /// let mut filtered = lender.filter_map(hrc_mut!(
+    /// let mut filtered = lender.filter_map(covar_mut!(
     ///     for<'all> |a: &'all mut u8| -> Result<Option<&'all u8>, Infallible> {
     ///         if *a > 1 { Ok(Some(&*a)) } else { Ok(None) }
     ///     }
@@ -526,7 +526,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(filtered.next().unwrap(), Some(&2));
     /// ```
     #[inline]
-    fn filter_map<F>(self, f: F) -> FilterMap<Self, F>
+    fn filter_map<F>(self, f: Covar<F>) -> FilterMap<Self, F>
     where
         Self: Sized,
         F: for<'all> FnMutHKAResOpt<'all, FallibleLend<'all, Self>, Self::Error>,
@@ -636,7 +636,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// Maps this lender using the given function while it returns [`Some`].
     ///
     /// Note that functions passed to this method must be built using the
-    /// [`hrc!`](crate::hrc) or [`hrc_mut!`](crate::hrc_mut) macro, which also
+    /// [`covar!`](crate::covar) or [`covar_mut!`](crate::covar_mut) macro, which also
     /// checks for covariance of the returned type. Circumventing the macro may
     /// result in undefined behavior if the return type is not covariant.
     ///
@@ -650,7 +650,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// let lender = lender::lend_fallible_iter::<fallible_lend!(&'lend mut u8), _>(
     ///     data.iter_mut().into_fallible(),
     /// );
-    /// let mut mapped = lender.map_while(hrc_mut!(
+    /// let mut mapped = lender.map_while(covar_mut!(
     ///     for<'all> |a: &'all mut u8| -> Result<Option<&'all u8>, Infallible> {
     ///         if *a < 2 { Ok(Some(&*a)) } else { Ok(None) }
     ///     }
@@ -659,7 +659,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(mapped.next().unwrap(), None);
     /// ```
     #[inline]
-    fn map_while<P>(self, predicate: P) -> MapWhile<Self, P>
+    fn map_while<P>(self, predicate: Covar<P>) -> MapWhile<Self, P>
     where
         Self: Sized,
         P: for<'all> FnMutHKAResOpt<'all, FallibleLend<'all, Self>, Self::Error>,
@@ -715,7 +715,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// The [`FallibleLender`] version of [`Iterator::scan`].
     ///
     /// Note that functions passed to this method must be built using the
-    /// [`hrc!`](crate::hrc) or [`hrc_mut!`](crate::hrc_mut) macro, which also
+    /// [`covar!`](crate::covar) or [`covar_mut!`](crate::covar_mut) macro, which also
     /// checks for covariance of the returned type. Circumventing the macro may
     /// result in undefined behavior if the return type is not covariant.
     ///
@@ -730,7 +730,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// );
     /// let mut scanned = lender.scan(
     ///     0,
-    ///     hrc_mut!(
+    ///     covar_mut!(
     ///         for<'all> |args: (&'all mut u8, &'all u8)| -> Result<Option<&'all u8>, Infallible> {
     ///             *args.0 += *args.1;
     ///             Ok(Some(args.1))
@@ -741,7 +741,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(scanned.next().unwrap(), Some(&2));
     /// ```
     #[inline]
-    fn scan<St, F>(self, initial_state: St, f: F) -> Scan<Self, St, F>
+    fn scan<St, F>(self, initial_state: St, f: Covar<F>) -> Scan<Self, St, F>
     where
         Self: Sized,
         F: for<'all> FnMutHKAResOpt<'all, (&'all mut St, FallibleLend<'all, Self>), Self::Error>,
@@ -752,7 +752,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// The [`FallibleLender`] version of [`Iterator::flat_map`].
     ///
     /// Note that functions passed to this method must be built using the
-    /// [`hrc!`](crate::hrc) or [`hrc_mut!`](crate::hrc_mut) macro, which also
+    /// [`covar!`](crate::covar) or [`covar_mut!`](crate::covar_mut) macro, which also
     /// checks for covariance of the returned type. Circumventing the macro may
     /// result in undefined behavior if the return type is not covariant.
     ///
@@ -778,7 +778,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     ///
     /// let data = [1, 2, 3];
     /// let mut flat = data.into_iter().into_lender().into_fallible().flat_map(
-    ///     hrc_mut!(for<'lend> |x: i32| -> Result<VecLender, Infallible> {
+    ///     covar_mut!(for<'lend> |x: i32| -> Result<VecLender, Infallible> {
     ///         Ok(VecLender(vec![x, x * 10]))
     ///     })
     /// );
@@ -787,7 +787,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(flat.next().unwrap(), Some(2));
     /// ```
     #[inline]
-    fn flat_map<'call, F>(self, f: F) -> FallibleFlatMap<'call, Self, F>
+    fn flat_map<'call, F>(self, f: Covar<F>) -> FallibleFlatMap<'call, Self, F>
     where
         Self: Sized,
         F: for<'all> FnMutHKARes<'all, FallibleLend<'all, Self>, Self::Error>,
@@ -806,7 +806,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// let data = [vec![1, 2], vec![3, 4]];
     /// let lender = data.into_iter().into_lender()
     ///     .into_fallible();
-    /// let mut flat = lender.map(hrc!(for<'all> |v: Vec<i32>| -> Result<lender::IntoFallible<lender::FromIter<std::vec::IntoIter<i32>>>, Infallible> {
+    /// let mut flat = lender.map(covar!(for<'all> |v: Vec<i32>| -> Result<lender::IntoFallible<lender::FromIter<std::vec::IntoIter<i32>>>, Infallible> {
     ///     Ok(v.into_iter().into_lender().into_fallible())
     /// })).flatten();
     /// assert_eq!(flat.next().unwrap(), Some(1));

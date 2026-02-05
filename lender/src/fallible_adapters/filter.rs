@@ -46,7 +46,9 @@ where
         ) -> impl FnMut(FallibleLend<'_, L>) -> Result<usize, E> {
             move |x| (f)(&x).map(|res| res as usize)
         }
-        let lender = self.lender.map(f::<_, Self, _>(self.predicate));
+        // SAFETY: the closure returns Result<usize, E> (owned types),
+        // which is trivially covariant.
+        let lender = self.lender.map(unsafe { crate::Covar::__new(f::<_, Self, _>(self.predicate)) });
         crate::fallible_adapters::non_fallible_adapter::process(lender, |iter| {
             core::iter::Iterator::sum(iter)
         })

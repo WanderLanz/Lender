@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::{Lend, Lender, Lending, higher_order::FnMutHKAOpt};
+use crate::{Covar, Lend, Lender, Lending, higher_order::FnMutHKAOpt};
 
 /// A lender that yields elements based on a predicate and maps them.
 ///
@@ -9,12 +9,12 @@ use crate::{Lend, Lender, Lending, higher_order::FnMutHKAOpt};
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct MapWhile<L, P> {
     pub(crate) lender: L,
-    pub(crate) predicate: P,
+    pub(crate) predicate: Covar<P>,
 }
 
 impl<L, P> MapWhile<L, P> {
     #[inline(always)]
-    pub(crate) fn new(lender: L, predicate: P) -> MapWhile<L, P> {
+    pub(crate) fn new(lender: L, predicate: Covar<P>) -> MapWhile<L, P> {
         MapWhile { lender, predicate }
     }
 
@@ -26,7 +26,7 @@ impl<L, P> MapWhile<L, P> {
 
     /// Returns the inner lender and the predicate.
     #[inline(always)]
-    pub fn into_parts(self) -> (L, P) {
+    pub fn into_parts(self) -> (L, Covar<P>) {
         (self.lender, self.predicate)
     }
 }
@@ -57,7 +57,7 @@ where
     crate::unsafe_assume_covariance!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
-        (self.predicate)(self.lender.next()?)
+        (self.predicate.as_inner_mut())(self.lender.next()?)
     }
 
     #[inline]

@@ -76,7 +76,9 @@ where
         ) -> impl FnMut(Lend<'_, L>) -> usize {
             move |x| (f)(&x) as usize
         }
-        self.lender.map(f::<Self, _>(self.predicate)).iter().sum()
+        // SAFETY: the closure returns usize (an owned type),
+        // which is trivially covariant.
+        self.lender.map(unsafe { crate::Covar::__new(f::<Self, _>(self.predicate)) }).iter().sum()
     }
 
     #[inline]

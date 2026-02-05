@@ -2,7 +2,7 @@ use alloc::borrow::ToOwned;
 use core::{cmp::Ordering, num::NonZeroUsize, ops::ControlFlow};
 
 use crate::{
-    Chain, Chunk, Chunky, Cloned, Convert, Copied, Cycle, DoubleEndedLender, Enumerate,
+    Chain, Chunk, Chunky, Cloned, Convert, Copied, Covar, Cycle, DoubleEndedLender, Enumerate,
     ExactSizeLender, ExtendLender, Filter, FilterMap, FirstShunt, FlatMap, Flatten, FromLender,
     Fuse, ImplBound, Inspect, Intersperse, IntersperseWith, IntoFallible, IntoLender, Iter, Map,
     MapIntoIter, MapWhile, Mutate, Owned, Peekable, ProductLender, Ref, Rev, Scan, SecondShunt,
@@ -326,7 +326,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// Maps each lend of this lender using the given function.
     ///
     /// Note that functions passed to this method must be built using the
-    /// [`hrc!`](crate::hrc) or [`hrc_mut!`](crate::hrc_mut) macro, which also
+    /// [`covar!`](crate::covar) or [`covar_mut!`](crate::covar_mut) macro, which also
     /// checks for covariance of the returned type. Circumventing the macro may
     /// result in undefined behavior if the return type is not covariant.
     ///
@@ -336,7 +336,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// # use lender::prelude::*;
     /// let mut data = [1, 2u8];
     /// let mut lender = lender::lend_iter::<lend!(&'lend mut u8), _>(data.iter_mut());
-    /// let mut mapped = lender.map(hrc_mut!(for<'all> |a: &'all mut u8| -> &'all u8 {
+    /// let mut mapped = lender.map(covar_mut!(for<'all> |a: &'all mut u8| -> &'all u8 {
     ///     *a += 1;
     ///     &*a
     /// }));
@@ -345,7 +345,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(mapped.next(), None);
     /// ```
     #[inline]
-    fn map<F>(self, f: F) -> Map<Self, F>
+    fn map<F>(self, f: Covar<F>) -> Map<Self, F>
     where
         Self: Sized,
         F: for<'all> FnMutHKA<'all, Lend<'all, Self>>,
@@ -419,7 +419,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// Filters and maps this lender using the given function.
     ///
     /// Note that functions passed to this method must be built using the
-    /// [`hrc!`](crate::hrc) or [`hrc_mut!`](crate::hrc_mut) macro, which also
+    /// [`covar!`](crate::covar) or [`covar_mut!`](crate::covar_mut) macro, which also
     /// checks for covariance of the returned type. Circumventing the macro may
     /// result in undefined behavior if the return type is not covariant.
     ///
@@ -429,7 +429,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// # use lender::prelude::*;
     /// let mut data = [1, 2u8];
     /// let mut lender = lender::lend_iter::<lend!(&'lend mut u8), _>(data.iter_mut());
-    /// let mut filtered = lender.filter_map(hrc_mut!(for<'all> |a: &'all mut u8| -> Option<&'all u8> {
+    /// let mut filtered = lender.filter_map(covar_mut!(for<'all> |a: &'all mut u8| -> Option<&'all u8> {
     ///     if *a > 1 {
     ///         Some(&*a)
     ///     } else {
@@ -440,7 +440,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(filtered.next(), None);
     /// ```
     #[inline]
-    fn filter_map<F>(self, f: F) -> FilterMap<Self, F>
+    fn filter_map<F>(self, f: Covar<F>) -> FilterMap<Self, F>
     where
         Self: Sized,
         F: for<'all> FnMutHKAOpt<'all, Lend<'all, Self>>,
@@ -531,7 +531,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// Maps this lender using the given function while it returns [`Some`].
     ///
     /// Note that functions passed to this method must be built using the
-    /// [`hrc!`](crate::hrc) or [`hrc_mut!`](crate::hrc_mut) macro, which also
+    /// [`covar!`](crate::covar) or [`covar_mut!`](crate::covar_mut) macro, which also
     /// checks for covariance of the returned type. Circumventing the macro may
     /// result in undefined behavior if the return type is not covariant.
     ///
@@ -541,7 +541,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// # use lender::prelude::*;
     /// let mut data = [1, 2u8];
     /// let mut lender = lender::lend_iter::<lend!(&'lend mut u8), _>(data.iter_mut());
-    /// let mut mapped = lender.map_while(hrc_mut!(for<'all> |a: &'all mut u8| -> Option<&'all u8> {
+    /// let mut mapped = lender.map_while(covar_mut!(for<'all> |a: &'all mut u8| -> Option<&'all u8> {
     ///     if *a < 2 {
     ///         Some(&*a)
     ///     } else {
@@ -552,7 +552,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(mapped.next(), None);
     /// ```
     #[inline]
-    fn map_while<P>(self, predicate: P) -> MapWhile<Self, P>
+    fn map_while<P>(self, predicate: Covar<P>) -> MapWhile<Self, P>
     where
         Self: Sized,
         P: for<'all> FnMutHKAOpt<'all, Lend<'all, Self>>,
@@ -600,7 +600,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// The [`Lender`] version of [`Iterator::scan`].
     ///
     /// Note that functions passed to this method must be built using the
-    /// [`hrc!`](crate::hrc) or [`hrc_mut!`](crate::hrc_mut) macro, which also
+    /// [`covar!`](crate::covar) or [`covar_mut!`](crate::covar_mut) macro, which also
     /// checks for covariance of the returned type. Circumventing the macro may
     /// result in undefined behavior if the return type is not covariant.
     ///
@@ -609,7 +609,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// ```rust
     /// # use lender::prelude::*;
     /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1u8, 2, 3].iter());
-    /// let mut scanned = lender.scan(0u8, hrc_mut!(for<'all> |args: (&'all mut u8, &'all u8)| -> Option<&'all u8> {
+    /// let mut scanned = lender.scan(0u8, covar_mut!(for<'all> |args: (&'all mut u8, &'all u8)| -> Option<&'all u8> {
     ///     *args.0 += *args.1;
     ///     Some(args.1)
     /// }));
@@ -617,7 +617,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(scanned.next(), Some(&2));
     /// ```
     #[inline]
-    fn scan<St, F>(self, initial_state: St, f: F) -> Scan<Self, St, F>
+    fn scan<St, F>(self, initial_state: St, f: Covar<F>) -> Scan<Self, St, F>
     where
         Self: Sized,
         F: for<'all> FnMutHKAOpt<'all, (&'all mut St, Lend<'all, Self>)>,
@@ -627,7 +627,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// The [`Lender`] version of [`Iterator::flat_map`].
     ///
     /// Note that functions passed to this method must be built using the
-    /// [`hrc!`](crate::hrc) or [`hrc_mut!`](crate::hrc_mut) macro, which also
+    /// [`covar!`](crate::covar) or [`covar_mut!`](crate::covar_mut) macro, which also
     /// checks for covariance of the returned type. Circumventing the macro may
     /// result in undefined behavior if the return type is not covariant.
     ///
@@ -651,14 +651,14 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// let data = [1, 2, 3];
     /// let mut flat = data.into_iter().into_lender().flat_map(
-    ///     hrc_mut!(for<'lend> |x: i32| -> VecLender { VecLender(vec![x, x * 10]) })
+    ///     covar_mut!(for<'lend> |x: i32| -> VecLender { VecLender(vec![x, x * 10]) })
     /// );
     /// assert_eq!(flat.next(), Some(1));
     /// assert_eq!(flat.next(), Some(10));
     /// assert_eq!(flat.next(), Some(2));
     /// ```
     #[inline]
-    fn flat_map<'call, F>(self, f: F) -> FlatMap<'call, Self, F>
+    fn flat_map<'call, F>(self, f: Covar<F>) -> FlatMap<'call, Self, F>
     where
         Self: Sized,
         F: for<'all> FnMutHKA<'all, Lend<'all, Self>>,
@@ -1027,10 +1027,10 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// # use lender::prelude::*;
     /// let mut data = [1, 2, 3u8];
     /// let mut lender = lender::lend_iter::<lend!(&'lend mut u8), _>(data.iter_mut());
-    /// let found = lender.find_map(hrc_mut!(for<'all> |x: &'all mut u8| -> Option<&'all u8> {
-    ///     if *x > 1 { Some(&*x) } else { None }
-    /// }));
-    /// assert_eq!(found, Some(&2));
+    /// let found = lender.find_map(|x: &mut u8| {
+    ///     if *x > 1 { Some(*x) } else { None }
+    /// });
+    /// assert_eq!(found, Some(2));
     /// ```
     #[inline]
     fn find_map<'a, F>(&'a mut self, mut f: F) -> Option<<F as FnMutHKAOpt<'a, Lend<'a, Self>>>::B>

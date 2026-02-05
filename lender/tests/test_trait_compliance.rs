@@ -24,7 +24,7 @@ fn exact_size_enumerate() {
 #[test]
 fn exact_size_map() {
     let mut lender =
-        VecLender::new(vec![1, 2, 3]).map(lender::hrc_mut!(for<'all> |x: &i32| -> i32 { x * 2 }));
+        VecLender::new(vec![1, 2, 3]).map(lender::covar_mut!(for<'all> |x: &i32| -> i32 { x * 2 }));
     assert_eq!(lender.len(), 3);
     assert!(!lender.is_empty());
     lender.next();
@@ -150,7 +150,7 @@ fn fused_enumerate() {
 #[test]
 fn fused_map() {
     let mut lender =
-        VecLender::new(vec![1]).map(lender::hrc_mut!(for<'all> |x: &i32| -> i32 { x + 1 }));
+        VecLender::new(vec![1]).map(lender::covar_mut!(for<'all> |x: &i32| -> i32 { x + 1 }));
     assert_eq!(lender.next(), Some(2));
     assert_eq!(lender.next(), None);
     assert_eq!(lender.next(), None);
@@ -237,7 +237,7 @@ fn size_hint_filter() {
 
 #[test]
 fn size_hint_filter_map() {
-    let lender = VecLender::new(vec![1, 2, 3]).filter_map(lender::hrc_mut!(
+    let lender = VecLender::new(vec![1, 2, 3]).filter_map(lender::covar_mut!(
         for<'all> |x: &i32| -> Option<i32> { if *x > 1 { Some(x * 10) } else { None } }
     ));
     let (lo, hi) = lender.size_hint();
@@ -248,7 +248,7 @@ fn size_hint_filter_map() {
 #[test]
 fn size_hint_map() {
     let lender =
-        VecLender::new(vec![1, 2, 3]).map(lender::hrc_mut!(for<'all> |x: &i32| -> i32 { x * 2 }));
+        VecLender::new(vec![1, 2, 3]).map(lender::covar_mut!(for<'all> |x: &i32| -> i32 { x * 2 }));
     let (lo, hi) = lender.size_hint();
     assert_eq!(lo, 3);
     assert_eq!(hi, Some(3));
@@ -381,7 +381,7 @@ fn size_hint_intersperse_one() {
 #[test]
 fn size_hint_map_constant() {
     let lender =
-        VecLender::new(vec![1, 2, 3]).map(lender::hrc_mut!(for<'all> |_x: &i32| -> i32 { 1 }));
+        VecLender::new(vec![1, 2, 3]).map(lender::covar_mut!(for<'all> |_x: &i32| -> i32 { 1 }));
     let (lo, hi) = lender.size_hint();
     assert_eq!(lo, 3);
     assert_eq!(hi, Some(3));
@@ -479,7 +479,7 @@ fn filter_does_not_have_exact_size() {
 
 #[test]
 fn filter_map_does_not_have_exact_size() {
-    let lender = VecLender::new(vec![1, 2, 3, 4, 5]).filter_map(hrc_mut!(
+    let lender = VecLender::new(vec![1, 2, 3, 4, 5]).filter_map(covar_mut!(
         for<'all> |x: &i32| -> Option<i32> { if *x > 2 { Some(*x * 10) } else { None } }
     ));
     let (lower, upper) = lender.size_hint();
@@ -505,7 +505,7 @@ fn take_while_does_not_have_exact_size() {
 
 #[test]
 fn map_while_does_not_have_exact_size() {
-    let lender = VecLender::new(vec![1, 2, 3, 4, 5]).map_while(hrc_mut!(
+    let lender = VecLender::new(vec![1, 2, 3, 4, 5]).map_while(covar_mut!(
         for<'all> |x: &i32| -> Option<i32> { if *x < 3 { Some(*x * 10) } else { None } }
     ));
     let (lower, upper) = lender.size_hint();
@@ -517,7 +517,7 @@ fn map_while_does_not_have_exact_size() {
 fn scan_does_not_have_exact_size() {
     let lender = VecLender::new(vec![1, 2, 3, 4, 5]).scan(
         0,
-        hrc_mut!(for<'all> |args: (&'all mut i32, &i32)| -> Option<i32> {
+        covar_mut!(for<'all> |args: (&'all mut i32, &i32)| -> Option<i32> {
             *args.0 += *args.1;
             if *args.0 < 10 { Some(*args.0) } else { None }
         }),
@@ -535,7 +535,7 @@ fn map_while_not_fused_behavior() {
     // This test verifies the documented behavior: MapWhile does not implement
     // FusedLender. After the closure returns None, the underlying lender may
     // still have elements, and MapWhile's behavior after that is unspecified.
-    let mut lender = VecLender::new(vec![1, 2, 100, 3, 4]).map_while(hrc_mut!(
+    let mut lender = VecLender::new(vec![1, 2, 100, 3, 4]).map_while(covar_mut!(
         for<'all> |x: &i32| -> Option<i32> { if *x < 50 { Some(*x) } else { None } }
     ));
     assert_eq!(lender.next(), Some(1));

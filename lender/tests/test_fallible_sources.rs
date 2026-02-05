@@ -146,11 +146,11 @@ fn fallible_repeat() {
 
 #[test]
 fn fallible_once_with() {
-    use lender::{fallible_once_with, fallible_once_with_err, hrc_once};
+    use lender::{fallible_once_with, fallible_once_with_err, covar_once};
 
     // Test with value from closure
     let mut once_with =
-        fallible_once_with::<_, String, _>(42, hrc_once!(move |x: &mut i32| -> i32 { *x }));
+        fallible_once_with::<_, String, _>(42, covar_once!(for<'lend> |x: &'lend mut i32| -> i32 { *x }));
     assert_eq!(once_with.next().unwrap(), Some(42));
     assert!(once_with.next().unwrap().is_none());
     assert!(once_with.next().unwrap().is_none()); // Should be fused
@@ -210,14 +210,14 @@ fn from_fallible_fn() {
     use lender::from_fallible_fn;
 
     // Test with stateful closure that counts up
-    let mut from_fn = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
+    let mut from_fn = from_fallible_fn(0, covar_mut!(for<'lend> |state: &'lend mut i32| -> Result<Option<i32>, String> {
         *state += 1;
         if *state <= 3 {
             Ok(Some(*state))
         } else {
             Ok(None)
         }
-    });
+    }));
     assert_eq!(from_fn.next().unwrap(), Some(1));
     assert_eq!(from_fn.next().unwrap(), Some(2));
     assert_eq!(from_fn.next().unwrap(), Some(3));
@@ -225,7 +225,7 @@ fn from_fallible_fn() {
     assert!(from_fn.next().unwrap().is_none()); // Should continue returning None
 
     // Test with closure that returns error
-    let mut from_fn_err = from_fallible_fn(0, |state: &mut i32| -> Result<Option<i32>, String> {
+    let mut from_fn_err = from_fallible_fn(0, covar_mut!(for<'lend> |state: &'lend mut i32| -> Result<Option<i32>, String> {
         *state += 1;
         if *state == 2 {
             Err("error".to_string())
@@ -234,7 +234,7 @@ fn from_fallible_fn() {
         } else {
             Ok(None)
         }
-    });
+    }));
     assert_eq!(from_fn_err.next().unwrap(), Some(1));
     match from_fn_err.next() {
         Err(e) => assert_eq!(e, "error"),

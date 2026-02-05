@@ -1,14 +1,67 @@
 //! # Higher-Order Types, Traits, etc.
 //!
-//! - Flexible function signatures, to work around function lifetime signature restrictions.
-//! - Higher-Rank Closures (macro to create fn signatures as a type hint)
+//! - Flexible function signatures, to work around function lifetime
+//!   signature restrictions.
+//! - Higher-Rank Closures (macros to create fn signatures as a type
+//!   hint)
+//! - [`Covar`] transparent wrapper to mark covariance-checked closures
 //!
-//! If you are using nightly, it is recommended to use higher-rank closures
-//! (`for<'all> |x: &'all ()| -> &'all () { x }`), which better satisfy these traits
-//! without addition function signatures. (`#![feature(closure_lifetime_binder)]`).
-//!
-//! If you are not on nightly, you can use the [`hrc!`](`crate::hrc`), [`hrc_mut!`](`crate::hrc_mut`),
-//! or [`hrc_once!`](`crate::hrc_once`) macros to create a higher-rank closure.
+//! Use the [`covar!`](`crate::covar`),
+//! [`covar_mut!`](`crate::covar_mut`), or
+//! [`covar_once!`](`crate::covar_once`) macros to create a
+//! covariance-checked higher-rank closure wrapped in [`Covar`].
+
+/// A transparent wrapper that seals a closure whose covariance has
+/// been verified at construction time by the [`covar!`](crate::covar),
+/// [`covar_mut!`](crate::covar_mut), or
+/// [`covar_once!`](crate::covar_once) macros.
+///
+/// Adapter structs like [`Map`](crate::Map) store `Covar<F>` and call the inner
+/// closure through [`as_inner`](Covar::as_inner) and
+/// [`as_inner_mut`](Covar::as_inner_mut), or [`into_inner`](Covar::into_inner).
+///
+/// `Covar<F>` cannot be constructed safely by user code (the
+/// constructor is unsafe, and also hidden to discourage usage).
+#[derive(Clone, Copy)]
+#[repr(transparent)]
+pub struct Covar<F> {
+    f: F,
+}
+
+impl<F> Covar<F> {
+    /// Creates a new `Covar<F>`.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that `f` produces covariant output
+    /// with respect to any lifetime parameters in its signature.
+    /// This is guaranteed by the [`covar!`](crate::covar),
+    /// [`covar_mut!`](crate::covar_mut), and
+    /// [`covar_once!`](crate::covar_once) macros.
+    #[doc(hidden)]
+    #[inline(always)]
+    pub unsafe fn __new(f: F) -> Self {
+        Covar { f }
+    }
+
+    /// Returns a reference to the inner closure.
+    #[inline(always)]
+    pub fn as_inner(&self) -> &F {
+        &self.f
+    }
+
+    /// Returns a mutable reference to the inner closure.
+    #[inline(always)]
+    pub fn as_inner_mut(&mut self) -> &mut F {
+        &mut self.f
+    }
+
+    /// Unwraps and returns the inner closure.
+    #[inline(always)]
+    pub fn into_inner(self) -> F {
+        self.f
+    }
+}
 
 /// Higher-Kinded Associated Output [`FnOnce`], where `Output` (B) is with lifetime `'b`.
 pub trait FnOnceHKA<'b, A>: FnOnce(A) -> <Self as FnOnceHKA<'b, A>>::B {
@@ -111,6 +164,9 @@ macro_rules! __hrc__ {
         -> $Ret:ty
         $body:block
     ) => (
+        // SAFETY: the covariance check inside __funnel__ guarantees
+        // that the return type is covariant in the bound lifetime(s).
+        unsafe { $crate::higher_order::Covar::__new(
         ({
             fn __funnel__<
                 $(
@@ -162,6 +218,7 @@ macro_rules! __hrc__ {
         })(
             $(move $($move)?)? |$($arg),*| $body
         )
+        ) }
     );
 
     // Case 2: Without for<> or without return type - no covariance check needed
@@ -197,6 +254,10 @@ macro_rules! __hrc__ {
         $( -> $Ret:ty)?
         $body:block
     ) => (
+        // SAFETY: Case 2 has no for<> with return type, so no
+        // covariance issue arises (the return type does not borrow
+        // from a higher-rank lifetime).
+        unsafe { $crate::higher_order::Covar::__new(
         ({
             fn __funnel__<
                 $(
@@ -230,30 +291,29 @@ macro_rules! __hrc__ {
         })(
             $(move $($move)?)? |$($arg),*| $body
         )
+        ) }
     );
 }
 
-/// Higher-Rank Closure ([`FnOnce`]) macro for creating closures with explicit lifetime bounds.
+/// Covariance-checked [`FnOnce`] closure macro.
 ///
-/// This macro is a stable replacement for the nightly `closure_lifetime_binder` feature
-/// (`for<'a> |x: &'a T| -> &'a U { ... }`). It wraps a closure and provides the necessary
-/// type hints for the compiler to understand higher-rank lifetime bounds.
+/// Creates a [`Covar`]-wrapped closure with explicit lifetime
+/// bounds and a compile-time covariance check (when a return type
+/// is specified with `for<'a>` bounds). This ensures that the
+/// return type is covariant in the bound lifetime, which is
+/// required for soundness with lending iterators.
 ///
-/// Use `hrc_once!` when the closure will only be called once (e.g., with [`Lender::fold`](crate::Lender::fold)).
-/// For closures that may be called multiple times, use [`hrc_mut!`](crate::hrc_mut) or [`hrc!`](crate::hrc).
-///
-/// # Covariance Check
-///
-/// When a return type is specified with `for<'a>` bounds, the macro includes a compile-time
-/// covariance check. This ensures that the return type is covariant in the bound lifetime,
-/// which is required for soundness with lending iterators. Invariant types like
-/// `Cell<&'a T>` will cause a compilation error.
+/// Use `covar_once!` when the closure will only be called once
+/// (e.g., with [`Lender::fold`](crate::Lender::fold)). For
+/// closures that may be called multiple times, use
+/// [`covar_mut!`](crate::covar_mut) or
+/// [`covar!`](crate::covar).
 ///
 /// # Syntax
 ///
 /// ```text
-/// hrc_once!(for<'a> |arg: Type<'a>| -> ReturnType<'a> { body })
-/// hrc_once!(for<'a> move |arg: Type<'a>| -> ReturnType<'a> { body })
+/// covar_once!(for<'a> |arg: Type<'a>| -> ReturnType<'a> { body })
+/// covar_once!(for<'a> move |arg: Type<'a>| -> ReturnType<'a> { body })
 /// ```
 ///
 /// # Examples
@@ -261,9 +321,8 @@ macro_rules! __hrc__ {
 /// ```rust
 /// use lender::prelude::*;
 ///
-/// // Using hrc_once! with once_with (closure called exactly once)
 /// let mut lender = lender::once_with(42u8,
-///     hrc_once!(for<'lend> |state: &'lend mut u8| -> &'lend mut u8 {
+///     covar_once!(for<'lend> |state: &'lend mut u8| -> &'lend mut u8 {
 ///         *state += 1;
 ///         state
 ///     })
@@ -271,35 +330,30 @@ macro_rules! __hrc__ {
 /// assert_eq!(lender.next(), Some(&mut 43));
 /// assert_eq!(lender.next(), None);
 /// ```
-///
-/// This is a modified version of
-/// [`higher-order-closure`](https://crates.io/crates/higher-order-closure)'s
-/// `higher_order_closure` macro.
 #[macro_export]
-macro_rules! hrc_once {($($t:tt)+) => ($crate::__hrc__!(FnOnce, $($t)+))}
+macro_rules! covar_once {($($t:tt)+) => ($crate::__hrc__!(FnOnce, $($t)+))}
 
-/// Higher-Rank Closure ([`FnMut`]) macro for creating closures with explicit lifetime bounds.
+/// Covariance-checked [`FnMut`] closure macro.
 ///
-/// This macro is a stable replacement for the nightly `closure_lifetime_binder` feature
-/// (`for<'a> |x: &'a T| -> &'a U { ... }`). It wraps a closure and provides the necessary
-/// type hints for the compiler to understand higher-rank lifetime bounds.
+/// Creates a [`Covar`]-wrapped closure with explicit lifetime
+/// bounds and a compile-time covariance check (when a return type
+/// is specified with `for<'a>` bounds). This ensures that the
+/// return type is covariant in the bound lifetime, which is
+/// required for soundness with lending iterators.
 ///
-/// Use `hrc_mut!` when the closure may be called multiple times and captures mutable state
-/// or needs `&mut self` semantics. This is the most commonly used variant for lender methods
-/// like [`Lender::map`](crate::Lender::map), [`Lender::for_each`](crate::Lender::for_each), [`Lender::filter_map`](crate::Lender::filter_map), and [`Lender::scan`](crate::Lender::scan).
-///
-/// # Covariance Check
-///
-/// When a return type is specified with `for<'a>` bounds, the macro includes a compile-time
-/// covariance check. This ensures that the return type is covariant in the bound lifetime,
-/// which is required for soundness with lending iterators. Invariant types like
-/// `Cell<&'a T>` will cause a compilation error.
+/// Use `covar_mut!` when the closure may be called multiple times
+/// and captures mutable state or needs `&mut self` semantics.
+/// This is the most commonly used variant for lender methods
+/// like [`Lender::map`](crate::Lender::map),
+/// [`Lender::for_each`](crate::Lender::for_each),
+/// [`Lender::filter_map`](crate::Lender::filter_map), and
+/// [`Lender::scan`](crate::Lender::scan).
 ///
 /// # Syntax
 ///
 /// ```text
-/// hrc_mut!(for<'a> |arg: Type<'a>| -> ReturnType<'a> { body })
-/// hrc_mut!(for<'a> move |arg: Type<'a>| -> ReturnType<'a> { body })
+/// covar_mut!(for<'a> |arg: Type<'a>| -> ReturnType<'a> { body })
+/// covar_mut!(for<'a> move |arg: Type<'a>| -> ReturnType<'a> { body })
 /// ```
 ///
 /// # Examples
@@ -307,10 +361,9 @@ macro_rules! hrc_once {($($t:tt)+) => ($crate::__hrc__!(FnOnce, $($t)+))}
 /// ```rust
 /// use lender::prelude::*;
 ///
-/// // Using hrc_mut! with map to transform borrowed elements
 /// let mut data = [1, 2, 3, 4];
 /// let mut lender = lender::windows_mut(&mut data, 2)
-///     .map(hrc_mut!(for<'lend> |w: &'lend mut [i32]| -> &'lend mut i32 {
+///     .map(covar_mut!(for<'lend> |w: &'lend mut [i32]| -> &'lend mut i32 {
 ///         &mut w[0]
 ///     }));
 /// assert_eq!(lender.next(), Some(&mut 1));
@@ -319,43 +372,34 @@ macro_rules! hrc_once {($($t:tt)+) => ($crate::__hrc__!(FnOnce, $($t)+))}
 /// ```rust
 /// use lender::prelude::*;
 ///
-/// // Using hrc_mut! with for_each
 /// let mut data = [0, 1, 0, 0, 0, 0, 0, 0, 0];
 /// lender::windows_mut(&mut data, 3)
-///     .for_each(hrc_mut!(for<'lend> |w: &'lend mut [i32]| {
+///     .for_each(|w| {
 ///         w[2] = w[0] + w[1];  // Compute Fibonacci
-///     }));
+///     });
 /// assert_eq!(data, [0, 1, 1, 2, 3, 5, 8, 13, 21]);
 /// ```
-///
-/// This is a modified version of
-/// [`higher-order-closure`](https://crates.io/crates/higher-order-closure)'s
-/// `higher_order_closure` macro.
 #[macro_export]
-macro_rules! hrc_mut {($($t:tt)+) => ($crate::__hrc__!(FnMut, $($t)+))}
+macro_rules! covar_mut {($($t:tt)+) => ($crate::__hrc__!(FnMut, $($t)+))}
 
-/// Higher-Rank Closure ([`Fn`]) macro for creating closures with explicit lifetime bounds.
+/// Covariance-checked [`Fn`] closure macro.
 ///
-/// This macro is a stable replacement for the nightly `closure_lifetime_binder` feature
-/// (`for<'a> |x: &'a T| -> &'a U { ... }`). It wraps a closure and provides the necessary
-/// type hints for the compiler to understand higher-rank lifetime bounds.
+/// Creates a [`Covar`]-wrapped closure with explicit lifetime
+/// bounds and a compile-time covariance check (when a return type
+/// is specified with `for<'a>` bounds). This ensures that the
+/// return type is covariant in the bound lifetime, which is
+/// required for soundness with lending iterators.
 ///
-/// Use `hrc!` when the closure only needs shared access to its captures (`&self` semantics)
-/// and may be called multiple times. In practice, [`hrc_mut!`](crate::hrc_mut) is more commonly used since
-/// most lender methods require [`FnMut`].
-///
-/// # Covariance Check
-///
-/// When a return type is specified with `for<'a>` bounds, the macro includes a compile-time
-/// covariance check. This ensures that the return type is covariant in the bound lifetime,
-/// which is required for soundness with lending iterators. Invariant types like
-/// `Cell<&'a T>` will cause a compilation error.
+/// Use `covar!` when the closure only needs shared access to its
+/// captures (`&self` semantics) and may be called multiple times.
+/// In practice, [`covar_mut!`](crate::covar_mut) is more commonly
+/// used since most lender methods require [`FnMut`].
 ///
 /// # Syntax
 ///
 /// ```text
-/// hrc!(for<'a> |arg: Type<'a>| -> ReturnType<'a> { body })
-/// hrc!(for<'a> move |arg: Type<'a>| -> ReturnType<'a> { body })
+/// covar!(for<'a> |arg: Type<'a>| -> ReturnType<'a> { body })
+/// covar!(for<'a> move |arg: Type<'a>| -> ReturnType<'a> { body })
 /// ```
 ///
 /// # Examples
@@ -363,14 +407,11 @@ macro_rules! hrc_mut {($($t:tt)+) => ($crate::__hrc__!(FnMut, $($t)+))}
 /// ```rust
 /// use lender::prelude::*;
 ///
-/// // hrc! can be used where Fn is sufficient, but hrc_mut! also works
 /// let data = [1, 2, 3];
 /// let lender = data.iter().into_lender();
-/// let mapped = lender.map(hrc!(for<'lend> |x: &'lend i32| -> i32 { *x * 2 }));
+/// let mapped = lender.map(
+///     covar!(for<'lend> |x: &'lend i32| -> i32 { *x * 2 }),
+/// );
 /// ```
-///
-/// This is a modified version of
-/// [`higher-order-closure`](https://crates.io/crates/higher-order-closure)'s
-/// `higher_order_closure` macro.
 #[macro_export]
-macro_rules! hrc {($($t:tt)+) => ($crate::__hrc__!(Fn, $($t)+))}
+macro_rules! covar {($($t:tt)+) => ($crate::__hrc__!(Fn, $($t)+))}

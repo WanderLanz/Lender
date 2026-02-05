@@ -23,7 +23,7 @@ where
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         match self.lender.next()? {
-            Some(next) => (self.predicate)(next),
+            Some(next) => (self.predicate.as_inner_mut())(next),
             None => Ok(None),
         }
     }

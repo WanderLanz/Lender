@@ -176,7 +176,7 @@ fn compose_filter_map_fold() {
     // filter even numbers, map to doubled, then fold sum
     let result = VecLender::new(vec![1, 2, 3, 4, 5, 6])
         .filter(|x| *x % 2 == 0)
-        .map(hrc_mut!(for<'all> |x: &'all i32| -> i32 { *x * 10 }))
+        .map(covar_mut!(for<'all> |x: &'all i32| -> i32 { *x * 10 }))
         .fold(0, |acc, x| acc + x);
     // 2*10 + 4*10 + 6*10 = 120
     assert_eq!(result, 120);
@@ -214,7 +214,7 @@ fn compose_flatten_filter_map() {
     let result = VecOfVecLender::new(vec![vec![1, 2, 3], vec![4, 5, 6]])
         .flatten()
         .filter(|x| **x % 2 == 1)
-        .map(hrc_mut!(for<'all> |x: &'all i32| -> i32 { *x * 100 }))
+        .map(covar_mut!(for<'all> |x: &'all i32| -> i32 { *x * 100 }))
         .fold(0, |acc, x| acc + x);
     // Odd: 1, 3, 5 → 100 + 300 + 500 = 900
     assert_eq!(result, 900);
@@ -262,7 +262,7 @@ fn compose_zip_map_fold() {
     let b = VecLender::new(vec![10, 20, 30]);
     let result = a
         .zip(b)
-        .map(hrc_mut!(for<'all> |pair: (&'all i32, &'all i32)| -> i32 {
+        .map(covar_mut!(for<'all> |pair: (&'all i32, &'all i32)| -> i32 {
             *pair.0 + *pair.1
         }))
         .fold(0, |acc, x| acc + x);

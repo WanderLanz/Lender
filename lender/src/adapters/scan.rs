@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::{Lend, Lender, Lending, higher_order::FnMutHKAOpt};
+use crate::{Covar, Lend, Lender, Lending, higher_order::FnMutHKAOpt};
 
 /// A lender to maintain state while lending elements from the underlying lender.
 ///
@@ -9,13 +9,13 @@ use crate::{Lend, Lender, Lending, higher_order::FnMutHKAOpt};
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Scan<L, St, F> {
     pub(crate) lender: L,
-    pub(crate) f: F,
+    pub(crate) f: Covar<F>,
     pub(crate) state: St,
 }
 
 impl<L, St, F> Scan<L, St, F> {
     #[inline(always)]
-    pub(crate) fn new(lender: L, state: St, f: F) -> Scan<L, St, F> {
+    pub(crate) fn new(lender: L, state: St, f: Covar<F>) -> Scan<L, St, F> {
         Scan { lender, state, f }
     }
 
@@ -27,7 +27,7 @@ impl<L, St, F> Scan<L, St, F> {
 
     /// Returns the inner lender, the state, and the scan function.
     #[inline(always)]
-    pub fn into_parts(self) -> (L, St, F) {
+    pub fn into_parts(self) -> (L, St, Covar<F>) {
         (self.lender, self.state, self.f)
     }
 }
@@ -55,11 +55,12 @@ where
     for<'all> F: FnMutHKAOpt<'all, (&'all mut St, Lend<'all, L>)>,
     L: Lender,
 {
-    // SAFETY: the lend is the return type of F
+    // SAFETY: the lend is the return type of F, whose covariance
+    // has been checked at Covar construction time.
     crate::unsafe_assume_covariance!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
-        (self.f)((&mut self.state, self.lender.next()?))
+        (self.f.as_inner_mut())((&mut self.state, self.lender.next()?))
     }
 
     #[inline]

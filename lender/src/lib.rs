@@ -43,6 +43,7 @@ pub use fallible_adapters::*;
 mod traits;
 pub use traits::*;
 pub mod higher_order;
+pub use higher_order::Covar;
 mod sources;
 pub use sources::*;
 mod fallible_sources;
@@ -54,13 +55,15 @@ pub mod prelude {
     pub use lender_derive::for_;
 
     pub use crate::{
-        CovariantFallibleLending, CovariantLending, DoubleEndedFallibleLender, DoubleEndedLender,
+        Covar, CovariantFallibleLending, CovariantLending, DoubleEndedFallibleLender,
+        DoubleEndedLender,
         ExactSizeFallibleLender, ExactSizeLender, ExtendFallibleLender, ExtendLender,
         FallibleIteratorExt, FallibleLend, FallibleLender, FallibleLending, FromFallibleLender,
         FromLender, FusedFallibleLender, FusedLender, IntoFallibleIteratorExt, IntoFallibleLender,
         IntoIteratorExt, IntoLender, IteratorExt, Lend, Lender, Lending, ProductFallibleLender,
         ProductLender, SumFallibleLender, SumLender, WindowsMutExt, check_covariance,
-        check_covariance_fallible, covariant_fallible_lend, covariant_lend, fallible_lend, hrc,
-        hrc_mut, hrc_once, lend, unsafe_assume_covariance, unsafe_assume_covariance_fallible,
+        check_covariance_fallible, covariant_fallible_lend, covariant_lend, fallible_lend,
+        covar, covar_mut, covar_once, lend, unsafe_assume_covariance,
+        unsafe_assume_covariance_fallible,
     };
 }

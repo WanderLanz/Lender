@@ -22,7 +22,7 @@ where
 
     #[inline(always)]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
-        self.lender.next()?.map(&mut self.f).transpose()
+        self.lender.next()?.map(self.f.as_inner_mut()).transpose()
     }
 
     #[inline(always)]
@@ -37,7 +37,7 @@ where
         Fold: FnMut(B, FallibleLend<'_, Self>) -> Result<R, Self::Error>,
         R: crate::try_trait_v2::Try<Output = B>,
     {
-        let f = &mut self.f;
+        let f = self.f.as_inner_mut();
         self.lender.try_fold(init, move |acc, x| fold(acc, (f)(x)?))
     }
 
@@ -47,8 +47,9 @@ where
         Self: Sized,
         Fold: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
     {
+        let f = self.f.as_inner_mut();
         self.lender
-            .fold(init, move |acc, x| fold(acc, (self.f)(x)?))
+            .fold(init, move |acc, x| fold(acc, (f)(x)?))
     }
 }
 
@@ -58,7 +59,7 @@ where
 {
     #[inline(always)]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
-        self.lender.next_back()?.map(&mut self.f).transpose()
+        self.lender.next_back()?.map(self.f.as_inner_mut()).transpose()
     }
 
     #[inline]
@@ -68,7 +69,7 @@ where
         Fold: FnMut(B, FallibleLend<'_, Self>) -> Result<R, Self::Error>,
         R: crate::try_trait_v2::Try<Output = B>,
     {
-        let f = &mut self.f;
+        let f = self.f.as_inner_mut();
         self.lender
             .try_rfold(init, move |acc, x| fold(acc, (f)(x)?))
     }
@@ -79,8 +80,9 @@ where
         Self: Sized,
         Fold: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
     {
+        let f = self.f.as_inner_mut();
         self.lender
-            .rfold(init, move |acc, x| fold(acc, (self.f)(x)?))
+            .rfold(init, move |acc, x| fold(acc, (f)(x)?))
     }
 }
 

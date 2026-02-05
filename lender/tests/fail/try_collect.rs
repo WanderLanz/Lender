@@ -24,7 +24,7 @@ fn main() {
     let mut count = 0u8;
     let mut lender = lender::from_fn(
         (),
-        hrc_mut!(for<'all> move |(): &'all mut ()| -> Option<Result<(), PrintOnDrop>> {
+        covar_mut!(for<'all> move |(): &'all mut ()| -> Option<Result<(), PrintOnDrop>> {
             let res = match count {
                 0 => Some(Ok(())),
                 count @ (2 | 4) => {

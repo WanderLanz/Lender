@@ -1,10 +1,10 @@
-error[E0277]: the trait bound `Invariant: lender::CovariantLending` is not satisfied
+error[E0277]: the trait bound `Invariant: CovariantLending` is not satisfied
   --> tests/fail/once_covariant.rs:20:28
    |
 20 |     let _ = lender::once::<Invariant>(v);
    |                            ^^^^^^^^^ unsatisfied trait bound
    |
-help: the trait `lender::CovariantLending` is not implemented for `Invariant`
+help: the trait `CovariantLending` is not implemented for `Invariant`
   --> tests/fail/once_covariant.rs:7:1
    |
  7 | struct Invariant;
@@ -15,13 +15,13 @@ note: required by a bound in `lender::once`
    | pub fn once<'a, L: ?Sized + CovariantLending>(value: Lend<'a, L>) -> Once<'a, L> {
    |                             ^^^^^^^^^^^^^^^^ required by this bound in `once`
 
-error[E0277]: the trait bound `Invariant: lender::CovariantLending` is not satisfied
+error[E0277]: the trait bound `Invariant: CovariantLending` is not satisfied
   --> tests/fail/once_covariant.rs:20:13
    |
 20 |     let _ = lender::once::<Invariant>(v);
    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
    |
-help: the trait `lender::CovariantLending` is not implemented for `Invariant`
+help: the trait `CovariantLending` is not implemented for `Invariant`
   --> tests/fail/once_covariant.rs:7:1
    |
  7 | struct Invariant;
@@ -35,13 +35,13 @@ note: required by a bound in `lender::Once`
    |     L: ?Sized + CovariantLending,
    |                 ^^^^^^^^^^^^^^^^ required by this bound in `Once`
 
-error[E0277]: the trait bound `FallibleInvariant: lender::CovariantFallibleLending` is not satisfied
+error[E0277]: the trait bound `FallibleInvariant: CovariantFallibleLending` is not satisfied
   --> tests/fail/once_covariant.rs:24:37
    |
 24 |     let _ = lender::fallible_once::<FallibleInvariant, std::io::Error>(v);
    |                                     ^^^^^^^^^^^^^^^^^ unsatisfied trait bound
    |
-help: the trait `lender::CovariantFallibleLending` is not implemented for `FallibleInvariant`
+help: the trait `CovariantFallibleLending` is not implemented for `FallibleInvariant`
   --> tests/fail/once_covariant.rs:13:1
    |
 13 | struct FallibleInvariant;
@@ -52,13 +52,13 @@ note: required by a bound in `fallible_once`
    | pub fn once<'a, L: ?Sized + CovariantFallibleLending, E>(
    |                             ^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `once`
 
-error[E0277]: the trait bound `FallibleInvariant: lender::CovariantFallibleLending` is not satisfied
+error[E0277]: the trait bound `FallibleInvariant: CovariantFallibleLending` is not satisfied
   --> tests/fail/once_covariant.rs:24:13
    |
 24 |     let _ = lender::fallible_once::<FallibleInvariant, std::io::Error>(v);
    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
    |
-help: the trait `lender::CovariantFallibleLending` is not implemented for `FallibleInvariant`
+help: the trait `CovariantFallibleLending` is not implemented for `FallibleInvariant`
   --> tests/fail/once_covariant.rs:13:1
    |
 13 | struct FallibleInvariant;
@@ -72,13 +72,13 @@ note: required by a bound in `FallibleOnce`
    |     L: ?Sized + CovariantFallibleLending,
    |                 ^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `FallibleOnce`
 
-error[E0277]: the trait bound `FallibleInvariant: lender::CovariantFallibleLending` is not satisfied
+error[E0277]: the trait bound `FallibleInvariant: CovariantFallibleLending` is not satisfied
   --> tests/fail/once_covariant.rs:28:41
    |
 28 |     let _ = lender::fallible_once_err::<FallibleInvariant, _>(std::io::Error::other("test"));
    |                                         ^^^^^^^^^^^^^^^^^ unsatisfied trait bound
    |
-help: the trait `lender::CovariantFallibleLending` is not implemented for `FallibleInvariant`
+help: the trait `CovariantFallibleLending` is not implemented for `FallibleInvariant`
   --> tests/fail/once_covariant.rs:13:1
    |
 13 | struct FallibleInvariant;
@@ -89,13 +89,13 @@ note: required by a bound in `fallible_once_err`
    | pub fn once_err<L: ?Sized + CovariantFallibleLending, E>(error: E) -> OnceErr<L, E> {
    |                             ^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `once_err`
 
-error[E0277]: the trait bound `FallibleInvariant: lender::CovariantFallibleLending` is not satisfied
+error[E0277]: the trait bound `FallibleInvariant: CovariantFallibleLending` is not satisfied
   --> tests/fail/once_covariant.rs:28:13
    |
 28 |     let _ = lender::fallible_once_err::<FallibleInvariant, _>(std::io::Error::other("test"));
    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
    |
-help: the trait `lender::CovariantFallibleLending` is not implemented for `FallibleInvariant`
+help: the trait `CovariantFallibleLending` is not implemented for `FallibleInvariant`
   --> tests/fail/once_covariant.rs:13:1
    |
 13 | struct FallibleInvariant;

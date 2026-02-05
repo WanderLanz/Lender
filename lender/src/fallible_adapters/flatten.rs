@@ -3,8 +3,8 @@ use core::fmt;
 use maybe_dangling::MaybeDangling;
 
 use crate::{
-    FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, IntoFallibleLender, Map,
-    try_trait_v2::Try,
+    Covar, FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender,
+    IntoFallibleLender, Map, try_trait_v2::Try,
 };
 
 /// A fallible lender that flattens one level of nesting in a lender of lenders.
@@ -130,7 +130,7 @@ where
     for<'all> FallibleLend<'all, Map<L, F>>: IntoFallibleLender,
 {
     #[inline(always)]
-    pub(crate) fn new(lender: L, f: F) -> Self {
+    pub(crate) fn new(lender: L, f: Covar<F>) -> Self {
         Self {
             inner: FlattenCompat::new(Map::new(lender, f)),
         }
@@ -144,7 +144,7 @@ where
 
     /// Returns the inner lender and the mapping function.
     #[inline(always)]
-    pub fn into_parts(self) -> (L, F) {
+    pub fn into_parts(self) -> (L, Covar<F>) {
         (*AliasableBox::into_unique(self.inner.lender)).into_parts()
     }
 }
@@ -463,7 +463,8 @@ mod test {
             .into_iter()
             .into_lender()
             .into_fallible()
-            .flat_map(|n| Ok((0..n).into_lender().into_fallible()));
+            // SAFETY: closure returns an owned Result (trivially covariant).
+            .flat_map(unsafe { crate::Covar::__new(|n: i32| Ok((0..n).into_lender().into_fallible())) });
         assert_eq!(l.next(), Ok(Some(0)));
         assert_eq!(l.next(), Ok(Some(0)));
         assert_eq!(l.next(), Ok(Some(1)));

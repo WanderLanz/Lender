@@ -299,7 +299,8 @@ fn mutate_into_parts_additional() {
 
 #[test]
 fn map_basic() {
-    let mut mapped = VecLender::new(vec![1, 2, 3]).map(|x: &i32| *x * 2);
+    let mut mapped = VecLender::new(vec![1, 2, 3])
+        .map(covar_mut!(for<'lend> |x: &'lend i32| -> i32 { *x * 2 }));
 
     assert_eq!(mapped.next(), Some(2));
     assert_eq!(mapped.next(), Some(4));
@@ -310,14 +311,15 @@ fn map_basic() {
 #[test]
 fn map_fold() {
     let sum = VecLender::new(vec![1, 2, 3])
-        .map(|x: &i32| *x * 10)
+        .map(covar_mut!(for<'lend> |x: &'lend i32| -> i32 { *x * 10 }))
         .fold(0, |acc, x| acc + x);
     assert_eq!(sum, 60);
 }
 
 #[test]
 fn map_double_ended() {
-    let mut mapped = VecLender::new(vec![1, 2, 3]).map(|x: &i32| *x * 10);
+    let mut mapped = VecLender::new(vec![1, 2, 3])
+        .map(covar_mut!(for<'lend> |x: &'lend i32| -> i32 { *x * 10 }));
 
     assert_eq!(mapped.next_back(), Some(30));
     assert_eq!(mapped.next(), Some(10));
@@ -328,7 +330,7 @@ fn map_double_ended() {
 #[test]
 fn map_fold_additional() {
     let sum = VecLender::new(vec![1, 2, 3])
-        .map(|x: &i32| *x * 2)
+        .map(covar_mut!(for<'lend> |x: &'lend i32| -> i32 { *x * 2 }))
         .fold(0, |acc, x| acc + x);
     assert_eq!(sum, 12); // 2 + 4 + 6
 }
@@ -336,33 +338,34 @@ fn map_fold_additional() {
 #[test]
 fn map_try_fold_additional() {
     let result: Option<i32> = VecLender::new(vec![1, 2, 3])
-        .map(|x: &i32| *x * 2)
+        .map(covar_mut!(for<'lend> |x: &'lend i32| -> i32 { *x * 2 }))
         .try_fold(0, |acc, x| Some(acc + x));
     assert_eq!(result, Some(12));
 }
 
 #[test]
 fn map_rfold_additional() {
-    let values: Vec<i32> =
-        VecLender::new(vec![1, 2, 3])
-            .map(|x: &i32| *x * 2)
-            .rfold(Vec::new(), |mut acc, x| {
-                acc.push(x);
-                acc
-            });
+    let values: Vec<i32> = VecLender::new(vec![1, 2, 3])
+        .map(covar_mut!(for<'lend> |x: &'lend i32| -> i32 { *x * 2 }))
+        .rfold(Vec::new(), |mut acc, x| {
+            acc.push(x);
+            acc
+        });
     assert_eq!(values, vec![6, 4, 2]);
 }
 
 #[test]
 fn map_into_inner() {
-    let map = VecLender::new(vec![1, 2, 3]).map(|x: &i32| *x * 2);
+    let map = VecLender::new(vec![1, 2, 3])
+        .map(covar_mut!(for<'lend> |x: &'lend i32| -> i32 { *x * 2 }));
     let lender = map.into_inner();
     assert_eq!(lender.count(), 3);
 }
 
 #[test]
 fn map_into_parts_additional() {
-    let map = VecLender::new(vec![1, 2, 3]).map(|x: &i32| *x * 2);
+    let map = VecLender::new(vec![1, 2, 3])
+        .map(covar_mut!(for<'lend> |x: &'lend i32| -> i32 { *x * 2 }));
     let (lender, _f) = map.into_parts();
     assert_eq!(lender.count(), 3);
 }
@@ -370,7 +373,7 @@ fn map_into_parts_additional() {
 #[test]
 fn map_try_rfold_additional() {
     let result: Option<i32> = VecLender::new(vec![1, 2, 3])
-        .map(|x: &i32| *x * 2)
+        .map(covar_mut!(for<'lend> |x: &'lend i32| -> i32 { *x * 2 }))
         .try_rfold(0, |acc, x| Some(acc + x));
     assert_eq!(result, Some(12)); // 6 + 4 + 2 = 12
 }
@@ -378,14 +381,14 @@ fn map_try_rfold_additional() {
 // ============================================================================
 // Scan adapter tests
 // Semantics: like fold but yields intermediate states
-// Note: scan requires hrc_mut! macro for the closure
+// Note: scan requires covar_mut! macro for the closure
 // ============================================================================
 
 #[test]
 fn scan_basic() {
     let mut scanned = VecLender::new(vec![1, 2, 3]).scan(
         0,
-        hrc_mut!(for<'all> |args: (&'all mut i32, &i32)| -> Option<i32> {
+        covar_mut!(for<'all> |args: (&'all mut i32, &i32)| -> Option<i32> {
             *args.0 += *args.1;
             Some(*args.0)
         }),
@@ -403,7 +406,7 @@ fn scan_early_termination() {
     // scan can terminate early by returning None
     let mut scanned = VecLender::new(vec![1, 2, 3, 4, 5]).scan(
         0,
-        hrc_mut!(for<'all> |args: (&'all mut i32, &i32)| -> Option<i32> {
+        covar_mut!(for<'all> |args: (&'all mut i32, &i32)| -> Option<i32> {
             *args.0 += *args.1;
             if *args.0 > 5 { None } else { Some(*args.0) }
         }),
@@ -419,7 +422,7 @@ fn scan_early_termination() {
 fn scan_into_inner() {
     let scan = VecLender::new(vec![1, 2, 3]).scan(
         0,
-        hrc_mut!(for<'all> |args: (&'all mut i32, &i32)| -> Option<i32> {
+        covar_mut!(for<'all> |args: (&'all mut i32, &i32)| -> Option<i32> {
             Some(*args.0 + *args.1)
         }),
     );
@@ -431,7 +434,7 @@ fn scan_into_inner() {
 fn scan_into_parts() {
     let scan = VecLender::new(vec![1, 2, 3]).scan(
         10,
-        hrc_mut!(for<'all> |args: (&'all mut i32, &i32)| -> Option<i32> {
+        covar_mut!(for<'all> |args: (&'all mut i32, &i32)| -> Option<i32> {
             Some(*args.0 + *args.1)
         }),
     );
@@ -444,7 +447,7 @@ fn scan_into_parts() {
 fn scan_size_hint_additional() {
     let scan = VecLender::new(vec![1, 2, 3, 4, 5]).scan(
         0,
-        hrc_mut!(for<'all> |args: (&'all mut i32, &i32)| -> Option<i32> { Some(*args.1) }),
+        covar_mut!(for<'all> |args: (&'all mut i32, &i32)| -> Option<i32> { Some(*args.1) }),
     );
     // Scan can terminate early, so lower bound is 0
     let (lower, upper) = scan.size_hint();
@@ -455,12 +458,12 @@ fn scan_size_hint_additional() {
 // ============================================================================
 // MapWhile adapter tests
 // Semantics: like map but stops when function returns None
-// Note: map_while requires hrc_mut! macro for the closure
+// Note: map_while requires covar_mut! macro for the closure
 // ============================================================================
 
 #[test]
 fn map_while_basic() {
-    let mut mw = VecLender::new(vec![1, 2, 3, 4, 5]).map_while(hrc_mut!(
+    let mut mw = VecLender::new(vec![1, 2, 3, 4, 5]).map_while(covar_mut!(
         for<'all> |x: &i32| -> Option<i32> { if *x < 4 { Some(*x * 10) } else { None } }
     ));
 
@@ -473,7 +476,7 @@ fn map_while_basic() {
 #[test]
 fn map_while_all_mapped() {
     let mut mw =
-        VecLender::new(vec![1, 2, 3]).map_while(hrc_mut!(for<'all> |x: &i32| -> Option<i32> {
+        VecLender::new(vec![1, 2, 3]).map_while(covar_mut!(for<'all> |x: &i32| -> Option<i32> {
             Some(*x * 2)
         }));
 
@@ -486,7 +489,7 @@ fn map_while_all_mapped() {
 #[test]
 fn map_while_immediate_none() {
     let mut mw =
-        VecLender::new(vec![5, 4, 3]).map_while(hrc_mut!(for<'all> |x: &i32| -> Option<i32> {
+        VecLender::new(vec![5, 4, 3]).map_while(covar_mut!(for<'all> |x: &i32| -> Option<i32> {
             if *x < 4 { Some(*x) } else { None }
         }));
     assert_eq!(mw.next(), None);
@@ -495,7 +498,7 @@ fn map_while_immediate_none() {
 #[test]
 fn map_while_into_inner() {
     let map_while =
-        VecLender::new(vec![1, 2, 3]).map_while(hrc_mut!(for<'all> |x: &i32| -> Option<i32> {
+        VecLender::new(vec![1, 2, 3]).map_while(covar_mut!(for<'all> |x: &i32| -> Option<i32> {
             Some(*x * 2)
         }));
     let lender = map_while.into_inner();
@@ -505,7 +508,7 @@ fn map_while_into_inner() {
 #[test]
 fn map_while_into_parts() {
     let map_while =
-        VecLender::new(vec![1, 2, 3]).map_while(hrc_mut!(for<'all> |x: &i32| -> Option<i32> {
+        VecLender::new(vec![1, 2, 3]).map_while(covar_mut!(for<'all> |x: &i32| -> Option<i32> {
             Some(*x * 2)
         }));
     let (lender, _predicate) = map_while.into_parts();
@@ -515,7 +518,7 @@ fn map_while_into_parts() {
 #[test]
 fn map_while_size_hint_additional() {
     let map_while = VecLender::new(vec![1, 2, 3, 4, 5])
-        .map_while(hrc_mut!(for<'all> |x: &i32| -> Option<i32> { Some(*x) }));
+        .map_while(covar_mut!(for<'all> |x: &i32| -> Option<i32> { Some(*x) }));
     // MapWhile can terminate early, so lower bound is 0
     let (lower, upper) = map_while.size_hint();
     assert_eq!(lower, 0);
@@ -526,7 +529,7 @@ fn map_while_size_hint_additional() {
 fn map_while_all_some() {
     // When all return Some, all elements are yielded
     let values: Vec<i32> = VecLender::new(vec![1, 2, 3])
-        .map_while(hrc_mut!(for<'all> |x: &i32| -> Option<i32> {
+        .map_while(covar_mut!(for<'all> |x: &i32| -> Option<i32> {
             Some(*x * 10)
         }))
         .fold(Vec::new(), |mut acc, x| {

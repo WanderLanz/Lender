@@ -1,8 +1,8 @@
 use core::fmt;
 
 use crate::{
-    DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending, higher_order::FnMutHKA,
-    try_trait_v2::Try,
+    Covar, DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending,
+    higher_order::FnMutHKA, try_trait_v2::Try,
 };
 
 /// A lender that maps the values of the underlying lender with a closure.
@@ -12,12 +12,12 @@ use crate::{
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Map<L, F> {
     pub(crate) lender: L,
-    pub(crate) f: F,
+    pub(crate) f: Covar<F>,
 }
 
 impl<L, F> Map<L, F> {
     #[inline(always)]
-    pub(crate) fn new(lender: L, f: F) -> Map<L, F> {
+    pub(crate) fn new(lender: L, f: Covar<F>) -> Map<L, F> {
         Map { lender, f }
     }
 
@@ -29,7 +29,7 @@ impl<L, F> Map<L, F> {
 
     /// Returns the inner lender and the mapping function.
     #[inline(always)]
-    pub fn into_parts(self) -> (L, F) {
+    pub fn into_parts(self) -> (L, Covar<F>) {
         (self.lender, self.f)
     }
 }
@@ -53,11 +53,13 @@ where
     F: for<'all> FnMutHKA<'all, Lend<'all, L>>,
     L: Lender,
 {
-    // SAFETY: the lend is the return type of F
+    // SAFETY: the lend is the return type of F, whose covariance
+    // has been checked at Covar construction time.
     crate::unsafe_assume_covariance!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
-        self.lender.next().map(&mut self.f)
+        let f = self.f.as_inner_mut();
+        self.lender.next().map(f)
     }
 
     #[inline(always)]
@@ -72,7 +74,7 @@ where
         Fold: FnMut(B, Lend<'_, Self>) -> R,
         R: Try<Output = B>,
     {
-        let f = &mut self.f;
+        let f = self.f.as_inner_mut();
         self.lender.try_fold(init, move |acc, x| fold(acc, (f)(x)))
     }
 
@@ -82,7 +84,8 @@ where
         Self: Sized,
         Fold: FnMut(B, Lend<'_, Self>) -> B,
     {
-        self.lender.fold(init, move |acc, x| fold(acc, (self.f)(x)))
+        let f = self.f.as_inner_mut();
+        self.lender.fold(init, move |acc, x| fold(acc, (f)(x)))
     }
 }
 
@@ -92,7 +95,8 @@ where
 {
     #[inline]
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
-        self.lender.next_back().map(&mut self.f)
+        let f = self.f.as_inner_mut();
+        self.lender.next_back().map(f)
     }
 
     #[inline]
@@ -102,7 +106,7 @@ where
         Fold: FnMut(B, Lend<'_, Self>) -> R,
         R: Try<Output = B>,
     {
-        let f = &mut self.f;
+        let f = self.f.as_inner_mut();
         self.lender.try_rfold(init, move |acc, x| fold(acc, (f)(x)))
     }
 
@@ -112,8 +116,9 @@ where
         Self: Sized,
         Fold: FnMut(B, Lend<'_, Self>) -> B,
     {
+        let f = self.f.as_inner_mut();
         self.lender
-            .rfold(init, move |acc, x| fold(acc, (self.f)(x)))
+            .rfold(init, move |acc, x| fold(acc, (f)(x)))
     }
 }
 

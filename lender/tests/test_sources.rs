@@ -16,9 +16,9 @@ fn windows_mut() {
         begin: 0,
         len: 3,
     }
-    .for_each(hrc_mut!(for<'lend> |w: &'lend mut [u32]| {
+    .for_each(covar_mut!(for<'lend> |w: &'lend mut [u32]| {
         w[2] = w[0] + w[1]
-    }));
+    }).into_inner());
     assert_eq!(data, [0, 1, 1, 2, 3, 5, 8, 13, 21]);
     WindowsMut {
         slice: &mut data,
@@ -26,10 +26,10 @@ fn windows_mut() {
         len: 3,
     }
     .filter(|x| x[0] > 0)
-    .map(hrc_mut!(
+    .map(covar_mut!(
         for<'lend> |x: &'lend mut [u32]| -> &'lend mut u32 { &mut x[0] }
     ))
-    .for_each(hrc_mut!(for<'lend> |x: &'lend mut u32| { *x += 1 }));
+    .for_each(covar_mut!(for<'lend> |x: &'lend mut u32| { *x += 1 }).into_inner());
     assert_eq!(data, [0, 2, 2, 3, 4, 6, 9, 13, 21]);
 }
 
@@ -211,7 +211,7 @@ fn source_repeat_with_double_ended() {
 fn source_from_fn_basic() {
     let mut from_fn = lender::from_fn(
         0,
-        hrc_mut!(for<'all> |s: &'all mut i32| -> Option<i32> {
+        covar_mut!(for<'all> |s: &'all mut i32| -> Option<i32> {
             *s += 1;
             if *s <= 3 { Some(*s) } else { None }
         }),
@@ -227,7 +227,7 @@ fn source_from_fn_basic() {
 fn source_once_with_basic() {
     let mut once_with = lender::once_with(
         42u8,
-        hrc_once!(for<'lend> |state: &'lend mut u8| -> &'lend mut u8 {
+        covar_once!(for<'lend> |state: &'lend mut u8| -> &'lend mut u8 {
             *state += 1;
             state
         }),

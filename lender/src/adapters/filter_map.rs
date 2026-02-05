@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::{DoubleEndedLender, FusedLender, Lend, Lender, Lending, higher_order::FnMutHKAOpt};
+use crate::{Covar, DoubleEndedLender, FusedLender, Lend, Lender, Lending, higher_order::FnMutHKAOpt};
 
 /// A lender that uses a closure to optionally produce elements.
 ///
@@ -9,12 +9,12 @@ use crate::{DoubleEndedLender, FusedLender, Lend, Lender, Lending, higher_order:
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct FilterMap<L, F> {
     pub(crate) lender: L,
-    pub(crate) f: F,
+    pub(crate) f: Covar<F>,
 }
 
 impl<L, F> FilterMap<L, F> {
     #[inline(always)]
-    pub(crate) fn new(lender: L, f: F) -> FilterMap<L, F> {
+    pub(crate) fn new(lender: L, f: Covar<F>) -> FilterMap<L, F> {
         FilterMap { lender, f }
     }
 
@@ -26,7 +26,7 @@ impl<L, F> FilterMap<L, F> {
 
     /// Returns the inner lender and the mapping function.
     #[inline(always)]
-    pub fn into_parts(self) -> (L, F) {
+    pub fn into_parts(self) -> (L, Covar<F>) {
         (self.lender, self.f)
     }
 }
@@ -53,12 +53,13 @@ where
     for<'all> F: FnMutHKAOpt<'all, Lend<'all, L>>,
     L: Lender,
 {
-    // SAFETY: the lend is the return type of F
+    // SAFETY: the lend is the return type of F, whose covariance
+    // has been checked at Covar construction time.
     crate::unsafe_assume_covariance!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         while let Some(x) = self.lender.next() {
-            if let Some(y) = (self.f)(x) {
+            if let Some(y) = (self.f.as_inner_mut())(x) {
                 // SAFETY: polonius return
                 return Some(unsafe { core::mem::transmute::<Lend<'_, Self>, Lend<'_, Self>>(y) });
             }
@@ -81,7 +82,7 @@ where
     #[inline]
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         while let Some(x) = self.lender.next_back() {
-            if let Some(y) = (self.f)(x) {
+            if let Some(y) = (self.f.as_inner_mut())(x) {
                 // SAFETY: polonius return
                 return Some(unsafe { core::mem::transmute::<Lend<'_, Self>, Lend<'_, Self>>(y) });
             }

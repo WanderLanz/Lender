@@ -4,6 +4,7 @@
 
 mod common;
 use ::lender::prelude::*;
+use ::lender::FromIter;
 use common::*;
 
 // ============================================================================
@@ -393,7 +394,7 @@ fn flat_map_basic() {
     let mut l = [1, 2, 3]
         .into_iter()
         .into_lender()
-        .flat_map(|n| (0..n).into_lender());
+        .flat_map(covar_mut!(for<'lend> |n: i32| -> FromIter<std::ops::Range<i32>> { (0..n).into_lender() }));
     assert_eq!(l.next(), Some(0)); // from n=1: [0]
     assert_eq!(l.next(), Some(0)); // from n=2: [0, 1]
     assert_eq!(l.next(), Some(1));
@@ -407,7 +408,7 @@ fn flat_map_basic() {
 fn flat_map_empty_outer() {
     let mut l = std::iter::empty::<i32>()
         .into_lender()
-        .flat_map(|n| (0..n).into_lender());
+        .flat_map(covar_mut!(for<'lend> |n: i32| -> FromIter<std::ops::Range<i32>> { (0..n).into_lender() }));
     assert_eq!(l.next(), None);
 }
 
@@ -417,7 +418,7 @@ fn flat_map_empty_inner() {
     let mut l = [0, 0, 0]
         .into_iter()
         .into_lender()
-        .flat_map(|n| (0..n).into_lender());
+        .flat_map(covar_mut!(for<'lend> |n: i32| -> FromIter<std::ops::Range<i32>> { (0..n).into_lender() }));
     assert_eq!(l.next(), None);
 }
 
@@ -426,7 +427,7 @@ fn flat_map_mixed_empty_nonempty() {
     let mut l = [1, 0, 2]
         .into_iter()
         .into_lender()
-        .flat_map(|n| (0..n).into_lender());
+        .flat_map(covar_mut!(for<'lend> |n: i32| -> FromIter<std::ops::Range<i32>> { (0..n).into_lender() }));
     assert_eq!(l.next(), Some(0)); // from n=1
     // n=0 produces empty
     assert_eq!(l.next(), Some(0)); // from n=2

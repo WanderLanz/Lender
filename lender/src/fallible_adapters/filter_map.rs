@@ -18,13 +18,14 @@ where
     L: FallibleLender,
 {
     type Error = L::Error;
-    // SAFETY: the lend is the return type of F
+    // SAFETY: the lend is the return type of F, whose covariance
+    // has been checked at Covar construction time.
     crate::unsafe_assume_covariance_fallible!();
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         while let Some(x) = self.lender.next()? {
-            if let Some(y) = (self.f)(x)? {
+            if let Some(y) = (self.f.as_inner_mut())(x)? {
                 return Ok(Some(
                     // SAFETY: polonius return
                     unsafe {
@@ -51,7 +52,7 @@ where
     #[inline]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         while let Some(x) = self.lender.next_back()? {
-            if let Some(y) = (self.f)(x)? {
+            if let Some(y) = (self.f.as_inner_mut())(x)? {
                 return Ok(Some(
                     // SAFETY: polonius return
                     unsafe {

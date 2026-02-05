@@ -326,7 +326,9 @@ fn filter_try_rfold_additional() {
 #[test]
 fn filter_map_basic() {
     let mut fm = VecLender::new(vec![1, 2, 3, 4, 5])
-        .filter_map(|x: &i32| if *x % 2 == 0 { Some(*x * 10) } else { None });
+        .filter_map(covar_mut!(for<'lend> |x: &'lend i32| -> Option<i32> {
+            if *x % 2 == 0 { Some(*x * 10) } else { None }
+        }));
 
     assert_eq!(fm.next(), Some(20));
     assert_eq!(fm.next(), Some(40));
@@ -336,13 +338,17 @@ fn filter_map_basic() {
 #[test]
 fn filter_map_all_none() {
     let mut fm = VecLender::new(vec![1, 3, 5])
-        .filter_map(|x: &i32| if *x % 2 == 0 { Some(*x * 10) } else { None });
+        .filter_map(covar_mut!(for<'lend> |x: &'lend i32| -> Option<i32> {
+            if *x % 2 == 0 { Some(*x * 10) } else { None }
+        }));
     assert_eq!(fm.next(), None);
 }
 
 #[test]
 fn filter_map_all_some() {
-    let mut fm = VecLender::new(vec![2, 4, 6]).filter_map(|x: &i32| Some(*x / 2));
+    let mut fm = VecLender::new(vec![2, 4, 6]).filter_map(covar_mut!(for<'lend> |x: &'lend i32| -> Option<i32> {
+        Some(*x / 2)
+    }));
 
     assert_eq!(fm.next(), Some(1));
     assert_eq!(fm.next(), Some(2));
@@ -353,7 +359,9 @@ fn filter_map_all_some() {
 #[test]
 fn filter_map_fold() {
     let sum = VecLender::new(vec![1, 2, 3, 4, 5])
-        .filter_map(|x: &i32| if *x % 2 == 0 { Some(*x) } else { None })
+        .filter_map(covar_mut!(for<'lend> |x: &'lend i32| -> Option<i32> {
+            if *x % 2 == 0 { Some(*x) } else { None }
+        }))
         .fold(0, |acc, x| acc + x);
     // 2 + 4 = 6
     assert_eq!(sum, 6);
@@ -362,7 +370,7 @@ fn filter_map_fold() {
 #[test]
 fn filter_map_into_inner() {
     let filter_map =
-        VecLender::new(vec![1, 2, 3]).filter_map(hrc_mut!(for<'all> |x: &i32| -> Option<i32> {
+        VecLender::new(vec![1, 2, 3]).filter_map(covar_mut!(for<'all> |x: &i32| -> Option<i32> {
             if *x % 2 == 0 { Some(*x * 2) } else { None }
         }));
     let lender = filter_map.into_inner();
@@ -372,7 +380,7 @@ fn filter_map_into_inner() {
 #[test]
 fn filter_map_into_parts() {
     let filter_map = VecLender::new(vec![1, 2, 3])
-        .filter_map(hrc_mut!(for<'all> |x: &i32| -> Option<i32> { Some(*x) }));
+        .filter_map(covar_mut!(for<'all> |x: &i32| -> Option<i32> { Some(*x) }));
     let (lender, _f) = filter_map.into_parts();
     assert_eq!(lender.count(), 3);
 }
@@ -383,7 +391,9 @@ fn filter_map_double_ended_coverage() {
     use lender::DoubleEndedLender;
 
     let mut fm = VecLender::new(vec![1, 2, 3, 4, 5])
-        .filter_map(|x: &i32| if *x % 2 == 0 { Some(*x * 2) } else { None });
+        .filter_map(covar_mut!(for<'lend> |x: &'lend i32| -> Option<i32> {
+            if *x % 2 == 0 { Some(*x * 2) } else { None }
+        }));
     // Use next_back to exercise the DoubleEndedLender unsafe path
     assert_eq!(fm.next_back(), Some(8)); // 4 * 2
     assert_eq!(fm.next(), Some(4)); // 2 * 2

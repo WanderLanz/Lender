@@ -1,12 +1,12 @@
 use core::fmt;
 
-use crate::{Lend, Lender, Lending, higher_order::FnMutHKAOpt};
+use crate::{Covar, Lend, Lender, Lending, higher_order::FnMutHKAOpt};
 
 /// Creates a lender from a state and a closure
 /// `F: FnMut(&mut St) -> Option<T>`.
 ///
 /// Note that functions passed to this function must be built
-/// using the [`hrc!`](crate::hrc) or [`hrc_mut!`](crate::hrc_mut)
+/// using the [`covar!`](crate::covar) or [`covar_mut!`](crate::covar_mut)
 /// macro, which also checks for covariance of the returned type.
 /// Circumventing the macro may result in undefined behavior if
 /// the return type is not covariant.
@@ -14,7 +14,7 @@ use crate::{Lend, Lender, Lending, higher_order::FnMutHKAOpt};
 /// # Examples
 /// ```rust
 /// # use lender::prelude::*;
-/// let mut lender = lender::from_fn(0u8, hrc_mut!(for<'all> |state: &'all mut u8| -> Option<&'all mut u8> {
+/// let mut lender = lender::from_fn(0u8, covar_mut!(for<'all> |state: &'all mut u8| -> Option<&'all mut u8> {
 ///     if *state < 10 {
 ///         *state += 1;
 ///         Some(state)
@@ -25,7 +25,7 @@ use crate::{Lend, Lender, Lending, higher_order::FnMutHKAOpt};
 /// assert_eq!(lender.next(), Some(&mut 1));
 /// ```
 #[inline]
-pub fn from_fn<St, F>(state: St, f: F) -> FromFn<St, F>
+pub fn from_fn<St, F>(state: St, f: Covar<F>) -> FromFn<St, F>
 where
     F: for<'all> FnMutHKAOpt<'all, &'all mut St>,
 {
@@ -40,7 +40,7 @@ where
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct FromFn<St, F> {
     state: St,
-    f: F,
+    f: Covar<F>,
 }
 
 impl<St: fmt::Debug, F> fmt::Debug for FromFn<St, F> {
@@ -62,10 +62,11 @@ impl<St, F> Lender for FromFn<St, F>
 where
     F: for<'all> FnMutHKAOpt<'all, &'all mut St>,
 {
-    // SAFETY: the lend is the return type of F
+    // SAFETY: the lend is the return type of F, whose covariance
+    // has been checked at Covar construction time.
     crate::unsafe_assume_covariance!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
-        (self.f)(&mut self.state)
+        (self.f.as_inner_mut())(&mut self.state)
     }
 }

@@ -1,16 +1,17 @@
 use core::fmt;
 
 use crate::{
-    DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending, higher_order::FnOnceHKA,
+    Covar, DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending,
+    higher_order::FnOnceHKA,
 };
 
 /// Creates a lender that lazily generates a value exactly once
 /// by invoking the provided closure.
 ///
 /// Note that functions passed to this function must be built
-/// using the [`hrc!`](crate::hrc),
-/// [`hrc_mut!`](crate::hrc_mut), or
-/// [`hrc_once!`](crate::hrc_once) macro, which also checks for
+/// using the [`covar!`](crate::covar),
+/// [`covar_mut!`](crate::covar_mut), or
+/// [`covar_once!`](crate::covar_once) macro, which also checks for
 /// covariance of the returned type. Circumventing the macro may
 /// result in undefined behavior if the return type is not
 /// covariant.
@@ -18,7 +19,7 @@ use crate::{
 /// # Examples
 /// ```rust
 /// # use lender::prelude::*;
-/// let mut lender = lender::once_with(0u8, hrc_once!(for<'all> |state: &'all mut u8| -> &'all mut u8 {
+/// let mut lender = lender::once_with(0u8, covar_once!(for<'all> |state: &'all mut u8| -> &'all mut u8 {
 ///     *state += 1;
 ///     state
 /// }));
@@ -26,7 +27,7 @@ use crate::{
 /// assert_eq!(lender.next(), None);
 /// ```
 #[inline]
-pub fn once_with<St, F>(state: St, f: F) -> OnceWith<St, F>
+pub fn once_with<St, F>(state: St, f: Covar<F>) -> OnceWith<St, F>
 where
     F: for<'all> FnOnceHKA<'all, &'all mut St>,
 {
@@ -40,7 +41,7 @@ where
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct OnceWith<St, F> {
     state: St,
-    f: Option<F>,
+    f: Option<Covar<F>>,
 }
 
 impl<St: Clone, F: Clone> Clone for OnceWith<St, F> {
@@ -71,11 +72,12 @@ impl<St, F> Lender for OnceWith<St, F>
 where
     F: for<'all> FnOnceHKA<'all, &'all mut St>,
 {
-    // SAFETY: the lend is the return type of F
+    // SAFETY: the lend is the return type of F, whose covariance
+    // has been checked at Covar construction time.
     crate::unsafe_assume_covariance!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
-        self.f.take().map(|f| f(&mut self.state))
+        self.f.take().map(|f| f.into_inner()(&mut self.state))
     }
 
     #[inline]

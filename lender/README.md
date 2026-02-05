@@ -38,7 +38,8 @@ and most methods provide the same functionality as the equivalent `Iterator`
 method.
 
 Notable differences in behavior include [`next_chunk`](https://docs.rs/lender/latest/lender/trait.Lender.html#method.next_chunk) providing a lender instead of an array
-and certain closures requiring usage of the [`hrc!`](https://docs.rs/lender/latest/lender/macro.hrc.html), [`hrc_mut!`](https://docs.rs/lender/latest/lender/macro.hrc_mut.html), [`hrc_once!`](https://docs.rs/lender/latest/lender/macro.hrc_once.html) (higher-rank closure) macros, which provide a stable replacement for the `closure_lifetime_binder` feature.
+and closures requiring usage of the [`covar!`](https://docs.rs/lender/latest/lender/macro.covar.html), [`covar_mut!`](https://docs.rs/lender/latest/lender/macro.covar_mut.html), [`covar_once!`](https://docs.rs/lender/latest/lender/macro.covar_once.html) macros, which provide higher-ranked closure
+and output covariance checks.
 
 Turn a lender into an iterator with [`cloned`](https://docs.rs/lender/latest/lender/trait.Lender.html#method.cloned)
 where lend is `Clone`, [`copied`](https://docs.rs/lender/latest/lender/trait.Lender.html#method.copied) where lend is `Copy`,
@@ -80,7 +81,7 @@ challenging:
 
 ```text
 lender.for_each(
-    hrc_mut!(for<'lend> |item: &'lend mut TYPE| {
+    covar_mut!(for<'lend> |item: &'lend mut TYPE| {
         // do something with item of type TYPE 
     })
 );
@@ -207,11 +208,11 @@ while let Some(w) = windows.next() {
 }
 assert_eq!(data, [0, 1, 1, 2, 3, 5, 8, 13, 21]);
 
-// Fibonacci sequence, for_each with hrc_mut!
+// Fibonacci sequence, for_each
 data.array_windows_mut::<3>()
-    .for_each(hrc_mut!(for<'lend> |w: &'lend mut [u32; 3]| {
+    .for_each(|w| {
          w[2] = w[0] + w[1]
-    }));
+    });
 assert_eq!(data, [0, 1, 1, 2, 3, 5, 8, 13, 21]);
 ```
 

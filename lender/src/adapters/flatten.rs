@@ -2,7 +2,7 @@ use aliasable::boxed::AliasableBox;
 use core::fmt;
 use maybe_dangling::MaybeDangling;
 
-use crate::{FusedLender, IntoLender, Lend, Lender, Lending, Map, try_trait_v2::Try};
+use crate::{Covar, FusedLender, IntoLender, Lend, Lender, Lending, Map, try_trait_v2::Try};
 
 /// A lender that flattens one level of nesting in a lender of lenders.
 ///
@@ -120,7 +120,7 @@ where
     for<'all> Lend<'all, Map<L, F>>: IntoLender,
 {
     #[inline(always)]
-    pub(crate) fn new(lender: L, f: F) -> Self {
+    pub(crate) fn new(lender: L, f: Covar<F>) -> Self {
         Self {
             inner: FlattenCompat::new(Map::new(lender, f)),
         }
@@ -134,7 +134,7 @@ where
 
     /// Returns the inner lender and the mapping function.
     #[inline(always)]
-    pub fn into_parts(self) -> (L, F) {
+    pub fn into_parts(self) -> (L, Covar<F>) {
         (*AliasableBox::into_unique(self.inner.lender)).into_parts()
     }
 }
@@ -439,7 +439,8 @@ mod test {
         let mut l = [1, 0, 2]
             .into_iter()
             .into_lender()
-            .flat_map(|n| (0..n).into_lender());
+            // SAFETY: closure returns an owned lender (trivially covariant).
+            .flat_map(unsafe { crate::Covar::__new(|n: i32| (0..n).into_lender()) });
         assert_eq!(l.next(), Some(0));
         assert_eq!(l.next(), Some(0));
         assert_eq!(l.next(), Some(1));
