@@ -116,7 +116,8 @@ pub trait ExtendFallibleLender<L: IntoFallibleLender> {
 /// By implementing `IntoFallibleLender` for a type, you define how it will be
 /// converted to a fallible lender.
 ///
-/// Every [`FallibleLender`] implements `IntoFallibleLender` for itself (returning `self`).
+/// Every [`FallibleLender`] implements `IntoFallibleLender` for itself
+/// (returning `self`).
 pub trait IntoFallibleLender {
     /// The error type of the resulting fallible lender.
     type Error;

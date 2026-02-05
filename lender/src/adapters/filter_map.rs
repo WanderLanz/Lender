@@ -6,7 +6,8 @@ use crate::{
 
 /// A lender that uses a closure to optionally produce elements.
 ///
-/// This `struct` is created by the [`filter_map()`](crate::Lender::filter_map) method on [`Lender`].
+/// This `struct` is created by the [`filter_map()`](crate::Lender::filter_map)
+/// method on [`Lender`].
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct FilterMap<L, F> {

@@ -4,7 +4,8 @@ use crate::{
     DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending, try_trait_v2::Try,
 };
 
-/// A lender that calls a function with a reference to each element before yielding it.
+/// A lender that calls a function with a reference to each element before
+/// yielding it.
 ///
 /// This `struct` is created by the [`inspect()`](crate::Lender::inspect) method on [`Lender`].
 #[derive(Clone)]

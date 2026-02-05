@@ -102,7 +102,8 @@ where
 
 impl<L: FusedLender> FusedLender for Flatten<'_, L> where for<'all> Lend<'all, L>: IntoLender {}
 
-/// A lender that maps each element to a lender, and yields the elements of the produced lenders.
+/// A lender that maps each element to a lender, and yields the elements of
+/// the produced lenders.
 ///
 /// This `struct` is created by the [`flat_map()`](crate::Lender::flat_map) method on [`Lender`].
 #[must_use = "lenders are lazy and do nothing unless consumed"]

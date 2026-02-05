@@ -21,8 +21,9 @@ pub use self::{
     marker::{FusedFallibleLender, FusedLender},
 };
 
-/// Trait for lend types that can be destructured into two components,
-/// used by [`Lender::unzip()`] and [`FallibleLender::unzip()`](crate::FallibleLender::unzip).
+/// Trait for lend types that can be destructured into two components, used
+/// by [`Lender::unzip()`] and
+/// [`FallibleLender::unzip()`](crate::FallibleLender::unzip).
 ///
 /// Implemented for `(A, B)`, `&(A, B)`, and `&mut (A, B)`.
 pub trait TupleLend<'a> {
@@ -173,13 +174,16 @@ macro_rules! __lend_impl {
 /// Uses a known borrow-checker bug which allows `dyn` objects to implement
 /// impossible traits.
 ///
-/// This macro only accepts type patterns that are guaranteed to be covariant in `'lend`:
+/// This macro only accepts type patterns that are guaranteed to be
+/// covariant in `'lend`:
 /// - Identifiers: `u8`, `String`, etc.
 /// - References: `&'lend T`, `&'lend mut T`
 /// - Slices: `&'lend [T]`, `&'lend mut [T]`
 /// - Double references: `& &'lend T`, `&&'lend T`
-/// - Tuples of identifiers: `(T0,)`, `(T0, T1)`, `(T0, T1, T2)`, etc. (any number of elements)
-/// - References to tuples: `&'lend (T0,)`, `&'lend (T0, T1)`, `&'lend mut (T0,)`, `&'lend mut (T0, T1)`, etc.
+/// - Tuples of identifiers: `(T0,)`, `(T0, T1)`, `(T0, T1, T2)`, etc.
+///   (any number of elements)
+/// - References to tuples: `&'lend (T0,)`, `&'lend (T0, T1)`,
+///   `&'lend mut (T0,)`, `&'lend mut (T0, T1)`, etc.
 ///
 /// For types that are not covered by this macro, please use
 /// [`covariant_lend!`](crate::covariant_lend!), which performs a compile-time
@@ -311,15 +315,16 @@ macro_rules! unsafe_assume_covariance {
 
 /// Defines a lending type with compile-time covariance checking.
 ///
-/// This macro creates a struct that implements [`Lending`] and includes a compile-time
-/// assertion that the lend type is covariant in its lifetime.
+/// This macro creates a struct that implements [`Lending`] and includes a
+/// compile-time assertion that the lend type is covariant in its lifetime.
 ///
 /// # Examples
 /// ```rust
 /// use lender::prelude::*;
 ///
 /// // Define a covariance-checked lending type for &'lend Vec<u8>.
-/// // This type cannot be expressed with lend!() because Vec<u8> has generics.
+/// // This type cannot be expressed with lend!() because Vec<u8>
+/// // has generics.
 /// lender::covariant_lend!(RefVec = &'lend Vec<u8>);
 ///
 /// let data = [vec![1u8, 2], vec![3, 4]];
@@ -330,15 +335,17 @@ macro_rules! unsafe_assume_covariance {
 ///
 /// # Compile-time Error for Invariant Types
 ///
-/// The following will fail to compile because `Cell<Option<&'lend String>>` is
-/// invariant in `'lend`:
+/// The following will fail to compile because
+/// `Cell<Option<&'lend String>>` is invariant in `'lend`:
 ///
 /// ```rust,compile_fail
 /// use std::cell::Cell;
 /// use lender::prelude::*;
 ///
 /// // This fails to compile - Cell makes the type invariant!
-/// lender::covariant_lend!(InvariantLend = &'lend Cell<Option<&'lend String>>);
+/// lender::covariant_lend!(
+///     InvariantLend = &'lend Cell<Option<&'lend String>>
+/// );
 /// ```
 #[macro_export]
 macro_rules! covariant_lend {
@@ -366,35 +373,41 @@ macro_rules! covariant_lend {
 
 /// Defines a fallible lending type with compile-time covariance checking.
 ///
-/// This macro creates a struct that implements [`FallibleLending`] and includes a
-/// compile-time assertion that the lend type is covariant in its lifetime.
+/// This macro creates a struct that implements [`FallibleLending`] and
+/// includes a compile-time assertion that the lend type is covariant in its
+/// lifetime.
 ///
 /// # Examples
 /// ```rust
 /// use fallible_iterator::IteratorExt as _;
 /// use lender::prelude::*;
 ///
-/// // Define a covariance-checked fallible lending type for Option<&'lend str>.
-/// // This type cannot be expressed with fallible_lend!() because Option has generics.
+/// // Define a covariance-checked fallible lending type for
+/// // Option<&'lend str>. This type cannot be expressed with
+/// // fallible_lend!() because Option has generics.
 /// lender::covariant_fallible_lend!(OptStr = Option<&'lend str>);
 ///
 /// let data = [Some("hello"), None, Some("world")];
-/// let mut lender = lender::lend_fallible_iter::<'_, OptStr, _>(data.iter().copied().into_fallible());
+/// let mut lender = lender::lend_fallible_iter::<'_, OptStr, _>(
+///     data.iter().copied().into_fallible()
+/// );
 /// let item: Option<&str> = lender.next().unwrap().unwrap();
 /// assert_eq!(item, Some("hello"));
 /// ```
 ///
 /// # Compile-time Error for Invariant Types
 ///
-/// The following will fail to compile because `Cell<Option<&'lend String>>` is
-/// invariant in `'lend`:
+/// The following will fail to compile because
+/// `Cell<Option<&'lend String>>` is invariant in `'lend`:
 ///
 /// ```rust,compile_fail
 /// use std::cell::Cell;
 /// use lender::prelude::*;
 ///
 /// // This fails to compile - Cell makes the type invariant!
-/// lender::covariant_fallible_lend!(InvariantLend = &'lend Cell<Option<&'lend String>>);
+/// lender::covariant_fallible_lend!(
+///     InvariantLend = &'lend Cell<Option<&'lend String>>
+/// );
 /// ```
 #[macro_export]
 macro_rules! covariant_fallible_lend {
@@ -440,7 +453,8 @@ macro_rules! check_covariance_fallible {
 ///
 /// This is the fallible counterpart to [`unsafe_assume_covariance!`].
 ///
-/// See [`unsafe_assume_covariance!`](crate::unsafe_assume_covariance!) for more details.
+/// See [`unsafe_assume_covariance!`](crate::unsafe_assume_covariance!) for
+/// more details.
 #[macro_export]
 macro_rules! unsafe_assume_covariance_fallible {
     () => {
@@ -503,13 +517,16 @@ pub trait DynFallibleLend<'lend> {
 /// Uses a known borrow-checker bug which allows `dyn` objects to implement
 /// impossible traits.
 ///
-/// This macro only accepts type patterns that are guaranteed to be covariant in `'lend`:
+/// This macro only accepts type patterns that are guaranteed to be
+/// covariant in `'lend`:
 /// - Identifiers: `u8`, `String`, etc.
 /// - References: `&'lend T`, `&'lend mut T`
 /// - Slices: `&'lend [T]`, `&'lend mut [T]`
 /// - Double references: `& &'lend T`, `&&'lend T`
-/// - Tuples of identifiers: `(T0,)`, `(T0, T1)`, `(T0, T1, T2)`, etc. (any number of elements)
-/// - References to tuples: `&'lend (T0,)`, `&'lend (T0, T1)`, `&'lend mut (T0,)`, `&'lend mut (T0, T1)`, etc.
+/// - Tuples of identifiers: `(T0,)`, `(T0, T1)`, `(T0, T1, T2)`, etc.
+///   (any number of elements)
+/// - References to tuples: `&'lend (T0,)`, `&'lend (T0, T1)`,
+///   `&'lend mut (T0,)`, `&'lend mut (T0, T1)`, etc.
 ///
 /// For types that are not covered by this macro, please use
 /// [`covariant_fallible_lend!`](crate::covariant_fallible_lend!), which
@@ -521,7 +538,10 @@ pub trait DynFallibleLend<'lend> {
 ///
 /// use lender::prelude::*;
 ///
-/// let mut empty = lender::fallible_empty::<fallible_lend!(&'lend mut [u32]), Infallible>();
+/// let mut empty = lender::fallible_empty::<
+///     fallible_lend!(&'lend mut [u32]),
+///     Infallible
+/// >();
 /// let _: Result<Option<&mut [u32]>, Infallible> = empty.next(); // => Ok(None)
 /// ```
 #[macro_export]

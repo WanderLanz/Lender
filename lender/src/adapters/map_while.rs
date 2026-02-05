@@ -4,7 +4,8 @@ use crate::{Covar, Lend, Lender, Lending, higher_order::FnMutHKAOpt};
 
 /// A lender that yields elements based on a predicate and maps them.
 ///
-/// This `struct` is created by the [`map_while()`](crate::Lender::map_while) method on [`Lender`].
+/// This `struct` is created by the [`map_while()`](crate::Lender::map_while)
+/// method on [`Lender`].
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct MapWhile<L, P> {

@@ -6,7 +6,8 @@ use crate::{
 
 /// A lender for stepping the underlying lender by a custom amount.
 ///
-/// This `struct` is created by the [`step_by()`](crate::Lender::step_by) method on [`Lender`].
+/// This `struct` is created by the [`step_by()`](crate::Lender::step_by)
+/// method on [`Lender`].
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct StepBy<L> {

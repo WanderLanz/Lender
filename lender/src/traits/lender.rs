@@ -17,8 +17,8 @@ use crate::{
 ///
 /// Must be defined for any type that implements [`Lender`].
 ///
-/// It implicitly restricts the lifetime `'lend` used in [`Lending<'lend>`](Lending) to be
-/// `where Self: 'lend`.
+/// It implicitly restricts the lifetime `'lend` used in
+/// [`Lending<'lend>`](Lending) to be `where Self: 'lend`.
 ///
 /// This is a result of Higher-Rank Trait Bounds (HRTBs) not having a way to
 /// express qualifiers (`for<'any where Self: 'any> Self: Trait`) and
@@ -768,7 +768,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// ```rust
     /// # use lender::prelude::*;
     /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2, 3, 4, 5u8].iter());
-    /// // Take the first two elements using by_ref, so the original lender is not consumed.
+    /// // Take the first two elements using by_ref, so the original lender
+    /// // is not consumed.
     /// let mut first_two = lender.by_ref().take(2);
     /// assert_eq!(first_two.next(), Some(&1));
     /// assert_eq!(first_two.next(), Some(&2));
@@ -830,7 +831,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// ```rust
     /// # use lender::prelude::*;
     /// let lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3, 4, 5].iter());
-    /// let (even, odd): (Vec<i32>, Vec<i32>) = lender.copied().partition(|x| x % 2 == 0);
+    /// let (even, odd): (Vec<i32>, Vec<i32>) =
+    ///     lender.copied().partition(|x| x % 2 == 0);
     /// assert_eq!(even, vec![2, 4]);
     /// assert_eq!(odd, vec![1, 3, 5]);
     /// ```
@@ -1338,7 +1340,9 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let lender = lender::lend_iter::<lend!(&'lend (i32, char)), _>([(1, 'a'), (2, 'b'), (3, 'c')].iter());
+    /// let lender = lender::lend_iter::<lend!(&'lend (i32, char)), _>(
+    ///     [(1, 'a'), (2, 'b'), (3, 'c')].iter()
+    /// );
     /// let (nums, chars): (Vec<i32>, Vec<char>) = lender.copied().unzip();
     /// assert_eq!(nums, vec![1, 2, 3]);
     /// assert_eq!(chars, vec!['a', 'b', 'c']);
@@ -1545,7 +1549,10 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// # use core::cmp::Ordering;
     /// let a = [1.0, 2.0].into_iter().into_lender();
     /// let b = [1.0, 3.0].into_iter().into_lender();
-    /// assert_eq!(a.partial_cmp_by(b, |x: f64, y: f64| x.partial_cmp(&y)), Some(Ordering::Less));
+    /// assert_eq!(
+    ///     a.partial_cmp_by(b, |x: f64, y: f64| x.partial_cmp(&y)),
+    ///     Some(Ordering::Less)
+    /// );
     /// ```
     #[inline]
     fn partial_cmp_by<L, F>(self, other: L, mut partial_cmp: F) -> Option<Ordering>
@@ -1794,8 +1801,9 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// Converts a [`Lender`] whose lend type is `Result<T, E>` into a
     /// [`FallibleLender`](crate::FallibleLender) with error type `E` and lend type `T`.
     ///
-    /// This is the lending equivalent of
-    /// [`fallible_iterator::convert`](https://docs.rs/fallible-iterator/latest/fallible_iterator/fn.convert.html).
+    /// This is the lending equivalent of [`fallible_iterator::convert`][1].
+    ///
+    /// [1]: https://docs.rs/fallible-iterator/latest/fallible_iterator/fn.convert.html
     ///
     /// # Examples
     ///
@@ -1816,9 +1824,9 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         Convert::new(self)
     }
 
-    /// Converts a [`Lender`] into a [`FallibleLender`](crate::FallibleLender) by wrapping
-    /// into `Result<Lend<'_, Self>, Infallible>` where `Infallible` is an
-    /// error that can never actually happen.
+    /// Converts a [`Lender`] into a [`FallibleLender`](crate::FallibleLender)
+    /// by wrapping into `Result<Lend<'_, Self>, Infallible>` where
+    /// `Infallible` is an error that can never actually happen.
     #[inline]
     fn into_fallible(self) -> IntoFallible<Self> where Self: Sized {
         IntoFallible::new(self)

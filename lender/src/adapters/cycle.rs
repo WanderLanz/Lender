@@ -7,7 +7,8 @@ use crate::{
 
 /// A lender that repeats endlessly.
 ///
-/// This `struct` is created by the [`cycle()`](crate::Lender::cycle) method on [`Lender`].
+/// This `struct` is created by the [`cycle()`](crate::Lender::cycle) method
+/// on [`Lender`].
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Cycle<L> {

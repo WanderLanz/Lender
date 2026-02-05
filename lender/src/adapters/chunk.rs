@@ -2,9 +2,11 @@ use core::ops::ControlFlow;
 
 use crate::{FusedLender, Lend, Lender, Lending, try_trait_v2::Try};
 
-/// A lending sub-iterator over elements of a chunk in a [`Chunky`](crate::Chunky) lender.
+/// A lending sub-iterator over elements of a chunk in a
+/// [`Chunky`](crate::Chunky) lender.
 ///
-/// This `struct` is created by the [`Chunky`](crate::Chunky) lender during iteration.
+/// This `struct` is created by the [`Chunky`](crate::Chunky) lender during
+/// iteration.
 #[derive(Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Chunk<'s, T> {

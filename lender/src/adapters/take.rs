@@ -7,7 +7,8 @@ use crate::{
 
 /// A lender that only yields the first `n` elements of the underlying lender.
 ///
-/// This `struct` is created by the [`take()`](crate::Lender::take) method on [`Lender`].
+/// This `struct` is created by the [`take()`](crate::Lender::take) method on
+/// [`Lender`].
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Take<L> {

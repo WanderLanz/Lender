@@ -4,7 +4,8 @@ use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lender, Lending};
 
 /// An iterator that copies the elements of an underlying lender.
 ///
-/// This `struct` is created by the [`copied()`](crate::Lender::copied) method on [`Lender`].
+/// This `struct` is created by the [`copied()`](crate::Lender::copied) method
+/// on [`Lender`].
 #[derive(Clone, Debug)]
 #[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Copied<L> {

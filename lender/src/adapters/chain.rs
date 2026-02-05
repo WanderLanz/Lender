@@ -7,7 +7,8 @@ use crate::{
 
 /// A lender that chains two lenders together, one after the other.
 ///
-/// This `struct` is created by the [`chain()`](crate::Lender::chain) method on [`Lender`].
+/// This `struct` is created by the [`chain()`](crate::Lender::chain) method
+/// on [`Lender`].
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Chain<A, B> {

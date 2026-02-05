@@ -4,9 +4,11 @@ use crate::{
     DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending, try_trait_v2::Try,
 };
 
-/// A lender that calls a mutation function on each element before yielding it.
+/// A lender that calls a mutation function on each element before yielding
+/// it.
 ///
-/// This `struct` is created by the [`mutate()`](crate::Lender::mutate) method on [`Lender`].
+/// This `struct` is created by the [`mutate()`](crate::Lender::mutate) method
+/// on [`Lender`].
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Mutate<L, F> {

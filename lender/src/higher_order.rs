@@ -13,14 +13,15 @@
 //! [`covar_once!`](`crate::covar_once`) macros to create a
 //! covariance-checked higher-rank closure wrapped in [`Covar`].
 
-/// A transparent wrapper that seals a closure whose covariance has
-/// been verified at construction time by the [`covar!`](crate::covar),
-/// [`covar_mut!`](crate::covar_mut), or
-/// [`covar_once!`](crate::covar_once) macros.
+/// A transparent wrapper that seals a closure whose covariance has been
+/// verified at construction time by the [`covar!`](crate::covar),
+/// [`covar_mut!`](crate::covar_mut), or [`covar_once!`](crate::covar_once)
+/// macros.
 ///
-/// Adapter structs like [`Map`](crate::Map) store `Covar<F>` and call the inner
-/// closure through [`as_inner`](Covar::as_inner) and
-/// [`as_inner_mut`](Covar::as_inner_mut), or [`into_inner`](Covar::into_inner).
+/// Adapter structs like [`Map`](crate::Map) store `Covar<F>` and call the
+/// inner closure through [`as_inner`](Covar::as_inner) and
+/// [`as_inner_mut`](Covar::as_inner_mut), or
+/// [`into_inner`](Covar::into_inner).
 ///
 /// `Covar<F>` cannot be constructed safely by user code (the
 /// constructor is unsafe, and also hidden to discourage usage).
@@ -38,9 +39,10 @@ impl<F> Covar<F> {
     ///
     /// # Safety
     ///
-    /// The caller must ensure that `f` produces covariant output with respect
-    /// to any lifetime parameters in its signature. This is guaranteed by the
-    /// [`covar!`](crate::covar), [`covar_mut!`](crate::covar_mut), and
+    /// The caller must ensure that `f` produces covariant output with
+    /// respect to any lifetime parameters in its signature. This is
+    /// guaranteed by the [`covar!`](crate::covar),
+    /// [`covar_mut!`](crate::covar_mut), and
     /// [`covar_once!`](crate::covar_once) macros (for one parameter).
     #[doc(hidden)]
     #[inline(always)]
@@ -67,7 +69,8 @@ impl<F> Covar<F> {
     }
 }
 
-/// Higher-Kinded Associated Output [`FnOnce`], where `Output` (B) is with lifetime `'b`.
+/// Higher-Kinded Associated Output [`FnOnce`], where `Output` (B) is with
+/// lifetime `'b`.
 pub trait FnOnceHKA<'b, A>: FnOnce(A) -> <Self as FnOnceHKA<'b, A>>::B {
     type B: 'b;
 }
@@ -76,7 +79,8 @@ impl<'b, A, B: 'b, F: FnOnce(A) -> B> FnOnceHKA<'b, A> for F {
     type B = B;
 }
 
-/// Higher-Kinded Associated Output [`FnMut`], where `Output` (B) is with lifetime `'b`.
+/// Higher-Kinded Associated Output [`FnMut`], where `Output` (B) is with
+/// lifetime `'b`.
 pub trait FnMutHKA<'b, A>: FnMut(A) -> <Self as FnMutHKA<'b, A>>::B {
     type B: 'b;
 }
@@ -85,8 +89,8 @@ impl<'b, A, B: 'b, F: FnMut(A) -> B> FnMutHKA<'b, A> for F {
     type B = B;
 }
 
-/// Higher-Kinded Associated Output [`FnMut`], where `Output` ([`Option<B>`](Option)) is with
-/// lifetime `'b`.
+/// Higher-Kinded Associated Output [`FnMut`], where `Output`
+/// ([`Option<B>`](Option)) is with lifetime `'b`.
 pub trait FnMutHKAOpt<'b, A>: FnMut(A) -> Option<<Self as FnMutHKAOpt<'b, A>>::B> {
     type B: 'b;
 }
@@ -95,8 +99,8 @@ impl<'b, A, B: 'b, F: FnMut(A) -> Option<B>> FnMutHKAOpt<'b, A> for F {
     type B = B;
 }
 
-/// Higher-Kinded Associated Output [`FnOnce`], where `Output` ([`Result<B, E>`](Result))
-/// has output type `B` with lifetime `'b`.
+/// Higher-Kinded Associated Output [`FnOnce`], where `Output`
+/// ([`Result<B, E>`](Result)) has output type `B` with lifetime `'b`.
 pub trait FnOnceHKARes<'b, A, E>:
     FnOnce(A) -> Result<<Self as FnOnceHKARes<'b, A, E>>::B, E>
 {
@@ -107,8 +111,8 @@ impl<'b, A, B: 'b, E, F: FnOnce(A) -> Result<B, E>> FnOnceHKARes<'b, A, E> for F
     type B = B;
 }
 
-/// Higher-Kinded Associated Output [`FnMut`], where `Output` ([`Result<B, E>`](Result))
-/// has output type `B` with lifetime `'b`.
+/// Higher-Kinded Associated Output [`FnMut`], where `Output`
+/// ([`Result<B, E>`](Result)) has output type `B` with lifetime `'b`.
 pub trait FnMutHKARes<'b, A, E>: FnMut(A) -> Result<<Self as FnMutHKARes<'b, A, E>>::B, E> {
     type B: 'b;
 }
@@ -117,8 +121,8 @@ impl<'b, A, B: 'b, E, F: FnMut(A) -> Result<B, E>> FnMutHKARes<'b, A, E> for F {
     type B = B;
 }
 
-/// Higher-Kinded Associated Output [`FnMut`], where `Output` (`Result<Option<B>, E>`)
-/// has output type `B` with lifetime `'b`.
+/// Higher-Kinded Associated Output [`FnMut`], where `Output`
+/// (`Result<Option<B>, E>`) has output type `B` with lifetime `'b`.
 pub trait FnMutHKAResOpt<'b, A, E>:
     FnMut(A) -> Result<Option<<Self as FnMutHKAResOpt<'b, A, E>>::B>, E>
 {
@@ -130,10 +134,11 @@ impl<'b, A, B: 'b, E, F: FnMut(A) -> Result<Option<B>, E>> FnMutHKAResOpt<'b, A,
 }
 
 /// Not meant to be called directly. A modified version of
-/// [`higher-order-closure`](https://crates.io/crates/higher-order-closure)'s
+/// [`higher-order-closure`](https://crates.io/crates/higher-order-closure)
 /// `higher_order_closure` macro to use any [`Fn`] trait.
 ///
-/// Performs a covariance check when a return type is specified a `for<>` bound.
+/// Performs a covariance check when a return type is specified with a
+/// `for<>` bound.
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __covar__ {
@@ -302,11 +307,10 @@ macro_rules! __covar__ {
 
 /// Covariance-checked [`FnOnce`] closure macro.
 ///
-/// Creates a [`Covar`]-wrapped closure with explicit lifetime
-/// bounds and a compile-time covariance check (when a return type
-/// is specified with `for<'a>` bounds). This ensures that the
-/// return type is covariant in the bound lifetime, which is
-/// required for soundness with lending iterators.
+/// Creates a [`Covar`]-wrapped closure with explicit lifetime bounds and a
+/// compile-time covariance check (when a return type is specified with
+/// `for<'a>` bounds). This ensures that the return type is covariant in the
+/// bound lifetime, which is required for soundness with lending iterators.
 ///
 /// Use `covar_once!` when the closure will only be called once
 /// (e.g., with [`Lender::fold`](crate::Lender::fold)). For
@@ -340,16 +344,15 @@ macro_rules! covar_once {($($t:tt)+) => ($crate::__covar__!(FnOnce, $($t)+))}
 
 /// Covariance-checked [`FnMut`] closure macro.
 ///
-/// Creates a [`Covar`]-wrapped closure with explicit lifetime
-/// bounds and a compile-time covariance check (when a return type
-/// is specified with `for<'a>` bounds). This ensures that the
-/// return type is covariant in the bound lifetime, which is
-/// required for soundness with lending iterators.
+/// Creates a [`Covar`]-wrapped closure with explicit lifetime bounds and a
+/// compile-time covariance check (when a return type is specified with
+/// `for<'a>` bounds). This ensures that the return type is covariant in the
+/// bound lifetime, which is required for soundness with lending iterators.
 ///
-/// Use `covar_mut!` when the closure may be called multiple times
-/// and captures mutable state or needs `&mut self` semantics.
-/// This is the most commonly used variant for lender methods
-/// like [`Lender::map`](crate::Lender::map),
+/// Use `covar_mut!` when the closure may be called multiple times and
+/// captures mutable state or needs `&mut self` semantics. This is the most
+/// commonly used variant for lender methods like
+/// [`Lender::map`](crate::Lender::map),
 /// [`Lender::for_each`](crate::Lender::for_each),
 /// [`Lender::filter_map`](crate::Lender::filter_map), and
 /// [`Lender::scan`](crate::Lender::scan).
@@ -389,16 +392,15 @@ macro_rules! covar_mut {($($t:tt)+) => ($crate::__covar__!(FnMut, $($t)+))}
 
 /// Covariance-checked [`Fn`] closure macro.
 ///
-/// Creates a [`Covar`]-wrapped closure with explicit lifetime
-/// bounds and a compile-time covariance check (when a return type
-/// is specified with `for<'a>` bounds). This ensures that the
-/// return type is covariant in the bound lifetime, which is
-/// required for soundness with lending iterators.
+/// Creates a [`Covar`]-wrapped closure with explicit lifetime bounds and a
+/// compile-time covariance check (when a return type is specified with
+/// `for<'a>` bounds). This ensures that the return type is covariant in the
+/// bound lifetime, which is required for soundness with lending iterators.
 ///
-/// Use `covar!` when the closure only needs shared access to its
-/// captures (`&self` semantics) and may be called multiple times.
-/// In practice, [`covar_mut!`](crate::covar_mut) is more commonly
-/// used since most lender methods require [`FnMut`].
+/// Use `covar!` when the closure only needs shared access to its captures
+/// (`&self` semantics) and may be called multiple times. In practice,
+/// [`covar_mut!`](crate::covar_mut) is more commonly used since most lender
+/// methods require [`FnMut`].
 ///
 /// # Syntax
 ///

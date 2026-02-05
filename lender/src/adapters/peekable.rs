@@ -10,7 +10,8 @@ use crate::{
 /// A lender with a [`peek()`](Peekable::peek) method that returns an optional
 /// reference to the next element.
 ///
-/// This `struct` is created by the [`peekable()`](crate::Lender::peekable) method on [`Lender`].
+/// This `struct` is created by the [`peekable()`](crate::Lender::peekable)
+/// method on [`Lender`].
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Peekable<'this, L>
 where

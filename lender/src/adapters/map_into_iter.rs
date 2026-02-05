@@ -2,9 +2,11 @@ use core::{iter::FusedIterator, marker::PhantomData};
 
 use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender};
 
-/// An iterator that maps each element of the underlying lender into an owned value.
+/// An iterator that maps each element of the underlying lender into an owned
+/// value.
 ///
-/// This `struct` is created by the [`map_into_iter()`](crate::Lender::map_into_iter) method on [`Lender`].
+/// This `struct` is created by the
+/// [`map_into_iter()`](crate::Lender::map_into_iter) method on [`Lender`].
 #[derive(Clone)]
 #[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct MapIntoIter<L, O, F> {
@@ -57,6 +59,11 @@ impl<L: Lender, O, F: FnMut(Lend<'_, L>) -> O> Iterator for MapIntoIter<L, O, F>
     }
 
     #[inline]
+    fn nth(&mut self, n: usize) -> Option<O> {
+        self.lender.nth(n).map(&mut self.f)
+    }
+
+    #[inline]
     fn fold<B, G>(self, init: B, mut g: G) -> B
     where
         G: FnMut(B, Self::Item) -> B,
@@ -72,6 +79,11 @@ impl<L: DoubleEndedLender, O, F: FnMut(Lend<'_, L>) -> O> DoubleEndedIterator
     #[inline]
     fn next_back(&mut self) -> Option<O> {
         self.lender.next_back().map(&mut self.f)
+    }
+
+    #[inline]
+    fn nth_back(&mut self, n: usize) -> Option<O> {
+        self.lender.nth_back(n).map(&mut self.f)
     }
 
     #[inline]

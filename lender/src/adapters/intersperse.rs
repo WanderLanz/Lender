@@ -2,7 +2,8 @@ use core::fmt;
 
 use crate::{FusedLender, Lend, Lender, Lending, Peekable};
 
-/// A lender that inserts a separator between adjacent elements of the underlying lender.
+/// A lender that inserts a separator between adjacent elements of the
+/// underlying lender.
 ///
 /// This `struct` is created by the [`intersperse()`](crate::Lender::intersperse) method on [`Lender`].
 // Clone is not implemented because the inner Peekable is not Clone.
@@ -115,7 +116,8 @@ where
     }
 }
 
-/// A lender that inserts an element computed by a closure between adjacent elements of the underlying lender.
+/// A lender that inserts an element computed by a closure between adjacent
+/// elements of the underlying lender.
 ///
 /// This `struct` is created by the [`intersperse_with()`](crate::Lender::intersperse_with) method on [`Lender`].
 // Clone is not implemented because the inner Peekable is not Clone.

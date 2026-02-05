@@ -2,9 +2,11 @@ use core::fmt;
 
 use crate::{DoubleEndedLender, FusedLender, Lend, Lender, Lending, try_trait_v2::Try};
 
-/// A lender that filters the elements of the underlying lender with a predicate.
+/// A lender that filters the elements of the underlying lender with a
+/// predicate.
 ///
-/// This `struct` is created by the [`filter()`](crate::Lender::filter) method on [`Lender`].
+/// This `struct` is created by the [`filter()`](crate::Lender::filter) method
+/// on [`Lender`].
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Filter<L, P> {

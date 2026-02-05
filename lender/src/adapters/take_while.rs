@@ -5,7 +5,8 @@ use crate::{FusedLender, Lend, Lender, Lending, try_trait_v2::Try};
 
 /// A lender that yields elements while a predicate returns `true`.
 ///
-/// This `struct` is created by the [`take_while()`](crate::Lender::take_while) method on [`Lender`].
+/// This `struct` is created by the [`take_while()`](crate::Lender::take_while)
+/// method on [`Lender`].
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct TakeWhile<L, P> {

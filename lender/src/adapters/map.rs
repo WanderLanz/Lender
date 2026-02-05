@@ -7,7 +7,8 @@ use crate::{
 
 /// A lender that maps the values of the underlying lender with a closure.
 ///
-/// This `struct` is created by the [`map()`](crate::Lender::map) method on [`Lender`].
+/// This `struct` is created by the [`map()`](crate::Lender::map) method on
+/// [`Lender`].
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Map<L, F> {

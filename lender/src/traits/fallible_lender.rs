@@ -54,8 +54,9 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     ///
     /// - In all other cases (e.g., when implementing adapters), use
     ///   [`unsafe_assume_covariance_fallible!`](crate::unsafe_assume_covariance_fallible)
-    ///   in the [`FallibleLender`] impl. The macro implements the method as
-    ///   `{ unsafe { core::mem::transmute(lend) } }`, which is a no-op. This is
+    ///   in the [`FallibleLender`] impl. The macro implements the method
+    ///   as `{ unsafe { core::mem::transmute(lend) } }`, which is a no-op.
+    ///   This is
     ///   unsafe because it is up to the implementor to guarantee that the
     ///   [`Lend`](FallibleLending::Lend) type is covariant in its lifetime.
     fn __check_covariance<'long: 'short, 'short>(
@@ -746,7 +747,9 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// let mut scanned = lender.scan(
     ///     0,
     ///     covar_mut!(
-    ///         for<'all> |args: (&'all mut u8, &'all u8)| -> Result<Option<&'all u8>, Infallible> {
+    ///         for<'all> |args: (&'all mut u8, &'all u8)|
+    ///             -> Result<Option<&'all u8>, Infallible>
+    ///         {
     ///             *args.0 += *args.1;
     ///             Ok(Some(args.1))
     ///         }
@@ -820,9 +823,15 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// let data = [vec![1, 2], vec![3, 4]];
     /// let lender = data.into_iter().into_lender()
     ///     .into_fallible();
-    /// let mut flat = lender.map(covar!(for<'all> |v: Vec<i32>| -> Result<lender::IntoFallible<lender::FromIter<std::vec::IntoIter<i32>>>, Infallible> {
-    ///     Ok(v.into_iter().into_lender().into_fallible())
-    /// })).flatten();
+    /// let mut flat = lender.map(covar!(
+    ///     for<'all> |v: Vec<i32>|
+    ///         -> Result<lender::IntoFallible<lender::FromIter<
+    ///             std::vec::IntoIter<i32>
+    ///         >>, Infallible>
+    ///     {
+    ///         Ok(v.into_iter().into_lender().into_fallible())
+    ///     }
+    /// )).flatten();
     /// assert_eq!(flat.next().unwrap(), Some(1));
     /// assert_eq!(flat.next().unwrap(), Some(2));
     /// assert_eq!(flat.next().unwrap(), Some(3));
@@ -1682,7 +1691,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// Note: This method requires a type implementing
     /// [`SumFallibleLender`](crate::SumFallibleLender). For simple numeric
     /// sums, consider using [`owned()`](FallibleLender::owned) and then
-    /// [`FallibleIterator::sum()`](fallible_iterator::FallibleIterator::sum).
+    /// [`FallibleIterator::sum()`](https://docs.rs/fallible-iterator/latest/fallible_iterator/trait.FallibleIterator.html#method.sum).
     #[inline]
     fn sum<S>(self) -> Result<S, Self::Error>
     where
@@ -1698,7 +1707,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// [`ProductFallibleLender`](crate::ProductFallibleLender). For simple
     /// numeric products, consider using [`owned()`](FallibleLender::owned)
     /// and then
-    /// [`FallibleIterator::product()`](fallible_iterator::FallibleIterator::product).
+    /// [`FallibleIterator::product()`](https://docs.rs/fallible-iterator/latest/fallible_iterator/trait.FallibleIterator.html#method.product).
     #[inline]
     fn product<P>(self) -> Result<P, Self::Error>
     where
@@ -1780,7 +1789,10 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// # use core::cmp::Ordering;
     /// let a = [1, 2].into_iter().into_lender().into_fallible();
     /// let b = [1, 3].into_iter().into_lender().into_fallible();
-    /// assert_eq!(a.partial_cmp::<lender::IntoFallible<_>>(b), Ok(Some(Ordering::Less)));
+    /// assert_eq!(
+    ///     a.partial_cmp::<lender::IntoFallible<_>>(b),
+    ///     Ok(Some(Ordering::Less))
+    /// );
     /// ```
     #[inline]
     fn partial_cmp<L>(self, other: L) -> Result<Option<Ordering>, Self::Error>
