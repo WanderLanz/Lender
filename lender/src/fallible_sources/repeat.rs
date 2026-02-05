@@ -15,8 +15,8 @@ use crate::prelude::*;
 /// ```rust
 /// # use lender::prelude::*;
 /// let mut lender = lender::fallible_repeat::<
-///     '_, fallible_lend!(&'lend u8), String,
-/// >(&0u8);
+///     '_, fallible_lend!(&'lend i32), String,
+/// >(&0);
 /// assert_eq!(lender.next().unwrap(), Some(&0));
 /// ```
 #[inline]
@@ -41,7 +41,7 @@ where
 /// ```rust
 /// # use lender::prelude::*;
 /// let mut lender = lender::fallible_repeat_err::<
-///     fallible_lend!(&'lend u8), _,
+///     fallible_lend!(&'lend i32), _,
 /// >("error".to_string());
 /// assert_eq!(lender.next(), Err("error".to_string()));
 /// assert_eq!(lender.next(), Err("error".to_string()));

@@ -20,8 +20,8 @@ use crate::prelude::*;
 /// ```rust
 /// # use lender::prelude::*;
 /// let mut lender = lender::fallible_repeat_with::<
-///     '_, fallible_lend!(&'lend u8), String, _,
-/// >(|| &0u8);
+///     '_, fallible_lend!(&'lend i32), String, _,
+/// >(|| &0);
 /// assert_eq!(lender.next().unwrap(), Some(&0));
 /// ```
 #[inline]
@@ -46,9 +46,9 @@ where
 /// # Examples
 /// ```rust
 /// # use lender::prelude::*;
-/// let mut count = 0u32;
+/// let mut count = 0;
 /// let mut lender = lender::fallible_repeat_with_err::<
-///     fallible_lend!(&'lend u8), _,
+///     fallible_lend!(&'lend i32), _,
 /// >(move || { count += 1; format!("error #{count}") });
 /// assert_eq!(lender.next(), Err("error #1".to_string()));
 /// assert_eq!(lender.next(), Err("error #2".to_string()));

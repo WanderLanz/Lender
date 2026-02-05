@@ -330,8 +330,8 @@ macro_rules! __covar__ {
 /// ```rust
 /// use lender::prelude::*;
 ///
-/// let mut lender = lender::once_with(42u8,
-///     covar_once!(for<'lend> |state: &'lend mut u8| -> &'lend mut u8 {
+/// let mut lender = lender::once_with(42,
+///     covar_once!(for<'lend> |state: &'lend mut i32| -> &'lend mut i32 {
 ///         *state += 1;
 ///         state
 ///     })

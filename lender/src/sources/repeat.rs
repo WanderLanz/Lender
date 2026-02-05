@@ -9,7 +9,7 @@ use crate::{FusedLender, prelude::*};
 /// # Examples
 /// ```rust
 /// # use lender::prelude::*;
-/// let mut lender = lender::repeat::<lend!(&'lend u8)>(&0u8);
+/// let mut lender = lender::repeat::<lend!(&'lend i32)>(&0);
 /// assert_eq!(lender.next(), Some(&0));
 /// ```
 #[inline]

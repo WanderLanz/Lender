@@ -14,8 +14,8 @@ use crate::{Covar, FallibleLend, FallibleLender, FallibleLending, higher_order::
 /// # use lender::prelude::*;
 /// # use std::io::Error;
 /// let mut lender = lender::from_fallible_fn::<_, Error, _>(
-///     0u8,
-///     covar_mut!(for<'all> |state: &'all mut u8| -> Result<Option<&'all mut u8>, Error> {
+///     0,
+///     covar_mut!(for<'all> |state: &'all mut i32| -> Result<Option<&'all mut i32>, Error> {
 ///         if *state < 3 {
 ///             *state += 1;
 ///             Ok(Some(state))

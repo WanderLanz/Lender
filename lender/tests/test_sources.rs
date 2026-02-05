@@ -224,8 +224,8 @@ fn source_from_fn_basic() {
 #[test]
 fn source_once_with_basic() {
     let mut once_with = lender::once_with(
-        42u8,
-        covar_once!(for<'lend> |state: &'lend mut u8| -> &'lend mut u8 {
+        42,
+        covar_once!(for<'lend> |state: &'lend mut i32| -> &'lend mut i32 {
             *state += 1;
             state
         }),

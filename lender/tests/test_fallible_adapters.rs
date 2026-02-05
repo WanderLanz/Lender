@@ -589,7 +589,7 @@ fn fallible_lender_max_by() {
     // Per Iterator::max_by docs: "If several elements are equally maximum, the last element is returned."
     // Use abs() comparison so that -3 and 3 are equal; last should win.
     let fallible2: lender::IntoFallible<_> =
-        vec![-3i32, 1, 3].into_iter().into_lender().into_fallible();
+        vec![-3, 1, 3].into_iter().into_lender().into_fallible();
     assert_eq!(
         fallible2.max_by(|a, b| Ok(a.abs().cmp(&b.abs()))),
         Ok(Some(3))
@@ -606,7 +606,7 @@ fn fallible_lender_min_by() {
     // Per Iterator::min_by docs: "If several elements are equally minimum, the first element is returned."
     // Use abs() comparison so that -1 and 1 are equal; first should win.
     let fallible2: lender::IntoFallible<_> =
-        vec![3i32, -1, 1].into_iter().into_lender().into_fallible();
+        vec![3, -1, 1].into_iter().into_lender().into_fallible();
     assert_eq!(
         fallible2.min_by(|a, b| Ok(a.abs().cmp(&b.abs()))),
         Ok(Some(-1))

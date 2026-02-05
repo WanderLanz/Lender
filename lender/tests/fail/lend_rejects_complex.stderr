@@ -9,8 +9,8 @@ error: lend!() only accepts simple covariant patterns. For complex types, use co
 error: lend!() only accepts simple covariant patterns. For complex types, use covariant_lend!(Name = YourType) instead.
   --> tests/fail/lend_rejects_complex.rs:10:10
    |
-10 | type B = lender::lend!(&'lend Vec<u8>);
-   |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+10 | type B = lender::lend!(&'lend Vec<i32>);
+   |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    |
    = note: this error originates in the macro `lender::lend` (in Nightly builds, run with -Z macro-backtrace for more info)
 
@@ -25,8 +25,8 @@ error: lend!() only accepts simple covariant patterns. For complex types, use co
 error: lend!() only accepts simple covariant patterns. For complex types, use covariant_lend!(Name = YourType) instead.
   --> tests/fail/lend_rejects_complex.rs:16:10
    |
-16 | type D = lender::lend!((&'lend u8, &'lend i32));
-   |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+16 | type D = lender::lend!((&'lend i32, &'lend i32));
+   |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    |
    = note: this error originates in the macro `lender::lend` (in Nightly builds, run with -Z macro-backtrace for more info)
 

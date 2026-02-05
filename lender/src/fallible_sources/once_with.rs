@@ -25,8 +25,8 @@ use crate::{
 /// ```rust
 /// # use lender::prelude::*;
 /// let mut lender = lender::fallible_once_with::<_, String, _>(
-///     0u8,
-///     covar_once!(for<'all> |state: &'all mut u8| -> &'all mut u8 {
+///     0,
+///     covar_once!(for<'all> |state: &'all mut i32| -> &'all mut i32 {
 ///         *state += 1;
 ///         state
 ///     })
@@ -56,8 +56,8 @@ where
 /// ```rust
 /// # use lender::prelude::*;
 /// let mut lender = lender::fallible_once_with_err::<
-///     _, fallible_lend!(&'lend u8), _,
-/// >(42u32, |state: &mut u32| format!("error code: {state}"));
+///     _, fallible_lend!(&'lend i32), _,
+/// >(42, |state: &mut i32| format!("error code: {state}"));
 /// assert_eq!(lender.next(), Err("error code: 42".to_string()));
 /// assert_eq!(lender.next(), Ok(None));
 /// ```

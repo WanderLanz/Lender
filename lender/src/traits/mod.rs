@@ -176,7 +176,7 @@ macro_rules! __lend_impl {
 ///
 /// This macro only accepts type patterns that are guaranteed to be
 /// covariant in `'lend`:
-/// - Identifiers: `u8`, `String`, etc.
+/// - Identifiers: `i32`, `String`, etc.
 /// - References: `&'lend T`, `&'lend mut T`
 /// - Slices: `&'lend [T]`, `&'lend mut [T]`
 /// - Double references: `& &'lend T`, `&&'lend T`
@@ -322,15 +322,15 @@ macro_rules! unsafe_assume_covariance {
 /// ```rust
 /// use lender::prelude::*;
 ///
-/// // Define a covariance-checked lending type for &'lend Vec<u8>.
-/// // This type cannot be expressed with lend!() because Vec<u8>
+/// // Define a covariance-checked lending type for &'lend Vec<i32>.
+/// // This type cannot be expressed with lend!() because Vec<i32>
 /// // has generics.
-/// covariant_lend!(RefVec = &'lend Vec<u8>);
+/// covariant_lend!(RefVec = &'lend Vec<i32>);
 ///
-/// let data = [vec![1u8, 2], vec![3, 4]];
+/// let data = [vec![1, 2], vec![3, 4]];
 /// let mut lender = lender::lend_iter::<'_, RefVec, _>(data.iter());
-/// let item: &Vec<u8> = lender.next().unwrap();
-/// assert_eq!(item, &vec![1u8, 2]);
+/// let item: &Vec<i32> = lender.next().unwrap();
+/// assert_eq!(item, &vec![1, 2]);
 /// ```
 ///
 /// # Compile-time Error for Invariant Types
@@ -519,7 +519,7 @@ pub trait DynFallibleLend<'lend> {
 ///
 /// This macro only accepts type patterns that are guaranteed to be
 /// covariant in `'lend`:
-/// - Identifiers: `u8`, `String`, etc.
+/// - Identifiers: `i32`, `String`, etc.
 /// - References: `&'lend T`, `&'lend mut T`
 /// - Slices: `&'lend [T]`, `&'lend mut [T]`
 /// - Double references: `& &'lend T`, `&&'lend T`

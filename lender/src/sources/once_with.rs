@@ -17,7 +17,7 @@ use crate::{
 /// # Examples
 /// ```rust
 /// # use lender::prelude::*;
-/// let mut lender = lender::once_with(0u8, covar_once!(for<'all> |state: &'all mut u8| -> &'all mut u8 {
+/// let mut lender = lender::once_with(0, covar_once!(for<'all> |state: &'all mut i32| -> &'all mut i32 {
 ///     *state += 1;
 ///     state
 /// }));

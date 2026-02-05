@@ -21,7 +21,7 @@ where
 }
 
 fn main() {
-    let mut count = 0u8;
+    let mut count = 0;
     let mut lender = lender::from_fn(
         (),
         covar_mut!(for<'all> move |(): &'all mut ()| -> Option<Result<(), PrintOnDrop>> {

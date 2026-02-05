@@ -12,7 +12,7 @@ use crate::{Covar, Lend, Lender, Lending, higher_order::FnMutHKAOpt};
 /// # Examples
 /// ```rust
 /// # use lender::prelude::*;
-/// let mut lender = lender::from_fn(0u8, covar_mut!(for<'all> |state: &'all mut u8| -> Option<&'all mut u8> {
+/// let mut lender = lender::from_fn(0, covar_mut!(for<'all> |state: &'all mut i32| -> Option<&'all mut i32> {
 ///     if *state < 10 {
 ///         *state += 1;
 ///         Some(state)

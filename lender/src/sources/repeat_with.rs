@@ -16,8 +16,8 @@ use crate::{FusedLender, prelude::*};
 /// ```rust
 /// # use lender::prelude::*;
 /// let mut lender = lender::repeat_with::<
-///     lend!(&'lend u8), _,
-/// >(|| &0u8);
+///     lend!(&'lend i32), _,
+/// >(|| &0);
 /// assert_eq!(lender.next(), Some(&0));
 /// ```
 #[inline]

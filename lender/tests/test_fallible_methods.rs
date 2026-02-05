@@ -783,7 +783,7 @@ fn fallible_lender_ge() {
 fn fallible_lender_reduce() {
     use lender::FallibleLender;
 
-    let result = vec![1i32, 2, 3, 4]
+    let result = vec![1, 2, 3, 4]
         .into_iter()
         .into_lender()
         .into_fallible()
@@ -803,7 +803,7 @@ fn fallible_lender_max() {
     use lender::FallibleLender;
 
     assert_eq!(
-        vec![1i32, 5, 3, 2, 4]
+        vec![1, 5, 3, 2, 4]
             .into_iter()
             .into_lender()
             .into_fallible()
@@ -825,7 +825,7 @@ fn fallible_lender_min() {
     use lender::FallibleLender;
 
     assert_eq!(
-        vec![3i32, 1, 5, 2, 4]
+        vec![3, 1, 5, 2, 4]
             .into_iter()
             .into_lender()
             .into_fallible()
@@ -839,7 +839,7 @@ fn fallible_lender_max_by() {
     use lender::FallibleLender;
 
     assert_eq!(
-        vec![1i32, 5, 3]
+        vec![1, 5, 3]
             .into_iter()
             .into_lender()
             .into_fallible()
@@ -853,7 +853,7 @@ fn fallible_lender_min_by() {
     use lender::FallibleLender;
 
     assert_eq!(
-        vec![3i32, 1, 5]
+        vec![3, 1, 5]
             .into_iter()
             .into_lender()
             .into_fallible()
@@ -867,7 +867,7 @@ fn fallible_lender_max_by_key() {
     use lender::FallibleLender;
 
     assert_eq!(
-        vec![-3i32, 0, 1, 5, -2]
+        vec![-3, 0, 1, 5, -2]
             .into_iter()
             .into_lender()
             .into_fallible()
@@ -881,7 +881,7 @@ fn fallible_lender_min_by_key() {
     use lender::FallibleLender;
 
     assert_eq!(
-        vec![-3i32, 0, 1, 5, -2]
+        vec![-3, 0, 1, 5, -2]
             .into_iter()
             .into_lender()
             .into_fallible()
@@ -895,7 +895,7 @@ fn fallible_lender_is_sorted() {
     use lender::FallibleLender;
 
     assert_eq!(
-        vec![1i32, 2, 3, 4]
+        vec![1, 2, 3, 4]
             .into_iter()
             .into_lender()
             .into_fallible()
@@ -903,7 +903,7 @@ fn fallible_lender_is_sorted() {
         Ok(true)
     );
     assert_eq!(
-        vec![1i32, 3, 2]
+        vec![1, 3, 2]
             .into_iter()
             .into_lender()
             .into_fallible()
@@ -917,7 +917,7 @@ fn fallible_lender_is_sorted_by() {
     use lender::FallibleLender;
 
     assert_eq!(
-        vec![4i32, 3, 2, 1]
+        vec![4, 3, 2, 1]
             .into_iter()
             .into_lender()
             .into_fallible()
@@ -931,7 +931,7 @@ fn fallible_lender_is_sorted_by_key() {
     use lender::FallibleLender;
 
     assert_eq!(
-        vec![0i32, -1, 2, -3]
+        vec![0, -1, 2, -3]
             .into_iter()
             .into_lender()
             .into_fallible()

@@ -7,12 +7,12 @@ use std::cell::Cell;
 type A = lender::lend!(&'lend Cell<&'lend String>);
 
 // Generic type (not a simple ident)
-type B = lender::lend!(&'lend Vec<u8>);
+type B = lender::lend!(&'lend Vec<i32>);
 
 // Path type (not a simple ident)
 type C = lender::lend!(&'lend std::string::String);
 
 // Tuple with reference inside (not supported)
-type D = lender::lend!((&'lend u8, &'lend i32));
+type D = lender::lend!((&'lend i32, &'lend i32));
 
 fn main() {}

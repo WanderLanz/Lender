@@ -79,7 +79,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2, 3u8].iter());
+    /// let mut lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3].iter());
     /// assert_eq!(lender.next(), Some(&1));
     /// assert_eq!(lender.next(), Some(&2));
     /// assert_eq!(lender.next(), Some(&3));
@@ -94,7 +94,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2, 3u8].iter());
+    /// let mut lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3].iter());
     /// let mut chunk_lender = lender.next_chunk(2);
     /// assert_eq!(chunk_lender.next(), Some(&1));
     /// assert_eq!(chunk_lender.next(), Some(&2));
@@ -115,7 +115,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2, 3u8].iter());
+    /// let mut lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3].iter());
     /// assert_eq!(lender.size_hint(), (3, Some(3)));
     /// ```
     #[inline(always)]
@@ -126,7 +126,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2, 3u8].iter());
+    /// let mut lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3].iter());
     /// assert_eq!(lender.count(), 3);
     /// ```
     #[inline]
@@ -146,7 +146,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2, 3u8].iter());
+    /// let mut lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3].iter());
     /// assert_eq!(lender.last(), Some(&3));
     /// ```
     #[inline]
@@ -177,7 +177,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2, 3].iter());
+    /// let mut lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3].iter());
     /// assert_eq!(lender.advance_by(2), Ok(()));
     /// assert_eq!(lender.next(), Some(&3));
     /// ```
@@ -185,7 +185,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// ```rust
     /// # use lender::prelude::*;
     /// # use core::num::NonZeroUsize;
-    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2].iter());
+    /// let mut lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2].iter());
     /// // Trying to advance by 5 when only 2 elements remain
     /// assert_eq!(lender.advance_by(5), Err(NonZeroUsize::new(3).unwrap()));
     /// ```
@@ -208,7 +208,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2, 3u8].iter());
+    /// let mut lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3].iter());
     /// assert_eq!(lender.nth(2), Some(&3));
     /// ```
     #[inline]
@@ -226,7 +226,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].iter());
+    /// let mut lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].iter());
     /// let mut step_lender = lender.step_by(2);
     /// assert_eq!(step_lender.next(), Some(&1));
     /// assert_eq!(step_lender.next(), Some(&3));
@@ -251,8 +251,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2].iter());
-    /// let mut other = lender::lend_iter::<lend!(&'lend u8), _>([3, 4].iter());
+    /// let mut lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2].iter());
+    /// let mut other = lender::lend_iter::<lend!(&'lend i32), _>([3, 4].iter());
     /// let mut chained = lender.chain(other);
     /// assert_eq!(chained.next(), Some(&1));
     /// assert_eq!(chained.next(), Some(&2));
@@ -274,8 +274,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2].iter());
-    /// let mut other = lender::lend_iter::<lend!(&'lend u8), _>([3, 4].iter());
+    /// let mut lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2].iter());
+    /// let mut other = lender::lend_iter::<lend!(&'lend i32), _>([3, 4].iter());
     /// let mut zipped = lender.zip(other);
     /// assert_eq!(zipped.next(), Some((&1, &3)));
     /// assert_eq!(zipped.next(), Some((&2, &4)));
@@ -294,7 +294,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2].iter());
+    /// let mut lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2].iter());
     /// let mut interspersed = lender.intersperse(&0);
     /// assert_eq!(interspersed.next(), Some(&1));
     /// assert_eq!(interspersed.next(), Some(&0));
@@ -316,7 +316,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2].iter());
+    /// let mut lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2].iter());
     /// let mut interspersed = lender.intersperse_with(|| &0);
     /// assert_eq!(interspersed.next(), Some(&1));
     /// assert_eq!(interspersed.next(), Some(&0));
@@ -341,9 +341,9 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut data = [1, 2u8];
-    /// let mut lender = lender::lend_iter::<lend!(&'lend mut u8), _>(data.iter_mut());
-    /// let mut mapped = lender.map(covar_mut!(for<'all> |a: &'all mut u8| -> &'all u8 {
+    /// let mut data = [1, 2];
+    /// let mut lender = lender::lend_iter::<lend!(&'lend mut i32), _>(data.iter_mut());
+    /// let mut mapped = lender.map(covar_mut!(for<'all> |a: &'all mut i32| -> &'all i32 {
     ///     *a += 1;
     ///     &*a
     /// }));
@@ -370,8 +370,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut data = [1, 2u8];
-    /// let mut lender = lender::lend_iter::<lend!(&'lend mut u8), _>(data.iter_mut());
+    /// let mut data = [1, 2];
+    /// let mut lender = lender::lend_iter::<lend!(&'lend mut i32), _>(data.iter_mut());
     /// let mut mapped_into_iter = lender.map_into_iter(|a| {
     ///     *a += 1;
     ///     *a
@@ -392,7 +392,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2u8].iter());
+    /// let mut lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2].iter());
     /// lender.for_each(|a| {
     ///     let _ = *a + 1;
     /// });
@@ -411,7 +411,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2u8].iter());
+    /// let mut lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2].iter());
     /// let mut filtered = lender.filter(|&a| *a > 1);
     /// assert_eq!(filtered.next(), Some(&2));
     /// assert_eq!(filtered.next(), None);
@@ -434,9 +434,9 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut data = [1, 2u8];
-    /// let mut lender = lender::lend_iter::<lend!(&'lend mut u8), _>(data.iter_mut());
-    /// let mut filtered = lender.filter_map(covar_mut!(for<'all> |a: &'all mut u8| -> Option<&'all u8> {
+    /// let mut data = [1, 2];
+    /// let mut lender = lender::lend_iter::<lend!(&'lend mut i32), _>(data.iter_mut());
+    /// let mut filtered = lender.filter_map(covar_mut!(for<'all> |a: &'all mut i32| -> Option<&'all i32> {
     ///     if *a > 1 {
     ///         Some(&*a)
     ///     } else {
@@ -460,7 +460,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2u8].iter());
+    /// let mut lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2].iter());
     /// let mut enumerated = lender.enumerate();
     /// assert_eq!(enumerated.next(), Some((0, &1)));
     /// assert_eq!(enumerated.next(), Some((1, &2)));
@@ -480,7 +480,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2u8].iter());
+    /// let mut lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2].iter());
     /// let mut peekable = lender.peekable();
     /// assert_eq!(peekable.peek(), Some(&&1));
     /// assert_eq!(peekable.next(), Some(&1));
@@ -502,7 +502,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2, 3, 4, 5].iter());
+    /// let mut lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3, 4, 5].iter());
     /// let mut skipped = lender.skip_while(|&a| *a < 3);
     /// assert_eq!(skipped.next(), Some(&3));
     /// assert_eq!(skipped.next(), Some(&4));
@@ -524,7 +524,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2, 3, 4, 5].iter());
+    /// let mut lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3, 4, 5].iter());
     /// let mut taken = lender.take_while(|&a| *a < 3);
     /// assert_eq!(taken.next(), Some(&1));
     /// assert_eq!(taken.next(), Some(&2));
@@ -548,9 +548,9 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut data = [1, 2u8];
-    /// let mut lender = lender::lend_iter::<lend!(&'lend mut u8), _>(data.iter_mut());
-    /// let mut mapped = lender.map_while(covar_mut!(for<'all> |a: &'all mut u8| -> Option<&'all u8> {
+    /// let mut data = [1, 2];
+    /// let mut lender = lender::lend_iter::<lend!(&'lend mut i32), _>(data.iter_mut());
+    /// let mut mapped = lender.map_while(covar_mut!(for<'all> |a: &'all mut i32| -> Option<&'all i32> {
     ///     if *a < 2 {
     ///         Some(&*a)
     ///     } else {
@@ -574,7 +574,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2, 3, 4, 5].iter());
+    /// let mut lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3, 4, 5].iter());
     /// let mut skipped = lender.skip(3);
     /// assert_eq!(skipped.next(), Some(&4));
     /// assert_eq!(skipped.next(), Some(&5));
@@ -593,7 +593,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2, 3, 4, 5].iter());
+    /// let mut lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3, 4, 5].iter());
     /// let mut taken = lender.take(2);
     /// assert_eq!(taken.next(), Some(&1));
     /// assert_eq!(taken.next(), Some(&2));
@@ -616,8 +616,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1u8, 2, 3].iter());
-    /// let mut scanned = lender.scan(0u8, covar_mut!(for<'all> |args: (&'all mut u8, &'all u8)| -> Option<&'all u8> {
+    /// let mut lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3].iter());
+    /// let mut scanned = lender.scan(0, covar_mut!(for<'all> |args: (&'all mut i32, &'all i32)| -> Option<&'all i32> {
     ///     *args.0 += *args.1;
     ///     Some(args.1)
     /// }));
@@ -701,7 +701,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2u8].iter());
+    /// let mut lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2].iter());
     /// let mut fused = lender.fuse();
     /// assert_eq!(fused.next(), Some(&1));
     /// assert_eq!(fused.next(), Some(&2));
@@ -721,8 +721,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2, 3u8].iter());
-    /// let mut sum = 0u8;
+    /// let mut lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3].iter());
+    /// let mut sum = 0;
     /// let mut inspected = lender.inspect(|&x| sum += x);
     /// assert_eq!(inspected.next(), Some(&1));
     /// assert_eq!(inspected.next(), Some(&2));
@@ -745,8 +745,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut data = [1, 2, 3u8];
-    /// let mut lender = lender::lend_iter::<lend!(&'lend mut u8), _>(data.iter_mut());
+    /// let mut data = [1, 2, 3];
+    /// let mut lender = lender::lend_iter::<lend!(&'lend mut i32), _>(data.iter_mut());
     /// let mut mutated = lender.mutate(|x| **x += 10);
     /// assert_eq!(mutated.next(), Some(&mut 11));
     /// assert_eq!(mutated.next(), Some(&mut 12));
@@ -767,7 +767,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2, 3, 4, 5u8].iter());
+    /// let mut lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3, 4, 5].iter());
     /// // Take the first two elements using by_ref, so the original lender
     /// // is not consumed.
     /// let mut first_two = lender.by_ref().take(2);
@@ -889,8 +889,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2, 3u8].iter());
-    /// let sum = lender.try_fold(0u8, |acc, &x| acc.checked_add(x));
+    /// let mut lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3].iter());
+    /// let sum = lender.try_fold(0, |acc: i32, &x| acc.checked_add(x));
     /// assert_eq!(sum, Some(6));
     /// ```
     #[inline]
@@ -914,7 +914,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2, 3u8].iter());
+    /// let mut lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3].iter());
     /// let result = lender.try_for_each(|&x| if x < 3 { Some(()) } else { None });
     /// assert_eq!(result, None);
     /// ```
@@ -932,8 +932,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2, 3u8].iter());
-    /// let sum = lender.fold(0u8, |acc, &x| acc + x);
+    /// let mut lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3].iter());
+    /// let sum = lender.fold(0, |acc, &x| acc + x);
     /// assert_eq!(sum, 6);
     /// ```
     #[inline]
@@ -950,7 +950,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let lender = lender::lend_iter::<lend!(&'lend u8), _>([1, 2, 3u8].iter());
+    /// let lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3].iter());
     /// let max = lender.copied().reduce(|max, x| if x > max { x } else { max });
     /// assert_eq!(max, Some(3));
     /// ```
@@ -971,7 +971,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// ```rust
     /// # use lender::prelude::*;
     /// let lender = [1, 2, 3].into_iter().into_lender();
-    /// let sum = lender.try_reduce(|acc: u8, x| acc.checked_add(x));
+    /// let sum = lender.try_reduce(|acc: i32, x| acc.checked_add(x));
     /// assert_eq!(sum, Some(Some(6)));
     /// ```
     #[inline]
@@ -1077,9 +1077,9 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut data = [1, 2, 3u8];
-    /// let mut lender = lender::lend_iter::<lend!(&'lend mut u8), _>(data.iter_mut());
-    /// let found = lender.find_map(|x: &mut u8| {
+    /// let mut data = [1, 2, 3];
+    /// let mut lender = lender::lend_iter::<lend!(&'lend mut i32), _>(data.iter_mut());
+    /// let found = lender.find_map(|x: &mut i32| {
     ///     if *x > 1 { Some(*x) } else { None }
     /// });
     /// assert_eq!(found, Some(2));
@@ -1461,7 +1461,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3i32].iter());
+    /// let lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3].iter());
     /// let total: i32 = lender.copied().sum();
     /// assert_eq!(total, 6);
     /// ```
@@ -1479,7 +1479,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3i32].iter());
+    /// let lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3].iter());
     /// let total: i32 = lender.copied().product();
     /// assert_eq!(total, 6);
     /// ```
@@ -1790,7 +1790,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// let mut lender = lender::lend_iter::<lend!(&'lend u8), _>([1u8, 2, 3].iter());
+    /// let mut lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3].iter());
     /// let mut chunky = lender.chunky(2);
     /// let mut chunk1 = chunky.next().unwrap();
     /// assert_eq!(chunk1.next(), Some(&1));
