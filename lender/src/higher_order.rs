@@ -128,7 +128,7 @@ impl<'b, A, B: 'b, E, F: FnMut(A) -> Result<Option<B>, E>> FnMutHKAResOpt<'b, A,
 /// `higher_order_closure` macro to use any [`Fn`] trait.
 #[doc(hidden)]
 #[macro_export]
-macro_rules! __hrc__ {
+macro_rules! __covar__ {
     // Case 1: With for<'lifetime> and return type - includes covariance check
     (
         $F:ident,
@@ -329,7 +329,7 @@ macro_rules! __hrc__ {
 /// assert_eq!(lender.next(), None);
 /// ```
 #[macro_export]
-macro_rules! covar_once {($($t:tt)+) => ($crate::__hrc__!(FnOnce, $($t)+))}
+macro_rules! covar_once {($($t:tt)+) => ($crate::__covar__!(FnOnce, $($t)+))}
 
 /// Covariance-checked [`FnMut`] closure macro.
 ///
@@ -378,7 +378,7 @@ macro_rules! covar_once {($($t:tt)+) => ($crate::__hrc__!(FnOnce, $($t)+))}
 /// assert_eq!(data, [0, 1, 1, 2, 3, 5, 8, 13, 21]);
 /// ```
 #[macro_export]
-macro_rules! covar_mut {($($t:tt)+) => ($crate::__hrc__!(FnMut, $($t)+))}
+macro_rules! covar_mut {($($t:tt)+) => ($crate::__covar__!(FnMut, $($t)+))}
 
 /// Covariance-checked [`Fn`] closure macro.
 ///
@@ -412,4 +412,4 @@ macro_rules! covar_mut {($($t:tt)+) => ($crate::__hrc__!(FnMut, $($t)+))}
 /// );
 /// ```
 #[macro_export]
-macro_rules! covar {($($t:tt)+) => ($crate::__hrc__!(Fn, $($t)+))}
+macro_rules! covar {($($t:tt)+) => ($crate::__covar__!(Fn, $($t)+))}
