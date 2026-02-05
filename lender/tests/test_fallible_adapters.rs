@@ -53,16 +53,20 @@ fn fallible_peekable_adapter() {
     use lender::{FalliblePeekable, from_fallible_fn};
 
     // Test peeking functionality
-    let mut peekable: FalliblePeekable<_> =
-        from_fallible_fn(0, covar_mut!(for<'lend> |state: &'lend mut i32| -> Result<Option<i32>, String> {
-            *state += 1;
-            if *state <= 3 {
-                Ok(Some(*state))
-            } else {
-                Ok(None)
+    let mut peekable: FalliblePeekable<_> = from_fallible_fn(
+        0,
+        covar_mut!(
+            for<'lend> |state: &'lend mut i32| -> Result<Option<i32>, String> {
+                *state += 1;
+                if *state <= 3 {
+                    Ok(Some(*state))
+                } else {
+                    Ok(None)
+                }
             }
-        }))
-        .peekable();
+        ),
+    )
+    .peekable();
 
     // Peek multiple times - should see same value
     assert_eq!(peekable.peek().unwrap(), Some(&1));
@@ -91,14 +95,19 @@ fn intersperse_adapters() {
     use lender::from_fallible_fn;
 
     // Test intersperse with fixed separator
-    let interspersed = from_fallible_fn(0, covar_mut!(for<'lend> |state: &'lend mut i32| -> Result<Option<i32>, String> {
-        *state += 1;
-        if *state <= 3 {
-            Ok(Some(*state))
-        } else {
-            Ok(None)
-        }
-    }))
+    let interspersed = from_fallible_fn(
+        0,
+        covar_mut!(
+            for<'lend> |state: &'lend mut i32| -> Result<Option<i32>, String> {
+                *state += 1;
+                if *state <= 3 {
+                    Ok(Some(*state))
+                } else {
+                    Ok(None)
+                }
+            }
+        ),
+    )
     .intersperse(0);
 
     let mut collected = Vec::new();
@@ -112,14 +121,19 @@ fn intersperse_adapters() {
 
     // Test intersperse_with using a closure
     let mut counter = 10;
-    let interspersed_with = from_fallible_fn(0, covar_mut!(for<'lend> |state: &'lend mut i32| -> Result<Option<i32>, String> {
-        *state += 1;
-        if *state <= 3 {
-            Ok(Some(*state))
-        } else {
-            Ok(None)
-        }
-    }))
+    let interspersed_with = from_fallible_fn(
+        0,
+        covar_mut!(
+            for<'lend> |state: &'lend mut i32| -> Result<Option<i32>, String> {
+                *state += 1;
+                if *state <= 3 {
+                    Ok(Some(*state))
+                } else {
+                    Ok(None)
+                }
+            }
+        ),
+    )
     .intersperse_with(move || {
         counter += 1;
         Ok(counter)
@@ -139,9 +153,14 @@ fn intersperse_adapters() {
 fn map_adapters() {
     let data = vec![1, 2, 3];
 
-    let mut iter = data.into_iter().into_lender().into_fallible().map(covar_mut!(
-        for<'lend> |x: i32| -> Result<i32, std::convert::Infallible> { Ok(x * 2) }
-    ));
+    let mut iter = data
+        .into_iter()
+        .into_lender()
+        .into_fallible()
+        .map(covar_mut!(for<'lend> |x: i32| -> Result<
+            i32,
+            std::convert::Infallible,
+        > { Ok(x * 2) }));
 
     assert_eq!(iter.next().unwrap(), Some(2));
     assert_eq!(iter.next().unwrap(), Some(4));

@@ -783,7 +783,8 @@ fn take_exact_size() {
 
 #[test]
 fn map_size_hint() {
-    let mapped = VecLender::new(vec![1, 2, 3]).map(covar_mut!(for<'lend> |x: &'lend i32| -> i32 { *x * 2 }));
+    let mapped =
+        VecLender::new(vec![1, 2, 3]).map(covar_mut!(for<'lend> |x: &'lend i32| -> i32 { *x * 2 }));
     assert_eq!(mapped.size_hint(), (3, Some(3)));
 }
 

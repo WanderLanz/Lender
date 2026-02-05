@@ -325,10 +325,11 @@ fn filter_try_rfold_additional() {
 
 #[test]
 fn filter_map_basic() {
-    let mut fm = VecLender::new(vec![1, 2, 3, 4, 5])
-        .filter_map(covar_mut!(for<'lend> |x: &'lend i32| -> Option<i32> {
+    let mut fm = VecLender::new(vec![1, 2, 3, 4, 5]).filter_map(covar_mut!(
+        for<'lend> |x: &'lend i32| -> Option<i32> {
             if *x % 2 == 0 { Some(*x * 10) } else { None }
-        }));
+        }
+    ));
 
     assert_eq!(fm.next(), Some(20));
     assert_eq!(fm.next(), Some(40));
@@ -337,18 +338,19 @@ fn filter_map_basic() {
 
 #[test]
 fn filter_map_all_none() {
-    let mut fm = VecLender::new(vec![1, 3, 5])
-        .filter_map(covar_mut!(for<'lend> |x: &'lend i32| -> Option<i32> {
+    let mut fm = VecLender::new(vec![1, 3, 5]).filter_map(covar_mut!(
+        for<'lend> |x: &'lend i32| -> Option<i32> {
             if *x % 2 == 0 { Some(*x * 10) } else { None }
-        }));
+        }
+    ));
     assert_eq!(fm.next(), None);
 }
 
 #[test]
 fn filter_map_all_some() {
-    let mut fm = VecLender::new(vec![2, 4, 6]).filter_map(covar_mut!(for<'lend> |x: &'lend i32| -> Option<i32> {
-        Some(*x / 2)
-    }));
+    let mut fm = VecLender::new(vec![2, 4, 6]).filter_map(covar_mut!(
+        for<'lend> |x: &'lend i32| -> Option<i32> { Some(*x / 2) }
+    ));
 
     assert_eq!(fm.next(), Some(1));
     assert_eq!(fm.next(), Some(2));
@@ -390,10 +392,9 @@ fn filter_map_into_parts() {
 fn filter_map_double_ended_coverage() {
     use lender::DoubleEndedLender;
 
-    let mut fm = VecLender::new(vec![1, 2, 3, 4, 5])
-        .filter_map(covar_mut!(for<'lend> |x: &'lend i32| -> Option<i32> {
-            if *x % 2 == 0 { Some(*x * 2) } else { None }
-        }));
+    let mut fm = VecLender::new(vec![1, 2, 3, 4, 5]).filter_map(covar_mut!(
+        for<'lend> |x: &'lend i32| -> Option<i32> { if *x % 2 == 0 { Some(*x * 2) } else { None } }
+    ));
     // Use next_back to exercise the DoubleEndedLender unsafe path
     assert_eq!(fm.next_back(), Some(8)); // 4 * 2
     assert_eq!(fm.next(), Some(4)); // 2 * 2

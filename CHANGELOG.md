@@ -8,11 +8,14 @@
   use either the (safe) `check_covariance!`/`check_covariance_fallible!` macros
   (for sources) to check covariance of the lend lifetime, or the (unsafe)
   `unsafe_assume_covariance!`/`unsafe_assume_covariance_fallible!` macros when
-  assuming covariance of underlying lends (without any check). Covariance checks
-  have also been embedded in the `covar!`, `covar_mut!` and `covar_once` macros.
-  Methods that used to take `for<'all> Lending<'all>` now take
-  `CovariantLending`, which depends on `for<'all> Lending<'all, L>` but
-  forces a covariance check.
+  assuming covariance of underlying lends (without any check). Methods that used
+  to take `for<'all> Lending<'all>` now take `CovariantLending`, which depends
+  on `for<'all> Lending<'all, L>` but forces a covariance check.
+
+- Covariance checks have also been embedded in the `covar!`, `covar_mut!` and
+  `covar_once` macros (formerly `hrc...`), which are now required to pass a
+  closure, as closures are passed through the `Covar` wrapper, which forces
+  a covariance check. This unfortunately includes closures without lifetimes.
 
 - Added missing `FromFallibleLender`/`ExtendFallibleLender` traits.
 

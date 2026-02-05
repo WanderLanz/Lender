@@ -7,9 +7,7 @@ use crate::{Covar, Lend, Lender, Lending, higher_order::FnMutHKAOpt};
 ///
 /// Note that functions passed to this function must be built
 /// using the [`covar!`](crate::covar) or [`covar_mut!`](crate::covar_mut)
-/// macro, which also checks for covariance of the returned type.
-/// Circumventing the macro may result in undefined behavior if
-/// the return type is not covariant.
+/// macros, which also checks for covariance of the returned type.
 ///
 /// # Examples
 /// ```rust

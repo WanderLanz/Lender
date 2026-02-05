@@ -48,8 +48,7 @@ where
         Fold: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
     {
         let f = self.f.as_inner_mut();
-        self.lender
-            .fold(init, move |acc, x| fold(acc, (f)(x)?))
+        self.lender.fold(init, move |acc, x| fold(acc, (f)(x)?))
     }
 }
 
@@ -59,7 +58,10 @@ where
 {
     #[inline(always)]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
-        self.lender.next_back()?.map(self.f.as_inner_mut()).transpose()
+        self.lender
+            .next_back()?
+            .map(self.f.as_inner_mut())
+            .transpose()
     }
 
     #[inline]
@@ -81,8 +83,7 @@ where
         Fold: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
     {
         let f = self.f.as_inner_mut();
-        self.lender
-            .rfold(init, move |acc, x| fold(acc, (f)(x)?))
+        self.lender.rfold(init, move |acc, x| fold(acc, (f)(x)?))
     }
 }
 

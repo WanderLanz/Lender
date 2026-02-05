@@ -364,7 +364,7 @@ in the details the design choices behind this crate.
 To guarantee that the lend type is covariant in the lifetime parameter,
 we use an uncallable method in the [`CovariantLending`] and [`Lender`] traits:
 ```rust,ignore
-fn _check_covariance<'long: 'short, 'short>(
+fn __check_covariance<'long: 'short, 'short>(
     lend: *const &'short <Self as Lending<'long>>::Lend, _: crate::Uncallable,
 ) -> *const &'short <Self as Lending<'short>>::Lend;
 ```
@@ -388,19 +388,19 @@ macros.
 Now, a first obvious question is: why not put this method directly in
 [`Lending`]? The problem is that in the implementation of [`Lending`] for `T`,
 the compiler can only normalize `<T as Lending<'lend>>::Lend` for the specific
-`'lend` from the impl header. The `_check_covariance` method introduces new
+`'lend` from the impl header. The `__check_covariance` method introduces new
 lifetimes `'long` and `'short` and projects `<Self as Lending<'long>>::Lend` and
 `<Self as Lending<'short>>::Lend`; the compiler can't resolve these
 projections because `'long`/`'short` don't match `'lend`.
 
-When `_check_covariance` is in [`Lender`] or [`CovariantLending`], instead, it
+When `__check_covariance` is in [`Lender`] or [`CovariantLending`], instead, it
 works because `for<'all> Lending<'all>` is a supertrait, and the compiler can
 normalize associated type projections through supertraits.
 
 The second obvious question is: why isn't [`CovariantLending`] as a supertrait of
 [`Lender`] depending on [`Lending`] (via a `for<'all> Lending<'all>` bound)?
 That would be logical, as there would be only one instance of
-`_check_covariance`. The problem is just of ergonomics: [`Lender`] is already
+`__check_covariance`. The problem is just of ergonomics: [`Lender`] is already
 enough complicated, requiring a supporting [`Lending`] to specify its lend.
 Having a third trait in the hierarchy would make it even more complicated to
 use. A macro in the vein of [`check_covariance!`] would not help, as it would

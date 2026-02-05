@@ -12,9 +12,7 @@ use crate::{
 /// using the [`covar!`](crate::covar),
 /// [`covar_mut!`](crate::covar_mut), or
 /// [`covar_once!`](crate::covar_once) macro, which also checks for
-/// covariance of the returned type. Circumventing the macro may
-/// result in undefined behavior if the return type is not
-/// covariant.
+/// covariance of the returned type.
 ///
 /// # Examples
 /// ```rust

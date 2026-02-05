@@ -3,8 +3,8 @@ use core::fmt;
 use maybe_dangling::MaybeDangling;
 
 use crate::{
-    Covar, FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender,
-    IntoFallibleLender, Map, try_trait_v2::Try,
+    Covar, FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, IntoFallibleLender,
+    Map, try_trait_v2::Try,
 };
 
 /// A fallible lender that flattens one level of nesting in a lender of lenders.
@@ -464,7 +464,9 @@ mod test {
             .into_lender()
             .into_fallible()
             // SAFETY: closure returns an owned Result (trivially covariant).
-            .flat_map(unsafe { crate::Covar::__new(|n: i32| Ok((0..n).into_lender().into_fallible())) });
+            .flat_map(unsafe {
+                crate::Covar::__new(|n: i32| Ok((0..n).into_lender().into_fallible()))
+            });
         assert_eq!(l.next(), Ok(Some(0)));
         assert_eq!(l.next(), Ok(Some(0)));
         assert_eq!(l.next(), Ok(Some(1)));

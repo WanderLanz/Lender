@@ -66,7 +66,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///   core::mem::transmute(lend) } }`, which is a no-op. This is unsafe because
     ///   it is up to the implementor to guarantee that the [`Lend`](Lending::Lend)
     ///   type is covariant in its lifetime.
-    fn _check_covariance<'long: 'short, 'short>(
+    fn __check_covariance<'long: 'short, 'short>(
         lend: *const &'short <Self as Lending<'long>>::Lend, _: crate::Uncallable,
     ) -> *const &'short <Self as Lending<'short>>::Lend;
 
@@ -326,9 +326,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// Maps each lend of this lender using the given function.
     ///
     /// Note that functions passed to this method must be built using the
-    /// [`covar!`](crate::covar) or [`covar_mut!`](crate::covar_mut) macro, which also
-    /// checks for covariance of the returned type. Circumventing the macro may
-    /// result in undefined behavior if the return type is not covariant.
+    /// [`covar!`](crate::covar) or [`covar_mut!`](crate::covar_mut) macros, which also
+    /// checks for covariance of the returned type.
     ///
     /// # Examples
     ///
@@ -419,9 +418,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// Filters and maps this lender using the given function.
     ///
     /// Note that functions passed to this method must be built using the
-    /// [`covar!`](crate::covar) or [`covar_mut!`](crate::covar_mut) macro, which also
-    /// checks for covariance of the returned type. Circumventing the macro may
-    /// result in undefined behavior if the return type is not covariant.
+    /// [`covar!`](crate::covar) or [`covar_mut!`](crate::covar_mut) macros, which also
+    /// checks for covariance of the returned type.
     ///
     /// # Examples
     ///
@@ -531,9 +529,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// Maps this lender using the given function while it returns [`Some`].
     ///
     /// Note that functions passed to this method must be built using the
-    /// [`covar!`](crate::covar) or [`covar_mut!`](crate::covar_mut) macro, which also
-    /// checks for covariance of the returned type. Circumventing the macro may
-    /// result in undefined behavior if the return type is not covariant.
+    /// [`covar!`](crate::covar) or [`covar_mut!`](crate::covar_mut) macros, which also
+    /// checks for covariance of the returned type.
     ///
     /// # Examples
     ///
@@ -600,9 +597,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// The [`Lender`] version of [`Iterator::scan`].
     ///
     /// Note that functions passed to this method must be built using the
-    /// [`covar!`](crate::covar) or [`covar_mut!`](crate::covar_mut) macro, which also
-    /// checks for covariance of the returned type. Circumventing the macro may
-    /// result in undefined behavior if the return type is not covariant.
+    /// [`covar!`](crate::covar) or [`covar_mut!`](crate::covar_mut) macros, which also
+    /// checks for covariance of the returned type.
     ///
     /// # Examples
     ///
@@ -628,8 +624,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// Note that functions passed to this method must be built using the
     /// [`covar!`](crate::covar) or [`covar_mut!`](crate::covar_mut) macro, which also
-    /// checks for covariance of the returned type. Circumventing the macro may
-    /// result in undefined behavior if the return type is not covariant.
+    /// checks for covariance of the returned type.
     ///
     /// # Examples
     ///

@@ -16,9 +16,7 @@ fn windows_mut() {
         begin: 0,
         len: 3,
     }
-    .for_each(covar_mut!(for<'lend> |w: &'lend mut [u32]| {
-        w[2] = w[0] + w[1]
-    }).into_inner());
+    .for_each(covar_mut!(for<'lend> |w: &'lend mut [u32]| { w[2] = w[0] + w[1] }).into_inner());
     assert_eq!(data, [0, 1, 1, 2, 3, 5, 8, 13, 21]);
     WindowsMut {
         slice: &mut data,

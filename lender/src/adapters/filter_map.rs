@@ -1,6 +1,8 @@
 use core::fmt;
 
-use crate::{Covar, DoubleEndedLender, FusedLender, Lend, Lender, Lending, higher_order::FnMutHKAOpt};
+use crate::{
+    Covar, DoubleEndedLender, FusedLender, Lend, Lender, Lending, higher_order::FnMutHKAOpt,
+};
 
 /// A lender that uses a closure to optionally produce elements.
 ///

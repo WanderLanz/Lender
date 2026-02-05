@@ -117,8 +117,7 @@ where
         Fold: FnMut(B, Lend<'_, Self>) -> B,
     {
         let f = self.f.as_inner_mut();
-        self.lender
-            .rfold(init, move |acc, x| fold(acc, (f)(x)))
+        self.lender.rfold(init, move |acc, x| fold(acc, (f)(x)))
     }
 }
 

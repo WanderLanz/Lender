@@ -95,7 +95,10 @@ fn fallible_lender_map() {
     use lender::FallibleLender;
 
     let fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3]).into_fallible();
-    let mut mapped = fallible.map(covar_mut!(for<'lend> |x: &'lend i32| -> Result<i32, core::convert::Infallible> { Ok(*x * 2) }));
+    let mut mapped = fallible.map(covar_mut!(for<'lend> |x: &'lend i32| -> Result<
+        i32,
+        core::convert::Infallible,
+    > { Ok(*x * 2) }));
     assert_eq!(mapped.next(), Ok(Some(2)));
     assert_eq!(mapped.next(), Ok(Some(4)));
     assert_eq!(mapped.next(), Ok(Some(6)));

@@ -1,10 +1,10 @@
 error: lifetime may not live long enough
   --> tests/fail/manual_covariant_lending_invariant.rs:21:9
    |
-17 |     fn _check_covariance<'long: 'short, 'short>(
-   |                          -----          ------ lifetime `'short` defined here
-   |                          |
-   |                          lifetime `'long` defined here
+17 |     fn __check_covariance<'long: 'short, 'short>(
+   |                           -----          ------ lifetime `'short` defined here
+   |                           |
+   |                           lifetime `'long` defined here
 ...
 21 |         lend
    |         ^^^^ associated function was supposed to return data with lifetime `'long` but it is returning data with lifetime `'short`
@@ -17,10 +17,10 @@ error: lifetime may not live long enough
 error: lifetime may not live long enough
   --> tests/fail/manual_covariant_lending_invariant.rs:36:9
    |
-32 |     fn _check_covariance<'long: 'short, 'short>(
-   |                          -----          ------ lifetime `'short` defined here
-   |                          |
-   |                          lifetime `'long` defined here
+32 |     fn __check_covariance<'long: 'short, 'short>(
+   |                           -----          ------ lifetime `'short` defined here
+   |                           |
+   |                           lifetime `'long` defined here
 ...
 36 |         lend
    |         ^^^^ associated function was supposed to return data with lifetime `'long` but it is returning data with lifetime `'short`

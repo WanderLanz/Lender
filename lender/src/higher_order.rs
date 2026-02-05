@@ -1,10 +1,12 @@
-//! # Higher-Order Types, Traits, etc.
+//! # Types and Traits for Higher-Order Types with Covariance Checks
 //!
 //! - Flexible function signatures, to work around function lifetime
 //!   signature restrictions.
-//! - Higher-Rank Closures (macros to create fn signatures as a type
-//!   hint)
-//! - [`Covar`] transparent wrapper to mark covariance-checked closures
+//!
+//! - Higher-Rank Closures, with macro checking covariance of return types with
+//!   respect to bound lifetimes.
+//!
+//! - [`Covar`] transparent wrapper to mark covariance-checked closures.
 //!
 //! Use the [`covar!`](`crate::covar`),
 //! [`covar_mut!`](`crate::covar_mut`), or
@@ -29,13 +31,17 @@ pub struct Covar<F>(F);
 impl<F> Covar<F> {
     /// Creates a new `Covar<F>`.
     ///
+    /// Please don't use this constructor unless you really need to. The
+    /// main usage is creation of covariance-checked closures inside
+    /// adapters for which covariance is known in advance, such
+    /// as [`Map`](crate::Map).
+    ///
     /// # Safety
     ///
-    /// The caller must ensure that `f` produces covariant output
-    /// with respect to any lifetime parameters in its signature.
-    /// This is guaranteed by the [`covar!`](crate::covar),
-    /// [`covar_mut!`](crate::covar_mut), and
-    /// [`covar_once!`](crate::covar_once) macros.
+    /// The caller must ensure that `f` produces covariant output with respect
+    /// to any lifetime parameters in its signature. This is guaranteed by the
+    /// [`covar!`](crate::covar), [`covar_mut!`](crate::covar_mut), and
+    /// [`covar_once!`](crate::covar_once) macros (for one parameter).
     #[doc(hidden)]
     #[inline(always)]
     pub unsafe fn __new(f: F) -> Self {
@@ -126,6 +132,8 @@ impl<'b, A, B: 'b, E, F: FnMut(A) -> Result<Option<B>, E>> FnMutHKAResOpt<'b, A,
 /// Not meant to be called directly. A modified version of
 /// [`higher-order-closure`](https://crates.io/crates/higher-order-closure)'s
 /// `higher_order_closure` macro to use any [`Fn`] trait.
+///
+/// Performs a covariance check when a return type is specified a `for<>` bound.
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __covar__ {

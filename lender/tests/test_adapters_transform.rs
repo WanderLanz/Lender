@@ -299,8 +299,8 @@ fn mutate_into_parts_additional() {
 
 #[test]
 fn map_basic() {
-    let mut mapped = VecLender::new(vec![1, 2, 3])
-        .map(covar_mut!(for<'lend> |x: &'lend i32| -> i32 { *x * 2 }));
+    let mut mapped =
+        VecLender::new(vec![1, 2, 3]).map(covar_mut!(for<'lend> |x: &'lend i32| -> i32 { *x * 2 }));
 
     assert_eq!(mapped.next(), Some(2));
     assert_eq!(mapped.next(), Some(4));
@@ -356,16 +356,16 @@ fn map_rfold_additional() {
 
 #[test]
 fn map_into_inner() {
-    let map = VecLender::new(vec![1, 2, 3])
-        .map(covar_mut!(for<'lend> |x: &'lend i32| -> i32 { *x * 2 }));
+    let map =
+        VecLender::new(vec![1, 2, 3]).map(covar_mut!(for<'lend> |x: &'lend i32| -> i32 { *x * 2 }));
     let lender = map.into_inner();
     assert_eq!(lender.count(), 3);
 }
 
 #[test]
 fn map_into_parts_additional() {
-    let map = VecLender::new(vec![1, 2, 3])
-        .map(covar_mut!(for<'lend> |x: &'lend i32| -> i32 { *x * 2 }));
+    let map =
+        VecLender::new(vec![1, 2, 3]).map(covar_mut!(for<'lend> |x: &'lend i32| -> i32 { *x * 2 }));
     let (lender, _f) = map.into_parts();
     assert_eq!(lender.count(), 3);
 }

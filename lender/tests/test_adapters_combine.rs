@@ -3,8 +3,8 @@
 #![allow(clippy::unnecessary_fold)]
 
 mod common;
-use ::lender::prelude::*;
 use ::lender::FromIter;
+use ::lender::prelude::*;
 use common::*;
 
 // ============================================================================
@@ -391,10 +391,13 @@ fn flatten_empty_outer() {
 #[test]
 fn flat_map_basic() {
     // flat_map: for each element n, produce n copies of n
-    let mut l = [1, 2, 3]
-        .into_iter()
-        .into_lender()
-        .flat_map(covar_mut!(for<'lend> |n: i32| -> FromIter<std::ops::Range<i32>> { (0..n).into_lender() }));
+    let mut l =
+        [1, 2, 3]
+            .into_iter()
+            .into_lender()
+            .flat_map(covar_mut!(for<'lend> |n: i32| -> FromIter<
+                std::ops::Range<i32>,
+            > { (0..n).into_lender() }));
     assert_eq!(l.next(), Some(0)); // from n=1: [0]
     assert_eq!(l.next(), Some(0)); // from n=2: [0, 1]
     assert_eq!(l.next(), Some(1));
@@ -406,28 +409,34 @@ fn flat_map_basic() {
 
 #[test]
 fn flat_map_empty_outer() {
-    let mut l = std::iter::empty::<i32>()
-        .into_lender()
-        .flat_map(covar_mut!(for<'lend> |n: i32| -> FromIter<std::ops::Range<i32>> { (0..n).into_lender() }));
+    let mut l = std::iter::empty::<i32>().into_lender().flat_map(covar_mut!(
+        for<'lend> |n: i32| -> FromIter<std::ops::Range<i32>> { (0..n).into_lender() }
+    ));
     assert_eq!(l.next(), None);
 }
 
 #[test]
 fn flat_map_empty_inner() {
     // All inner lenders are empty
-    let mut l = [0, 0, 0]
-        .into_iter()
-        .into_lender()
-        .flat_map(covar_mut!(for<'lend> |n: i32| -> FromIter<std::ops::Range<i32>> { (0..n).into_lender() }));
+    let mut l =
+        [0, 0, 0]
+            .into_iter()
+            .into_lender()
+            .flat_map(covar_mut!(for<'lend> |n: i32| -> FromIter<
+                std::ops::Range<i32>,
+            > { (0..n).into_lender() }));
     assert_eq!(l.next(), None);
 }
 
 #[test]
 fn flat_map_mixed_empty_nonempty() {
-    let mut l = [1, 0, 2]
-        .into_iter()
-        .into_lender()
-        .flat_map(covar_mut!(for<'lend> |n: i32| -> FromIter<std::ops::Range<i32>> { (0..n).into_lender() }));
+    let mut l =
+        [1, 0, 2]
+            .into_iter()
+            .into_lender()
+            .flat_map(covar_mut!(for<'lend> |n: i32| -> FromIter<
+                std::ops::Range<i32>,
+            > { (0..n).into_lender() }));
     assert_eq!(l.next(), Some(0)); // from n=1
     // n=0 produces empty
     assert_eq!(l.next(), Some(0)); // from n=2

@@ -262,9 +262,9 @@ fn compose_zip_map_fold() {
     let b = VecLender::new(vec![10, 20, 30]);
     let result = a
         .zip(b)
-        .map(covar_mut!(for<'all> |pair: (&'all i32, &'all i32)| -> i32 {
-            *pair.0 + *pair.1
-        }))
+        .map(covar_mut!(
+            for<'all> |pair: (&'all i32, &'all i32)| -> i32 { *pair.0 + *pair.1 }
+        ))
         .fold(0, |acc, x| acc + x);
     // (1+10) + (2+20) + (3+30) = 66
     assert_eq!(result, 66);
