@@ -41,7 +41,7 @@ where
 /// A lender where each iteration calls the provided closure
 /// `F: FnMut(&mut St) -> Result<Option<T>, E>`.
 ///
-/// This `struct` is created by the [`from_fn()`] function.
+/// This `struct` is created by the [`from_fallible_fn()`] function.
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct FromFn<St, E, F> {

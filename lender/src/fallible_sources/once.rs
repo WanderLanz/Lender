@@ -59,7 +59,7 @@ pub fn once_err<L: ?Sized + CovariantFallibleLending, E>(error: E) -> OnceErr<L,
 
 /// A fallible lender that yields a value exactly once.
 ///
-/// This `struct` is created by the [`once()`] function.
+/// This `struct` is created by the [`fallible_once()`] function.
 ///
 /// The [`FallibleLender`] version of [`core::iter::Once`].
 #[must_use = "lenders are lazy and do nothing unless consumed"]

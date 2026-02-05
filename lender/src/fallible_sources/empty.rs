@@ -23,7 +23,7 @@ pub const fn empty<L: ?Sized + for<'all> FallibleLending<'all>, E>() -> Empty<L,
 
 /// A fallible lender that yields nothing.
 ///
-/// This `struct` is created by the [`empty()`] function.
+/// This `struct` is created by the [`fallible_empty()`] function.
 ///
 /// The [`FallibleLender`] version of [`core::iter::Empty`].
 #[must_use = "lenders are lazy and do nothing unless consumed"]

@@ -29,7 +29,7 @@ pub fn from_iter<I: FallibleIterator>(iter: I) -> FromIter<I> {
 
 /// A lender that yields elements from a fallible iterator.
 ///
-/// This `struct` is created by the [`from_iter()`] function.
+/// This `struct` is created by the [`from_fallible_iter()`] function.
 
 #[derive(Clone, Debug)]
 #[repr(transparent)]
@@ -83,7 +83,7 @@ impl<I: FallibleIterator> From<I> for FromIter<I> {
 /// method added to [`IntoFallibleIterator`] by this crate.
 ///
 /// The lenders returned are obtained by applying
-/// [`from_iter()`] to the iterators returned by the
+/// [`from_fallible_iter()`] to the iterators returned by the
 /// wrapped [`IntoFallibleIterator`].
 ///
 /// # Examples
@@ -103,10 +103,10 @@ pub fn from_into_iter<I: IntoFallibleIterator>(into_iter: I) -> FromIntoIter<I> 
 }
 
 /// A [`IntoFallibleLender`] that returns lenders obtained by
-/// applying [`from_iter()`] to the iterators returned by the
+/// applying [`from_fallible_iter()`] to the iterators returned by the
 /// wrapped [`IntoFallibleIterator`].
 ///
-/// This `struct` is created by the [`from_into_iter()`]
+/// This `struct` is created by the [`from_into_fallible_iter()`]
 /// function.
 #[repr(transparent)]
 #[derive(Clone, Debug)]
@@ -171,7 +171,7 @@ where
 ///
 /// If `I::Item` is 'static, behaves like [`FromIter`].
 ///
-/// This `struct` is created by the [`lend_iter()`] function.
+/// This `struct` is created by the [`lend_fallible_iter()`] function.
 
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]

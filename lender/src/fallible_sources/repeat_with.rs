@@ -67,7 +67,7 @@ where
 /// A fallible lender that repeats an element endlessly by
 /// applying a closure.
 ///
-/// This `struct` is created by the [`repeat_with()`] function.
+/// This `struct` is created by the [`fallible_repeat_with()`] function.
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct RepeatWith<'a, L: ?Sized, E, F> {
     f: F,
