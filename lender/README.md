@@ -394,19 +394,19 @@ lifetimes `'long` and `'short` and projects `<Self as Lending<'long>>::Lend` and
 projections because `'long`/`'short` don't match `'lend`.
 
 When `__check_covariance` is in [`Lender`] or [`CovariantLending`], instead, it
-works because `for<'all> Lending<'all>` is a supertrait, and the compiler can
-normalize associated type projections through supertraits.
+works because `for<'all> Lending<'all>` is a supertrait for all lifetimes.
 
 The second obvious question is: why isn't [`CovariantLending`] as a supertrait of
 [`Lender`] depending on [`Lending`] (via a `for<'all> Lending<'all>` bound)?
 That would be logical, as there would be only one instance of
-`__check_covariance`. The problem is just of ergonomics: [`Lender`] is already
-enough complicated, requiring a supporting [`Lending`] to specify its lend.
-Having a third trait in the hierarchy would make it even more complicated to
-use. A macro in the vein of [`check_covariance!`] would not help, as it would
-introduce surreptitiously and invisibly an implementation of [`CovariantLending`]
-that [`Lender`] would depend on later, making it hard to understand the trait
-hierarchy.
+`__check_covariance`.
+
+The problem is just of ergonomics: [`Lender`] is already enough complicated,
+requiring a supporting [`Lending`] to specify its lend. Having a third trait in
+the hierarchy would make it even more complicated to use. A macro in the vein of
+[`check_covariance!`] would not help, as it would introduce surreptitiously and
+invisibly an implementation of [`CovariantLending`] that [`Lender`] would depend
+on later, making it hard to understand the trait hierarchy.
 
 In the end, having [`CovariantLending`] as a separate trait is a compromise that
 makes it possible to have covariance checks where needed without complicating

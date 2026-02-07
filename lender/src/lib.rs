@@ -62,7 +62,7 @@ pub mod prelude {
         IntoFallibleLender, IntoIteratorExt, IntoLender, IteratorExt, Lend, Lender, Lending,
         ProductFallibleLender, ProductLender, SumFallibleLender, SumLender, WindowsMutExt,
         check_covariance, check_covariance_fallible, covar, covar_mut, covar_once,
-        covariant_fallible_lend, covariant_lend, fallible_lend, higher_order, lend,
-        unsafe_assume_covariance, unsafe_assume_covariance_fallible,
+        covariant_fallible_lend, covariant_lend, fallible_lend, lend, unsafe_assume_covariance,
+        unsafe_assume_covariance_fallible,
     };
 }

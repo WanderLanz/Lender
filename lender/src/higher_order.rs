@@ -328,8 +328,7 @@ macro_rules! __covar__ {
 /// # Examples
 ///
 /// ```rust
-/// use lender::prelude::*;
-///
+/// # use lender::prelude::*;
 /// let mut lender = lender::once_with(42,
 ///     covar_once!(for<'lend> |state: &'lend mut i32| -> &'lend mut i32 {
 ///         *state += 1;
@@ -367,8 +366,7 @@ macro_rules! covar_once {($($t:tt)+) => ($crate::__covar__!(FnOnce, $($t)+))}
 /// # Examples
 ///
 /// ```rust
-/// use lender::prelude::*;
-///
+/// # use lender::prelude::*;
 /// let mut data = [1, 2, 3, 4];
 /// let mut lender = lender::windows_mut(&mut data, 2)
 ///     .map(covar_mut!(for<'lend> |w: &'lend mut [i32]| -> &'lend mut i32 {
@@ -378,8 +376,7 @@ macro_rules! covar_once {($($t:tt)+) => ($crate::__covar__!(FnOnce, $($t)+))}
 /// ```
 ///
 /// ```rust
-/// use lender::prelude::*;
-///
+/// # use lender::prelude::*;
 /// let mut data = [0, 1, 0, 0, 0, 0, 0, 0, 0];
 /// lender::windows_mut(&mut data, 3)
 ///     .for_each(|w| {
@@ -412,8 +409,7 @@ macro_rules! covar_mut {($($t:tt)+) => ($crate::__covar__!(FnMut, $($t)+))}
 /// # Examples
 ///
 /// ```rust
-/// use lender::prelude::*;
-///
+/// # use lender::prelude::*;
 /// let data = [1, 2, 3];
 /// let lender = data.iter().into_lender();
 /// let mapped = lender.map(

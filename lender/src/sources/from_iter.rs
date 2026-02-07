@@ -14,8 +14,7 @@ use crate::{CovariantLending, FusedLender, IntoLender, prelude::*};
 ///
 /// # Examples
 /// ```rust
-/// use lender::prelude::*;
-///
+/// # use lender::prelude::*;
 /// let mut lender = [1, 2, 3].iter().into_lender();
 /// let item: &'_ i32 = lender.next().unwrap();
 /// let item2: &'_ i32 = lender.next().unwrap();
@@ -88,8 +87,7 @@ impl<I: Iterator> From<I> for FromIter<I> {
 ///
 /// # Examples
 /// ```rust
-/// use lender::prelude::*;
-/// let data = vec![1, 2, 3];
+/// # use lender::prelude::*; let data = vec![1, 2, 3];
 /// let into_lender = lender::from_into_iter(&data);
 /// let mut lender = into_lender.into_lender();
 /// assert_eq!(lender.next(), Some(&1));
@@ -131,8 +129,7 @@ impl<I: IntoIterator> From<I> for FromIntoIter<I> {
 /// If `I::Item` is 'static, behaves like [`from_iter`].
 /// # Examples
 /// ```rust
-/// use lender::prelude::*;
-/// let mut data = [1, 2, 3];
+/// # use lender::prelude::*; let mut data = [1, 2, 3];
 ///
 /// // properly shortens the lifetime of non-static items and lends them
 /// let mut lender = lender::lend_iter::<'_, lend!(&'lend i32), _>(data.iter());

@@ -17,8 +17,7 @@ use crate::{
 ///
 /// # Examples
 /// ```rust
-/// use lender::prelude::*;
-/// let data = [1, 2, 3];
+/// # use lender::prelude::*; let data = [1, 2, 3];
 /// let mut lender = data.iter().into_lender().into_fallible();
 /// assert_eq!(lender.next().unwrap(), Some(&1));
 /// ```
@@ -88,8 +87,8 @@ impl<I: FallibleIterator> From<I> for FromIter<I> {
 ///
 /// # Examples
 /// ```rust
-/// use fallible_iterator::IteratorExt as _;
-/// use lender::prelude::*;
+/// # use lender::prelude::*;
+/// # use fallible_iterator::IteratorExt;
 /// let data = [1, 2, 3];
 /// let into_lender = lender::from_into_fallible_iter(
 ///     data.iter().into_fallible(),
@@ -138,8 +137,8 @@ impl<I: IntoFallibleIterator> From<I> for FromIntoIter<I> {
 ///
 /// # Examples
 /// ```rust
-/// use fallible_iterator::IteratorExt as _;
-/// use lender::prelude::*;
+/// # use lender::prelude::*;
+/// # use fallible_iterator::IteratorExt;
 /// let mut data = [1, 2, 3];
 ///
 /// // properly shortens the lifetime of non-static items and lends them

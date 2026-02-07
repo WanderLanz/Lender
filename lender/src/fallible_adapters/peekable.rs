@@ -57,9 +57,8 @@ where
     /// # Examples
     ///
     /// ```
-    /// use lender::prelude::*;
+    /// # use lender::prelude::*;
     /// # use std::convert::Infallible;
-    ///
     /// # fn main() -> Result<(), Infallible> {
     /// let mut lender = [1, 2, 3].iter().into_lender()
     ///     .into_fallible()
@@ -110,9 +109,8 @@ where
     /// # Examples
     ///
     /// ```
-    /// use lender::prelude::*;
+    /// # use lender::prelude::*;
     /// # use std::convert::Infallible;
-    ///
     /// # fn main() -> Result<(), Infallible> {
     /// let mut lender = [1, 2, 3].iter().into_lender()
     ///     .into_fallible()
@@ -160,9 +158,8 @@ where
     /// # Examples
     ///
     /// ```
-    /// use lender::prelude::*;
+    /// # use lender::prelude::*;
     /// # use std::convert::Infallible;
-    ///
     /// # fn main() -> Result<(), Infallible> {
     /// let mut lender = [1, 2, 3].iter().into_lender()
     ///     .into_fallible()
@@ -219,9 +216,8 @@ where
     /// # Examples
     ///
     /// ```
-    /// use lender::prelude::*;
+    /// # use lender::prelude::*;
     /// # use std::convert::Infallible;
-    ///
     /// # fn main() -> Result<(), Infallible> {
     /// let mut lender = [1, 2, 3].iter().into_lender()
     ///     .into_fallible()

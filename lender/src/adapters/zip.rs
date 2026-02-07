@@ -7,8 +7,7 @@ use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, IntoLender, Lend, L
 /// # Examples
 ///
 /// ```
-/// use lender::prelude::*;
-///
+/// # use lender::prelude::*;
 /// let a = [1, 2, 3].iter().into_lender();
 /// let b = [4, 5, 6].iter().into_lender();
 ///
@@ -49,8 +48,7 @@ impl<A, B> Zip<A, B> {
     /// # Examples
     ///
     /// ```
-    /// use lender::prelude::*;
-    ///
+    /// # use lender::prelude::*;
     /// let a = [1, 2, 3].iter().into_lender();
     /// let b = [4, 5, 6].iter().into_lender();
     ///

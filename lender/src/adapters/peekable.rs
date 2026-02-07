@@ -53,8 +53,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use lender::prelude::*;
-    ///
+    /// # use lender::prelude::*;
     /// let mut lender = [1, 2, 3].iter().into_lender().peekable();
     ///
     /// assert_eq!(lender.peek(), Some(&&1));
@@ -94,8 +93,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use lender::prelude::*;
-    ///
+    /// # use lender::prelude::*;
     /// let mut lender = [1, 2, 3].iter().into_lender().peekable();
     ///
     /// if let Some(p) = lender.peek_mut() {
@@ -128,8 +126,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use lender::prelude::*;
-    ///
+    /// # use lender::prelude::*;
     /// let mut lender = [1, 2, 3].iter().into_lender().peekable();
     ///
     /// // Consume 1 since it's odd
@@ -172,8 +169,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use lender::prelude::*;
-    ///
+    /// # use lender::prelude::*;
     /// let mut lender = [1, 2, 3].iter().into_lender().peekable();
     ///
     /// // Consume 1 since it equals 1

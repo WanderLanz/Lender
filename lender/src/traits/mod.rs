@@ -213,7 +213,7 @@ macro_rules! __lend_impl {
 ///
 /// # Examples
 /// ```rust
-/// use lender::prelude::*;
+/// # use lender::prelude::*;
 /// let mut empty = lender::empty::<lend!(&'lend mut [i32])>();
 /// let _: Option<&mut [i32]> = empty.next(); // => None
 /// ```
@@ -267,8 +267,7 @@ macro_rules! lend {
 ///
 /// # Examples
 /// ```rust
-/// use lender::prelude::*;
-///
+/// # use lender::prelude::*;
 /// struct RefLender<'a, T>(&'a [T], usize);
 ///
 /// impl<'lend, T> Lending<'lend> for RefLender<'_, T> {
@@ -353,8 +352,7 @@ macro_rules! unsafe_assume_covariance {
 ///
 /// # Examples
 /// ```rust
-/// use lender::prelude::*;
-///
+/// # use lender::prelude::*;
 /// // Define a covariance-checked lending type for &'lend Vec<i32>.
 /// // This type cannot be expressed with lend!() because Vec<i32>
 /// // has generics.
@@ -368,17 +366,13 @@ macro_rules! unsafe_assume_covariance {
 ///
 /// With visibility modifier:
 /// ```rust
-/// use lender::prelude::*;
-///
-/// mod inner {
-///     use lender::prelude::*;
-///     // Define a public covariance-checked lending type.
-///     covariant_lend!(pub MyLend = &'lend Vec<i32>);
-/// }
+/// # use lender::prelude::*;
+/// // Define a public covariance-checked lending type.
+/// covariant_lend!(pub MyLend = &'lend Vec<i32>);
 ///
 /// // MyLend can be used outside the module.
 /// let data = [vec![1, 2]];
-/// let mut lender = lender::lend_iter::<'_, inner::MyLend, _>(data.iter());
+/// let mut lender = lender::lend_iter::<'_, MyLend, _>(data.iter());
 /// assert_eq!(lender.next(), Some(&vec![1, 2]));
 /// ```
 ///
@@ -388,9 +382,8 @@ macro_rules! unsafe_assume_covariance {
 /// `Cell<Option<&'lend String>>` is invariant in `'lend`:
 ///
 /// ```rust,compile_fail
-/// use std::cell::Cell;
-/// use lender::prelude::*;
-///
+/// # use lender::prelude::*;
+/// # use std::cell::Cell;
 /// // This fails to compile - Cell makes the type invariant!
 /// covariant_lend!(
 ///     InvariantLend = &'lend Cell<Option<&'lend String>>
@@ -431,9 +424,8 @@ macro_rules! covariant_lend {
 ///
 /// # Examples
 /// ```rust
-/// use fallible_iterator::IteratorExt as _;
-/// use lender::prelude::*;
-///
+/// # use lender::prelude::*;
+/// # use fallible_iterator::IteratorExt;
 /// // Define a covariance-checked fallible lending type for
 /// // Option<&'lend str>. This type cannot be expressed with
 /// // fallible_lend!() because Option has generics.
@@ -449,18 +441,14 @@ macro_rules! covariant_lend {
 ///
 /// With visibility modifier:
 /// ```rust
-/// use fallible_iterator::IteratorExt as _;
-/// use lender::prelude::*;
-///
-/// mod inner {
-///     use lender::prelude::*;
-///     // Define a public covariance-checked fallible lending type.
-///     covariant_fallible_lend!(pub MyLend = Option<&'lend str>);
-/// }
+/// # use lender::prelude::*;
+/// # use fallible_iterator::IteratorExt;
+/// // Define a public covariance-checked fallible lending type.
+/// covariant_fallible_lend!(pub MyLend = Option<&'lend str>);
 ///
 /// // MyLend can be used outside the module.
 /// let data = [Some("hello")];
-/// let mut lender = lender::lend_fallible_iter::<'_, inner::MyLend, _>(
+/// let mut lender = lender::lend_fallible_iter::<'_, MyLend, _>(
 ///     data.iter().copied().into_fallible()
 /// );
 /// assert_eq!(lender.next().unwrap(), Some(Some("hello")));
@@ -472,9 +460,8 @@ macro_rules! covariant_lend {
 /// `Cell<Option<&'lend String>>` is invariant in `'lend`:
 ///
 /// ```rust,compile_fail
-/// use std::cell::Cell;
-/// use lender::prelude::*;
-///
+/// # use lender::prelude::*;
+/// # use std::cell::Cell;
 /// // This fails to compile - Cell makes the type invariant!
 /// covariant_fallible_lend!(
 ///     InvariantLend = &'lend Cell<Option<&'lend String>>
@@ -607,10 +594,8 @@ pub trait DynFallibleLend<'lend> {
 ///
 /// # Examples
 /// ```rust
-/// use std::convert::Infallible;
-///
-/// use lender::prelude::*;
-///
+/// # use lender::prelude::*;
+/// # use std::convert::Infallible;
 /// let mut empty = lender::fallible_empty::<
 ///     fallible_lend!(&'lend mut [i32]),
 ///     Infallible
