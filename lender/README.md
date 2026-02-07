@@ -370,14 +370,17 @@ fn __check_covariance<'long: 'short, 'short>(
 ```
 
 If this method is implemented as `{ lend }`, then the compiler will check that
-the type `&'short <Self as Lending<'long>>::Lend` is convertible to `&'short
-<Self as Lending<'short>>::Lend`, which is exactly the definition of covariance.
+the type `*const <Self as Lending<'long>>::Lend` is convertible to `*const <Self
+as Lending<'short>>::Lend`, given that `'long` outlives `'short`. For this to
+happen, `<Self as Lending<'long>>::Lend` must be a subtype of `<Self as
+Lending<'short>>::Lend`, which is equivalent to covariance.
+
 This is what the [`check_covariance!`] macro does for [`Lender`] impls. The
-[`unsafe_assume_covariance!`] macro, instead, implements this method as `{ unsafe
-{ core::mem::transmute(lend) } }`, which tells the compiler to assume covariance
-without checking it: it is in this case a responsibility of the programmer to
-ensure that covariance holds (as the caller of an `unsafe` block must ensure the
-safety invariants).
+[`unsafe_assume_covariance!`] macro, instead, implements this method as `{
+unsafe { core::mem::transmute(lend) } }`, which tells the compiler to assume
+covariance without checking it: it is in this case a responsibility of the
+programmer to ensure that covariance holds (as the caller of an `unsafe` block
+must ensure the safety invariants).
 
 [`CovariantLending`] is a separate trait that depends on [`Lending`]. It
 is the trait required by methods that just require a [`Lending`] impl but
@@ -391,7 +394,7 @@ the compiler can only normalize `<T as Lending<'lend>>::Lend` for the specific
 `'lend` from the impl header. The `__check_covariance` method introduces new
 lifetimes `'long` and `'short` and projects `<Self as Lending<'long>>::Lend` and
 `<Self as Lending<'short>>::Lend`; the compiler can't resolve these
-projections because `'long`/`'short` don't match `'lend`.
+projections because `'long`/`'short` are not `'lend`.
 
 When `__check_covariance` is in [`Lender`] or [`CovariantLending`], instead, it
 works because `for<'all> Lending<'all>` is a supertrait for all lifetimes.
@@ -399,7 +402,7 @@ works because `for<'all> Lending<'all>` is a supertrait for all lifetimes.
 The second obvious question is: why isn't [`CovariantLending`] as a supertrait of
 [`Lender`] depending on [`Lending`] (via a `for<'all> Lending<'all>` bound)?
 That would be logical, as there would be only one instance of
-`__check_covariance`.
+[`__check_covariance`].
 
 The problem is just of ergonomics: [`Lender`] is already enough complicated,
 requiring a supporting [`Lending`] to specify its lend. Having a third trait in
