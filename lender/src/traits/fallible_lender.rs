@@ -54,11 +54,13 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     ///
     /// - In all other cases (e.g., when implementing adapters), use
     ///   [`unsafe_assume_covariance_fallible!`](crate::unsafe_assume_covariance_fallible)
-    ///   in the [`FallibleLender`] impl. The macro implements the method
-    ///   as `{ unsafe { core::mem::transmute(lend) } }`, which is a no-op.
-    ///   This is
+    ///   in the [`FallibleLender`] impl. The macro implements the method as `{
+    ///   unsafe { core::mem::transmute(lend) } }`, which is a no-op. This is
     ///   unsafe because it is up to the implementor to guarantee that the
     ///   [`Lend`](FallibleLending::Lend) type is covariant in its lifetime.
+    /// 
+    /// See [`crate::Lender::__check_covariance`] for more details on how this
+    /// method works.
     fn __check_covariance<'long: 'short, 'short>(
         lend: *const &'short <Self as FallibleLending<'long>>::Lend, _: crate::Uncallable,
     ) -> *const &'short <Self as FallibleLending<'short>>::Lend;

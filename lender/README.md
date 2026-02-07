@@ -391,12 +391,12 @@ macros.
 Now, a first obvious question is: why not put this method directly in
 [`Lending`]? The problem is that in the implementation of [`Lending`] for `T`,
 the compiler can only normalize `<T as Lending<'lend>>::Lend` for the specific
-`'lend` from the impl header. The `__check_covariance` method introduces new
+`'lend` from the impl header. The [`__check_covariance`] method introduces new
 lifetimes `'long` and `'short` and projects `<Self as Lending<'long>>::Lend` and
 `<Self as Lending<'short>>::Lend`; the compiler can't resolve these
 projections because `'long`/`'short` are not `'lend`.
 
-When `__check_covariance` is in [`Lender`] or [`CovariantLending`], instead, it
+When [`__check_covariance`] is in [`Lender`] or [`CovariantLending`], instead, it
 works because `for<'all> Lending<'all>` is a supertrait for all lifetimes.
 
 The second obvious question is: why isn't [`CovariantLending`] as a supertrait of
@@ -456,3 +456,4 @@ but if you see any unsafe code that can be made safe, please let us know!
 [`lend`]: https://docs.rs/lender/latest/lender/macro.lend.html
 [`covariant_lend`]: https://docs.rs/lender/latest/lender/macro.covariant_lend.html
 [`Iterator`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html
+[`__check_covariance`]: https://docs.rs/lender/latest/lender/trait.Lender.html#tymethod.__check_covariance

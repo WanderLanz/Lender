@@ -85,7 +85,9 @@ impl<'lend, T: ?Sized + for<'all> DynLend<'all>> Lending<'lend> for DynLendShunt
 /// The required method [`__check_covariance`](CovariantLending::_check_covariance)
 /// enforces covariance: its safe body `{ lend }` only compiles when the
 /// [`Lend`](Lending::Lend) type is covariant, so non-covariant types cannot
-/// implement this trait without `unsafe`.
+/// implement this trait without `unsafe`. See the documentation of
+/// [`Lender::__check_covariance`](crate::Lender::__check_covariance) for
+/// details.
 #[doc(hidden)]
 pub trait CovariantLending: for<'all> Lending<'all> {
     fn __check_covariance<'long: 'short, 'short>(

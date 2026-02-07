@@ -209,11 +209,12 @@ macro_rules! __covar__ {
                 // ensures the lifetime is used even if $Ret doesn't contain it.
                 #[allow(dead_code)]
                 struct __CovarCheck<$hr>(
-                    ::core::marker::PhantomData<($Ret, &$hr ())>
+                    ::core::marker::PhantomData<fn() -> ($Ret, &$hr ())>
                 );
 
                 // This function only compiles if __CovarCheck (and thus $Ret)
-                // is covariant in the lifetime parameter.
+                // is covariant in the lifetime parameter. See the documentation of
+                // Lender::__check_covariance for details.
                 #[allow(dead_code)]
                 fn __check_covariance<'__long: '__short, '__short>(
                     x: *const __CovarCheck<'__long>,

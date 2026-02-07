@@ -59,7 +59,11 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///   [`Lend`](Lending::Lend) types), use
     ///   [`check_covariance!`](crate::check_covariance) in the [`Lender`] impl.
     ///   The macro implements the method as `{ lend }`, which only compiles if
-    ///   the [`Lend`](Lending::Lend) type is covariant in its lifetime.
+    ///   the [`Lend`](Lending::Lend) type is covariant in its lifetime. This
+    ///   happens because `*const <Self as Lending<'long>>::Lend` can be coerced
+    ///   into `*const <Self as Lending<'short>>::Lend` only if `<Self as
+    ///   Lending<'long>>::Lend` is a subtype of `<Self as
+    ///   Lending<'short>>::Lend`, which is the definition of covariance.
     ///
     /// - In all other cases (e.g., when implementing adapters), use
     ///   [`unsafe_assume_covariance!`](crate::unsafe_assume_covariance) in the
