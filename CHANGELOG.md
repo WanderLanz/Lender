@@ -49,8 +49,9 @@
 
 - The `lend!` macro now covers just a set of fixed covariant types. If you need
   to use more complex types, you can use the `covariant_lend!` macro, which
-  however requires that you define a type name (it cannot be inlined). The same
-  applies to `fallible_lend!` and `covariant_fallible_lend!`.
+  however requires that you define a type name (with an optional
+  visibility specifier), as it cannot be inlined. The same applies to
+  `fallible_lend!` and `covariant_fallible_lend!`.
 
 - Coherent use of `must_use` attribute.
 

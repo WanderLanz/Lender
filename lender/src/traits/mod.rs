@@ -318,6 +318,9 @@ macro_rules! unsafe_assume_covariance {
 /// This macro creates a struct that implements [`Lending`] and includes a
 /// compile-time assertion that the lend type is covariant in its lifetime.
 ///
+/// An optional visibility modifier can be provided to make the type reusable
+/// across modules.
+///
 /// # Examples
 /// ```rust
 /// use lender::prelude::*;
@@ -331,6 +334,22 @@ macro_rules! unsafe_assume_covariance {
 /// let mut lender = lender::lend_iter::<'_, RefVec, _>(data.iter());
 /// let item: &Vec<i32> = lender.next().unwrap();
 /// assert_eq!(item, &vec![1, 2]);
+/// ```
+///
+/// With visibility modifier:
+/// ```rust
+/// use lender::prelude::*;
+///
+/// mod inner {
+///     use lender::prelude::*;
+///     // Define a public covariance-checked lending type.
+///     covariant_lend!(pub MyLend = &'lend Vec<i32>);
+/// }
+///
+/// // MyLend can be used outside the module.
+/// let data = [vec![1, 2]];
+/// let mut lender = lender::lend_iter::<'_, inner::MyLend, _>(data.iter());
+/// assert_eq!(lender.next(), Some(&vec![1, 2]));
 /// ```
 ///
 /// # Compile-time Error for Invariant Types
@@ -349,10 +368,10 @@ macro_rules! unsafe_assume_covariance {
 /// ```
 #[macro_export]
 macro_rules! covariant_lend {
-    ($name:ident = $T:ty) => {
+    ($vis:vis $name:ident = $T:ty) => {
         /// A lending type with compile-time covariance checking.
         #[derive(Clone, Copy, Debug, Default)]
-        struct $name;
+        $vis struct $name;
 
         impl<'lend> $crate::Lending<'lend> for $name {
             type Lend = $T;
@@ -377,6 +396,9 @@ macro_rules! covariant_lend {
 /// includes a compile-time assertion that the lend type is covariant in its
 /// lifetime.
 ///
+/// An optional visibility modifier can be provided to make the type reusable
+/// across modules.
+///
 /// # Examples
 /// ```rust
 /// use fallible_iterator::IteratorExt as _;
@@ -395,6 +417,25 @@ macro_rules! covariant_lend {
 /// assert_eq!(item, Some("hello"));
 /// ```
 ///
+/// With visibility modifier:
+/// ```rust
+/// use fallible_iterator::IteratorExt as _;
+/// use lender::prelude::*;
+///
+/// mod inner {
+///     use lender::prelude::*;
+///     // Define a public covariance-checked fallible lending type.
+///     covariant_fallible_lend!(pub MyLend = Option<&'lend str>);
+/// }
+///
+/// // MyLend can be used outside the module.
+/// let data = [Some("hello")];
+/// let mut lender = lender::lend_fallible_iter::<'_, inner::MyLend, _>(
+///     data.iter().copied().into_fallible()
+/// );
+/// assert_eq!(lender.next().unwrap(), Some(Some("hello")));
+/// ```
+///
 /// # Compile-time Error for Invariant Types
 ///
 /// The following will fail to compile because
@@ -411,10 +452,10 @@ macro_rules! covariant_lend {
 /// ```
 #[macro_export]
 macro_rules! covariant_fallible_lend {
-    ($name:ident = $T:ty) => {
+    ($vis:vis $name:ident = $T:ty) => {
         /// A fallible lending type with compile-time covariance checking.
         #[derive(Clone, Copy, Debug, Default)]
-        struct $name;
+        $vis struct $name;
 
         impl<'lend> $crate::FallibleLending<'lend> for $name {
             type Lend = $T;
