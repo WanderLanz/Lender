@@ -68,7 +68,7 @@ where
     L: ?Sized + CovariantFallibleLending,
 {
     inner: Option<FallibleLend<'a, L>>,
-    _marker: PhantomData<E>,
+    _marker: PhantomData<fn() -> E>,
 }
 
 impl<'a, L, E> Clone for Once<'a, L, E>
@@ -164,7 +164,7 @@ where
     L: ?Sized + CovariantFallibleLending,
 {
     inner: Option<E>,
-    _marker: PhantomData<L>,
+    _marker: PhantomData<fn() -> L>,
 }
 
 impl<L, E: Clone> Clone for OnceErr<L, E>

@@ -14,7 +14,7 @@ use crate::{
 pub struct MapErr<E, L, F> {
     pub(crate) lender: L,
     f: F,
-    _marker: PhantomData<E>,
+    _marker: PhantomData<fn() -> E>,
 }
 
 impl<E, L, F> MapErr<E, L, F> {

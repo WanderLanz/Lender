@@ -35,7 +35,7 @@ impl<E, I> LenderResult<E> for I where I: Lender + for<'all> LendingResult<'all,
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Convert<E, I> {
     iter: I,
-    _marker: PhantomData<E>,
+    _marker: PhantomData<fn() -> E>,
 }
 
 impl<E, I> Convert<E, I> {

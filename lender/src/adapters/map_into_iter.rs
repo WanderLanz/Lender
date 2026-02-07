@@ -12,7 +12,7 @@ use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender};
 pub struct MapIntoIter<L, O, F> {
     pub(crate) lender: L,
     pub(crate) f: F,
-    pub(crate) _marker: PhantomData<O>,
+    pub(crate) _marker: PhantomData<fn() -> O>,
 }
 
 impl<L, O, F> MapIntoIter<L, O, F> {

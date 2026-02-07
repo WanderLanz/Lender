@@ -71,7 +71,7 @@ where
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct RepeatWith<'a, L: ?Sized, E, F> {
     f: F,
-    _marker: core::marker::PhantomData<(&'a L, E)>,
+    _marker: core::marker::PhantomData<(&'a L, fn() -> E)>,
 }
 
 impl<L: ?Sized, E, F: Clone> Clone for RepeatWith<'_, L, E, F> {
@@ -171,7 +171,7 @@ where
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct RepeatWithErr<L: ?Sized, F> {
     f: F,
-    _marker: PhantomData<L>,
+    _marker: PhantomData<fn() -> L>,
 }
 
 impl<L: ?Sized, F: Clone> Clone for RepeatWithErr<L, F> {

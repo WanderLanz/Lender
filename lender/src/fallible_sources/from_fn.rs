@@ -47,7 +47,7 @@ where
 pub struct FromFn<St, E, F> {
     state: St,
     f: Covar<F>,
-    _marker: PhantomData<E>,
+    _marker: PhantomData<fn() -> E>,
 }
 
 impl<St: fmt::Debug, E, F> fmt::Debug for FromFn<St, E, F> {

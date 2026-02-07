@@ -81,7 +81,7 @@ where
 pub struct OnceWith<St, E, F> {
     state: St,
     f: Option<Covar<F>>,
-    _marker: PhantomData<E>,
+    _marker: PhantomData<fn() -> E>,
 }
 
 impl<St: Clone, E, F: Clone> Clone for OnceWith<St, E, F> {
@@ -161,7 +161,7 @@ impl<St, E, F> FusedFallibleLender for OnceWith<St, E, F> where
 pub struct OnceWithErr<St, L: ?Sized, F> {
     state: St,
     f: Option<F>,
-    _marker: PhantomData<L>,
+    _marker: PhantomData<fn() -> L>,
 }
 
 impl<St: Clone, L: ?Sized, F: Clone> Clone for OnceWithErr<St, L, F> {

@@ -25,7 +25,7 @@ pub const fn empty<L: ?Sized + for<'all> Lending<'all>>() -> Empty<L> {
 /// The [`Lender`] version of [`core::iter::Empty`].
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 #[derive(Clone, Copy, Default)]
-pub struct Empty<L: ?Sized>(marker::PhantomData<L>);
+pub struct Empty<L: ?Sized>(marker::PhantomData<fn() -> L>);
 
 impl<L: ?Sized> fmt::Debug for Empty<L> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

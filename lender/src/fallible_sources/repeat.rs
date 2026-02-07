@@ -67,7 +67,7 @@ where
     L: ?Sized + CovariantFallibleLending + 'a,
 {
     elt: FallibleLend<'a, L>,
-    _marker: PhantomData<E>,
+    _marker: PhantomData<fn() -> E>,
 }
 
 impl<'a, L, E> Clone for Repeat<'a, L, E>
@@ -176,7 +176,7 @@ where
     L: ?Sized + CovariantFallibleLending,
 {
     err: E,
-    _marker: PhantomData<L>,
+    _marker: PhantomData<fn() -> L>,
 }
 
 impl<L, E: Clone> Clone for RepeatErr<L, E>
