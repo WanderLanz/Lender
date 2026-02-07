@@ -6,13 +6,10 @@ use std::cell::Cell;
 // Generic with nested lifetime - potentially invariant
 type A = lender::lend!(&'lend Cell<&'lend String>);
 
-// Generic type (not a simple ident)
-type B = lender::lend!(&'lend Vec<i32>);
-
 // Path type (not a simple ident)
-type C = lender::lend!(&'lend std::string::String);
+type B = lender::lend!(&'lend std::string::String);
 
 // Tuple with reference inside (not supported)
-type D = lender::lend!((&'lend i32, &'lend i32));
+type C = lender::lend!((&'lend i32, &'lend i32));
 
 fn main() {}

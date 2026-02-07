@@ -130,6 +130,14 @@ macro_rules! __lend_impl {
     ($Shunt:ident, $Trait:ident, &$lt:lifetime mut $T:ident) => {
         $crate::$Shunt<dyn for<'lend> $crate::$Trait<'lend, Lend = &$lt mut $T>>
     };
+    // Reference to str
+    ($Shunt:ident, $Trait:ident, &$lt:lifetime str) => {
+        $crate::$Shunt<dyn for<'lend> $crate::$Trait<'lend, Lend = &$lt str>>
+    };
+    // Mutable reference to str
+    ($Shunt:ident, $Trait:ident, &$lt:lifetime mut str) => {
+        $crate::$Shunt<dyn for<'lend> $crate::$Trait<'lend, Lend = &$lt mut str>>
+    };
     // Reference to slice
     ($Shunt:ident, $Trait:ident, &$lt:lifetime [$T:ident]) => {
         $crate::$Shunt<dyn for<'lend> $crate::$Trait<'lend, Lend = &$lt [$T]>>
@@ -137,6 +145,18 @@ macro_rules! __lend_impl {
     // Mutable reference to slice
     ($Shunt:ident, $Trait:ident, &$lt:lifetime mut [$T:ident]) => {
         $crate::$Shunt<dyn for<'lend> $crate::$Trait<'lend, Lend = &$lt mut [$T]>>
+    };
+    // Vec<T>
+    ($Shunt:ident, $Trait:ident, Vec<$T:ident>) => {
+        $crate::$Shunt<dyn for<'lend> $crate::$Trait<'lend, Lend = Vec<$T>>>
+    };
+    // Reference to Vec<T>
+    ($Shunt:ident, $Trait:ident, &$lt:lifetime Vec<$T:ident>) => {
+        $crate::$Shunt<dyn for<'lend> $crate::$Trait<'lend, Lend = &$lt Vec<$T>>>
+    };
+    // Mutable reference to Vec<T>
+    ($Shunt:ident, $Trait:ident, &$lt:lifetime mut Vec<$T:ident>) => {
+        $crate::$Shunt<dyn for<'lend> $crate::$Trait<'lend, Lend = &$lt mut Vec<$T>>>
     };
     // Double reference (& &'lend T)
     ($Shunt:ident, $Trait:ident, & &$lt:lifetime $T:ident) => {
@@ -178,7 +198,9 @@ macro_rules! __lend_impl {
 /// covariant in `'lend`:
 /// - Identifiers: `i32`, `String`, etc.
 /// - References: `&'lend T`, `&'lend mut T`
+/// - String slices: `&'lend str`, `&'lend mut str`
 /// - Slices: `&'lend [T]`, `&'lend mut [T]`
+/// - Vec: `Vec<T>`, `&'lend Vec<T>`, `&'lend mut Vec<T>`
 /// - Double references: `& &'lend T`, `&&'lend T`
 /// - Tuples of identifiers: `(T0,)`, `(T0, T1)`, `(T0, T1, T2)`, etc.
 ///   (any number of elements)
@@ -192,8 +214,8 @@ macro_rules! __lend_impl {
 /// # Examples
 /// ```rust
 /// use lender::prelude::*;
-/// let mut empty = lender::empty::<lend!(&'lend mut [u32])>();
-/// let _: Option<&mut [u32]> = empty.next(); // => None
+/// let mut empty = lender::empty::<lend!(&'lend mut [i32])>();
+/// let _: Option<&mut [i32]> = empty.next(); // => None
 /// ```
 #[macro_export]
 macro_rules! lend {
@@ -202,8 +224,16 @@ macro_rules! lend {
     // Reference patterns
     (&$lt:lifetime $T:ident) => { $crate::__lend_impl!(DynLendShunt, DynLend, &$lt $T) };
     (&$lt:lifetime mut $T:ident) => { $crate::__lend_impl!(DynLendShunt, DynLend, &$lt mut $T) };
+    // String slices
+    (&$lt:lifetime str) => { $crate::__lend_impl!(DynLendShunt, DynLend, &$lt str) };
+    (&$lt:lifetime mut str) => { $crate::__lend_impl!(DynLendShunt, DynLend, &$lt mut str) };
+    // Slices
     (&$lt:lifetime [$T:ident]) => { $crate::__lend_impl!(DynLendShunt, DynLend, &$lt [$T]) };
     (&$lt:lifetime mut [$T:ident]) => { $crate::__lend_impl!(DynLendShunt, DynLend, &$lt mut [$T]) };
+    // Vec
+    (Vec<$T:ident>) => { $crate::__lend_impl!(DynLendShunt, DynLend, Vec<$T>) };
+    (&$lt:lifetime Vec<$T:ident>) => { $crate::__lend_impl!(DynLendShunt, DynLend, &$lt Vec<$T>) };
+    (&$lt:lifetime mut Vec<$T:ident>) => { $crate::__lend_impl!(DynLendShunt, DynLend, &$lt mut Vec<$T>) };
     // Double references
     (& &$lt:lifetime $T:ident) => { $crate::__lend_impl!(DynLendShunt, DynLend, & &$lt $T) };
     (&&$lt:lifetime $T:ident) => { $crate::__lend_impl!(DynLendShunt, DynLend, &&$lt $T) };
@@ -562,7 +592,9 @@ pub trait DynFallibleLend<'lend> {
 /// covariant in `'lend`:
 /// - Identifiers: `i32`, `String`, etc.
 /// - References: `&'lend T`, `&'lend mut T`
+/// - String slices: `&'lend str`, `&'lend mut str`
 /// - Slices: `&'lend [T]`, `&'lend mut [T]`
+/// - Vec: `Vec<T>`, `&'lend Vec<T>`, `&'lend mut Vec<T>`
 /// - Double references: `& &'lend T`, `&&'lend T`
 /// - Tuples of identifiers: `(T0,)`, `(T0, T1)`, `(T0, T1, T2)`, etc.
 ///   (any number of elements)
@@ -580,10 +612,10 @@ pub trait DynFallibleLend<'lend> {
 /// use lender::prelude::*;
 ///
 /// let mut empty = lender::fallible_empty::<
-///     fallible_lend!(&'lend mut [u32]),
+///     fallible_lend!(&'lend mut [i32]),
 ///     Infallible
 /// >();
-/// let _: Result<Option<&mut [u32]>, Infallible> = empty.next(); // => Ok(None)
+/// let _: Result<Option<&mut [i32]>, Infallible> = empty.next(); // => Ok(None)
 /// ```
 #[macro_export]
 macro_rules! fallible_lend {
@@ -592,8 +624,16 @@ macro_rules! fallible_lend {
     // Reference patterns
     (&$lt:lifetime $T:ident) => { $crate::__lend_impl!(DynFallibleLendShunt, DynFallibleLend, &$lt $T) };
     (&$lt:lifetime mut $T:ident) => { $crate::__lend_impl!(DynFallibleLendShunt, DynFallibleLend, &$lt mut $T) };
+    // String slices
+    (&$lt:lifetime str) => { $crate::__lend_impl!(DynFallibleLendShunt, DynFallibleLend, &$lt str) };
+    (&$lt:lifetime mut str) => { $crate::__lend_impl!(DynFallibleLendShunt, DynFallibleLend, &$lt mut str) };
+    // Slices
     (&$lt:lifetime [$T:ident]) => { $crate::__lend_impl!(DynFallibleLendShunt, DynFallibleLend, &$lt [$T]) };
     (&$lt:lifetime mut [$T:ident]) => { $crate::__lend_impl!(DynFallibleLendShunt, DynFallibleLend, &$lt mut [$T]) };
+    // Vec
+    (Vec<$T:ident>) => { $crate::__lend_impl!(DynFallibleLendShunt, DynFallibleLend, Vec<$T>) };
+    (&$lt:lifetime Vec<$T:ident>) => { $crate::__lend_impl!(DynFallibleLendShunt, DynFallibleLend, &$lt Vec<$T>) };
+    (&$lt:lifetime mut Vec<$T:ident>) => { $crate::__lend_impl!(DynFallibleLendShunt, DynFallibleLend, &$lt mut Vec<$T>) };
     // Double references
     (& &$lt:lifetime $T:ident) => { $crate::__lend_impl!(DynFallibleLendShunt, DynFallibleLend, & &$lt $T) };
     (&&$lt:lifetime $T:ident) => { $crate::__lend_impl!(DynFallibleLendShunt, DynFallibleLend, &&$lt $T) };
