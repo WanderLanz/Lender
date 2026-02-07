@@ -68,8 +68,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///   it is up to the implementor to guarantee that the [`Lend`](Lending::Lend)
     ///   type is covariant in its lifetime.
     fn __check_covariance<'long: 'short, 'short>(
-        lend: *const &'short <Self as Lending<'long>>::Lend, _: crate::Uncallable,
-    ) -> *const &'short <Self as Lending<'short>>::Lend;
+        lend: *const <Self as Lending<'long>>::Lend, _: crate::Uncallable,
+    ) -> *const <Self as Lending<'short>>::Lend;
 
     /// Yields the next lend, if any, of the lender.
     ///
@@ -809,7 +809,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// collection of their outputs, short-circuiting on `Try` failures.
     ///
     /// This method requires the target collection type `B` to implement
-    /// [`FromLender`] for the [`TryShunt`](crate::TryShunt) adapter. See
+    /// [`FromLender`] for the [`TryShunt`] adapter. See
     /// [`FromLender`] for how to implement this trait.
     #[inline]
     fn try_collect<'a, B>(&'a mut self) -> ChangeOutputType<Lend<'a, Self>, B>

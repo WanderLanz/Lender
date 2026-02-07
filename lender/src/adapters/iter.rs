@@ -12,7 +12,7 @@ use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender};
 /// specialization.
 ///
 /// This `struct` is created by the [`iter()`](crate::Lender::iter)
-/// method on [`Lender`](crate::Lender).
+/// method on [`Lender`].
 #[derive(Clone, Debug)]
 #[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Iter<'this, L: 'this> {

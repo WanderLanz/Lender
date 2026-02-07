@@ -1690,7 +1690,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// The [`FallibleLender`] version of [`Iterator::sum`].
     ///
     /// Note: This method requires a type implementing
-    /// [`SumFallibleLender`](crate::SumFallibleLender). For simple numeric
+    /// [`SumFallibleLender`]. For simple numeric
     /// sums, consider using [`owned()`](FallibleLender::owned) and then
     /// [`FallibleIterator::sum()`](https://docs.rs/fallible-iterator/latest/fallible_iterator/trait.FallibleIterator.html#method.sum).
     #[inline]
@@ -1705,7 +1705,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// The [`FallibleLender`] version of [`Iterator::product`].
     ///
     /// Note: This method requires a type implementing
-    /// [`ProductFallibleLender`](crate::ProductFallibleLender). For simple
+    /// [`ProductFallibleLender`]. For simple
     /// numeric products, consider using [`owned()`](FallibleLender::owned)
     /// and then
     /// [`FallibleIterator::product()`](https://docs.rs/fallible-iterator/latest/fallible_iterator/trait.FallibleIterator.html#method.product).

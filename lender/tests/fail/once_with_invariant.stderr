@@ -4,15 +4,36 @@ error[E0582]: binding for associated type `Output` references lifetime `'lend`, 
 20 |     F: for<'lend> FnOnce() -> &'lend Cell<Option<&'lend String>>,
    |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-error[E0623]: lifetime mismatch
+error[E0803]: cannot infer an appropriate lifetime for lifetime parameter `'lend` due to conflicting requirements
   --> tests/fail/once_with_invariant.rs:22:5
    |
 22 |     lender::check_covariance!();
    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   |     |
-   |     these two types are declared with different lifetimes...
-   |     ...but data from `lend` flows into `lend` here
    |
+note: first, the lifetime cannot outlive the lifetime `'short` as defined here...
+  --> tests/fail/once_with_invariant.rs:22:5
+   |
+22 |     lender::check_covariance!();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+note: ...so that the types are compatible
+  --> tests/fail/once_with_invariant.rs:22:5
+   |
+22 |     lender::check_covariance!();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = note: expected `Lending<'short>`
+              found `Lending<'_>`
+note: but, the lifetime must be valid for the lifetime `'long` as defined here...
+  --> tests/fail/once_with_invariant.rs:22:5
+   |
+22 |     lender::check_covariance!();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+note: ...so that the types are compatible
+  --> tests/fail/once_with_invariant.rs:22:5
+   |
+22 |     lender::check_covariance!();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = note: expected `Lending<'long>`
+              found `Lending<'_>`
    = note: this error originates in the macro `lender::check_covariance` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: implementation of `Lending` is not general enough
@@ -24,15 +45,36 @@ error: implementation of `Lending` is not general enough
    = note: `InvariantOnceWith<F>` must implement `Lending<'0>`, for any lifetime `'0`...
    = note: ...but it actually implements `Lending<'1>`, for some specific lifetime `'1`
 
-error[E0623]: lifetime mismatch
+error[E0803]: cannot infer an appropriate lifetime for lifetime parameter `'lend` due to conflicting requirements
   --> tests/fail/once_with_invariant.rs:22:5
    |
 22 |     lender::check_covariance!();
    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   |     |
-   |     these two types are declared with different lifetimes...
-   |     ...but data from `lend` flows into `lend` here
    |
+note: first, the lifetime cannot outlive the lifetime `'short` as defined here...
+  --> tests/fail/once_with_invariant.rs:22:5
+   |
+22 |     lender::check_covariance!();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+note: ...so that the types are compatible
+  --> tests/fail/once_with_invariant.rs:22:5
+   |
+22 |     lender::check_covariance!();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = note: expected `Lending<'short>`
+              found `Lending<'_>`
+note: but, the lifetime must be valid for the lifetime `'long` as defined here...
+  --> tests/fail/once_with_invariant.rs:22:5
+   |
+22 |     lender::check_covariance!();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+note: ...so that the types are compatible
+  --> tests/fail/once_with_invariant.rs:22:5
+   |
+22 |     lender::check_covariance!();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = note: expected `Lending<'long>`
+              found `Lending<'_>`
    = note: this error originates in the macro `lender::check_covariance` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: lifetime may not live long enough

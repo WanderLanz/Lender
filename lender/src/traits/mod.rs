@@ -89,9 +89,9 @@ impl<'lend, T: ?Sized + for<'all> DynLend<'all>> Lending<'lend> for DynLendShunt
 #[doc(hidden)]
 pub trait CovariantLending: for<'all> Lending<'all> {
     fn __check_covariance<'long: 'short, 'short>(
-        lend: *const &'short <Self as Lending<'long>>::Lend,
+        lend: *const <Self as Lending<'long>>::Lend,
         _: Uncallable,
-    ) -> *const &'short <Self as Lending<'short>>::Lend;
+    ) -> *const <Self as Lending<'short>>::Lend;
 }
 
 // SAFETY: lend!() only accepts type patterns that are syntactically covariant
@@ -99,9 +99,9 @@ pub trait CovariantLending: for<'all> Lending<'all> {
 impl<T: ?Sized + for<'all> DynLend<'all>> CovariantLending for DynLendShunt<T> {
     #[allow(clippy::not_unsafe_ptr_arg_deref)]
     fn __check_covariance<'long: 'short, 'short>(
-        lend: *const &'short <Self as Lending<'long>>::Lend,
+        lend: *const <Self as Lending<'long>>::Lend,
         _: Uncallable,
-    ) -> *const &'short <Self as Lending<'short>>::Lend {
+    ) -> *const <Self as Lending<'short>>::Lend {
         // SAFETY: lend!() only accepts syntactically covariant patterns
         unsafe { core::mem::transmute(lend) }
     }
@@ -293,9 +293,9 @@ macro_rules! lend {
 macro_rules! check_covariance {
     () => {
         fn __check_covariance<'long: 'short, 'short>(
-            lend: *const &'short <Self as Lending<'long>>::Lend,
+            lend: *const <Self as Lending<'long>>::Lend,
             _: $crate::Uncallable,
-        ) -> *const &'short <Self as Lending<'short>>::Lend {
+        ) -> *const <Self as Lending<'short>>::Lend {
             lend
         }
     };
@@ -334,9 +334,9 @@ macro_rules! unsafe_assume_covariance {
     () => {
         #[allow(clippy::not_unsafe_ptr_arg_deref)]
         fn __check_covariance<'long: 'short, 'short>(
-            lend: *const &'short <Self as Lending<'long>>::Lend,
+            lend: *const <Self as Lending<'long>>::Lend,
             _: $crate::Uncallable,
-        ) -> *const &'short <Self as Lending<'short>>::Lend {
+        ) -> *const <Self as Lending<'short>>::Lend {
             // SAFETY: Covariance is assumed by the caller of this macro
             unsafe { core::mem::transmute(lend) }
         }
@@ -411,9 +411,9 @@ macro_rules! covariant_lend {
         // its body `{ lend }` only compiles if $T is covariant in 'lend.
         impl $crate::CovariantLending for $name {
             fn __check_covariance<'long: 'short, 'short>(
-                lend: *const &'short <Self as $crate::Lending<'long>>::Lend,
+                lend: *const <Self as $crate::Lending<'long>>::Lend,
                 _: $crate::Uncallable,
-            ) -> *const &'short <Self as $crate::Lending<'short>>::Lend {
+            ) -> *const <Self as $crate::Lending<'short>>::Lend {
                 lend
             }
         }

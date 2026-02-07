@@ -365,8 +365,8 @@ To guarantee that the lend type is covariant in the lifetime parameter,
 we use an uncallable method in the [`CovariantLending`] and [`Lender`] traits:
 ```rust,ignore
 fn __check_covariance<'long: 'short, 'short>(
-    lend: *const &'short <Self as Lending<'long>>::Lend, _: crate::Uncallable,
-) -> *const &'short <Self as Lending<'short>>::Lend;
+    lend: *const <Self as Lending<'long>>::Lend, _: crate::Uncallable,
+) -> *const <Self as Lending<'short>>::Lend;
 ```
 
 If this method is implemented as `{ lend }`, then the compiler will check that
