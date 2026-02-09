@@ -296,7 +296,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     fn chain<U>(self, other: U) -> Chain<Self, <U as IntoFallibleLender>::FallibleLender>
         where
             Self: Sized,
-            U: IntoFallibleLender + for<'all> FallibleLending<'all, Lend = FallibleLend<'all, Self>>,
+            U: IntoFallibleLender<Error = Self::Error> + for<'all> FallibleLending<'all, Lend = FallibleLend<'all, Self>>,
     {
         Chain::new(self, other.into_fallible_lender())
     }
@@ -1693,7 +1693,8 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     ///
     /// Note: This method requires a type implementing
     /// [`SumFallibleLender`]. For simple numeric
-    /// sums, consider using [`owned()`](FallibleLender::owned) and then
+    /// sums, consider using [`owned()`](FallibleLender::owned)
+    /// and then
     /// [`FallibleIterator::sum()`](https://docs.rs/fallible-iterator/latest/fallible_iterator/trait.FallibleIterator.html#method.sum).
     #[inline]
     fn sum<S>(self) -> Result<S, Self::Error>

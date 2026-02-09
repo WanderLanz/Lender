@@ -34,9 +34,7 @@ pub trait DoubleEndedLender: Lender {
     /// See [`DoubleEndedIterator::nth_back`].
     #[inline]
     fn nth_back(&mut self, n: usize) -> Option<Lend<'_, Self>> {
-        if self.advance_back_by(n).is_err() {
-            return None;
-        }
+        self.advance_back_by(n).ok()?;
         self.next_back()
     }
 

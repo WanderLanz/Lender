@@ -1,8 +1,8 @@
-use core::{fmt, marker::PhantomData, num::NonZeroUsize};
+use core::{fmt, marker::PhantomData, num::NonZeroUsize, ops::ControlFlow};
 
 use crate::{
     DoubleEndedFallibleLender, ExactSizeFallibleLender, FallibleLend, FallibleLender,
-    FallibleLending, FusedFallibleLender,
+    FallibleLending, FusedFallibleLender, try_trait_v2::Try,
 };
 
 /// A fallible lender that maps the errors of the underlying lender with a closure.
@@ -99,6 +99,40 @@ where
     {
         self.lender.last().map_err(&mut self.f)
     }
+
+    #[inline]
+    fn try_fold<B, Fold, R>(&mut self, init: B, mut fold: Fold) -> Result<R, Self::Error>
+    where
+        Self: Sized,
+        Fold: FnMut(B, FallibleLend<'_, Self>) -> Result<R, Self::Error>,
+        R: Try<Output = B>,
+    {
+        let f = &mut self.f;
+        match self.lender.try_fold(init, |acc, x| {
+            Ok(super::try_fold_with(fold(acc, x)))
+        }) {
+            Ok(ControlFlow::Continue(acc)) => Ok(R::from_output(acc)),
+            Ok(ControlFlow::Break(r)) => r,
+            Err(e) => Err((f)(e)),
+        }
+    }
+
+    #[inline]
+    fn fold<B, Fold>(mut self, init: B, mut fold: Fold) -> Result<B, Self::Error>
+    where
+        Self: Sized,
+        Fold: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
+    {
+        let f = &mut self.f;
+        match self.lender.try_fold(init, |acc, x| match fold(acc, x) {
+            Ok(b) => Ok(ControlFlow::Continue(b)),
+            Err(e) => Ok(ControlFlow::Break(e)),
+        }) {
+            Ok(ControlFlow::Continue(acc)) => Ok(acc),
+            Ok(ControlFlow::Break(e)) => Err(e),
+            Err(e) => Err((f)(e)),
+        }
+    }
 }
 
 impl<E, L: DoubleEndedFallibleLender, F> DoubleEndedFallibleLender for MapErr<E, L, F>
@@ -119,6 +153,40 @@ where
     fn nth_back(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.lender.nth_back(n).map_err(&mut self.f)
     }
+
+    #[inline]
+    fn try_rfold<B, Fold, R>(&mut self, init: B, mut fold: Fold) -> Result<R, Self::Error>
+    where
+        Self: Sized,
+        Fold: FnMut(B, FallibleLend<'_, Self>) -> Result<R, Self::Error>,
+        R: Try<Output = B>,
+    {
+        let f = &mut self.f;
+        match self.lender.try_rfold(init, |acc, x| {
+            Ok(super::try_fold_with(fold(acc, x)))
+        }) {
+            Ok(ControlFlow::Continue(acc)) => Ok(R::from_output(acc)),
+            Ok(ControlFlow::Break(r)) => r,
+            Err(e) => Err((f)(e)),
+        }
+    }
+
+    #[inline]
+    fn rfold<B, Fold>(mut self, init: B, mut fold: Fold) -> Result<B, Self::Error>
+    where
+        Self: Sized,
+        Fold: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
+    {
+        let f = &mut self.f;
+        match self.lender.try_rfold(init, |acc, x| match fold(acc, x) {
+            Ok(b) => Ok(ControlFlow::Continue(b)),
+            Err(e) => Ok(ControlFlow::Break(e)),
+        }) {
+            Ok(ControlFlow::Continue(acc)) => Ok(acc),
+            Ok(ControlFlow::Break(e)) => Err(e),
+            Err(e) => Err((f)(e)),
+        }
+    }
 }
 
 impl<E, L, F> FusedFallibleLender for MapErr<E, L, F>
@@ -136,5 +204,10 @@ where
     #[inline(always)]
     fn len(&self) -> usize {
         self.lender.len()
+    }
+
+    #[inline(always)]
+    fn is_empty(&self) -> bool {
+        self.lender.is_empty()
     }
 }

@@ -2,10 +2,13 @@ use core::fmt;
 
 use crate::{FallibleLend, FallibleLender, FallibleLending, FalliblePeekable, FusedFallibleLender};
 
-/// A fallible lender that inserts a separator between adjacent elements of the underlying lender.
+/// A fallible lender that inserts a separator between adjacent
+/// elements of the underlying lender.
 ///
-/// This `struct` is created by the [`intersperse()`](crate::FallibleLender::intersperse) method on
-/// [`FallibleLender`]. See its documentation for more.
+/// This `struct` is created by the
+/// [`intersperse()`](crate::FallibleLender::intersperse)
+/// method on [`FallibleLender`]. See its documentation for
+/// more.
 // Clone is not implemented because the inner Peekable is not Clone.
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Intersperse<'this, L>
@@ -122,10 +125,13 @@ where
     }
 }
 
-/// A fallible lender that inserts an element computed by a closure between adjacent elements of the underlying lender.
+/// A fallible lender that inserts an element computed by a closure
+/// between adjacent elements of the underlying lender.
 ///
-/// This `struct` is created by the [`intersperse_with()`](crate::FallibleLender::intersperse_with) method on
-/// [`FallibleLender`]. See its documentation for more.
+/// This `struct` is created by the
+/// [`intersperse_with()`](crate::FallibleLender::intersperse_with)
+/// method on [`FallibleLender`]. See its documentation for
+/// more.
 // Clone is not implemented because the inner Peekable is not Clone.
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct IntersperseWith<'this, L, G>

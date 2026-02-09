@@ -85,7 +85,7 @@ impl<L: ?Sized, E, F: Clone> Clone for RepeatWith<'_, L, E, F> {
 
 impl<L: ?Sized, E, F> fmt::Debug for RepeatWith<'_, L, E, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("FallibleRepeatWith").finish()
+        f.debug_struct("FallibleRepeatWith").finish_non_exhaustive()
     }
 }
 
@@ -185,7 +185,8 @@ impl<L: ?Sized, F: Clone> Clone for RepeatWithErr<L, F> {
 
 impl<L: ?Sized, F> fmt::Debug for RepeatWithErr<L, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("FallibleRepeatWithErr").finish()
+        f.debug_struct("FallibleRepeatWithErr")
+            .finish_non_exhaustive()
     }
 }
 

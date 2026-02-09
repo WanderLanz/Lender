@@ -10,8 +10,8 @@ use crate::{
 ///
 /// # Examples
 /// ```rust
-/// # use lender::prelude::*; let mut value = 42u32;
-/// let mut o = lender::once::<lend!(&'lend mut u32)>(&mut value);
+/// # use lender::prelude::*; let mut value = 42;
+/// let mut o = lender::once::<lend!(&'lend mut i32)>(&mut value);
 /// assert_eq!(o.next(), Some(&mut 42));
 /// assert_eq!(o.next(), None);
 /// ```

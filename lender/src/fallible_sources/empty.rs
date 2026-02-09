@@ -11,8 +11,8 @@ use crate::{
 ///
 /// # Examples
 /// ```rust
-/// # use lender::prelude::*; let mut e = lender::fallible_empty::<fallible_lend!(&'lend u32), String>();
-/// let x: Result<Option<&u32>, String> = e.next();
+/// # use lender::prelude::*; let mut e = lender::fallible_empty::<fallible_lend!(&'lend i32), String>();
+/// let x: Result<Option<&i32>, String> = e.next();
 /// assert_eq!(x, Ok(None));
 /// ```
 #[inline]

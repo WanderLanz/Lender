@@ -20,6 +20,28 @@ where
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
+
+    #[inline]
+    fn fold<B, F>(self, init: B, mut f: F) -> Result<B, Self::Error>
+    where
+        Self: Sized,
+        F: FnMut(B, Self::Item) -> Result<B, Self::Error>,
+    {
+        self.lender.fold(init, |acc, x| f(acc, *x))
+    }
+
+    #[inline]
+    fn count(self) -> Result<usize, Self::Error>
+    where
+        Self: Sized,
+    {
+        self.lender.count()
+    }
+
+    #[inline]
+    fn nth(&mut self, n: usize) -> Result<Option<Self::Item>, Self::Error> {
+        self.lender.nth(n).map(Option::<&T>::copied)
+    }
 }
 
 impl<T, L> DoubleEndedFallibleIterator for Copied<L>
@@ -31,5 +53,14 @@ where
     #[inline]
     fn next_back(&mut self) -> Result<Option<Self::Item>, Self::Error> {
         self.lender.next_back().map(Option::<&T>::copied)
+    }
+
+    #[inline]
+    fn rfold<B, F>(self, init: B, mut f: F) -> Result<B, Self::Error>
+    where
+        Self: Sized,
+        F: FnMut(B, Self::Item) -> Result<B, Self::Error>,
+    {
+        self.lender.rfold(init, |acc, x| f(acc, *x))
     }
 }

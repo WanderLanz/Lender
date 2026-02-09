@@ -8,8 +8,8 @@ use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lendi
 ///
 /// # Examples
 /// ```rust
-/// # use lender::prelude::*; let mut e = lender::empty::<lend!(&'lend mut u32)>();
-/// let x: Option<&'_ mut u32> = e.next();
+/// # use lender::prelude::*; let mut e = lender::empty::<lend!(&'lend mut i32)>();
+/// let x: Option<&'_ mut i32> = e.next();
 /// assert_eq!(x, None);
 /// ```
 #[inline]

@@ -54,7 +54,7 @@ impl<St: fmt::Debug, E, F> fmt::Debug for FromFn<St, E, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("FromFallibleFn")
             .field("state", &self.state)
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 

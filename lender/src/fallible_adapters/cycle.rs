@@ -97,4 +97,4 @@ where
     }
 }
 
-impl<L> FusedFallibleLender for Cycle<L> where L: Clone + FusedFallibleLender {}
+impl<L> FusedFallibleLender for Cycle<L> where L: Clone + FallibleLender {}

@@ -38,6 +38,20 @@ where
     }
 
     #[inline]
+    fn count(mut self) -> Result<usize, Self::Error>
+    where
+        Self: Sized,
+    {
+        let mut count = 0;
+        while let Some(x) = self.lender.next()? {
+            if (self.f.as_inner_mut())(x)?.is_some() {
+                count += 1;
+            }
+        }
+        Ok(count)
+    }
+
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (_, upper) = self.lender.size_hint();
         (0, upper)

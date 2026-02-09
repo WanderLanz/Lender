@@ -30,7 +30,7 @@ where
 
     /// Returns the original and cloned inner lenders.
     #[inline(always)]
-    pub fn into_inner(self) -> (L, L) {
+    pub fn into_parts(self) -> (L, L) {
         (self.orig, self.lender)
     }
 }
@@ -126,4 +126,4 @@ where
     }
 }
 
-impl<L> FusedLender for Cycle<L> where L: Clone + FusedLender {}
+impl<L> FusedLender for Cycle<L> where L: Clone + Lender {}

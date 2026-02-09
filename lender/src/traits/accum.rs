@@ -8,20 +8,20 @@ use crate::{FallibleLender, Lender};
 /// ```rust
 /// # use std::borrow::ToOwned;
 /// # use lender::{prelude::*, SumLender};
-/// struct U32Sum(pub u32);
-/// impl<'lend> Lending<'lend> for U32Sum {
-///    type Lend = &'lend u32;
+/// struct I32Sum(pub i32);
+/// impl<'lend> Lending<'lend> for I32Sum {
+///    type Lend = &'lend i32;
 /// }
-/// impl<L: Lender> SumLender<L> for U32Sum
+/// impl<L: Lender> SumLender<L> for I32Sum
 /// where
-///     for<'all> L: Lending<'all, Lend = &'all u32>,
+///     for<'all> L: Lending<'all, Lend = &'all i32>,
 /// {
 ///     fn sum_lender(lender: L) -> Self {
-///         U32Sum(lender.fold(0, |acc, x| acc + *x))
+///         I32Sum(lender.fold(0, |acc, x| acc + *x))
 ///     }
 /// }
-/// let e = lender::empty::<lend!(&'lend u32)>();
-/// assert_eq!(U32Sum::sum_lender(e).0, 0u32);
+/// let e = lender::empty::<lend!(&'lend i32)>();
+/// assert_eq!(I32Sum::sum_lender(e).0, 0);
 /// ```
 pub trait SumLender<L: Lender>: Sized {
     fn sum_lender(lender: L) -> Self;

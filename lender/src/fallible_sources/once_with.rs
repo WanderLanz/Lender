@@ -98,7 +98,7 @@ impl<St: fmt::Debug, E, F> fmt::Debug for OnceWith<St, E, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("FallibleOnceWith")
             .field("state", &self.state)
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 
@@ -178,7 +178,7 @@ impl<St: fmt::Debug, L: ?Sized, F> fmt::Debug for OnceWithErr<St, L, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("FallibleOnceWithErr")
             .field("state", &self.state)
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 

@@ -9,14 +9,14 @@ use common::*;
 #[test]
 fn windows_mut() {
     // Fibonacci sequence
-    let mut data = vec![0u32; 3 * 3];
+    let mut data = vec![0i32; 3 * 3];
     data[1] = 1;
     WindowsMut {
         slice: &mut data,
         begin: 0,
         len: 3,
     }
-    .for_each(covar_mut!(for<'lend> |w: &'lend mut [u32]| { w[2] = w[0] + w[1] }).into_inner());
+    .for_each(covar_mut!(for<'lend> |w: &'lend mut [i32]| { w[2] = w[0] + w[1] }).into_inner());
     assert_eq!(data, [0, 1, 1, 2, 3, 5, 8, 13, 21]);
     WindowsMut {
         slice: &mut data,
@@ -25,9 +25,9 @@ fn windows_mut() {
     }
     .filter(|x| x[0] > 0)
     .map(covar_mut!(
-        for<'lend> |x: &'lend mut [u32]| -> &'lend mut u32 { &mut x[0] }
+        for<'lend> |x: &'lend mut [i32]| -> &'lend mut i32 { &mut x[0] }
     ))
-    .for_each(covar_mut!(for<'lend> |x: &'lend mut u32| { *x += 1 }).into_inner());
+    .for_each(covar_mut!(for<'lend> |x: &'lend mut i32| { *x += 1 }).into_inner());
     assert_eq!(data, [0, 2, 2, 3, 4, 6, 9, 13, 21]);
 }
 

@@ -112,6 +112,7 @@ pub struct FromIntoIter<I> {
 impl<I: IntoIterator> IntoLender for FromIntoIter<I> {
     type Lender = FromIter<I::IntoIter>;
 
+    #[inline(always)]
     fn into_lender(self) -> <Self as IntoLender>::Lender {
         self.into_iter.into_iter().into_lender()
     }

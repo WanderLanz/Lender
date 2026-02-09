@@ -3,6 +3,7 @@
 mod common;
 use ::lender::prelude::*;
 use common::*;
+use fallible_iterator::{DoubleEndedFallibleIterator, FallibleIterator};
 
 // ============================================================================
 // New method tests (M5–M7, M11)
@@ -992,4 +993,685 @@ fn fallible_map_into_iter_lender_error() {
     assert_eq!(iter.next().unwrap(), Some(2));
     assert_eq!(iter.next().unwrap(), Some(4));
     assert!(iter.next().is_err());
+}
+
+// ============================================================================
+// Cloned: fold, count, nth, rfold
+// ============================================================================
+
+#[test]
+fn fallible_cloned_fold() {
+    let lender = VecFallibleLender::new(vec![1, 2, 3, 4]);
+    let sum = lender.cloned().fold(0, |acc, x| Ok(acc + x)).unwrap();
+    assert_eq!(sum, 10);
+}
+
+#[test]
+fn fallible_cloned_fold_empty() {
+    let lender = VecFallibleLender::new(vec![]);
+    let sum = lender.cloned().fold(0, |acc, x: i32| Ok(acc + x)).unwrap();
+    assert_eq!(sum, 0);
+}
+
+#[test]
+fn fallible_cloned_fold_error() {
+    let lender = ErrorAtLender::new(vec![1, 2, 3, 4], 2);
+    let result = lender.cloned().fold(0, |acc, x| Ok(acc + x));
+    assert!(result.is_err());
+}
+
+#[test]
+fn fallible_cloned_count() {
+    let lender = VecFallibleLender::new(vec![1, 2, 3]);
+    assert_eq!(lender.cloned().count().unwrap(), 3);
+}
+
+#[test]
+fn fallible_cloned_count_empty() {
+    let lender = VecFallibleLender::new(vec![]);
+    assert_eq!(lender.cloned().count().unwrap(), 0);
+}
+
+#[test]
+fn fallible_cloned_count_error() {
+    let lender = ErrorAtLender::new(vec![1, 2, 3], 1);
+    assert!(lender.cloned().count().is_err());
+}
+
+#[test]
+fn fallible_cloned_nth() {
+    let lender = VecFallibleLender::new(vec![10, 20, 30, 40]);
+    let mut cloned = lender.cloned();
+    assert_eq!(cloned.nth(2).unwrap(), Some(30));
+    assert_eq!(cloned.next().unwrap(), Some(40));
+    assert_eq!(cloned.next().unwrap(), None);
+}
+
+#[test]
+fn fallible_cloned_nth_past_end() {
+    let lender = VecFallibleLender::new(vec![1, 2]);
+    let mut cloned = lender.cloned();
+    assert_eq!(cloned.nth(5).unwrap(), None);
+}
+
+#[test]
+fn fallible_cloned_nth_error() {
+    let lender = ErrorAtLender::new(vec![1, 2, 3, 4], 1);
+    let mut cloned = lender.cloned();
+    assert!(cloned.nth(2).is_err());
+}
+
+#[test]
+fn fallible_cloned_rfold() {
+    let lender = VecFallibleLender::new(vec![1, 2, 3]);
+    let result = lender
+        .cloned()
+        .rfold(Vec::new(), |mut acc, x| {
+            acc.push(x);
+            Ok(acc)
+        })
+        .unwrap();
+    assert_eq!(result, vec![3, 2, 1]);
+}
+
+#[test]
+fn fallible_cloned_rfold_empty() {
+    let lender = VecFallibleLender::new(vec![]);
+    let result = lender
+        .cloned()
+        .rfold(Vec::new(), |mut acc, x: i32| {
+            acc.push(x);
+            Ok(acc)
+        })
+        .unwrap();
+    assert!(result.is_empty());
+}
+
+// ============================================================================
+// Copied: fold, count, nth, rfold
+// ============================================================================
+
+#[test]
+fn fallible_copied_fold() {
+    let lender = VecFallibleLender::new(vec![1, 2, 3, 4]);
+    let sum = lender.copied().fold(0, |acc, x| Ok(acc + x)).unwrap();
+    assert_eq!(sum, 10);
+}
+
+#[test]
+fn fallible_copied_fold_empty() {
+    let lender = VecFallibleLender::new(vec![]);
+    let sum = lender.copied().fold(0, |acc, x: i32| Ok(acc + x)).unwrap();
+    assert_eq!(sum, 0);
+}
+
+#[test]
+fn fallible_copied_fold_error() {
+    let lender = ErrorAtLender::new(vec![1, 2, 3, 4], 2);
+    let result = lender.copied().fold(0, |acc, x| Ok(acc + x));
+    assert!(result.is_err());
+}
+
+#[test]
+fn fallible_copied_count() {
+    let lender = VecFallibleLender::new(vec![1, 2, 3]);
+    assert_eq!(lender.copied().count().unwrap(), 3);
+}
+
+#[test]
+fn fallible_copied_count_empty() {
+    let lender = VecFallibleLender::new(vec![]);
+    assert_eq!(lender.copied().count().unwrap(), 0);
+}
+
+#[test]
+fn fallible_copied_count_error() {
+    let lender = ErrorAtLender::new(vec![1, 2, 3], 1);
+    assert!(lender.copied().count().is_err());
+}
+
+#[test]
+fn fallible_copied_nth() {
+    let lender = VecFallibleLender::new(vec![10, 20, 30, 40]);
+    let mut copied = lender.copied();
+    assert_eq!(copied.nth(2).unwrap(), Some(30));
+    assert_eq!(copied.next().unwrap(), Some(40));
+    assert_eq!(copied.next().unwrap(), None);
+}
+
+#[test]
+fn fallible_copied_nth_past_end() {
+    let lender = VecFallibleLender::new(vec![1, 2]);
+    let mut copied = lender.copied();
+    assert_eq!(copied.nth(5).unwrap(), None);
+}
+
+#[test]
+fn fallible_copied_nth_error() {
+    let lender = ErrorAtLender::new(vec![1, 2, 3, 4], 1);
+    let mut copied = lender.copied();
+    assert!(copied.nth(2).is_err());
+}
+
+#[test]
+fn fallible_copied_rfold() {
+    let lender = VecFallibleLender::new(vec![1, 2, 3]);
+    let result = lender
+        .copied()
+        .rfold(Vec::new(), |mut acc, x| {
+            acc.push(x);
+            Ok(acc)
+        })
+        .unwrap();
+    assert_eq!(result, vec![3, 2, 1]);
+}
+
+#[test]
+fn fallible_copied_rfold_empty() {
+    let lender = VecFallibleLender::new(vec![]);
+    let result = lender
+        .copied()
+        .rfold(Vec::new(), |mut acc, x: i32| {
+            acc.push(x);
+            Ok(acc)
+        })
+        .unwrap();
+    assert!(result.is_empty());
+}
+
+// ============================================================================
+// Owned: fold, count, nth, next_back, rfold
+// (Uses into_iter().into_lender().into_fallible() for owned values)
+// ============================================================================
+
+#[test]
+fn fallible_owned_fold() {
+    let fallible = vec![1, 2, 3, 4].into_iter().into_lender().into_fallible();
+    let sum = fallible.owned().fold(0, |acc, x| Ok(acc + x)).unwrap();
+    assert_eq!(sum, 10);
+}
+
+#[test]
+fn fallible_owned_fold_empty() {
+    let fallible = Vec::<i32>::new().into_iter().into_lender().into_fallible();
+    let sum = fallible.owned().fold(0, |acc, x: i32| Ok(acc + x)).unwrap();
+    assert_eq!(sum, 0);
+}
+
+#[test]
+fn fallible_owned_fold_error() {
+    let data: Vec<Result<i32, String>> = vec![Ok(1), Ok(2), Err("error".into()), Ok(4)];
+    let fallible = data.into_iter().into_lender().convert::<String>();
+    let result = fallible.owned().fold(0, |acc, x| Ok(acc + x));
+    assert!(result.is_err());
+}
+
+#[test]
+fn fallible_owned_count() {
+    let fallible = vec![1, 2, 3].into_iter().into_lender().into_fallible();
+    assert_eq!(fallible.owned().count().unwrap(), 3);
+}
+
+#[test]
+fn fallible_owned_count_empty() {
+    let fallible = Vec::<i32>::new().into_iter().into_lender().into_fallible();
+    assert_eq!(fallible.owned().count().unwrap(), 0);
+}
+
+#[test]
+fn fallible_owned_count_error() {
+    let data: Vec<Result<i32, String>> = vec![Ok(1), Err("error".into()), Ok(3)];
+    let fallible = data.into_iter().into_lender().convert::<String>();
+    assert!(fallible.owned().count().is_err());
+}
+
+#[test]
+fn fallible_owned_nth() {
+    let fallible = vec![10, 20, 30, 40]
+        .into_iter()
+        .into_lender()
+        .into_fallible();
+    let mut owned = fallible.owned();
+    assert_eq!(owned.nth(2).unwrap(), Some(30));
+    assert_eq!(owned.next().unwrap(), Some(40));
+    assert_eq!(owned.next().unwrap(), None);
+}
+
+#[test]
+fn fallible_owned_nth_past_end() {
+    let fallible = vec![1, 2].into_iter().into_lender().into_fallible();
+    let mut owned = fallible.owned();
+    assert_eq!(owned.nth(5).unwrap(), None);
+}
+
+#[test]
+fn fallible_owned_nth_error() {
+    let data: Vec<Result<i32, String>> = vec![Ok(1), Err("error".into()), Ok(3), Ok(4)];
+    let fallible = data.into_iter().into_lender().convert::<String>();
+    let mut owned = fallible.owned();
+    assert!(owned.nth(2).is_err());
+}
+
+#[test]
+fn fallible_owned_next_back() {
+    let fallible = vec![1, 2, 3].into_iter().into_lender().into_fallible();
+    let mut owned = fallible.owned();
+    assert_eq!(owned.next_back().unwrap(), Some(3));
+    assert_eq!(owned.next().unwrap(), Some(1));
+    assert_eq!(owned.next_back().unwrap(), Some(2));
+    assert_eq!(owned.next().unwrap(), None);
+}
+
+#[test]
+fn fallible_owned_rfold() {
+    let fallible = vec![1, 2, 3].into_iter().into_lender().into_fallible();
+    let result = fallible
+        .owned()
+        .rfold(Vec::new(), |mut acc, x| {
+            acc.push(x);
+            Ok(acc)
+        })
+        .unwrap();
+    assert_eq!(result, vec![3, 2, 1]);
+}
+
+#[test]
+fn fallible_owned_rfold_empty() {
+    let fallible = Vec::<i32>::new().into_iter().into_lender().into_fallible();
+    let result = fallible
+        .owned()
+        .rfold(Vec::new(), |mut acc, x: i32| {
+            acc.push(x);
+            Ok(acc)
+        })
+        .unwrap();
+    assert!(result.is_empty());
+}
+
+// ============================================================================
+// MapIntoIter: nth, fold, rfold
+// ============================================================================
+
+#[test]
+fn fallible_map_into_iter_nth() {
+    let lender = VecFallibleLender::new(vec![10, 20, 30, 40, 50]);
+    let mut iter = lender.map_into_iter(|x: &i32| Ok(*x * 2));
+    assert_eq!(iter.nth(2).unwrap(), Some(60));
+    assert_eq!(iter.next().unwrap(), Some(80));
+    assert_eq!(iter.next().unwrap(), Some(100));
+    assert_eq!(iter.next().unwrap(), None);
+}
+
+#[test]
+fn fallible_map_into_iter_nth_past_end() {
+    let lender = VecFallibleLender::new(vec![1, 2]);
+    let mut iter = lender.map_into_iter(|x: &i32| Ok(*x));
+    assert_eq!(iter.nth(10).unwrap(), None);
+}
+
+#[test]
+fn fallible_map_into_iter_nth_error_in_lender() {
+    let lender = ErrorAtLender::new(vec![1, 2, 3, 4], 1);
+    let mut iter = lender.map_into_iter(|x: &i32| Ok::<_, String>(*x));
+    // nth(2) needs to advance past index 1 which errors
+    assert!(iter.nth(2).is_err());
+}
+
+#[test]
+fn fallible_map_into_iter_nth_error_in_closure() {
+    let lender = ErrorAtLender::new(vec![1, 2, 3, 4, 5], 100);
+    let mut iter = lender.map_into_iter(|x: &i32| {
+        if *x == 3 {
+            Err("closure error".to_string())
+        } else {
+            Ok(*x * 2)
+        }
+    });
+    // nth(2) lands on element 3, which the closure errors on
+    assert!(iter.nth(2).is_err());
+}
+
+#[test]
+fn fallible_map_into_iter_fold() {
+    let lender = VecFallibleLender::new(vec![1, 2, 3, 4]);
+    let sum = lender
+        .map_into_iter(|x: &i32| Ok(*x * 2))
+        .fold(0, |acc, x| Ok(acc + x))
+        .unwrap();
+    assert_eq!(sum, 20); // (1+2+3+4)*2 = 20
+}
+
+#[test]
+fn fallible_map_into_iter_fold_empty() {
+    let lender = VecFallibleLender::new(vec![]);
+    let sum = lender
+        .map_into_iter(|x: &i32| Ok(*x))
+        .fold(0, |acc, x| Ok(acc + x))
+        .unwrap();
+    assert_eq!(sum, 0);
+}
+
+#[test]
+fn fallible_map_into_iter_fold_error_in_lender() {
+    let lender = ErrorAtLender::new(vec![1, 2, 3, 4], 2);
+    let result = lender
+        .map_into_iter(|x: &i32| Ok::<_, String>(*x))
+        .fold(0, |acc, x| Ok(acc + x));
+    assert!(result.is_err());
+}
+
+#[test]
+fn fallible_map_into_iter_fold_error_in_closure() {
+    let lender = ErrorAtLender::new(vec![1, 2, 3, 4, 5], 100);
+    let result = lender
+        .map_into_iter(|x: &i32| {
+            if *x == 3 {
+                Err("closure error".to_string())
+            } else {
+                Ok(*x * 2)
+            }
+        })
+        .fold(0, |acc, x| Ok(acc + x));
+    assert!(result.is_err());
+}
+
+#[test]
+fn fallible_map_into_iter_rfold() {
+    let lender = VecFallibleLender::new(vec![1, 2, 3]);
+    let result = lender
+        .map_into_iter(|x: &i32| Ok(*x * 10))
+        .rfold(Vec::new(), |mut acc, x| {
+            acc.push(x);
+            Ok(acc)
+        })
+        .unwrap();
+    assert_eq!(result, vec![30, 20, 10]);
+}
+
+#[test]
+fn fallible_map_into_iter_rfold_empty() {
+    let lender = VecFallibleLender::new(vec![]);
+    let result = lender
+        .map_into_iter(|x: &i32| Ok(*x))
+        .rfold(Vec::new(), |mut acc, x: i32| {
+            acc.push(x);
+            Ok(acc)
+        })
+        .unwrap();
+    assert!(result.is_empty());
+}
+
+#[test]
+fn fallible_map_into_iter_rfold_error_in_closure() {
+    // Use convert to get a DoubleEndedFallibleLender with String error
+    let data: Vec<Result<i32, String>> = vec![Ok(1), Ok(2), Ok(3), Ok(4), Ok(5)];
+    let lender = data.into_iter().into_lender().convert::<String>();
+    let result = lender
+        .map_into_iter(|x: i32| {
+            if x == 3 {
+                Err("closure error".to_string())
+            } else {
+                Ok(x)
+            }
+        })
+        .rfold(Vec::new(), |mut acc, x| {
+            acc.push(x);
+            Ok(acc)
+        });
+    assert!(result.is_err());
+}
+
+// ============================================================================
+// Chunky: nth, try_fold, fold
+// ============================================================================
+
+#[test]
+fn fallible_chunky_nth() {
+    let mut chunky = VecFallibleLender::new(vec![1, 2, 3, 4, 5, 6]).chunky(2);
+    // Skip 1 chunk, get second chunk [3, 4]
+    let mut chunk = chunky.nth(1).unwrap().unwrap();
+    assert_eq!(chunk.next().unwrap(), Some(&3));
+    assert_eq!(chunk.next().unwrap(), Some(&4));
+    assert_eq!(chunk.next().unwrap(), None);
+    // Third chunk [5, 6] should still be available
+    let mut chunk = chunky.next().unwrap().unwrap();
+    assert_eq!(chunk.next().unwrap(), Some(&5));
+    assert_eq!(chunk.next().unwrap(), Some(&6));
+}
+
+#[test]
+fn fallible_chunky_nth_zero() {
+    let mut chunky = VecFallibleLender::new(vec![1, 2, 3, 4]).chunky(2);
+    // nth(0) is equivalent to next()
+    let mut chunk = chunky.nth(0).unwrap().unwrap();
+    assert_eq!(chunk.next().unwrap(), Some(&1));
+    assert_eq!(chunk.next().unwrap(), Some(&2));
+}
+
+#[test]
+fn fallible_chunky_nth_past_end() {
+    let mut chunky = VecFallibleLender::new(vec![1, 2, 3, 4]).chunky(2);
+    // Only 2 chunks, nth(5) should be None
+    assert!(chunky.nth(5).unwrap().is_none());
+    // Exhausted
+    assert!(chunky.next().unwrap().is_none());
+}
+
+#[test]
+fn fallible_chunky_nth_exact_end() {
+    let mut chunky = VecFallibleLender::new(vec![1, 2, 3, 4, 5, 6]).chunky(2);
+    // 3 chunks, nth(2) gets the last one
+    let mut chunk = chunky.nth(2).unwrap().unwrap();
+    assert_eq!(chunk.next().unwrap(), Some(&5));
+    assert_eq!(chunk.next().unwrap(), Some(&6));
+    assert!(chunky.next().unwrap().is_none());
+}
+
+#[test]
+fn fallible_chunky_size_hint() {
+    let chunky = VecFallibleLender::new(vec![1, 2, 3, 4, 5, 6]).chunky(2);
+    assert_eq!(chunky.size_hint(), (3, Some(3)));
+}
+
+#[test]
+fn fallible_chunky_count() {
+    let chunky = VecFallibleLender::new(vec![1, 2, 3, 4, 5, 6]).chunky(2);
+    assert_eq!(chunky.count().unwrap(), 3);
+}
+
+#[test]
+fn fallible_chunky_try_fold() {
+    let mut chunky = VecFallibleLender::new(vec![1, 2, 3, 4, 5, 6]).chunky(2);
+    let result: Result<Result<i32, ()>, _> = chunky.try_fold(0, |acc, mut chunk| {
+        let mut sum = acc;
+        while let Some(x) = chunk.next()? {
+            sum += x;
+        }
+        Ok(Ok(sum))
+    });
+    assert_eq!(result, Ok(Ok(21))); // 1+2+3+4+5+6 = 21
+}
+
+#[test]
+fn fallible_chunky_try_fold_break() {
+    let mut chunky = VecFallibleLender::new(vec![1, 2, 3, 4, 5, 6]).chunky(2);
+    // Break after processing the first chunk
+    let result: Result<Result<i32, i32>, _> = chunky.try_fold(0, |acc, mut chunk| {
+        let mut sum = acc;
+        while let Some(x) = chunk.next()? {
+            sum += x;
+        }
+        if sum > 5 {
+            Ok(Err(sum)) // break
+        } else {
+            Ok(Ok(sum)) // continue
+        }
+    });
+    // First chunk: 1+2=3 (continue), second: 3+3+4=10 (break)
+    assert_eq!(result, Ok(Err(10)));
+}
+
+#[test]
+fn fallible_chunky_fold() {
+    let chunky = VecFallibleLender::new(vec![1, 2, 3, 4, 5, 6]).chunky(2);
+    let result = chunky.fold(0, |acc, mut chunk| {
+        let mut sum = acc;
+        while let Some(x) = chunk.next()? {
+            sum += x;
+        }
+        Ok(sum)
+    });
+    assert_eq!(result, Ok(21));
+}
+
+#[test]
+fn fallible_chunky_fold_empty() {
+    let chunky = VecFallibleLender::new(vec![]).chunky(2);
+    let result = chunky.fold(0, |acc, mut chunk| {
+        let mut sum = acc;
+        while let Some(x) = chunk.next()? {
+            sum += x;
+        }
+        Ok(sum)
+    });
+    assert_eq!(result, Ok(0));
+}
+
+// ============================================================================
+// FilterMap: count, next_back, size_hint
+// ============================================================================
+
+#[test]
+fn fallible_filter_map_count() {
+    use lender::from_fallible_fn;
+
+    let count = from_fallible_fn(
+        0,
+        covar_mut!(
+            for<'lend> |state: &'lend mut i32| -> Result<Option<i32>, String> {
+                *state += 1;
+                if *state <= 6 {
+                    Ok(Some(*state))
+                } else {
+                    Ok(None)
+                }
+            }
+        ),
+    )
+    .filter_map(covar_mut!(
+        for<'lend> |x: i32| -> Result<Option<i32>, String> {
+            Ok(if x % 2 == 0 { Some(x) } else { None })
+        }
+    ))
+    .count();
+    assert_eq!(count, Ok(3)); // 2, 4, 6
+}
+
+#[test]
+fn fallible_filter_map_count_empty() {
+    use lender::from_fallible_fn;
+
+    let count = from_fallible_fn(
+        0,
+        covar_mut!(for<'lend> |_state: &'lend mut i32| -> Result<Option<i32>, String> { Ok(None) }),
+    )
+    .filter_map(covar_mut!(
+        for<'lend> |x: i32| -> Result<Option<i32>, String> { Ok(Some(x)) }
+    ))
+    .count();
+    assert_eq!(count, Ok(0));
+}
+
+#[test]
+fn fallible_filter_map_count_all_filtered() {
+    use lender::from_fallible_fn;
+
+    let count = from_fallible_fn(
+        0,
+        covar_mut!(
+            for<'lend> |state: &'lend mut i32| -> Result<Option<i32>, String> {
+                *state += 1;
+                if *state <= 5 {
+                    Ok(Some(*state))
+                } else {
+                    Ok(None)
+                }
+            }
+        ),
+    )
+    .filter_map(covar_mut!(
+        for<'lend> |_x: i32| -> Result<Option<i32>, String> { Ok(None) }
+    ))
+    .count();
+    assert_eq!(count, Ok(0));
+}
+
+#[test]
+fn fallible_filter_map_count_error_in_source() {
+    let count = ErrorAtLender::new(vec![1, 2, 3, 4, 5], 2)
+        .filter_map(covar_mut!(
+            for<'lend> |x: &'lend i32| -> Result<Option<i32>, String> { Ok(Some(*x)) }
+        ))
+        .count();
+    assert!(count.is_err());
+}
+
+#[test]
+fn fallible_filter_map_count_error_in_closure() {
+    use lender::from_fallible_fn;
+
+    let count = from_fallible_fn(
+        0,
+        covar_mut!(
+            for<'lend> |state: &'lend mut i32| -> Result<Option<i32>, String> {
+                *state += 1;
+                if *state <= 5 {
+                    Ok(Some(*state))
+                } else {
+                    Ok(None)
+                }
+            }
+        ),
+    )
+    .filter_map(covar_mut!(
+        for<'lend> |x: i32| -> Result<Option<i32>, String> {
+            if x == 3 {
+                Err("closure error".to_string())
+            } else {
+                Ok(Some(x))
+            }
+        }
+    ))
+    .count();
+    assert!(count.is_err());
+}
+
+#[test]
+fn fallible_filter_map_next_back() {
+    let lender = VecFallibleLender::new(vec![1, 2, 3, 4, 5, 6]);
+    let mut fm = lender.filter_map(covar_mut!(for<'lend> |x: &'lend i32| -> Result<
+        Option<i32>,
+        std::convert::Infallible,
+    > {
+        Ok(if *x % 2 == 0 { Some(*x * 10) } else { None })
+    }));
+    // next_back: 6(even->60), then 5(odd,skip), 4(even->40)
+    assert_eq!(fm.next_back().unwrap(), Some(60));
+    assert_eq!(fm.next_back().unwrap(), Some(40));
+    assert_eq!(fm.next_back().unwrap(), Some(20));
+    assert_eq!(fm.next_back().unwrap(), None);
+}
+
+#[test]
+fn fallible_filter_map_size_hint() {
+    let lender = VecFallibleLender::new(vec![1, 2, 3, 4, 5]);
+    let fm = lender.filter_map(covar_mut!(for<'lend> |x: &'lend i32| -> Result<
+        Option<i32>,
+        std::convert::Infallible,
+    > {
+        Ok(if *x % 2 == 0 { Some(*x) } else { None })
+    }));
+    let (lo, hi) = fm.size_hint();
+    assert_eq!(lo, 0);
+    assert_eq!(hi, Some(5));
 }

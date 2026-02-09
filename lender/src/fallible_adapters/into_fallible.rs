@@ -122,6 +122,11 @@ where
     fn len(&self) -> usize {
         self.lender.len()
     }
+
+    #[inline(always)]
+    fn is_empty(&self) -> bool {
+        self.lender.is_empty()
+    }
 }
 
 impl<L> FusedFallibleLender for IntoFallible<L> where L: FusedLender {}

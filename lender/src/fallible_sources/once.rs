@@ -19,7 +19,7 @@ use crate::{
 /// ```rust
 /// # use lender::prelude::*;
 /// let mut lender = lender::fallible_once::<
-///     fallible_lend!(&'lend u32), String,
+///     fallible_lend!(&'lend i32), String,
 /// >(&42);
 /// assert_eq!(lender.next(), Ok(Some(&42)));
 /// assert_eq!(lender.next(), Ok(None));
@@ -44,7 +44,7 @@ pub fn once<'a, L: ?Sized + CovariantFallibleLending, E>(
 /// ```rust
 /// # use lender::prelude::*;
 /// let mut lender = lender::fallible_once_err::<
-///     fallible_lend!(&'lend u32), _,
+///     fallible_lend!(&'lend i32), _,
 /// >("error".to_string());
 /// assert_eq!(lender.next(), Err("error".to_string()));
 /// assert_eq!(lender.next(), Ok(None));

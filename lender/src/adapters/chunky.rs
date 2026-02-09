@@ -14,6 +14,9 @@ use crate::{
 /// fixed-size arrays, `Chunky` yields [`Chunk`] lenders that
 /// must be consumed to access the elements.
 ///
+/// This struct is created by [`Lender::chunky`] or
+/// [`FallibleLender::chunky`].
+///
 /// # Important: Partial Chunk Consumption
 ///
 /// **Each [`Chunk`] yielded by `Chunky` must be fully consumed
@@ -27,14 +30,18 @@ use crate::{
 /// borrowing from a single underlying lender, so partial
 /// consumption affects subsequent chunks.
 ///
-/// This struct is created by [`Lender::chunky`] or
-/// [`FallibleLender::chunky`].
+/// Partial chunk consumption has also the consequence of not
+/// enumerating entirely the elements returned by the underlying
+/// lender, as the number of chunks is computed at the start.
+/// Thus, in case of partial chunk consumption the last element
+/// of the last chunk will not be the last element of the underlying
+/// lender.
 #[derive(Debug, Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Chunky<L> {
     pub(crate) lender: L,
-    pub(crate) len: usize,
     pub(crate) chunk_size: usize,
+    pub(crate) len: usize,
 }
 
 impl<L> Chunky<L>
@@ -113,8 +120,7 @@ where
             let skip = n * self.chunk_size;
             self.len -= n;
             if self.lender.advance_by(skip).is_err() {
-                self.len = 0;
-                return None;
+                unreachable!();
             }
             self.next()
         } else {

@@ -57,33 +57,33 @@ fn simple_lender() {
             Some(&mut self.0)
         }
     }
-    let mut x = 0u32;
-    let mut bar: MyLender<'_, u32> = MyLender(&mut x);
+    let mut x = 0;
+    let mut bar: MyLender<'_, i32> = MyLender(&mut x);
     let _ = bar.next();
     let _ = bar.next();
     let mut bar = bar
         .into_lender()
         .mutate(|y| **y += 1)
-        .map(covar_mut!(for<'lend> |x: &'lend mut u32| -> u32 { *x + 1 }))
+        .map(covar_mut!(for<'lend> |x: &'lend mut i32| -> i32 { *x + 1 }))
         .iter();
     let _ = bar.find_map(|x| if x > 0 { Some(vec![1, 2, 3]) } else { None });
 }
 
 #[test]
 fn from_lender() {
-    let mut vec = vec![1u32, 2, 3, 4, 5];
+    let mut vec = vec![1, 2, 3, 4, 5];
     let windows = WindowsMut {
         slice: &mut vec,
         begin: 0,
         len: 3,
     };
-    let vec = MyVec::<Vec<u32>>::from_lender(windows);
+    let vec = MyVec::<Vec<i32>>::from_lender(windows);
     assert_eq!(vec.0, vec![&[1, 2, 3][..], &[2, 3, 4][..], &[3, 4, 5][..]]);
 
     struct MyVec<T>(Vec<T>);
-    impl<L: Lender> FromLender<L> for MyVec<Vec<u32>>
+    impl<L: Lender> FromLender<L> for MyVec<Vec<i32>>
     where
-        for<'all> L: Lending<'all, Lend = &'all mut [u32]>,
+        for<'all> L: Lending<'all, Lend = &'all mut [i32]>,
     {
         fn from_lender(lender: L) -> Self {
             let mut vec = Vec::new();

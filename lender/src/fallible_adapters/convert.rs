@@ -1,4 +1,4 @@
-use core::marker::PhantomData;
+use core::{marker::PhantomData, ops::ControlFlow};
 
 use stable_try_trait_v2::Try;
 
@@ -82,6 +82,42 @@ where
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
     }
+
+    #[inline]
+    fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> Result<R, Self::Error>
+    where
+        Self: Sized,
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<R, Self::Error>,
+        R: Try<Output = B>,
+    {
+        match self.iter.try_fold(init, |acc, item| match item {
+            Ok(v) => super::try_fold_with(f(acc, v)),
+            Err(e) => ControlFlow::Break(Err(e)),
+        }) {
+            ControlFlow::Continue(acc) => Ok(R::from_output(acc)),
+            ControlFlow::Break(r) => r,
+        }
+    }
+
+    #[inline]
+    fn fold<B, F>(mut self, init: B, mut f: F) -> Result<B, Self::Error>
+    where
+        Self: Sized,
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
+    {
+        // Delegate to the inner lender's try_fold using
+        // ControlFlow to propagate item errors.
+        match self.iter.try_fold(init, |acc, item| match item {
+            Ok(v) => match f(acc, v) {
+                Ok(b) => ControlFlow::Continue(b),
+                Err(e) => ControlFlow::Break(e),
+            },
+            Err(e) => ControlFlow::Break(e),
+        }) {
+            ControlFlow::Continue(acc) => Ok(acc),
+            ControlFlow::Break(e) => Err(e),
+        }
+    }
 }
 
 impl<E, I> DoubleEndedFallibleLender for Convert<E, I>
@@ -96,6 +132,40 @@ where
             None => Ok(None),
         }
     }
+
+    #[inline]
+    fn try_rfold<B, F, R>(&mut self, init: B, mut f: F) -> Result<R, Self::Error>
+    where
+        Self: Sized,
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<R, Self::Error>,
+        R: Try<Output = B>,
+    {
+        match self.iter.try_rfold(init, |acc, item| match item {
+            Ok(v) => super::try_fold_with(f(acc, v)),
+            Err(e) => ControlFlow::Break(Err(e)),
+        }) {
+            ControlFlow::Continue(acc) => Ok(R::from_output(acc)),
+            ControlFlow::Break(r) => r,
+        }
+    }
+
+    #[inline]
+    fn rfold<B, F>(mut self, init: B, mut f: F) -> Result<B, Self::Error>
+    where
+        Self: Sized,
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
+    {
+        match self.iter.try_rfold(init, |acc, item| match item {
+            Ok(v) => match f(acc, v) {
+                Ok(b) => ControlFlow::Continue(b),
+                Err(e) => ControlFlow::Break(e),
+            },
+            Err(e) => ControlFlow::Break(e),
+        }) {
+            ControlFlow::Continue(acc) => Ok(acc),
+            ControlFlow::Break(e) => Err(e),
+        }
+    }
 }
 
 impl<E, I> ExactSizeFallibleLender for Convert<E, I>
@@ -105,6 +175,11 @@ where
     #[inline(always)]
     fn len(&self) -> usize {
         self.iter.len()
+    }
+
+    #[inline(always)]
+    fn is_empty(&self) -> bool {
+        self.iter.is_empty()
     }
 }
 

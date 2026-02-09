@@ -45,3 +45,34 @@ pub use peekable::Peekable as FalliblePeekable;
 
 pub type FallibleTryShuntAdapter<'a, 'b, 'c, 'd, L> =
     TryShunt<'a, &'b mut NonFallibleAdapter<'c, &'d mut L>>;
+
+use crate::try_trait_v2::Try;
+use core::ops::ControlFlow;
+
+/// Converts a `Result<R, E>` from a fallible fold closure
+/// into a [`ControlFlow`] for delegation to an inner
+/// lender's `try_fold`/`try_rfold`.
+///
+/// Used by [`Convert`] and [`MapErr`] to bridge between
+/// the user's fold closure (which returns `Result<R, E>`)
+/// and the inner lender's fold (which expects a
+/// [`ControlFlow`]). `Ok(r)` is branched via
+/// [`Try::branch`] to propagate short-circuits, while
+/// `Err(e)` becomes `Break(Err(e))`.
+#[inline(always)]
+fn try_fold_with<B, R, E>(
+    result: Result<R, E>,
+) -> ControlFlow<Result<R, E>, B>
+where
+    R: Try<Output = B>,
+{
+    match result {
+        Ok(r) => match r.branch() {
+            ControlFlow::Continue(b) => ControlFlow::Continue(b),
+            ControlFlow::Break(residual) => {
+                ControlFlow::Break(Ok(R::from_residual(residual)))
+            }
+        },
+        Err(e) => ControlFlow::Break(Err(e)),
+    }
+}

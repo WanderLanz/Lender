@@ -685,3 +685,596 @@ fn fallible_into_inner() {
 }
 
 // ============================================================================
+// MapErr: method overrides and pre-existing methods
+// ============================================================================
+
+#[test]
+fn fallible_map_err_try_fold_ok() {
+    // Use ErrorAtLender with error_at beyond range so no error
+    let lender = ErrorAtLender::new(vec![1, 2, 3], 100);
+    let mut mapped = lender.map_err(|e| format!("mapped: {}", e));
+    let result: Result<Result<i32, ()>, _> = mapped.try_fold(0, |acc, x| Ok(Ok(acc + *x)));
+    assert_eq!(result, Ok(Ok(6)));
+}
+
+#[test]
+fn fallible_map_err_try_fold_inner_error() {
+    let lender = ErrorAtLender::new(vec![1, 2, 3, 4], 2);
+    let mut mapped = lender.map_err(|e| format!("mapped: {}", e));
+    let result: Result<Result<i32, ()>, _> = mapped.try_fold(0, |acc, x| Ok(Ok(acc + *x)));
+    assert_eq!(result.unwrap_err(), "mapped: error at index 2");
+}
+
+#[test]
+fn fallible_map_err_try_fold_closure_error() {
+    let lender = ErrorAtLender::new(vec![1, 2, 3, 4], 100);
+    let mut mapped = lender.map_err(|e| format!("mapped: {}", e));
+    let result: Result<Result<i32, String>, _> = mapped.try_fold(0, |acc, x| {
+        if *x == 3 {
+            Err("closure error".to_string())
+        } else {
+            Ok(Ok(acc + *x))
+        }
+    });
+    // Closure error is returned directly (not mapped)
+    assert_eq!(result, Err("closure error".to_string()));
+}
+
+#[test]
+fn fallible_map_err_try_fold_break() {
+    let lender = ErrorAtLender::new(vec![1, 2, 3, 4], 100);
+    let mut mapped = lender.map_err(|e| format!("mapped: {}", e));
+    let result: Result<Result<i32, i32>, _> = mapped.try_fold(0, |acc, x| {
+        let new = acc + *x;
+        if new > 5 {
+            Ok(Err(new)) // break via Try
+        } else {
+            Ok(Ok(new))
+        }
+    });
+    assert_eq!(result, Ok(Err(6))); // 1+2+3=6 > 5
+}
+
+#[test]
+fn fallible_map_err_fold_ok() {
+    let lender = ErrorAtLender::new(vec![1, 2, 3], 100);
+    let result = lender
+        .map_err(|e| format!("mapped: {}", e))
+        .fold(0, |acc, x| Ok(acc + *x));
+    assert_eq!(result, Ok(6));
+}
+
+#[test]
+fn fallible_map_err_fold_inner_error() {
+    let lender = ErrorAtLender::new(vec![1, 2, 3, 4], 2);
+    let result = lender
+        .map_err(|e| format!("mapped: {}", e))
+        .fold(0, |acc, x| Ok(acc + *x));
+    assert_eq!(result.unwrap_err(), "mapped: error at index 2");
+}
+
+#[test]
+fn fallible_map_err_fold_closure_error() {
+    let lender = ErrorAtLender::new(vec![1, 2, 3, 4], 100);
+    let result = lender
+        .map_err(|e| format!("mapped: {}", e))
+        .fold(0, |acc, x| {
+            if *x == 3 {
+                Err("closure error".to_string())
+            } else {
+                Ok(acc + *x)
+            }
+        });
+    assert_eq!(result, Err("closure error".to_string()));
+}
+
+#[test]
+fn fallible_map_err_try_rfold_ok() {
+    let lender = VecFallibleLender::new(vec![1, 2, 3]);
+    let mut mapped = lender.map_err(|e: std::convert::Infallible| match e {});
+    let result: Result<Result<Vec<i32>, ()>, _> = mapped.try_rfold(Vec::new(), |mut acc, x| {
+        acc.push(*x);
+        Ok(Ok(acc))
+    });
+    assert_eq!(result, Ok(Ok(vec![3, 2, 1])));
+}
+
+#[test]
+fn fallible_map_err_try_rfold_closure_error() {
+    let lender = VecFallibleLender::new(vec![1, 2, 3, 4, 5]);
+    let mut mapped = lender.map_err(|e: std::convert::Infallible| match e {});
+    let result: Result<Result<i32, String>, _> = mapped.try_rfold(0, |acc, x| {
+        if *x == 3 {
+            Err("rfold error".to_string())
+        } else {
+            Ok(Ok(acc + *x))
+        }
+    });
+    assert_eq!(result, Err("rfold error".to_string()));
+}
+
+#[test]
+fn fallible_map_err_try_rfold_break() {
+    let lender = VecFallibleLender::new(vec![1, 2, 3, 4, 5]);
+    let mut mapped = lender.map_err(|e: std::convert::Infallible| match e {});
+    let result: Result<Result<i32, i32>, _> = mapped.try_rfold(0, |acc, x| {
+        let new = acc + *x;
+        if new > 7 {
+            Ok(Err(new)) // break
+        } else {
+            Ok(Ok(new))
+        }
+    });
+    // rfold goes 5, 4, 3: 5+4=9 > 7
+    assert_eq!(result, Ok(Err(9)));
+}
+
+#[test]
+fn fallible_map_err_try_rfold_inner_error() {
+    // Convert wrapping a lender with an Err item produces an error
+    // during try_rfold, which MapErr must map through its closure.
+    let data: Vec<Result<i32, String>> = vec![Ok(1), Err("inner error".into()), Ok(3)];
+    let convert = data.into_iter().into_lender().convert::<String>();
+    let mut mapped = convert.map_err(|e| format!("mapped: {}", e));
+    let result: Result<Result<Vec<i32>, ()>, _> = mapped.try_rfold(Vec::new(), |mut acc, x| {
+        acc.push(x);
+        Ok(Ok(acc))
+    });
+    // rfold goes backwards: Ok(3), then Err("inner error")
+    // The inner error is mapped through the MapErr closure
+    assert_eq!(result.unwrap_err(), "mapped: inner error");
+}
+
+#[test]
+fn fallible_map_err_rfold_ok() {
+    let lender = VecFallibleLender::new(vec![1, 2, 3]);
+    let result = lender
+        .map_err(|e: std::convert::Infallible| match e {})
+        .rfold(Vec::new(), |mut acc, x| {
+            acc.push(*x);
+            Ok(acc)
+        });
+    assert_eq!(result, Ok(vec![3, 2, 1]));
+}
+
+#[test]
+fn fallible_map_err_rfold_closure_error() {
+    let lender = VecFallibleLender::new(vec![1, 2, 3, 4, 5]);
+    let result = lender
+        .map_err(|e: std::convert::Infallible| match e {})
+        .rfold(0, |acc, x| {
+            if *x == 3 {
+                Err("rfold closure error".to_string())
+            } else {
+                Ok(acc + *x)
+            }
+        });
+    assert_eq!(result, Err("rfold closure error".to_string()));
+}
+
+#[test]
+fn fallible_map_err_rfold_inner_error() {
+    // Same scenario but for rfold (not try_rfold).
+    let data: Vec<Result<i32, String>> = vec![Ok(1), Err("inner error".into()), Ok(3)];
+    let convert = data.into_iter().into_lender().convert::<String>();
+    let result = convert
+        .map_err(|e| format!("mapped: {}", e))
+        .rfold(Vec::new(), |mut acc, x| {
+            acc.push(x);
+            Ok(acc)
+        });
+    assert_eq!(result.unwrap_err(), "mapped: inner error");
+}
+
+#[test]
+fn fallible_map_err_into_inner() {
+    let lender = ErrorAtLender::new(vec![1, 2, 3], 100);
+    let mapped = lender.map_err(|e| format!("mapped: {}", e));
+    let _inner = mapped.into_inner();
+}
+
+#[test]
+fn fallible_map_err_into_parts() {
+    let lender = ErrorAtLender::new(vec![1, 2, 3], 100);
+    let mapped = lender.map_err(|e| format!("mapped: {}", e));
+    let (_inner, _f) = mapped.into_parts();
+}
+
+#[test]
+fn fallible_map_err_debug() {
+    let lender = ErrorAtLender::new(vec![1, 2, 3], 100);
+    let mapped = lender.map_err(|e| format!("mapped: {}", e));
+    let debug_str = format!("{:?}", mapped);
+    assert!(debug_str.contains("MapErr"));
+}
+
+#[test]
+fn fallible_map_err_next_ok() {
+    let lender = VecFallibleLender::new(vec![1, 2, 3]);
+    let mut mapped = lender.map_err(|e: std::convert::Infallible| match e {});
+    assert_eq!(mapped.next().unwrap(), Some(&1));
+    assert_eq!(mapped.next().unwrap(), Some(&2));
+    assert_eq!(mapped.next().unwrap(), Some(&3));
+    assert_eq!(mapped.next().unwrap(), None);
+}
+
+#[test]
+fn fallible_map_err_next_error() {
+    let lender = ErrorAtLender::new(vec![1, 2, 3], 1);
+    let mut mapped = lender.map_err(|e| format!("mapped: {}", e));
+    assert_eq!(mapped.next().unwrap(), Some(&1));
+    assert_eq!(mapped.next().unwrap_err(), "mapped: error at index 1");
+}
+
+#[test]
+fn fallible_map_err_count() {
+    let lender = ErrorAtLender::new(vec![1, 2, 3], 100);
+    let count = lender.map_err(|e| format!("mapped: {}", e)).count();
+    assert_eq!(count.unwrap(), 3);
+}
+
+#[test]
+fn fallible_map_err_count_error() {
+    let lender = ErrorAtLender::new(vec![1, 2, 3], 1);
+    let count = lender.map_err(|e| format!("mapped: {}", e)).count();
+    assert!(count.is_err());
+}
+
+#[test]
+fn fallible_map_err_nth() {
+    let lender = ErrorAtLender::new(vec![1, 2, 3, 4, 5], 100);
+    let mut mapped = lender.map_err(|e| format!("mapped: {}", e));
+    assert_eq!(mapped.nth(2).unwrap(), Some(&3));
+}
+
+#[test]
+fn fallible_map_err_nth_error() {
+    let lender = ErrorAtLender::new(vec![1, 2, 3, 4, 5], 1);
+    let mut mapped = lender.map_err(|e| format!("mapped: {}", e));
+    assert!(mapped.nth(2).is_err());
+}
+
+#[test]
+fn fallible_map_err_last() {
+    let lender = ErrorAtLender::new(vec![1, 2, 3], 100);
+    let mut mapped = lender.map_err(|e| format!("mapped: {}", e));
+    assert_eq!(mapped.last().unwrap(), Some(&3));
+}
+
+#[test]
+fn fallible_map_err_last_error() {
+    let lender = ErrorAtLender::new(vec![1, 2, 3], 1);
+    let mut mapped = lender.map_err(|e| format!("mapped: {}", e));
+    assert!(mapped.last().is_err());
+}
+
+#[test]
+fn fallible_map_err_advance_by() {
+    let lender = ErrorAtLender::new(vec![1, 2, 3, 4, 5], 100);
+    let mut mapped = lender.map_err(|e| format!("mapped: {}", e));
+    assert_eq!(mapped.advance_by(2), Ok(Ok(())));
+    assert_eq!(mapped.next().unwrap(), Some(&3));
+}
+
+#[test]
+fn fallible_map_err_advance_by_error() {
+    let lender = ErrorAtLender::new(vec![1, 2, 3, 4, 5], 1);
+    let mut mapped = lender.map_err(|e| format!("mapped: {}", e));
+    assert!(mapped.advance_by(3).is_err());
+}
+
+#[test]
+fn fallible_map_err_next_back() {
+    let lender = VecFallibleLender::new(vec![1, 2, 3]);
+    let mut mapped = lender.map_err(|e: std::convert::Infallible| match e {});
+    assert_eq!(mapped.next_back().unwrap(), Some(&3));
+    assert_eq!(mapped.next_back().unwrap(), Some(&2));
+    assert_eq!(mapped.next_back().unwrap(), Some(&1));
+    assert_eq!(mapped.next_back().unwrap(), None);
+}
+
+#[test]
+fn fallible_map_err_nth_back() {
+    let lender = VecFallibleLender::new(vec![1, 2, 3, 4, 5]);
+    let mut mapped = lender.map_err(|e: std::convert::Infallible| match e {});
+    assert_eq!(mapped.nth_back(2).unwrap(), Some(&3));
+}
+
+#[test]
+fn fallible_map_err_advance_back_by() {
+    let lender = VecFallibleLender::new(vec![1, 2, 3, 4, 5]);
+    let mut mapped = lender.map_err(|e: std::convert::Infallible| match e {});
+    assert_eq!(mapped.advance_back_by(2), Ok(Ok(())));
+    assert_eq!(mapped.next_back().unwrap(), Some(&3));
+}
+
+#[test]
+fn fallible_map_err_size_hint() {
+    let lender = VecFallibleLender::new(vec![1, 2, 3]);
+    let mapped = lender.map_err(|e: std::convert::Infallible| match e {});
+    assert_eq!(mapped.size_hint(), (3, Some(3)));
+}
+
+#[test]
+fn fallible_map_err_len_is_empty() {
+    use lender::ExactSizeFallibleLender;
+    let lender = VecFallibleLender::new(vec![1, 2, 3]);
+    let mapped = lender.map_err(|e: std::convert::Infallible| match e {});
+    assert_eq!(mapped.len(), 3);
+    assert!(!mapped.is_empty());
+
+    let lender_empty = VecFallibleLender::new(vec![]);
+    let mapped_empty = lender_empty.map_err(|e: std::convert::Infallible| match e {});
+    assert_eq!(mapped_empty.len(), 0);
+    assert!(mapped_empty.is_empty());
+}
+
+// ============================================================================
+// Convert: method overrides
+// ============================================================================
+
+#[test]
+fn fallible_convert_try_fold_ok() {
+    let data = vec![Ok(1), Ok(2), Ok(3)];
+    let mut lender = data.into_iter().into_lender().convert::<&str>();
+    let result: Result<Result<i32, ()>, _> = lender.try_fold(0, |acc, x| Ok(Ok(acc + x)));
+    assert_eq!(result, Ok(Ok(6)));
+}
+
+#[test]
+fn fallible_convert_try_fold_item_error() {
+    let data: Vec<Result<i32, &str>> = vec![Ok(1), Ok(2), Err("oops"), Ok(4)];
+    let mut lender = data.into_iter().into_lender().convert::<&str>();
+    let result: Result<Result<i32, ()>, _> = lender.try_fold(0, |acc, x| Ok(Ok(acc + x)));
+    assert_eq!(result, Err("oops"));
+}
+
+#[test]
+fn fallible_convert_try_fold_closure_error() {
+    let data: Vec<Result<i32, String>> = vec![Ok(1), Ok(2), Ok(3), Ok(4)];
+    let mut lender = data.into_iter().into_lender().convert::<String>();
+    let result: Result<Result<i32, String>, _> = lender.try_fold(0, |acc, x| {
+        if x == 3 {
+            Err("closure error".to_string())
+        } else {
+            Ok(Ok(acc + x))
+        }
+    });
+    assert_eq!(result, Err("closure error".to_string()));
+}
+
+#[test]
+fn fallible_convert_try_fold_break() {
+    let data: Vec<Result<i32, &str>> = vec![Ok(1), Ok(2), Ok(3), Ok(4)];
+    let mut lender = data.into_iter().into_lender().convert::<&str>();
+    let result: Result<Result<i32, i32>, _> = lender.try_fold(0, |acc, x| {
+        let new = acc + x;
+        if new > 3 {
+            Ok(Err(new)) // break
+        } else {
+            Ok(Ok(new))
+        }
+    });
+    assert_eq!(result, Ok(Err(6))); // 1+2+3=6 > 3
+}
+
+#[test]
+fn fallible_convert_fold_ok() {
+    let data = vec![Ok(1), Ok(2), Ok(3)];
+    let result = data
+        .into_iter()
+        .into_lender()
+        .convert::<&str>()
+        .fold(0, |acc, x| Ok(acc + x));
+    assert_eq!(result, Ok(6));
+}
+
+#[test]
+fn fallible_convert_fold_item_error() {
+    let data: Vec<Result<i32, &str>> = vec![Ok(1), Ok(2), Err("oops"), Ok(4)];
+    let result = data
+        .into_iter()
+        .into_lender()
+        .convert::<&str>()
+        .fold(0, |acc, x| Ok(acc + x));
+    assert_eq!(result, Err("oops"));
+}
+
+#[test]
+fn fallible_convert_fold_closure_error() {
+    let data: Vec<Result<i32, String>> = vec![Ok(1), Ok(2), Ok(3), Ok(4)];
+    let result = data
+        .into_iter()
+        .into_lender()
+        .convert::<String>()
+        .fold(0, |acc, x| {
+            if x == 3 {
+                Err("closure error".to_string())
+            } else {
+                Ok(acc + x)
+            }
+        });
+    assert_eq!(result, Err("closure error".to_string()));
+}
+
+#[test]
+fn fallible_convert_fold_empty() {
+    let data: Vec<Result<i32, &str>> = vec![];
+    let result = data
+        .into_iter()
+        .into_lender()
+        .convert::<&str>()
+        .fold(0, |acc, x| Ok(acc + x));
+    assert_eq!(result, Ok(0));
+}
+
+#[test]
+fn fallible_convert_next_back() {
+    let data = vec![Ok(1), Ok(2), Ok(3)];
+    let mut lender = data.into_iter().into_lender().convert::<&str>();
+    assert_eq!(lender.next_back().unwrap(), Some(3));
+    assert_eq!(lender.next().unwrap(), Some(1));
+    assert_eq!(lender.next_back().unwrap(), Some(2));
+    assert_eq!(lender.next().unwrap(), None);
+}
+
+#[test]
+fn fallible_convert_next_back_error() {
+    let data: Vec<Result<i32, &str>> = vec![Ok(1), Ok(2), Err("back error")];
+    let mut lender = data.into_iter().into_lender().convert::<&str>();
+    assert_eq!(lender.next_back().unwrap_err(), "back error");
+}
+
+#[test]
+fn fallible_convert_next_back_exhausted() {
+    let data: Vec<Result<i32, &str>> = vec![Ok(1)];
+    let mut lender = data.into_iter().into_lender().convert::<&str>();
+    assert_eq!(lender.next_back().unwrap(), Some(1));
+    assert_eq!(lender.next_back().unwrap(), None);
+}
+
+#[test]
+fn fallible_convert_try_rfold_ok() {
+    let data = vec![Ok(1), Ok(2), Ok(3)];
+    let mut lender = data.into_iter().into_lender().convert::<&str>();
+    let result: Result<Result<Vec<i32>, ()>, _> = lender.try_rfold(Vec::new(), |mut acc, x| {
+        acc.push(x);
+        Ok(Ok(acc))
+    });
+    assert_eq!(result, Ok(Ok(vec![3, 2, 1])));
+}
+
+#[test]
+fn fallible_convert_try_rfold_item_error() {
+    let data: Vec<Result<i32, &str>> = vec![Ok(1), Err("oops"), Ok(3)];
+    let mut lender = data.into_iter().into_lender().convert::<&str>();
+    let result: Result<Result<Vec<i32>, ()>, _> = lender.try_rfold(Vec::new(), |mut acc, x| {
+        acc.push(x);
+        Ok(Ok(acc))
+    });
+    // rfold goes backwards: Ok(3), then Err("oops")
+    assert_eq!(result, Err("oops"));
+}
+
+#[test]
+fn fallible_convert_try_rfold_closure_error() {
+    let data: Vec<Result<i32, String>> = vec![Ok(1), Ok(2), Ok(3), Ok(4)];
+    let mut lender = data.into_iter().into_lender().convert::<String>();
+    let result: Result<Result<i32, String>, _> = lender.try_rfold(0, |acc, x| {
+        if x == 2 {
+            Err("closure error".to_string())
+        } else {
+            Ok(Ok(acc + x))
+        }
+    });
+    // rfold goes 4, 3, 2(error)
+    assert_eq!(result, Err("closure error".to_string()));
+}
+
+#[test]
+fn fallible_convert_try_rfold_break() {
+    let data: Vec<Result<i32, &str>> = vec![Ok(1), Ok(2), Ok(3), Ok(4)];
+    let mut lender = data.into_iter().into_lender().convert::<&str>();
+    let result: Result<Result<i32, i32>, _> = lender.try_rfold(0, |acc, x| {
+        let new = acc + x;
+        if new > 5 {
+            Ok(Err(new)) // break
+        } else {
+            Ok(Ok(new))
+        }
+    });
+    // rfold goes 4, 3: 4+3=7 > 5
+    assert_eq!(result, Ok(Err(7)));
+}
+
+#[test]
+fn fallible_convert_rfold_ok() {
+    let data = vec![Ok(1), Ok(2), Ok(3)];
+    let result =
+        data.into_iter()
+            .into_lender()
+            .convert::<&str>()
+            .rfold(Vec::new(), |mut acc, x| {
+                acc.push(x);
+                Ok(acc)
+            });
+    assert_eq!(result, Ok(vec![3, 2, 1]));
+}
+
+#[test]
+fn fallible_convert_rfold_item_error() {
+    let data: Vec<Result<i32, &str>> = vec![Ok(1), Err("oops"), Ok(3)];
+    let result =
+        data.into_iter()
+            .into_lender()
+            .convert::<&str>()
+            .rfold(Vec::new(), |mut acc, x| {
+                acc.push(x);
+                Ok(acc)
+            });
+    assert_eq!(result, Err("oops"));
+}
+
+#[test]
+fn fallible_convert_rfold_closure_error() {
+    let data: Vec<Result<i32, String>> = vec![Ok(1), Ok(2), Ok(3)];
+    let result = data
+        .into_iter()
+        .into_lender()
+        .convert::<String>()
+        .rfold(0, |acc, x| {
+            if x == 2 {
+                Err("closure error".to_string())
+            } else {
+                Ok(acc + x)
+            }
+        });
+    assert_eq!(result, Err("closure error".to_string()));
+}
+
+#[test]
+fn fallible_convert_rfold_empty() {
+    let data: Vec<Result<i32, &str>> = vec![];
+    let result = data
+        .into_iter()
+        .into_lender()
+        .convert::<&str>()
+        .rfold(0, |acc, x| Ok(acc + x));
+    assert_eq!(result, Ok(0));
+}
+
+#[test]
+fn fallible_convert_into_inner() {
+    let data: Vec<Result<i32, &str>> = vec![Ok(1), Ok(2), Ok(3)];
+    let lender = data.into_iter().into_lender().convert::<&str>();
+    let mut inner = lender.into_inner();
+    // inner is the original Lender over Result<i32, &str>
+    assert_eq!(inner.next(), Some(Ok(1)));
+}
+
+#[test]
+fn fallible_convert_exact_size() {
+    use lender::ExactSizeFallibleLender;
+    let data: Vec<Result<i32, &str>> = vec![Ok(1), Ok(2), Ok(3)];
+    let lender = data.into_iter().into_lender().convert::<&str>();
+    assert_eq!(lender.len(), 3);
+    assert!(!lender.is_empty());
+}
+
+#[test]
+fn fallible_convert_exact_size_empty() {
+    use lender::ExactSizeFallibleLender;
+    let data: Vec<Result<i32, &str>> = vec![];
+    let lender = data.into_iter().into_lender().convert::<&str>();
+    assert_eq!(lender.len(), 0);
+    assert!(lender.is_empty());
+}
+
+#[test]
+fn fallible_convert_size_hint() {
+    let data: Vec<Result<i32, &str>> = vec![Ok(1), Ok(2), Ok(3)];
+    let lender = data.into_iter().into_lender().convert::<&str>();
+    assert_eq!(lender.size_hint(), (3, Some(3)));
+}
+
+// ============================================================================

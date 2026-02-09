@@ -11,7 +11,7 @@ fn fallible_empty() {
     use lender::{fallible_empty, fallible_lend};
 
     // Test basic fallible_empty lender
-    let mut empty = fallible_empty::<fallible_lend!(u32), String>();
+    let mut empty = fallible_empty::<fallible_lend!(i32), String>();
     assert!(empty.next().unwrap().is_none());
     assert!(empty.next().unwrap().is_none()); // Should continue returning None
 

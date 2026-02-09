@@ -180,6 +180,7 @@ where
             .or_else(|| self.a.rfind(predicate))
     }
 
+    #[inline]
     fn try_rfold<Acc, F, R>(&mut self, init: Acc, mut f: F) -> R
     where
         Self: Sized,
@@ -197,6 +198,7 @@ where
         Try::from_output(acc)
     }
 
+    #[inline]
     fn rfold<Acc, F>(self, init: Acc, mut f: F) -> Acc
     where
         Self: Sized,

@@ -2,15 +2,16 @@ use core::{fmt, num::NonZero};
 
 use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending};
 
-/// Creates a new lender that returns mutable contiguous overlapping windows of fixed size over a
-/// slice.
+/// Creates a new lender that returns mutable contiguous
+/// overlapping windows of fixed size over a slice.
 ///
 /// This is the mutable, lending variant of
 /// [`windows`](https://doc.rust-lang.org/stable/std/primitive.slice.html#method.windows).
 /// The const generic equivalent is [`array_windows_mut`].
 ///
-/// Note that the [`WindowsMutExt`] trait provides a convenient entry point for this function
-/// as a method on slices and arrays.
+/// Note that the [`WindowsMutExt`] trait provides a convenient
+/// entry point for this function as a method on slices and
+/// arrays.
 ///
 /// # Panics
 ///
@@ -37,7 +38,9 @@ pub fn windows_mut<T>(slice: &mut [T], size: usize) -> WindowsMut<'_, T> {
     }
 }
 
-/// This struct is returned by [`windows_mut`].
+/// A lender over mutable overlapping windows of a slice.
+///
+/// This `struct` is created by the [`windows_mut()`] function.
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct WindowsMut<'a, T> {
     slice: &'a mut [T],
@@ -50,7 +53,7 @@ impl<T: fmt::Debug> fmt::Debug for WindowsMut<'_, T> {
         f.debug_struct("WindowsMut")
             .field("slice", &self.slice)
             .field("size", &self.size)
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 
@@ -129,15 +132,16 @@ impl<T> ExactSizeLender for WindowsMut<'_, T> {
 
 impl<T> FusedLender for WindowsMut<'_, T> {}
 
-/// Creates a new lender that returns mutable overlapping array windows of fixed size over a
-/// slice.
+/// Creates a new lender that returns mutable overlapping array
+/// windows of fixed size over a slice.
 ///
 /// This is the mutable, lending variant of
 /// [`array_windows`](https://doc.rust-lang.org/stable/std/primitive.slice.html#method.windows).
 /// The non-const generic equivalent is [`windows_mut`].
 ///
-/// Note that the [`WindowsMutExt`] trait provides a convenient entry point for this function
-/// as a method on slices and arrays.
+/// Note that the [`WindowsMutExt`] trait provides a convenient
+/// entry point for this function as a method on slices and
+/// arrays.
 ///
 /// See
 /// [`array_windows`](https://doc.rust-lang.org/stable/std/primitive.slice.html#method.array_windows)
@@ -169,7 +173,11 @@ pub fn array_windows_mut<T, const WINDOW_SIZE: usize>(
     }
 }
 
-/// This struct is returned by [`array_windows_mut`].
+/// A lender over mutable overlapping windows of a slice
+/// as fixed-size arrays.
+///
+/// This `struct` is created by the [`array_windows_mut()`]
+/// function.
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct ArrayWindowsMut<'a, T, const WINDOW_SIZE: usize> {
     slice: &'a mut [T],
@@ -180,7 +188,7 @@ impl<T: fmt::Debug, const WINDOW_SIZE: usize> fmt::Debug for ArrayWindowsMut<'_,
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("ArrayWindowsMut")
             .field("slice", &self.slice)
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 

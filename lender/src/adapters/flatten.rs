@@ -6,7 +6,8 @@ use crate::{Covar, FusedLender, IntoLender, Lend, Lender, Lending, Map, try_trai
 
 /// A lender that flattens one level of nesting in a lender of lenders.
 ///
-/// This `struct` is created by the [`flatten()`](crate::Lender::flatten) method on [`Lender`].
+/// This `struct` is created by the
+/// [`flatten()`](crate::Lender::flatten) method on [`Lender`].
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Flatten<'this, L: Lender>
 where
@@ -105,7 +106,8 @@ impl<L: FusedLender> FusedLender for Flatten<'_, L> where for<'all> Lend<'all, L
 /// A lender that maps each element to a lender, and yields the elements of
 /// the produced lenders.
 ///
-/// This `struct` is created by the [`flat_map()`](crate::Lender::flat_map) method on [`Lender`].
+/// This `struct` is created by the
+/// [`flat_map()`](crate::Lender::flat_map) method on [`Lender`].
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct FlatMap<'this, L: Lender, F>
 where

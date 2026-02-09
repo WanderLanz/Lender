@@ -11,8 +11,8 @@ use crate::{Covar, Lend, Lender, Lending, higher_order::FnMutHKAOpt};
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Scan<L, St, F> {
     pub(crate) lender: L,
-    pub(crate) f: Covar<F>,
     pub(crate) state: St,
+    pub(crate) f: Covar<F>,
 }
 
 impl<L, St, F> Scan<L, St, F> {

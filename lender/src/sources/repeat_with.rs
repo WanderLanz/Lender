@@ -53,7 +53,7 @@ impl<L: ?Sized, F: Clone> Clone for RepeatWith<'_, L, F> {
 
 impl<L: ?Sized, F> fmt::Debug for RepeatWith<'_, L, F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("RepeatWith").finish()
+        f.debug_struct("RepeatWith").finish_non_exhaustive()
     }
 }
 

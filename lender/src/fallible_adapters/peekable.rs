@@ -8,10 +8,11 @@ use crate::{
     try_trait_v2::{FromResidual, Try},
 };
 
-/// A fallible lender with a [`peek()`](Peekable::peek) method that returns an optional
-/// reference to the next element.
+/// A fallible lender with a [`peek()`](Peekable::peek) method
+/// that returns an optional reference to the next element.
 ///
-/// This `struct` is created by the [`peekable()`](crate::FallibleLender::peekable) method on
+/// This `struct` is created by the
+/// [`peekable()`](crate::FallibleLender::peekable) method on
 /// [`FallibleLender`]. See its documentation for more.
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Peekable<'this, L>
@@ -22,6 +23,8 @@ where
     // from the lender. AliasableBox eliminates noalias retagging that would
     // invalidate the peeked reference when the struct is moved.
     // Field order ensures lender drops last.
+    //
+    // See https://github.com/WanderLanz/Lender/issues/34
     peeked: MaybeDangling<Option<Option<FallibleLend<'this, L>>>>,
     lender: AliasableBox<L>,
 }

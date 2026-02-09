@@ -8,7 +8,7 @@ use crate::{FallibleLend, FallibleLender, Lend, Lender};
 /// struct MyStruct;
 /// impl<L: IntoLender> FromLender<L> for MyStruct
 /// where
-///     L::Lender: for<'all> Lending<'all, Lend = &'all mut [u32]>,
+///     L::Lender: for<'all> Lending<'all, Lend = &'all mut [i32]>,
 /// {
 ///     fn from_lender(lender: L) -> Self {
 ///         lender.into_lender().for_each(|lend| drop(lend));
@@ -65,7 +65,7 @@ pub trait IntoLender {
 
 impl<L: Lender> IntoLender for L {
     type Lender = L;
-    #[inline]
+    #[inline(always)]
     fn into_lender(self) -> L {
         self
     }
@@ -130,7 +130,7 @@ pub trait IntoFallibleLender {
 impl<L: FallibleLender> IntoFallibleLender for L {
     type Error = L::Error;
     type FallibleLender = L;
-    #[inline]
+    #[inline(always)]
     fn into_fallible_lender(self) -> L {
         self
     }

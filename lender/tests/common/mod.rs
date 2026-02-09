@@ -150,6 +150,7 @@ impl lender::FusedFallibleLender for VecFallibleLender {}
 /// Elements before `error_at` yield `Ok(Some(&data[i]))`,
 /// the element at `error_at` yields `Err("error at index {error_at}")`,
 /// and elements after continue normally (the error is not terminal).
+#[derive(Debug)]
 pub struct ErrorAtLender {
     pub data: Vec<i32>,
     pub front: usize,

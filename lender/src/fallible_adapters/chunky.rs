@@ -30,6 +30,27 @@ where
     }
 
     #[inline]
+    fn nth(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        if n < self.len {
+            // Skip n chunks by advancing the inner lender
+            let skip = n * self.chunk_size;
+            self.len -= n;
+            if self.lender.advance_by(skip)?.is_err() {
+                unreachable!();
+            }
+            self.next()
+        } else {
+            // Exhaust
+            if self.len > 0 {
+                let skip = self.len * self.chunk_size;
+                let _ = self.lender.advance_by(skip)?;
+                self.len = 0;
+            }
+            Ok(None)
+        }
+    }
+
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         (self.len, Some(self.len))
     }
