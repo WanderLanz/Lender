@@ -170,6 +170,7 @@ impl<L> StepBy<L>
 where
     L: ExactSizeLender,
 {
+    #[inline]
     fn next_back_index(&self) -> usize {
         let rem = self.lender.len() % (self.step + 1);
         if self.first_take {

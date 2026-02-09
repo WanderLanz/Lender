@@ -99,6 +99,7 @@ where
 {
     // SAFETY: the lend is the output of the Try type from L
     crate::unsafe_assume_covariance!();
+    #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         if self.residual.is_some() {
             return None;
@@ -120,6 +121,7 @@ where
         None
     }
 
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (_, upper) = self.lender.size_hint();
         (0, upper)

@@ -60,7 +60,8 @@ where
 
 /// A fallible lender that repeats an element endlessly.
 ///
-/// This `struct` is created by the [`fallible_repeat()`](crate::fallible_repeat) function.
+/// This `struct` is created by the
+/// [`fallible_repeat()`](crate::fallible_repeat) function.
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct Repeat<'a, L, E>
 where
@@ -130,7 +131,7 @@ where
         (usize::MAX, None)
     }
 
-    #[inline(always)]
+    #[inline]
     fn advance_by(
         &mut self,
         _n: usize,
@@ -150,7 +151,7 @@ where
         self.next()
     }
 
-    #[inline(always)]
+    #[inline]
     fn advance_back_by(
         &mut self,
         _n: usize,

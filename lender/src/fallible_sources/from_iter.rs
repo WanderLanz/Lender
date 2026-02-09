@@ -9,7 +9,8 @@ use crate::{
 ///
 /// This function can be conveniently accessed using the
 /// [`into_fallible_lender`](crate::traits::FallibleIteratorExt::into_fallible_lender)
-/// method added to [`FallibleIterator`] by this crate.
+/// method added to [`FallibleIterator`] by this
+/// crate.
 ///
 /// Does not change the behavior of the iterator: the resulting
 /// lender will yield the same items and can be adapted back into
@@ -28,8 +29,9 @@ pub fn from_iter<I: FallibleIterator>(iter: I) -> FromIter<I> {
 
 /// A lender that yields elements from a fallible iterator.
 ///
-/// This `struct` is created by the [`from_fallible_iter()`](crate::from_fallible_iter) function.
-
+/// This `struct` is created by the
+/// [`from_fallible_iter()`](crate::from_fallible_iter)
+/// function.
 #[derive(Clone, Debug)]
 #[repr(transparent)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -79,11 +81,13 @@ impl<I: FallibleIterator> From<I> for FromIter<I> {
 ///
 /// This function can be conveniently accessed using the
 /// [`into_into_fallible_lender`](crate::traits::IntoFallibleIteratorExt::into_into_fallible_lender)
-/// method added to [`IntoFallibleIterator`] by this crate.
+/// method added to [`IntoFallibleIterator`] by this
+/// crate.
 ///
 /// The lenders returned are obtained by applying
-/// [`from_fallible_iter()`](crate::from_fallible_iter) to the iterators returned by the
-/// wrapped [`IntoFallibleIterator`].
+/// [`from_fallible_iter()`](crate::from_fallible_iter) to
+/// the iterators returned by the wrapped
+/// [`IntoFallibleIterator`].
 ///
 /// # Examples
 /// ```rust
@@ -101,11 +105,14 @@ pub fn from_into_iter<I: IntoFallibleIterator>(into_iter: I) -> FromIntoIter<I> 
     FromIntoIter { into_iter }
 }
 
-/// A [`IntoFallibleLender`] that returns lenders obtained by
-/// applying [`from_fallible_iter()`](crate::from_fallible_iter) to the iterators returned by the
-/// wrapped [`IntoFallibleIterator`].
+/// A [`IntoFallibleLender`] that returns lenders obtained
+/// by applying
+/// [`from_fallible_iter()`](crate::from_fallible_iter) to
+/// the iterators returned by the wrapped
+/// [`IntoFallibleIterator`].
 ///
-/// This `struct` is created by the [`from_into_fallible_iter()`](crate::from_into_fallible_iter)
+/// This `struct` is created by the
+/// [`from_into_fallible_iter()`](crate::from_into_fallible_iter)
 /// function.
 #[repr(transparent)]
 #[derive(Clone, Debug)]
@@ -118,6 +125,7 @@ impl<I: IntoFallibleIterator> IntoFallibleLender for FromIntoIter<I> {
 
     type FallibleLender = FromIter<I::IntoFallibleIter>;
 
+    #[inline(always)]
     fn into_fallible_lender(self) -> <Self as IntoFallibleLender>::FallibleLender {
         self.into_iter.into_fallible_iter().into_fallible_lender()
     }
@@ -142,12 +150,16 @@ impl<I: IntoFallibleIterator> From<I> for FromIntoIter<I> {
 /// let mut data = [1, 2, 3];
 ///
 /// // properly shortens the lifetime of non-static items and lends them
-/// let mut lender = lender::lend_fallible_iter::<'_, fallible_lend!(&'lend i32), _>(data.iter().into_fallible());
+/// let mut lender = lender::lend_fallible_iter::<
+///     '_, fallible_lend!(&'lend i32), _,
+/// >(data.iter().into_fallible());
 /// let lend: Option<&'_ i32> = lender.next().unwrap();
 /// let lend: &'_ i32 = lend.unwrap();
 ///
-/// // does not shorten the lifetime of 'static items, behaves like `from_iter`
-/// let mut lender = lender::lend_fallible_iter::<'_, fallible_lend!(i32), _>([1, 2, 3].into_iter().into_fallible());
+/// // does not shorten the lifetime of 'static items
+/// let mut lender = lender::lend_fallible_iter::<
+///     '_, fallible_lend!(i32), _,
+/// >([1, 2, 3].into_iter().into_fallible());
 /// let item: Option<i32> = lender.next().unwrap();
 /// let item: i32 = item.unwrap();
 /// let item2: Option<i32> = lender.next().unwrap();
@@ -170,8 +182,9 @@ where
 ///
 /// If `I::Item` is 'static, behaves like [`FromIter`].
 ///
-/// This `struct` is created by the [`lend_fallible_iter()`](crate::lend_fallible_iter) function.
-
+/// This `struct` is created by the
+/// [`lend_fallible_iter()`](crate::lend_fallible_iter)
+/// function.
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct LendIter<'a, L: ?Sized, I> {

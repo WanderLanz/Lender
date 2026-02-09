@@ -54,7 +54,8 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     ///
     /// - In all other cases (e.g., when implementing adapters), use
     ///   [`unsafe_assume_covariance_fallible!`](crate::unsafe_assume_covariance_fallible)
-    ///   in the [`FallibleLender`] impl. The macro implements the method as `{
+    ///   in the [`FallibleLender`] impl. The macro
+    ///   implements the method as `{
     ///   unsafe { core::mem::transmute(lend) } }`, which is a no-op. This is
     ///   unsafe because it is up to the implementor to guarantee that the
     ///   [`Lend`](FallibleLending::Lend) type is covariant in its lifetime.
@@ -156,6 +157,18 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// Returns the last element of the lender.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// let mut lender =
+    ///     lender::lend_fallible_iter::<fallible_lend!(&'lend i32), _>(
+    ///         [1, 2, 3].iter().into_fallible(),
+    ///     );
+    /// assert_eq!(lender.last(), Ok(Some(&3)));
+    /// ```
     #[inline]
     fn last<'call>(&'call mut self) -> Result<Option<FallibleLend<'call, Self>>, Self::Error>
     where
@@ -1108,6 +1121,21 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::try_for_each`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// let mut lender =
+    ///     lender::lend_fallible_iter::<fallible_lend!(&'lend i32), _>(
+    ///         [1, 2, 3].iter().into_fallible(),
+    ///     );
+    /// let result = lender.try_for_each(|&x| {
+    ///     if x < 3 { Ok(Some(())) } else { Ok(None) }
+    /// });
+    /// assert_eq!(result, Ok(None));
+    /// ```
     #[inline]
     fn try_for_each<F, R>(&mut self, mut f: F) -> Result<R, Self::Error>
     where
@@ -1176,6 +1204,18 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::try_reduce`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let lender =
+    ///     [1, 2, 3].into_iter().into_lender().into_fallible();
+    /// let sum = lender.try_reduce(|acc: i32, x| {
+    ///     Ok(acc.checked_add(x))
+    /// });
+    /// assert_eq!(sum, Ok(Some(Some(6))));
+    /// ```
     #[inline]
     fn try_reduce<T, F, R>(mut self, f: F) -> Result<ChangeOutputType<R, Option<T>>, Self::Error>
     where
@@ -1304,6 +1344,18 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::find_map`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let mut lender =
+    ///     [1, 2, 3].into_iter().into_lender().into_fallible();
+    /// let found = lender.find_map(|x: i32| {
+    ///     Ok(if x > 1 { Some(x * 10) } else { None })
+    /// });
+    /// assert_eq!(found, Ok(Some(20)));
+    /// ```
     #[allow(clippy::type_complexity)]
     #[inline]
     fn find_map<'a, F>(&'a mut self, mut f: F) -> Result<Option<<F as FnMutHKAResOpt<'a, FallibleLend<'a, Self>, Self::Error>>::B>, Self::Error>
@@ -1328,6 +1380,20 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::try_find`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use fallible_iterator::IteratorExt as _;
+    /// # use lender::prelude::*;
+    /// let mut lender =
+    ///     lender::lend_fallible_iter::<fallible_lend!(&'lend i32), _>(
+    ///         [1, 2, 3].iter().into_fallible(),
+    ///     );
+    /// let result =
+    ///     lender.try_find(|&x| Ok(Some(*x > 1)));
+    /// assert_eq!(result, Ok(Some(Some(&2))));
+    /// ```
     #[inline]
     fn try_find<F, R>(&mut self, mut f: F) -> Result<ChangeOutputType<R, Option<FallibleLend<'_, Self>>>, Self::Error>
     where
@@ -1397,6 +1463,18 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::rposition`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let mut lender =
+    ///     [1, 2, 3, 2, 1].iter().into_lender().into_fallible();
+    /// assert_eq!(
+    ///     lender.rposition(|&x| Ok(x == 2)),
+    ///     Ok(Some(3))
+    /// );
+    /// ```
     #[inline]
     fn rposition<P>(&mut self, mut predicate: P) -> Result<Option<usize>, Self::Error>
     where

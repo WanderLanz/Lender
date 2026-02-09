@@ -158,7 +158,7 @@ where
 
 impl<L: FallibleLender + fmt::Debug, F> fmt::Debug for FlatMap<'_, L, F>
 where
-    Map<L, F>: FallibleLender + Clone,
+    Map<L, F>: FallibleLender,
     for<'all> FallibleLend<'all, Map<L, F>>: IntoFallibleLender,
     for<'all> <FallibleLend<'all, Map<L, F>> as IntoFallibleLender>::FallibleLender: fmt::Debug,
 {
@@ -304,7 +304,7 @@ where
                     return Ok(Some(x));
                 }
             }
-            // SAFETY: inner is manually guaranteed to be the only FallibleLend alive of the inner iterator
+            // SAFETY: inner is manually guaranteed to be the only FallibleLend alive of the inner lender
             *self.inner = self.lender.next()?.map(|l| unsafe {
                 core::mem::transmute::<
                     <FallibleLend<'_, L> as IntoFallibleLender>::FallibleLender,

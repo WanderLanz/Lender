@@ -36,7 +36,7 @@ fn map_err_adapter() {
 
     // Test mapping error type
     let mut mapped =
-        fallible_once_err::<fallible_lend!(u32), _>(42).map_err(|e: i32| format!("Error: {}", e));
+        fallible_once_err::<fallible_lend!(i32), _>(42).map_err(|e: i32| format!("Error: {}", e));
     match mapped.next() {
         Err(e) => assert_eq!(e, "Error: 42"),
         Ok(_) => panic!("Expected error"),

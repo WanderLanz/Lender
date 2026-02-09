@@ -27,7 +27,8 @@ trait LenderResult<E>: Lender + for<'all> LendingResult<'all, E> {}
 
 impl<E, I> LenderResult<E> for I where I: Lender + for<'all> LendingResult<'all, E> {}
 
-/// A fallible lending iterator that wraps a normal lending iterator over [`Result`]s.
+/// A fallible lending iterator that wraps a normal lending
+/// iterator over [`Result`]s.
 ///
 /// This struct is created by [`Lender::convert`].
 #[derive(Clone, Debug)]

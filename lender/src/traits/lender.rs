@@ -347,7 +347,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// # use lender::prelude::*;
     /// let mut data = [1, 2];
     /// let mut lender = lender::lend_iter::<lend!(&'lend mut i32), _>(data.iter_mut());
-    /// let mut mapped = lender.map(covar_mut!(for<'all> |a: &'all mut i32| -> &'all i32 {
+    /// let mut mapped = lender.map(covar_mut!(for<'all>
+    ///     |a: &'all mut i32| -> &'all i32 {
     ///     *a += 1;
     ///     &*a
     /// }));
@@ -440,7 +441,9 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// # use lender::prelude::*;
     /// let mut data = [1, 2];
     /// let mut lender = lender::lend_iter::<lend!(&'lend mut i32), _>(data.iter_mut());
-    /// let mut filtered = lender.filter_map(covar_mut!(for<'all> |a: &'all mut i32| -> Option<&'all i32> {
+    /// let mut filtered = lender.filter_map(
+    ///     covar_mut!(for<'all>
+    ///         |a: &'all mut i32| -> Option<&'all i32> {
     ///     if *a > 1 {
     ///         Some(&*a)
     ///     } else {
@@ -554,7 +557,9 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// # use lender::prelude::*;
     /// let mut data = [1, 2];
     /// let mut lender = lender::lend_iter::<lend!(&'lend mut i32), _>(data.iter_mut());
-    /// let mut mapped = lender.map_while(covar_mut!(for<'all> |a: &'all mut i32| -> Option<&'all i32> {
+    /// let mut mapped = lender.map_while(
+    ///     covar_mut!(for<'all>
+    ///         |a: &'all mut i32| -> Option<&'all i32> {
     ///     if *a < 2 {
     ///         Some(&*a)
     ///     } else {
@@ -621,7 +626,10 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// ```rust
     /// # use lender::prelude::*;
     /// let mut lender = lender::lend_iter::<lend!(&'lend i32), _>([1, 2, 3].iter());
-    /// let mut scanned = lender.scan(0, covar_mut!(for<'all> |args: (&'all mut i32, &'all i32)| -> Option<&'all i32> {
+    /// let mut scanned = lender.scan(0,
+    ///     covar_mut!(for<'all>
+    ///         |args: (&'all mut i32, &'all i32)|
+    ///             -> Option<&'all i32> {
     ///     *args.0 += *args.1;
     ///     Some(args.1)
     /// }));
@@ -684,7 +692,10 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// ```rust
     /// # use lender::prelude::*;
     /// let data = [vec![1, 2], vec![3, 4]];
-    /// let mut flat = data.into_iter().map(|v| v.into_iter().into_lender()).into_lender().flatten();
+    /// let mut flat = data.into_iter()
+    ///     .map(|v| v.into_iter().into_lender())
+    ///     .into_lender()
+    ///     .flatten();
     /// assert_eq!(flat.next(), Some(1));
     /// assert_eq!(flat.next(), Some(2));
     /// assert_eq!(flat.next(), Some(3));

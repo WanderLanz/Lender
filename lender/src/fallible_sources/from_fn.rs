@@ -15,7 +15,9 @@ use crate::{Covar, FallibleLend, FallibleLender, FallibleLending, higher_order::
 /// # use std::io::Error;
 /// let mut lender = lender::from_fallible_fn::<_, Error, _>(
 ///     0,
-///     covar_mut!(for<'all> |state: &'all mut i32| -> Result<Option<&'all mut i32>, Error> {
+///     covar_mut!(for<'all>
+///         |state: &'all mut i32|
+///             -> Result<Option<&'all mut i32>, Error> {
 ///         if *state < 3 {
 ///             *state += 1;
 ///             Ok(Some(state))
@@ -41,7 +43,8 @@ where
 /// A lender where each iteration calls the provided closure
 /// `F: FnMut(&mut St) -> Result<Option<T>, E>`.
 ///
-/// This `struct` is created by the [`from_fallible_fn()`](crate::from_fallible_fn) function.
+/// This `struct` is created by the
+/// [`from_fallible_fn()`](crate::from_fallible_fn) function.
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct FromFn<St, E, F> {

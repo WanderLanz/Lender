@@ -28,7 +28,6 @@ pub fn from_iter<I: Iterator>(iter: I) -> FromIter<I> {
 /// A lender that yields elements from an iterator.
 ///
 /// This `struct` is created by the [`from_iter()`] function.
-
 #[derive(Clone, Debug)]
 #[repr(transparent)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -159,7 +158,6 @@ where
 /// If `I::Item` is 'static, behaves like [`FromIter`].
 ///
 /// This `struct` is created by the [`lend_iter()`] function.
-
 #[derive(Clone, Debug)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct LendIter<'a, L: ?Sized, I> {

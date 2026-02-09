@@ -23,32 +23,24 @@ where
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
-        if self.flag {
-            Ok(None)
-        } else {
-            match self.lender.next()? {
-                Some(next) => Ok(Some(next)),
-                None => {
-                    self.flag = true;
-                    Ok(None)
-                }
+        if !self.flag {
+            if let x @ Some(_) = self.lender.next()? {
+                return Ok(x);
             }
+            self.flag = true;
         }
+        Ok(None)
     }
 
     #[inline]
     fn nth(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
-        if self.flag {
-            Ok(None)
-        } else {
-            match self.lender.nth(n)? {
-                Some(value) => Ok(Some(value)),
-                None => {
-                    self.flag = true;
-                    Ok(None)
-                }
+        if !self.flag {
+            if let x @ Some(_) = self.lender.nth(n)? {
+                return Ok(x);
             }
+            self.flag = true;
         }
+        Ok(None)
     }
 
     #[inline]
@@ -56,17 +48,13 @@ where
     where
         Self: Sized,
     {
-        if self.flag {
-            Ok(None)
-        } else {
-            match self.lender.last()? {
-                x @ Some(_) => Ok(x),
-                None => {
-                    self.flag = true;
-                    Ok(None)
-                }
+        if !self.flag {
+            if let x @ Some(_) = self.lender.last()? {
+                return Ok(x);
             }
+            self.flag = true;
         }
+        Ok(None)
     }
 
     #[inline]

@@ -47,7 +47,7 @@ where
     }
 
     #[inline]
-    fn count(mut self) -> Result<usize, <L as FallibleLender>::Error> {
+    fn count(mut self) -> Result<usize, Self::Error> {
         if self.n > 0 && self.lender.nth(self.n - 1)?.is_none() {
             return Ok(0);
         }
@@ -59,10 +59,8 @@ where
     where
         Self: Sized,
     {
-        if self.n > 0 {
-            if self.lender.nth(core::mem::take(&mut self.n) - 1)?.is_none() {
-                return Ok(None);
-            }
+        if self.n > 0 && self.lender.nth(core::mem::take(&mut self.n) - 1)?.is_none() {
+            return Ok(None);
         }
         self.lender.last()
     }

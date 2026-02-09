@@ -7,7 +7,8 @@ use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lendi
 ///
 /// This is the mutable, lending variant of
 /// [`windows`](https://doc.rust-lang.org/stable/std/primitive.slice.html#method.windows).
-/// The const generic equivalent is [`array_windows_mut`].
+/// The const generic equivalent is
+/// [`array_windows_mut`].
 ///
 /// Note that the [`WindowsMutExt`] trait provides a convenient
 /// entry point for this function as a method on slices and
@@ -137,7 +138,8 @@ impl<T> FusedLender for WindowsMut<'_, T> {}
 ///
 /// This is the mutable, lending variant of
 /// [`array_windows`](https://doc.rust-lang.org/stable/std/primitive.slice.html#method.windows).
-/// The non-const generic equivalent is [`windows_mut`].
+/// The non-const generic equivalent is
+/// [`windows_mut`].
 ///
 /// Note that the [`WindowsMutExt`] trait provides a convenient
 /// entry point for this function as a method on slices and
@@ -249,7 +251,8 @@ pub trait WindowsMutExt<T> {
     ///
     /// Panics if `size` is zero.
     fn windows_mut(&mut self, size: usize) -> WindowsMut<'_, T>;
-    /// Returns a lender over mutable overlapping array windows of `WINDOW_SIZE` elements.
+    /// Returns a lender over mutable overlapping array
+    /// windows of `WINDOW_SIZE` elements.
     ///
     /// See [`array_windows_mut`] for more details.
     ///

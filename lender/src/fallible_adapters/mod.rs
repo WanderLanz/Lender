@@ -59,19 +59,15 @@ use core::ops::ControlFlow;
 /// [`ControlFlow`]). `Ok(r)` is branched via
 /// [`Try::branch`] to propagate short-circuits, while
 /// `Err(e)` becomes `Break(Err(e))`.
-#[inline(always)]
-fn try_fold_with<B, R, E>(
-    result: Result<R, E>,
-) -> ControlFlow<Result<R, E>, B>
+#[inline]
+fn try_fold_with<B, R, E>(result: Result<R, E>) -> ControlFlow<Result<R, E>, B>
 where
     R: Try<Output = B>,
 {
     match result {
         Ok(r) => match r.branch() {
             ControlFlow::Continue(b) => ControlFlow::Continue(b),
-            ControlFlow::Break(residual) => {
-                ControlFlow::Break(Ok(R::from_residual(residual)))
-            }
+            ControlFlow::Break(residual) => ControlFlow::Break(Ok(R::from_residual(residual))),
         },
         Err(e) => ControlFlow::Break(Err(e)),
     }

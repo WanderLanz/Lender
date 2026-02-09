@@ -49,8 +49,10 @@ where
 
     /// Returns a reference to the next element without advancing the lender.
     ///
-    /// Like [`next`](FallibleLender::next), if there is a next value, it is borrowed from
-    /// the underlying lender and cached. Calling `peek()` multiple times without advancing
+    /// Like [`next`](FallibleLender::next), if there is a
+    /// next value, it is borrowed from the underlying lender
+    /// and cached. Calling `peek()` multiple times without
+    /// advancing
     /// the lender returns the same cached element.
     ///
     /// # Errors
@@ -248,7 +250,7 @@ where
 // the lender's AliasableBox allocation; a clone would need its own allocation,
 // leaving the cloned peeked value dangling.
 
-impl<'this, L: fmt::Debug> fmt::Debug for Peekable<'this, L>
+impl<'this, L> fmt::Debug for Peekable<'this, L>
 where
     L: FallibleLender + fmt::Debug,
     FallibleLend<'this, L>: fmt::Debug,

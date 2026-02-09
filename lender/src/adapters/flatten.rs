@@ -289,7 +289,7 @@ where
                 }
             }
 
-            // SAFETY: inner is manually guaranteed to be the only lend alive of the inner iterator
+            // SAFETY: inner is manually guaranteed to be the only lend alive of the inner lender
             *self.inner = self.lender.next().map(|l| unsafe {
                 core::mem::transmute::<
                     <Lend<'_, L> as IntoLender>::Lender,

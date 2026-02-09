@@ -192,7 +192,7 @@ where
 // the lender's AliasableBox allocation; a clone would need its own allocation,
 // leaving the cloned peeked value dangling.
 
-impl<'this, L: fmt::Debug> fmt::Debug for Peekable<'this, L>
+impl<'this, L> fmt::Debug for Peekable<'this, L>
 where
     L: Lender + fmt::Debug,
     Lend<'this, L>: fmt::Debug,

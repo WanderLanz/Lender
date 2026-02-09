@@ -116,7 +116,7 @@ where
 
 impl<L> ExactSizeFallibleLender for IntoFallible<L>
 where
-    L: Lender + ExactSizeLender,
+    L: ExactSizeLender,
 {
     #[inline(always)]
     fn len(&self) -> usize {

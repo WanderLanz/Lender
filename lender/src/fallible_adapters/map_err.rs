@@ -7,7 +7,8 @@ use crate::{
 
 /// A fallible lender that maps the errors of the underlying lender with a closure.
 ///
-/// This `struct` is created by the [`map_err()`](crate::FallibleLender::map_err) method on
+/// This `struct` is created by the
+/// [`map_err()`](crate::FallibleLender::map_err) method on
 /// [`FallibleLender`]. See its documentation for more.
 #[derive(Clone)]
 #[must_use = "lenders are lazy and do nothing unless consumed"]
@@ -108,9 +109,10 @@ where
         R: Try<Output = B>,
     {
         let f = &mut self.f;
-        match self.lender.try_fold(init, |acc, x| {
-            Ok(super::try_fold_with(fold(acc, x)))
-        }) {
+        match self
+            .lender
+            .try_fold(init, |acc, x| Ok(super::try_fold_with(fold(acc, x))))
+        {
             Ok(ControlFlow::Continue(acc)) => Ok(R::from_output(acc)),
             Ok(ControlFlow::Break(r)) => r,
             Err(e) => Err((f)(e)),
@@ -162,9 +164,10 @@ where
         R: Try<Output = B>,
     {
         let f = &mut self.f;
-        match self.lender.try_rfold(init, |acc, x| {
-            Ok(super::try_fold_with(fold(acc, x)))
-        }) {
+        match self
+            .lender
+            .try_rfold(init, |acc, x| Ok(super::try_fold_with(fold(acc, x))))
+        {
             Ok(ControlFlow::Continue(acc)) => Ok(R::from_output(acc)),
             Ok(ControlFlow::Break(r)) => r,
             Err(e) => Err((f)(e)),

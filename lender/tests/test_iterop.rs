@@ -88,6 +88,7 @@ fn map_into_iter_rfold_empty() {
 }
 
 #[test]
+#[allow(clippy::iter_nth_zero)]
 fn map_into_iter_nth() {
     let mut iter = VecLender::new(vec![1, 2, 3, 4, 5]).map_into_iter(|x| *x * 10);
     assert_eq!(iter.nth(0), Some(10));

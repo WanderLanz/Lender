@@ -11,7 +11,10 @@ use crate::{
 ///
 /// # Examples
 /// ```rust
-/// # use lender::prelude::*; let mut e = lender::fallible_empty::<fallible_lend!(&'lend i32), String>();
+/// # use lender::prelude::*;
+/// let mut e = lender::fallible_empty::<
+///     fallible_lend!(&'lend i32), String,
+/// >();
 /// let x: Result<Option<&i32>, String> = e.next();
 /// assert_eq!(x, Ok(None));
 /// ```
@@ -22,11 +25,13 @@ pub const fn empty<L: ?Sized + for<'all> FallibleLending<'all>, E>() -> Empty<L,
 
 /// A fallible lender that yields nothing.
 ///
-/// This `struct` is created by the [`fallible_empty()`](crate::fallible_empty) function.
+/// This `struct` is created by the
+/// [`fallible_empty()`](crate::fallible_empty) function.
 ///
 /// The [`FallibleLender`] version of [`core::iter::Empty`].
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 #[derive(Clone, Copy, Default)]
+#[allow(clippy::type_complexity)]
 pub struct Empty<L: ?Sized, E>(marker::PhantomData<(fn() -> E, fn() -> L)>);
 
 impl<L: ?Sized, E> fmt::Debug for Empty<L, E> {

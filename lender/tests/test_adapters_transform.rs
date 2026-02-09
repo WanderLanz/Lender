@@ -630,6 +630,7 @@ fn cloned_count_empty() {
 }
 
 #[test]
+#[allow(clippy::iter_nth_zero)]
 fn cloned_nth() {
     let lender = VecLender::new(vec![10, 20, 30, 40, 50]);
     let mut iter = lender.cloned();
@@ -737,6 +738,7 @@ fn copied_count_empty() {
 }
 
 #[test]
+#[allow(clippy::iter_nth_zero)]
 fn copied_nth() {
     let lender = VecLender::new(vec![100, 200, 300, 400, 500]);
     let mut iter = lender.copied();
@@ -827,6 +829,7 @@ fn owned_count_empty() {
 }
 
 #[test]
+#[allow(clippy::iter_nth_zero)]
 fn owned_nth() {
     let lender = [10, 20, 30, 40, 50].into_iter().into_lender();
     let mut iter = lender.owned();

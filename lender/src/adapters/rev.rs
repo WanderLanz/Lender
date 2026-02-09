@@ -143,6 +143,11 @@ where
     fn len(&self) -> usize {
         self.lender.len()
     }
+
+    #[inline(always)]
+    fn is_empty(&self) -> bool {
+        self.lender.is_empty()
+    }
 }
 
 impl<L> FusedLender for Rev<L> where L: DoubleEndedLender + FusedLender {}

@@ -1,3 +1,5 @@
+use core::num::NonZeroUsize;
+
 use crate::{
     DoubleEndedFallibleLender, ExactSizeFallibleLender, FallibleLend, FallibleLender,
     FallibleLending, FusedFallibleLender, Rev, try_trait_v2::Try,
@@ -29,7 +31,7 @@ where
     }
 
     #[inline]
-    fn advance_by(&mut self, n: usize) -> Result<Result<(), core::num::NonZeroUsize>, Self::Error> {
+    fn advance_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         self.lender.advance_back_by(n)
     }
 
@@ -77,10 +79,7 @@ where
     }
 
     #[inline]
-    fn advance_back_by(
-        &mut self,
-        n: usize,
-    ) -> Result<Result<(), core::num::NonZeroUsize>, Self::Error> {
+    fn advance_back_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         self.lender.advance_by(n)
     }
 

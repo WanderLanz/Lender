@@ -33,7 +33,9 @@ where
     fn nth(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         if n < self.len {
             // Skip n chunks by advancing the inner lender
-            let skip = n * self.chunk_size;
+            let skip = n
+                .checked_mul(self.chunk_size)
+                .expect("overflow in Chunky::nth");
             self.len -= n;
             if self.lender.advance_by(skip)?.is_err() {
                 unreachable!();
@@ -42,7 +44,10 @@ where
         } else {
             // Exhaust
             if self.len > 0 {
-                let skip = self.len * self.chunk_size;
+                let skip = self
+                    .len
+                    .checked_mul(self.chunk_size)
+                    .expect("overflow in Chunky::nth");
                 let _ = self.lender.advance_by(skip)?;
                 self.len = 0;
             }
