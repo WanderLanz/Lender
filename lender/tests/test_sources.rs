@@ -9,7 +9,7 @@ use common::*;
 #[test]
 fn windows_mut() {
     // Fibonacci sequence
-    let mut data = vec![0i32; 3 * 3];
+    let mut data = vec![0; 3 * 3];
     data[1] = 1;
     WindowsMut {
         slice: &mut data,

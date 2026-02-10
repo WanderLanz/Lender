@@ -327,7 +327,7 @@ where
         let peek_opt = match self.peeked.take() {
             Some(None) => return Ok(None),
             Some(v) =>
-            // SAFETY: 'this: 'call
+            // SAFETY: 'this: 'a
             unsafe {
                 core::mem::transmute::<
                     Option<FallibleLend<'this, Self>>,

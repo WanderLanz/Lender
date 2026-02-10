@@ -11,7 +11,7 @@ use crate::{
 /// Note that functions passed to this function must be built
 /// using the [`covar!`](crate::covar),
 /// [`covar_mut!`](crate::covar_mut), or
-/// [`covar_once!`](crate::covar_once) macro, which also checks for
+/// [`covar_once!`](crate::covar_once) macros, which also check for
 /// covariance of the returned type.
 ///
 /// # Examples

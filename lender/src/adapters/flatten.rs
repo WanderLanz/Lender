@@ -20,7 +20,7 @@ impl<L: Lender> Flatten<'_, L>
 where
     for<'all> Lend<'all, L>: IntoLender,
 {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new(lender: L) -> Self {
         Self {
             inner: FlattenCompat::new(lender),
@@ -43,6 +43,7 @@ where
     for<'all> Lend<'all, L>: IntoLender,
     for<'all> <Lend<'all, L> as IntoLender>::Lender: fmt::Debug,
 {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Flatten")
             .field("inner", &self.inner)
@@ -73,7 +74,7 @@ where
         self.inner.size_hint()
     }
 
-    #[inline]
+    #[inline(always)]
     fn try_fold<B, F, R>(&mut self, init: B, f: F) -> R
     where
         Self: Sized,
@@ -83,7 +84,7 @@ where
         self.inner.try_fold(init, f)
     }
 
-    #[inline]
+    #[inline(always)]
     fn fold<B, F>(self, init: B, f: F) -> B
     where
         Self: Sized,
@@ -92,7 +93,7 @@ where
         self.inner.fold(init, f)
     }
 
-    #[inline]
+    #[inline(always)]
     fn count(self) -> usize
     where
         Self: Sized,
@@ -122,7 +123,7 @@ where
     Map<L, F>: Lender,
     for<'all> Lend<'all, Map<L, F>>: IntoLender,
 {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new(lender: L, f: Covar<F>) -> Self {
         Self {
             inner: FlattenCompat::new(Map::new(lender, f)),
@@ -152,6 +153,7 @@ where
     for<'all> Lend<'all, Map<L, F>>: IntoLender,
     for<'all> <Lend<'all, Map<L, F>> as IntoLender>::Lender: fmt::Debug,
 {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("FlatMap")
             .field("inner", &self.inner)
@@ -184,7 +186,7 @@ where
         self.inner.size_hint()
     }
 
-    #[inline]
+    #[inline(always)]
     fn try_fold<B, G, R>(&mut self, init: B, f: G) -> R
     where
         Self: Sized,
@@ -194,7 +196,7 @@ where
         self.inner.try_fold(init, f)
     }
 
-    #[inline]
+    #[inline(always)]
     fn fold<B, G>(self, init: B, f: G) -> B
     where
         Self: Sized,
@@ -203,7 +205,7 @@ where
         self.inner.fold(init, f)
     }
 
-    #[inline]
+    #[inline(always)]
     fn count(self) -> usize
     where
         Self: Sized,
@@ -237,7 +239,7 @@ impl<L: Lender> FlattenCompat<'_, L>
 where
     for<'all> Lend<'all, L>: IntoLender,
 {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new(lender: L) -> Self {
         Self {
             inner: MaybeDangling::new(None),
@@ -255,6 +257,7 @@ where
     for<'all> Lend<'all, L>: IntoLender,
     for<'all> <Lend<'all, L> as IntoLender>::Lender: fmt::Debug,
 {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("FlattenCompat")
             .field("lender", &self.lender)

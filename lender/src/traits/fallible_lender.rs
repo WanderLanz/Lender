@@ -92,7 +92,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// ```
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error>;
 
-    /// Takes the next `len` lends of the lender with temporary lender
+    /// Takes the next `chunk_size` lends of the lender with temporary lender
     /// [`Chunk`]. This is equivalent to cloning the lender and calling
     /// [`take(len)`](FallibleLender::take) on it.
     /// 
@@ -109,7 +109,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(chunk_lender.next(), Ok(Some(&2)));
     /// assert_eq!(chunk_lender.next(), Ok(None));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn next_chunk(&mut self, chunk_size: usize) -> Chunk<'_, Self>
     where
         Self: Sized,
@@ -149,7 +149,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// );
     /// assert_eq!(lender.count(), Ok(3));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn count(self) -> Result<usize, Self::Error>
     where Self: Sized
     {
@@ -229,7 +229,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
 
     /// Yields the nth lend of the lender, if any, by
     /// consuming it. If the lender does not have enough
-    /// lends, returns [`None`].
+    /// lends, returns `Ok(None)`.
     ///
     /// `n` is zero-indexed.
     ///
@@ -274,7 +274,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(step_lender.next(), Ok(Some(&9)));
     /// assert_eq!(step_lender.next(), Ok(None));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn step_by(self, step: usize) -> StepBy<Self>
     where
         Self: Sized,
@@ -305,7 +305,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(chained.next(), Ok(Some(&4)));
     /// assert_eq!(chained.next(), Ok(None));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn chain<U>(self, other: U) -> Chain<Self, <U as IntoFallibleLender>::FallibleLender>
         where
             Self: Sized,
@@ -332,7 +332,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(zipped.next(), Ok(Some((&2, &4))));
     /// assert_eq!(zipped.next(), Ok(None));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn zip<U: IntoFallibleLender>(self, other: U) -> Zip<Self, <U as IntoFallibleLender>::FallibleLender>
     where
         Self: Sized,
@@ -359,7 +359,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(inter.next(), Ok(Some(&3)));
     /// assert_eq!(inter.next(), Ok(None));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn intersperse<'call>(self, separator: FallibleLend<'call, Self>) -> FallibleIntersperse<'call, Self>
     where
         Self: Sized,
@@ -388,7 +388,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(inter.next(), Ok(Some(&3)));
     /// assert_eq!(inter.next(), Ok(None));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn intersperse_with<'call, G>(self, separator: G) -> FallibleIntersperseWith<'call, Self, G>
     where
         Self: Sized,
@@ -421,7 +421,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// ));
     /// assert_eq!(mapped.next().unwrap(), Some(&2));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn map<F>(self, f: Covar<F>) -> Map<Self, F>
     where
         Self: Sized,
@@ -444,7 +444,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(lender.next(), Ok(Some(2)));
     /// assert_eq!(lender.next(), Err(String::from("error: oops")));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn map_err<E, F>(self, f: F) -> MapErr<E, Self, F>
     where
         Self: Sized,
@@ -475,7 +475,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(mapped_into_iter.next(), Ok(Some(12)));
     /// assert_eq!(mapped_into_iter.next(), Ok(None));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn map_into_iter<O, F>(self, f: F) -> MapIntoIter<Self, O, F>
     where
         Self: Sized,
@@ -525,7 +525,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(filtered.next(), Ok(Some(&3)));
     /// assert_eq!(filtered.next(), Ok(None));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn filter<P>(self, predicate: P) -> Filter<Self, P>
     where
         Self: Sized,
@@ -557,7 +557,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// ));
     /// assert_eq!(filtered.next().unwrap(), Some(&2));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn filter_map<F>(self, f: Covar<F>) -> FilterMap<Self, F>
     where
         Self: Sized,
@@ -583,7 +583,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(enumerated.next(), Ok(Some((2, &3))));
     /// assert_eq!(enumerated.next(), Ok(None));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn enumerate(self) -> Enumerate<Self>
     where
         Self: Sized,
@@ -609,7 +609,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(peekable.next(), Ok(Some(&2)));
     /// assert_eq!(peekable.peek(), Ok(None));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn peekable<'call>(self) -> FalliblePeekable<'call, Self>
     where
         Self: Sized,
@@ -632,7 +632,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(skipped.next(), Ok(Some(&3)));
     /// assert_eq!(skipped.next(), Ok(None));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn skip_while<P>(self, predicate: P) -> SkipWhile<Self, P>
     where
         Self: Sized,
@@ -657,7 +657,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(taken.next(), Ok(Some(&2)));
     /// assert_eq!(taken.next(), Ok(None));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn take_while<P>(self, predicate: P) -> TakeWhile<Self, P>
     where
         Self: Sized,
@@ -690,7 +690,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(mapped.next().unwrap(), Some(&1));
     /// assert_eq!(mapped.next().unwrap(), None);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn map_while<P>(self, predicate: Covar<P>) -> MapWhile<Self, P>
     where
         Self: Sized,
@@ -713,7 +713,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(skipped.next(), Ok(Some(&3)));
     /// assert_eq!(skipped.next(), Ok(None));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn skip(self, n: usize) -> Skip<Self>
     where
         Self: Sized,
@@ -736,7 +736,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(taken.next(), Ok(Some(&2)));
     /// assert_eq!(taken.next(), Ok(None));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn take(self, n: usize) -> Take<Self>
     where
         Self: Sized,
@@ -773,7 +773,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(scanned.next().unwrap(), Some(&1));
     /// assert_eq!(scanned.next().unwrap(), Some(&2));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn scan<St, F>(self, initial_state: St, f: Covar<F>) -> Scan<Self, St, F>
     where
         Self: Sized,
@@ -818,7 +818,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(flat.next().unwrap(), Some(10));
     /// assert_eq!(flat.next().unwrap(), Some(2));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn flat_map<'call, F>(self, f: Covar<F>) -> FallibleFlatMap<'call, Self, F>
     where
         Self: Sized,
@@ -853,7 +853,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(flat.next().unwrap(), Some(4));
     /// assert_eq!(flat.next().unwrap(), None);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn flatten<'call>(self) -> FallibleFlatten<'call, Self>
     where
         Self: Sized,
@@ -878,7 +878,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(fused.next(), Ok(None));
     /// assert_eq!(fused.next(), Ok(None));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn fuse(self) -> Fuse<Self>
     where
         Self: Sized,
@@ -904,7 +904,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(inspected.next(), Ok(None));
     /// assert_eq!(sum, 6);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn inspect<F>(self, f: F) -> Inspect<Self, F>
     where
         Self: Sized,
@@ -931,7 +931,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(mutated.next(), Ok(Some(&mut 13)));
     /// assert_eq!(mutated.next(), Ok(None));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn mutate<F>(self, f: F) -> Mutate<Self, F>
     where
         Self: Sized,
@@ -990,7 +990,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// let collected: Result<Vec<i32>, _> = lender.owned().collect();
     /// assert_eq!(collected, Ok(vec![1, 2, 3]));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn collect<B>(self) -> Result<B, (B, Self::Error)>
     where
         Self: Sized,
@@ -1008,7 +1008,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     ///
     /// On error, returns the collection (with partial results) together with
     /// the error.
-    #[inline]
+    #[inline(always)]
     fn try_collect<'a, B, T>(&'a mut self) -> Result<T, (T, Self::Error)>
     where
         Self: Sized,
@@ -1136,7 +1136,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// });
     /// assert_eq!(result, Ok(None));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn try_for_each<F, R>(&mut self, mut f: F) -> Result<R, Self::Error>
     where
         F: FnMut(FallibleLend<'_, Self>) -> Result<R, Self::Error>,
@@ -1500,7 +1500,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     ///     [1, 3, 2].into_iter().into_lender().into_fallible();
     /// assert_eq!(lender.max(), Ok(Some(3)));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn max<T: Ord>(self) -> Result<Option<T>, Self::Error>
     where
         Self: Sized,
@@ -1519,7 +1519,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     ///     [3, 1, 2].into_iter().into_lender().into_fallible();
     /// assert_eq!(lender.min(), Ok(Some(1)));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn min<T: Ord>(self) -> Result<Option<T>, Self::Error>
     where
         Self: Sized,
@@ -1538,7 +1538,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     ///     ["a", "bbb", "cc"].into_iter().into_lender().into_fallible();
     /// assert_eq!(lender.max_by_key(|s| Ok(s.len())), Ok(Some("bbb")));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn max_by_key<B: Ord, T, F>(self, f: F) -> Result<Option<T>, Self::Error>
     where
         Self: Sized,
@@ -1561,7 +1561,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     ///     Ok(Some("bbb"))
     /// );
     /// ```
-    #[inline]
+    #[inline(always)]
     fn max_by<T, F>(self, mut compare: F) -> Result<Option<T>, Self::Error>
     where
         Self: Sized,
@@ -1586,7 +1586,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     ///     ["a", "bbb", "cc"].into_iter().into_lender().into_fallible();
     /// assert_eq!(lender.min_by_key(|s| Ok(s.len())), Ok(Some("a")));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn min_by_key<B: Ord, T, F>(self, f: F) -> Result<Option<T>, Self::Error>
     where
         Self: Sized,
@@ -1609,7 +1609,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     ///     Ok(Some("a"))
     /// );
     /// ```
-    #[inline]
+    #[inline(always)]
     fn min_by<T, F>(self, mut compare: F) -> Result<Option<T>, Self::Error>
     where
         Self: Sized,
@@ -1640,7 +1640,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(lender.next(), Ok(Some(&1)));
     /// assert_eq!(lender.next(), Ok(None));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn rev(self) -> Rev<Self>
     where
         Self: Sized + DoubleEndedFallibleLender,
@@ -1683,7 +1683,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(copied.next()?, None);
     /// # Ok::<(), core::convert::Infallible>(())
     /// ```
-    #[inline]
+    #[inline(always)]
     fn copied<T>(self) -> Copied<Self>
     where
         Self: Sized + for<'all> FallibleLending<'all, Lend = &'all T>,
@@ -1712,7 +1712,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(cloned.next()?, None);
     /// # Ok::<(), core::convert::Infallible>(())
     /// ```
-    #[inline]
+    #[inline(always)]
     fn cloned<T>(self) -> Cloned<Self>
     where
         Self: Sized + for<'all> FallibleLending<'all, Lend = &'all T>,
@@ -1737,7 +1737,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(owned.next()?, None);
     /// # Ok::<(), core::convert::Infallible>(())
     /// ```
-    #[inline]
+    #[inline(always)]
     fn owned(self) -> Owned<Self>
     where
         Self: Sized,
@@ -1759,7 +1759,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(cycled.next(), Ok(Some(&1)));
     /// assert_eq!(cycled.next(), Ok(Some(&2)));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn cycle(self) -> Cycle<Self>
     where
         Self: Sized + Clone,
@@ -1801,6 +1801,9 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
 
     /// The [`FallibleLender`] version of [`Iterator::cmp`].
     ///
+    /// Note: Due to HRTB limitations, consider using
+    /// [`cmp_by`](FallibleLender::cmp_by) instead.
+    ///
     /// # Examples
     ///
     /// ```rust
@@ -1815,7 +1818,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// );
     /// assert_eq!(a.cmp(b), Ok(Ordering::Less));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn cmp<L>(self, other: L) -> Result<Ordering, Self::Error>
     where
         L: IntoFallibleLender<Error = Self::Error>,
@@ -1863,6 +1866,9 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
 
     /// The [`FallibleLender`] version of [`Iterator::partial_cmp`].
     ///
+    /// Note: Due to HRTB limitations, consider using
+    /// [`partial_cmp_by`](FallibleLender::partial_cmp_by) instead.
+    ///
     /// # Examples
     ///
     /// ```rust
@@ -1876,7 +1882,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     ///     Ok(Some(Ordering::Less))
     /// );
     /// ```
-    #[inline]
+    #[inline(always)]
     fn partial_cmp<L>(self, other: L) -> Result<Option<Ordering>, Self::Error>
     where
         L: IntoFallibleLender<Error = Self::Error>,
@@ -1897,12 +1903,12 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// # use fallible_iterator::IteratorExt as _;
     /// # use lender::prelude::*;
     /// # use core::cmp::Ordering;
-    /// let a = [1.0, 2.0].into_iter().into_lender().into_fallible();
-    /// let b = [1.0, 3.0].into_iter().into_lender().into_fallible();
+    /// let a = [1, 2].into_iter().into_lender().into_fallible();
+    /// let b = [1, 3].into_iter().into_lender().into_fallible();
     /// assert_eq!(
     ///     a.partial_cmp_by::<lender::IntoFallible<_>, _>(
     ///         b,
-    ///         |x: f64, y: f64| Ok(x.partial_cmp(&y))
+    ///         |x: i32, y: i32| Ok(x.partial_cmp(&y))
     ///     ),
     ///     Ok(Some(Ordering::Less))
     /// );
@@ -1927,7 +1933,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     ///
     /// Note: Due to HRTB limitations, consider using
     /// [`eq_by`](FallibleLender::eq_by) instead.
-    #[inline]
+    #[inline(always)]
     fn eq<L>(self, other: L) -> Result<bool, Self::Error>
     where
         L: IntoFallibleLender<Error = Self::Error>,
@@ -1972,6 +1978,9 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
 
     /// The [`FallibleLender`] version of [`Iterator::ne`].
     ///
+    /// Note: Due to HRTB limitations, consider using
+    /// [`eq_by`](FallibleLender::eq_by) instead.
+    ///
     /// # Examples
     ///
     /// ```rust
@@ -1981,7 +1990,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// let b = [1, 3].into_iter().into_lender().into_fallible();
     /// assert_eq!(a.ne::<lender::IntoFallible<_>>(b), Ok(true));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn ne<L>(self, other: L) -> Result<bool, Self::Error>
     where
         L: IntoFallibleLender<Error = Self::Error>,
@@ -1993,6 +2002,9 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
 
     /// The [`FallibleLender`] version of [`Iterator::lt`].
     ///
+    /// Note: Due to HRTB limitations, consider using
+    /// [`partial_cmp_by`](FallibleLender::partial_cmp_by) instead.
+    ///
     /// # Examples
     ///
     /// ```rust
@@ -2002,7 +2014,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// let b = [1, 3].into_iter().into_lender().into_fallible();
     /// assert_eq!(a.lt::<lender::IntoFallible<_>>(b), Ok(true));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn lt<L>(self, other: L) -> Result<bool, Self::Error>
     where
         L: IntoFallibleLender<Error = Self::Error>,
@@ -2014,6 +2026,9 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
 
     /// The [`FallibleLender`] version of [`Iterator::le`].
     ///
+    /// Note: Due to HRTB limitations, consider using
+    /// [`partial_cmp_by`](FallibleLender::partial_cmp_by) instead.
+    ///
     /// # Examples
     ///
     /// ```rust
@@ -2023,7 +2038,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// let b = [1, 2].into_iter().into_lender().into_fallible();
     /// assert_eq!(a.le::<lender::IntoFallible<_>>(b), Ok(true));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn le<L>(self, other: L) -> Result<bool, Self::Error>
     where
         L: IntoFallibleLender<Error = Self::Error>,
@@ -2035,6 +2050,9 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
 
     /// The [`FallibleLender`] version of [`Iterator::gt`].
     ///
+    /// Note: Due to HRTB limitations, consider using
+    /// [`partial_cmp_by`](FallibleLender::partial_cmp_by) instead.
+    ///
     /// # Examples
     ///
     /// ```rust
@@ -2044,7 +2062,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// let b = [1, 2].into_iter().into_lender().into_fallible();
     /// assert_eq!(a.gt::<lender::IntoFallible<_>>(b), Ok(true));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn gt<L>(self, other: L) -> Result<bool, Self::Error>
     where
         L: IntoFallibleLender<Error = Self::Error>,
@@ -2056,6 +2074,9 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
 
     /// The [`FallibleLender`] version of [`Iterator::ge`].
     ///
+    /// Note: Due to HRTB limitations, consider using
+    /// [`partial_cmp_by`](FallibleLender::partial_cmp_by) instead.
+    ///
     /// # Examples
     ///
     /// ```rust
@@ -2065,7 +2086,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// let b = [1, 2].into_iter().into_lender().into_fallible();
     /// assert_eq!(a.ge::<lender::IntoFallible<_>>(b), Ok(true));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn ge<L>(self, other: L) -> Result<bool, Self::Error>
     where
         L: IntoFallibleLender<Error = Self::Error>,
@@ -2087,7 +2108,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// let lender = [1, 3, 2].into_iter().into_lender().into_fallible();
     /// assert_eq!(lender.is_sorted(), Ok(false));
     /// ```
-    #[inline]
+    #[inline(always)]
     #[allow(clippy::wrong_self_convention)]
     fn is_sorted<T>(self) -> Result<bool, Self::Error>
     where
@@ -2204,7 +2225,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// assert_eq!(chunk3.next().unwrap(), Some(&5));
     /// assert_eq!(chunk3.next().unwrap(), None);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn chunky(self, chunk_size: usize) -> Chunky<Self>
     where
         Self: Sized + ExactSizeFallibleLender,
@@ -2231,7 +2252,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// let v: Vec<i32> = lender.iter().collect().unwrap();
     /// assert_eq!(v, vec![1, 2, 3]);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn iter<'this>(self) -> Iter<'this, Self>
     where
         Self: Sized + 'this,

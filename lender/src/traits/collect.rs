@@ -2,7 +2,7 @@ use crate::{FallibleLend, FallibleLender, Lend, Lender};
 
 /// A trait for creating a value from a [`Lender`].
 ///
-/// # Example
+/// # Examples
 /// ```
 /// # use lender::prelude::*;
 /// struct MyStruct;
@@ -25,7 +25,7 @@ pub trait FromLender<L: IntoLender>: Sized {
 ///
 /// This is the fallible counterpart to [`FromLender`].
 ///
-/// # Example
+/// # Examples
 /// ```
 /// # use lender::prelude::*;
 /// # use std::convert::Infallible;

@@ -7,7 +7,7 @@ use crate::{Covar, FallibleLend, FallibleLender, FallibleLending, higher_order::
 ///
 /// Note that functions passed to this function must be built
 /// using the [`covar!`](crate::covar) or [`covar_mut!`](crate::covar_mut)
-/// macros, which also checks for covariance of the returned type.
+/// macros, which also check for covariance of the returned type.
 ///
 /// # Examples
 /// ```rust

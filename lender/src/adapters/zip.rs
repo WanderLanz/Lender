@@ -18,6 +18,7 @@ use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, IntoLender, Lend, L
 /// assert_eq!(zipped.next(), Some((&3, &6)));
 /// assert_eq!(zipped.next(), None);
 /// ```
+#[inline]
 pub fn zip<A, B>(a: A, b: B) -> Zip<A::Lender, B::Lender>
 where
     A: IntoLender,

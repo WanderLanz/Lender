@@ -30,7 +30,7 @@ where
         self.lender.fold(init, |acc, x| f(acc, *x))
     }
 
-    #[inline]
+    #[inline(always)]
     fn count(self) -> Result<usize, Self::Error>
     where
         Self: Sized,

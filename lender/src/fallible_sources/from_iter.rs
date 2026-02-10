@@ -8,9 +8,10 @@ use crate::{
 /// Creates a lender from a fallible iterator.
 ///
 /// This function can be conveniently accessed using the
-/// [`into_fallible_lender`](crate::traits::FallibleIteratorExt::into_fallible_lender)
-/// method added to [`FallibleIterator`] by this
-/// crate.
+/// [`into_fallible_lender`][ifl] method added to
+/// [`FallibleIterator`] by this crate.
+///
+/// [ifl]: crate::traits::FallibleIteratorExt::into_fallible_lender
 ///
 /// Does not change the behavior of the iterator: the resulting
 /// lender will yield the same items and can be adapted back into
@@ -111,9 +112,10 @@ impl<I: FallibleIterator> From<I> for FromIter<I> {
 /// [`IntoFallibleIterator`].
 ///
 /// This function can be conveniently accessed using the
-/// [`into_into_fallible_lender`](crate::traits::IntoFallibleIteratorExt::into_into_fallible_lender)
-/// method added to [`IntoFallibleIterator`] by this
-/// crate.
+/// [`into_into_fallible_lender`][iifl] method added to
+/// [`IntoFallibleIterator`] by this crate.
+///
+/// [iifl]: crate::traits::IntoFallibleIteratorExt::into_into_fallible_lender
 ///
 /// The lenders returned are obtained by applying
 /// [`from_fallible_iter()`](crate::from_fallible_iter) to

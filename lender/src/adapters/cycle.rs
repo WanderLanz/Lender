@@ -20,7 +20,7 @@ impl<L> Cycle<L>
 where
     L: Clone,
 {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new(lender: L) -> Cycle<L> {
         Cycle {
             orig: lender.clone(),

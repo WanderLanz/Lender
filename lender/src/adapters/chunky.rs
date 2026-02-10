@@ -30,7 +30,7 @@ use crate::{
 /// borrowing from a single underlying lender, so partial
 /// consumption affects subsequent chunks.
 ///
-/// Partial chunk consumption has also the consequence of not
+/// Partial chunk consumption also has the consequence of not
 /// enumerating entirely the elements returned by the underlying
 /// lender, as the number of chunks is computed at the start.
 /// Thus, in case of partial chunk consumption the last element

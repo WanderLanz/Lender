@@ -79,6 +79,7 @@ where
 }
 
 impl<L: Lender> From<L> for IntoFallible<L> {
+    #[inline(always)]
     fn from(lender: L) -> Self {
         Self::new(lender)
     }

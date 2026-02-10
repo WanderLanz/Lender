@@ -50,7 +50,7 @@ where
         self.lender.fold(init, |acc, ref x| f(acc, x.to_owned()))
     }
 
-    #[inline]
+    #[inline(always)]
     fn count(self) -> usize {
         self.lender.count()
     }

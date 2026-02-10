@@ -69,8 +69,8 @@ impl<F> Covar<F> {
     }
 }
 
-/// Higher-Kinded Associated Output [`FnOnce`], where `Output` (B) is with
-/// lifetime `'b`.
+/// Higher-Kinded Associated Output [`FnOnce`], where `Output`
+/// (`B`) has lifetime `'b`.
 pub trait FnOnceHKA<'b, A>: FnOnce(A) -> <Self as FnOnceHKA<'b, A>>::B {
     type B: 'b;
 }
@@ -79,8 +79,8 @@ impl<'b, A, B: 'b, F: FnOnce(A) -> B> FnOnceHKA<'b, A> for F {
     type B = B;
 }
 
-/// Higher-Kinded Associated Output [`FnMut`], where `Output` (B) is with
-/// lifetime `'b`.
+/// Higher-Kinded Associated Output [`FnMut`], where `Output`
+/// (`B`) has lifetime `'b`.
 pub trait FnMutHKA<'b, A>: FnMut(A) -> <Self as FnMutHKA<'b, A>>::B {
     type B: 'b;
 }
@@ -90,7 +90,7 @@ impl<'b, A, B: 'b, F: FnMut(A) -> B> FnMutHKA<'b, A> for F {
 }
 
 /// Higher-Kinded Associated Output [`FnMut`], where `Output`
-/// ([`Option<B>`](Option)) is with lifetime `'b`.
+/// ([`Option<B>`](Option)) has lifetime `'b`.
 pub trait FnMutHKAOpt<'b, A>: FnMut(A) -> Option<<Self as FnMutHKAOpt<'b, A>>::B> {
     type B: 'b;
 }

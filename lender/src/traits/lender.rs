@@ -104,7 +104,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(chunk_lender.next(), Some(&2));
     /// assert_eq!(chunk_lender.next(), None);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn next_chunk(&mut self, chunk_size: usize) -> Chunk<'_, Self>
     where
         Self: Sized,
@@ -133,7 +133,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// let mut lender = [1, 2, 3].iter().into_lender();
     /// assert_eq!(lender.count(), 3);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn count(self) -> usize
     where
         Self: Sized,
@@ -239,7 +239,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(step_lender.next(), Some(&9));
     /// assert_eq!(step_lender.next(), None);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn step_by(self, step: usize) -> StepBy<Self>
     where
         Self: Sized,
@@ -264,7 +264,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(chained.next(), Some(&4));
     /// assert_eq!(chained.next(), None);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn chain<U>(self, other: U) -> Chain<Self, <U as IntoLender>::Lender>
     where
         Self: Sized,
@@ -285,7 +285,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(zipped.next(), Some((&2, &4)));
     /// assert_eq!(zipped.next(), None);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn zip<U: IntoLender>(self, other: U) -> Zip<Self, <U as IntoLender>::Lender>
     where
         Self: Sized,
@@ -305,7 +305,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(interspersed.next(), Some(&2));
     /// assert_eq!(interspersed.next(), None);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn intersperse<'call>(self, separator: Lend<'call, Self>) -> Intersperse<'call, Self>
     where
         Self: Sized,
@@ -327,7 +327,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(interspersed.next(), Some(&2));
     /// assert_eq!(interspersed.next(), None);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn intersperse_with<'call, G>(self, separator: G) -> IntersperseWith<'call, Self, G>
     where
         Self: Sized,
@@ -356,7 +356,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(mapped.next(), Some(&3));
     /// assert_eq!(mapped.next(), None);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn map<F>(self, f: Covar<F>) -> Map<Self, F>
     where
         Self: Sized,
@@ -385,7 +385,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(mapped_into_iter.next(), Some(3));
     /// assert_eq!(mapped_into_iter.next(), None);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn map_into_iter<O, F: FnMut(Lend<'_, Self>) -> O>(self, f: F) -> MapIntoIter<Self, O, F>
     where Self: Sized
     {
@@ -402,7 +402,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///     let _ = *a + 1;
     /// });
     /// ```
-    #[inline]
+    #[inline(always)]
     fn for_each<F>(self, mut f: F)
     where
         Self: Sized,
@@ -421,7 +421,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(filtered.next(), Some(&2));
     /// assert_eq!(filtered.next(), None);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn filter<P>(self, predicate: P) -> Filter<Self, P>
     where
         Self: Sized,
@@ -453,7 +453,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(filtered.next(), Some(&2));
     /// assert_eq!(filtered.next(), None);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn filter_map<F>(self, f: Covar<F>) -> FilterMap<Self, F>
     where
         Self: Sized,
@@ -473,7 +473,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(enumerated.next(), Some((1, &2)));
     /// assert_eq!(enumerated.next(), None);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn enumerate(self) -> Enumerate<Self>
     where
         Self: Sized,
@@ -495,7 +495,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(peekable.next(), Some(&2));
     /// assert_eq!(peekable.peek(), None);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn peekable<'call>(self) -> Peekable<'call, Self>
     where
         Self: Sized,
@@ -516,7 +516,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(skipped.next(), Some(&5));
     /// assert_eq!(skipped.next(), None);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn skip_while<P>(self, predicate: P) -> SkipWhile<Self, P>
     where
         Self: Sized,
@@ -537,7 +537,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(taken.next(), Some(&2));
     /// assert_eq!(taken.next(), None);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn take_while<P>(self, predicate: P) -> TakeWhile<Self, P>
     where
         Self: Sized,
@@ -569,7 +569,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(mapped.next(), Some(&1));
     /// assert_eq!(mapped.next(), None);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn map_while<P>(self, predicate: Covar<P>) -> MapWhile<Self, P>
     where
         Self: Sized,
@@ -589,7 +589,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(skipped.next(), Some(&5));
     /// assert_eq!(skipped.next(), None);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn skip(self, n: usize) -> Skip<Self>
     where
         Self: Sized,
@@ -608,7 +608,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(taken.next(), Some(&2));
     /// assert_eq!(taken.next(), None);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn take(self, n: usize) -> Take<Self>
     where
         Self: Sized,
@@ -636,7 +636,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(scanned.next(), Some(&1));
     /// assert_eq!(scanned.next(), Some(&2));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn scan<St, F>(self, initial_state: St, f: Covar<F>) -> Scan<Self, St, F>
     where
         Self: Sized,
@@ -676,7 +676,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(flat.next(), Some(10));
     /// assert_eq!(flat.next(), Some(2));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn flat_map<'call, F>(self, f: Covar<F>) -> FlatMap<'call, Self, F>
     where
         Self: Sized,
@@ -702,7 +702,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(flat.next(), Some(4));
     /// assert_eq!(flat.next(), None);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn flatten<'call>(self) -> Flatten<'call, Self>
     where
         Self: Sized,
@@ -723,7 +723,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(fused.next(), None);
     /// assert_eq!(fused.next(), None);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn fuse(self) -> Fuse<Self>
     where
         Self: Sized,
@@ -745,7 +745,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(inspected.next(), None);
     /// assert_eq!(sum, 6);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn inspect<F>(self, f: F) -> Inspect<Self, F>
     where
         Self: Sized,
@@ -768,7 +768,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(mutated.next(), Some(&mut 13));
     /// assert_eq!(mutated.next(), None);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn mutate<F>(self, f: F) -> Mutate<Self, F>
     where
         Self: Sized,
@@ -826,7 +826,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// This method requires the target collection type `B` to implement
     /// [`FromLender`] for the [`TryShunt`] adapter. See
     /// [`FromLender`] for how to implement this trait.
-    #[inline]
+    #[inline(always)]
     fn try_collect<'a, B>(&'a mut self) -> ChangeOutputType<Lend<'a, Self>, B>
     where
         Self: Sized,
@@ -933,7 +933,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// let result = lender.try_for_each(|&x| if x < 3 { Some(()) } else { None });
     /// assert_eq!(result, None);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn try_for_each<F, R>(&mut self, mut f: F) -> R
     where
         F: FnMut(Lend<'_, Self>) -> R,
@@ -1216,7 +1216,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// let lender = [1, 3, 2].into_iter().into_lender();
     /// assert_eq!(lender.max(), Some(3));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn max<T: Ord>(self) -> Option<T>
     where
         Self: Sized,
@@ -1233,7 +1233,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// let lender = [3, 1, 2].into_iter().into_lender();
     /// assert_eq!(lender.min(), Some(1));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn min<T: Ord>(self) -> Option<T>
     where
         Self: Sized,
@@ -1254,7 +1254,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///     Some(-10)
     /// );
     /// ```
-    #[inline]
+    #[inline(always)]
     fn max_by_key<B: Ord, T, F>(self, f: F) -> Option<T>
     where
         Self: Sized,
@@ -1276,7 +1276,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///     Some(-10)
     /// );
     /// ```
-    #[inline]
+    #[inline(always)]
     fn max_by<T, F>(self, mut compare: F) -> Option<T>
     where
         Self: Sized,
@@ -1303,7 +1303,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///     Some(0)
     /// );
     /// ```
-    #[inline]
+    #[inline(always)]
     fn min_by_key<B: Ord, T, F>(self, f: F) -> Option<T>
     where
         Self: Sized,
@@ -1325,7 +1325,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///     Some(0)
     /// );
     /// ```
-    #[inline]
+    #[inline(always)]
     fn min_by<T, F>(self, mut compare: F) -> Option<T>
     where
         Self: Sized,
@@ -1352,7 +1352,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///     lender.rev().copied().collect();
     /// assert_eq!(result, vec![3, 2, 1]);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn rev(self) -> Rev<Self>
     where
         Self: Sized + DoubleEndedLender,
@@ -1395,7 +1395,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// let result: Vec<i32> = lender.copied().collect();
     /// assert_eq!(result, vec![1, 2, 3]);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn copied<T>(self) -> Copied<Self>
     where
         Self: Sized + for<'all> Lending<'all, Lend = &'all T>,
@@ -1424,7 +1424,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///     vec![String::from("a"), String::from("b")]
     /// );
     /// ```
-    #[inline]
+    #[inline(always)]
     fn cloned<T>(self) -> Cloned<Self>
     where
         Self: Sized + for<'all> Lending<'all, Lend = &'all T>,
@@ -1443,7 +1443,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// let result: Vec<i32> = lender.owned().collect();
     /// assert_eq!(result, vec![1, 2, 3]);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn owned(self) -> Owned<Self>
     where
         Self: Sized,
@@ -1463,7 +1463,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(lender.next(), Some(&1));
     /// assert_eq!(lender.next(), Some(&2));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn cycle(self) -> Cycle<Self>
     where
         Self: Sized + Clone,
@@ -1510,7 +1510,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// Note: Due to HRTB limitations, consider using
     /// [`cmp_by`](Lender::cmp_by) instead.
-    #[inline]
+    #[inline(always)]
     fn cmp<L>(self, other: L) -> Ordering
     where
         L: IntoLender,
@@ -1554,7 +1554,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// Note: Due to HRTB limitations, consider using
     /// [`partial_cmp_by`](Lender::partial_cmp_by) instead.
-    #[inline]
+    #[inline(always)]
     fn partial_cmp<L>(self, other: L) -> Option<Ordering>
     where
         L: IntoLender,
@@ -1598,7 +1598,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// Note: Due to HRTB limitations, consider using
     /// [`eq_by`](Lender::eq_by) instead.
-    #[inline]
+    #[inline(always)]
     fn eq<L>(self, other: L) -> bool
     where
         L: IntoLender,
@@ -1637,7 +1637,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// Note: Due to HRTB limitations, consider using
     /// [`eq_by`](Lender::eq_by) instead.
-    #[inline]
+    #[inline(always)]
     fn ne<L>(self, other: L) -> bool
     where
         L: IntoLender,
@@ -1650,7 +1650,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// Note: Due to HRTB limitations, consider using
     /// [`partial_cmp_by`](Lender::partial_cmp_by) instead.
-    #[inline]
+    #[inline(always)]
     fn lt<L>(self, other: L) -> bool
     where
         L: IntoLender,
@@ -1663,7 +1663,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// Note: Due to HRTB limitations, consider using
     /// [`partial_cmp_by`](Lender::partial_cmp_by) instead.
-    #[inline]
+    #[inline(always)]
     fn le<L>(self, other: L) -> bool
     where
         L: IntoLender,
@@ -1676,7 +1676,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// Note: Due to HRTB limitations, consider using
     /// [`partial_cmp_by`](Lender::partial_cmp_by) instead.
-    #[inline]
+    #[inline(always)]
     fn gt<L>(self, other: L) -> bool
     where
         L: IntoLender,
@@ -1689,7 +1689,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///
     /// Note: Due to HRTB limitations, consider using
     /// [`partial_cmp_by`](Lender::partial_cmp_by) instead.
-    #[inline]
+    #[inline(always)]
     fn ge<L>(self, other: L) -> bool
     where
         L: IntoLender,
@@ -1710,7 +1710,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// let lender = [3, 1, 2].into_iter().into_lender();
     /// assert!(!lender.is_sorted());
     /// ```
-    #[inline]
+    #[inline(always)]
     #[allow(clippy::wrong_self_convention)]
     fn is_sorted<T>(self) -> bool
     where
@@ -1797,7 +1797,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// let v: Vec<i32> = lender.iter().collect();
     /// assert_eq!(v, vec![1, 2, 3]);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn iter<'this>(self) -> Iter<'this, Self>
     where
         Self: Sized + 'this,
@@ -1825,7 +1825,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(chunk2.next(), Some(&3));
     /// assert_eq!(chunk2.next(), None);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn chunky(self, chunk_size: usize) -> Chunky<Self>
     where
         Self: Sized + ExactSizeLender,
@@ -1851,7 +1851,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(lender.next(), Ok(Some(2)));
     /// assert!(lender.next().is_err());
     /// ```
-    #[inline]
+    #[inline(always)]
     fn convert<E>(self) -> Convert<E, Self>
     where
         Self: Sized,
@@ -1875,7 +1875,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(fallible.next(), Ok(Some(3)));
     /// assert_eq!(fallible.next(), Ok(None));
     /// ```
-    #[inline]
+    #[inline(always)]
     fn into_fallible(self) -> IntoFallible<Self> where Self: Sized {
         IntoFallible::new(self)
     }
