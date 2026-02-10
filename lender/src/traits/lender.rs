@@ -810,7 +810,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// let collected: Vec<i32> = lender.copied().collect();
     /// assert_eq!(collected, vec![1, 2, 3]);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn collect<B>(self) -> B
     where
         Self: Sized,
@@ -1372,7 +1372,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// assert_eq!(nums, vec![1, 2, 3]);
     /// assert_eq!(chars, vec!['a', 'b', 'c']);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn unzip<ExtA, ExtB>(self) -> (ExtA, ExtB)
     where
     Self: Sized,
@@ -1480,7 +1480,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// let total: i32 = lender.copied().sum();
     /// assert_eq!(total, 6);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn sum<S>(self) -> S
     where
         Self: Sized,
@@ -1498,7 +1498,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// let total: i32 = lender.copied().product();
     /// assert_eq!(total, 6);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn product<P>(self) -> P
     where
         Self: Sized,

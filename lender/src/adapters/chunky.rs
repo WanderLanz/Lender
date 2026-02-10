@@ -48,7 +48,7 @@ impl<L> Chunky<L>
 where
     L: Lender + ExactSizeLender,
 {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new(lender: L, chunk_size: usize) -> Self {
         assert!(chunk_size != 0, "chunk size must be non-zero");
         let len = lender.len().div_ceil(chunk_size);
@@ -64,7 +64,7 @@ impl<L> Chunky<L>
 where
     L: FallibleLender + ExactSizeFallibleLender,
 {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new_fallible(lender: L, chunk_size: usize) -> Self {
         assert!(chunk_size != 0, "chunk size must be non-zero");
         let len = lender.len().div_ceil(chunk_size);

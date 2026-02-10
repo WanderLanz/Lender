@@ -270,7 +270,7 @@ impl<T> WindowsMutExt<T> for [T] {
     /// # Panics
     ///
     /// Panics if `size` is zero.
-    #[inline]
+    #[inline(always)]
     fn windows_mut(&mut self, size: usize) -> WindowsMut<'_, T> {
         windows_mut(self, size)
     }
@@ -279,7 +279,7 @@ impl<T> WindowsMutExt<T> for [T] {
     /// # Panics
     ///
     /// Panics if `WINDOW_SIZE` is zero.
-    #[inline]
+    #[inline(always)]
     fn array_windows_mut<const WINDOW_SIZE: usize>(
         &mut self,
     ) -> ArrayWindowsMut<'_, T, WINDOW_SIZE> {
@@ -293,7 +293,7 @@ impl<T, const N: usize> WindowsMutExt<T> for [T; N] {
     /// # Panics
     ///
     /// Panics if `size` is zero.
-    #[inline]
+    #[inline(always)]
     fn windows_mut(&mut self, size: usize) -> WindowsMut<'_, T> {
         windows_mut(self, size)
     }
@@ -302,7 +302,7 @@ impl<T, const N: usize> WindowsMutExt<T> for [T; N] {
     /// # Panics
     ///
     /// Panics if `WINDOW_SIZE` is zero.
-    #[inline]
+    #[inline(always)]
     fn array_windows_mut<const WINDOW_SIZE: usize>(
         &mut self,
     ) -> ArrayWindowsMut<'_, T, WINDOW_SIZE> {

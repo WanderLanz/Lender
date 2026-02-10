@@ -121,7 +121,7 @@ where
         None
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (_, upper) = self.lender.size_hint();
         (0, upper)

@@ -105,7 +105,7 @@ impl<I: ExactSizeIterator> ExactSizeLender for FromIter<I> {
 impl<I: FusedIterator> FusedLender for FromIter<I> {}
 
 impl<I: Iterator> From<I> for FromIter<I> {
-    #[inline]
+    #[inline(always)]
     fn from(iter: I) -> Self {
         from_iter(iter)
     }
@@ -132,7 +132,7 @@ pub fn from_into_iter<I: IntoIterator>(into_iter: I) -> FromIntoIter<I> {
     FromIntoIter { into_iter }
 }
 
-/// A [`IntoLender`] that returns lenders obtained by applying
+/// An [`IntoLender`] that returns lenders obtained by applying
 /// [`from_iter`] to the iterators returned by the wrapped
 /// [`IntoIterator`].
 ///
@@ -154,6 +154,7 @@ impl<I: IntoIterator> IntoLender for FromIntoIter<I> {
 }
 
 impl<I: IntoIterator> From<I> for FromIntoIter<I> {
+    #[inline(always)]
     fn from(into_iter: I) -> Self {
         from_into_iter(into_iter)
     }
@@ -163,6 +164,7 @@ impl<I: IntoIterator> From<I> for FromIntoIter<I> {
 /// the items' lifetimes with the given lending type `L`.
 ///
 /// If `I::Item` is 'static, behaves like [`from_iter`].
+///
 /// # Examples
 /// ```rust
 /// # use lender::prelude::*; let mut data = [1, 2, 3];

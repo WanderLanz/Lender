@@ -131,7 +131,7 @@ where
         (usize::MAX, None)
     }
 
-    #[inline]
+    #[inline(always)]
     fn advance_by(
         &mut self,
         _n: usize,

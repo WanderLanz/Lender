@@ -69,7 +69,7 @@ where
     // SAFETY: the lend is that of the inner lender
     crate::unsafe_assume_covariance_fallible!();
 
-    #[inline]
+    #[inline(always)]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.inner.next()
     }
@@ -187,7 +187,7 @@ where
     // SAFETY: the lend is that of the inner lender
     crate::unsafe_assume_covariance_fallible!();
 
-    #[inline]
+    #[inline(always)]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.inner.next()
     }
@@ -304,7 +304,9 @@ where
                     return Ok(Some(x));
                 }
             }
-            // SAFETY: inner is manually guaranteed to be the only FallibleLend alive of the inner lender
+            // SAFETY: inner is manually guaranteed to be
+            // the only FallibleLend alive of the inner
+            // lender
             *self.inner = self.lender.next()?.map(|l| unsafe {
                 core::mem::transmute::<
                     <FallibleLend<'_, L> as IntoFallibleLender>::FallibleLender,

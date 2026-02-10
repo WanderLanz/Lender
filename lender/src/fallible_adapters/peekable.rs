@@ -52,8 +52,7 @@ where
     /// Like [`next`](FallibleLender::next), if there is a
     /// next value, it is borrowed from the underlying lender
     /// and cached. Calling `peek()` multiple times without
-    /// advancing
-    /// the lender returns the same cached element.
+    /// advancing the lender returns the same cached element.
     ///
     /// # Errors
     ///

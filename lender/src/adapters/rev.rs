@@ -156,6 +156,7 @@ impl<L> Default for Rev<L>
 where
     L: Default,
 {
+    #[inline(always)]
     fn default() -> Self {
         Rev::new(L::default())
     }

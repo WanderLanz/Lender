@@ -12,7 +12,7 @@ use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lendi
 /// let x: Option<&'_ mut i32> = e.next();
 /// assert_eq!(x, None);
 /// ```
-#[inline]
+#[inline(always)]
 pub const fn empty<L: ?Sized + for<'all> Lending<'all>>() -> Empty<L> {
     Empty(marker::PhantomData)
 }

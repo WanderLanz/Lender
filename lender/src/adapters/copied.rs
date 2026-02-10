@@ -105,6 +105,7 @@ impl<L> Default for Copied<L>
 where
     L: Default,
 {
+    #[inline(always)]
     fn default() -> Self {
         Self::new(L::default())
     }

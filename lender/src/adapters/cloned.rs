@@ -105,6 +105,7 @@ impl<L> Default for Cloned<L>
 where
     L: Default,
 {
+    #[inline(always)]
     fn default() -> Self {
         Self::new(L::default())
     }

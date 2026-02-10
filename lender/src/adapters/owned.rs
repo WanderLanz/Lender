@@ -102,6 +102,7 @@ impl<L> Default for Owned<L>
 where
     L: Default,
 {
+    #[inline(always)]
     fn default() -> Self {
         Self::new(L::default())
     }

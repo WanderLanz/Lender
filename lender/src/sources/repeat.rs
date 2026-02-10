@@ -6,6 +6,7 @@ use crate::{FusedLender, prelude::*};
 ///
 /// The [`Lender`] version of
 /// [`iter::repeat()`](core::iter::repeat).
+///
 /// # Examples
 /// ```rust
 /// # use lender::prelude::*;
@@ -80,7 +81,7 @@ where
         (usize::MAX, None)
     }
 
-    #[inline]
+    #[inline(always)]
     fn advance_by(&mut self, _n: usize) -> Result<(), core::num::NonZeroUsize> {
         Ok(())
     }

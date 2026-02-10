@@ -17,7 +17,7 @@ pub struct StepBy<L> {
 }
 
 impl<L> StepBy<L> {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new(lender: L, step: usize) -> Self {
         assert_ne!(step, 0);
         StepBy {

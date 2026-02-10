@@ -101,7 +101,7 @@ impl<I: DoubleEndedFallibleIterator> DoubleEndedFallibleLender for FromIter<I> {
 // ExactSizeFallibleIterator marker traits.
 
 impl<I: FallibleIterator> From<I> for FromIter<I> {
-    #[inline]
+    #[inline(always)]
     fn from(iter: I) -> Self {
         from_iter(iter)
     }
@@ -136,7 +136,7 @@ pub fn from_into_iter<I: IntoFallibleIterator>(into_iter: I) -> FromIntoIter<I> 
     FromIntoIter { into_iter }
 }
 
-/// A [`IntoFallibleLender`] that returns lenders obtained
+/// An [`IntoFallibleLender`] that returns lenders obtained
 /// by applying
 /// [`from_fallible_iter()`](crate::from_fallible_iter) to
 /// the iterators returned by the wrapped
@@ -163,6 +163,7 @@ impl<I: IntoFallibleIterator> IntoFallibleLender for FromIntoIter<I> {
 }
 
 impl<I: IntoFallibleIterator> From<I> for FromIntoIter<I> {
+    #[inline(always)]
     fn from(into_iter: I) -> Self {
         from_into_iter(into_iter)
     }

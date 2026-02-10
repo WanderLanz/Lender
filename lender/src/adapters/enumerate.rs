@@ -185,6 +185,7 @@ where
 impl<L> FusedLender for Enumerate<L> where L: FusedLender {}
 
 impl<L: Default> Default for Enumerate<L> {
+    #[inline(always)]
     fn default() -> Self {
         Enumerate::new(Default::default())
     }

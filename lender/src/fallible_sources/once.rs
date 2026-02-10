@@ -121,7 +121,7 @@ where
         }))
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         if self.inner.is_some() {
             (1, Some(1))

@@ -218,6 +218,7 @@ where
 }
 
 impl<A: Default, B: Default> Default for Chain<A, B> {
+    #[inline(always)]
     fn default() -> Self {
         Chain::new(Default::default(), Default::default())
     }

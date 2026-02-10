@@ -220,12 +220,12 @@ impl<L> ExactSizeLender for Fuse<L>
 where
     L: ExactSizeLender,
 {
-    #[inline(always)]
+    #[inline]
     fn len(&self) -> usize {
         if !self.flag { self.lender.len() } else { 0 }
     }
 
-    #[inline(always)]
+    #[inline]
     fn is_empty(&self) -> bool {
         if !self.flag {
             self.lender.is_empty()
@@ -236,6 +236,7 @@ where
 }
 
 impl<L: Default> Default for Fuse<L> {
+    #[inline(always)]
     fn default() -> Self {
         Self::new(L::default())
     }

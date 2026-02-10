@@ -1649,7 +1649,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::unzip`].
-    #[inline]
+    #[inline(always)]
     fn unzip<ExtA, ExtB>(self) -> Result<(ExtA, ExtB), Self::Error>
     where
         Self: Sized,
@@ -1774,7 +1774,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// sums, consider using [`owned()`](FallibleLender::owned)
     /// and then
     /// [`FallibleIterator::sum()`](https://docs.rs/fallible-iterator/latest/fallible_iterator/trait.FallibleIterator.html#method.sum).
-    #[inline]
+    #[inline(always)]
     fn sum<S>(self) -> Result<S, Self::Error>
     where
         Self: Sized,
@@ -1790,7 +1790,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// numeric products, consider using [`owned()`](FallibleLender::owned)
     /// and then
     /// [`FallibleIterator::product()`](https://docs.rs/fallible-iterator/latest/fallible_iterator/trait.FallibleIterator.html#method.product).
-    #[inline]
+    #[inline(always)]
     fn product<P>(self) -> Result<P, Self::Error>
     where
         Self: Sized,
