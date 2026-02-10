@@ -50,12 +50,48 @@ impl<I: Iterator> Lender for FromIter<I> {
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
     }
+
+    #[inline(always)]
+    fn nth(&mut self, n: usize) -> Option<Lend<'_, Self>> {
+        self.iter.nth(n)
+    }
+
+    #[inline(always)]
+    fn count(self) -> usize
+    where
+        Self: Sized,
+    {
+        self.iter.count()
+    }
+
+    #[inline(always)]
+    fn fold<B, F>(self, init: B, f: F) -> B
+    where
+        Self: Sized,
+        F: FnMut(B, Lend<'_, Self>) -> B,
+    {
+        self.iter.fold(init, f)
+    }
 }
 
 impl<I: DoubleEndedIterator> DoubleEndedLender for FromIter<I> {
     #[inline(always)]
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         self.iter.next_back()
+    }
+
+    #[inline(always)]
+    fn nth_back(&mut self, n: usize) -> Option<Lend<'_, Self>> {
+        self.iter.nth_back(n)
+    }
+
+    #[inline(always)]
+    fn rfold<B, F>(self, init: B, f: F) -> B
+    where
+        Self: Sized,
+        F: FnMut(B, Lend<'_, Self>) -> B,
+    {
+        self.iter.rfold(init, f)
     }
 }
 
@@ -192,6 +228,36 @@ where
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
     }
+
+    #[inline]
+    fn nth(&mut self, n: usize) -> Option<Lend<'_, Self>> {
+        // SAFETY: 'a: 'lend, and Lend<'a, L> is covariant in 'a
+        unsafe {
+            core::mem::transmute::<Option<Lend<'a, L>>, Option<Lend<'_, L>>>(self.iter.nth(n))
+        }
+    }
+
+    #[inline(always)]
+    fn count(self) -> usize
+    where
+        Self: Sized,
+    {
+        self.iter.count()
+    }
+
+    #[inline]
+    fn fold<B, F>(self, init: B, mut f: F) -> B
+    where
+        Self: Sized,
+        F: FnMut(B, Lend<'_, Self>) -> B,
+    {
+        self.iter.fold(init, |acc, x| {
+            // SAFETY: 'a: 'lend, and Lend<'a, L> is covariant in 'a
+            f(acc, unsafe {
+                core::mem::transmute::<Lend<'a, L>, Lend<'_, L>>(x)
+            })
+        })
+    }
 }
 
 impl<'a, L, I> DoubleEndedLender for LendIter<'a, L, I>
@@ -205,6 +271,30 @@ where
         unsafe {
             core::mem::transmute::<Option<Lend<'a, L>>, Option<Lend<'_, L>>>(self.iter.next_back())
         }
+    }
+
+    #[inline]
+    fn nth_back(&mut self, n: usize) -> Option<Lend<'_, Self>> {
+        // SAFETY: 'a: 'lend, and Lend<'a, L> is covariant in 'a
+        unsafe {
+            core::mem::transmute::<Option<Lend<'a, L>>, Option<Lend<'_, L>>>(
+                self.iter.nth_back(n),
+            )
+        }
+    }
+
+    #[inline]
+    fn rfold<B, F>(self, init: B, mut f: F) -> B
+    where
+        Self: Sized,
+        F: FnMut(B, Lend<'_, Self>) -> B,
+    {
+        self.iter.rfold(init, |acc, x| {
+            // SAFETY: 'a: 'lend, and Lend<'a, L> is covariant in 'a
+            f(acc, unsafe {
+                core::mem::transmute::<Lend<'a, L>, Lend<'_, L>>(x)
+            })
+        })
     }
 }
 

@@ -55,12 +55,43 @@ impl<I: FallibleIterator> FallibleLender for FromIter<I> {
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
     }
+
+    #[inline(always)]
+    fn nth(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        self.iter.nth(n)
+    }
+
+    #[inline(always)]
+    fn count(self) -> Result<usize, Self::Error>
+    where
+        Self: Sized,
+    {
+        self.iter.count()
+    }
+
+    #[inline(always)]
+    fn fold<B, F>(self, init: B, f: F) -> Result<B, Self::Error>
+    where
+        Self: Sized,
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
+    {
+        self.iter.fold(init, f)
+    }
 }
 
 impl<I: DoubleEndedFallibleIterator> DoubleEndedFallibleLender for FromIter<I> {
     #[inline(always)]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.iter.next_back()
+    }
+
+    #[inline(always)]
+    fn rfold<B, F>(self, init: B, f: F) -> Result<B, Self::Error>
+    where
+        Self: Sized,
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
+    {
+        self.iter.rfold(init, f)
     }
 }
 
@@ -226,6 +257,42 @@ where
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
     }
+
+    #[inline]
+    fn nth(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        let nth = self.iter.nth(n)?;
+        Ok(
+            // SAFETY: 'a: 'lend
+            unsafe {
+                core::mem::transmute::<
+                    Option<FallibleLend<'a, L>>,
+                    Option<FallibleLend<'_, L>>,
+                >(nth)
+            },
+        )
+    }
+
+    #[inline(always)]
+    fn count(self) -> Result<usize, Self::Error>
+    where
+        Self: Sized,
+    {
+        self.iter.count()
+    }
+
+    #[inline]
+    fn fold<B, F>(self, init: B, mut f: F) -> Result<B, Self::Error>
+    where
+        Self: Sized,
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
+    {
+        self.iter.fold(init, |acc, x| {
+            // SAFETY: 'a: 'lend, and FallibleLend<'a, L> is covariant in 'a
+            f(acc, unsafe {
+                core::mem::transmute::<FallibleLend<'a, L>, FallibleLend<'_, L>>(x)
+            })
+        })
+    }
 }
 
 impl<'a, L, I> DoubleEndedFallibleLender for LendIter<'a, L, I>
@@ -244,6 +311,20 @@ where
                 )
             },
         )
+    }
+
+    #[inline]
+    fn rfold<B, F>(self, init: B, mut f: F) -> Result<B, Self::Error>
+    where
+        Self: Sized,
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
+    {
+        self.iter.rfold(init, |acc, x| {
+            // SAFETY: 'a: 'lend, and FallibleLend<'a, L> is covariant in 'a
+            f(acc, unsafe {
+                core::mem::transmute::<FallibleLend<'a, L>, FallibleLend<'_, L>>(x)
+            })
+        })
     }
 }
 
