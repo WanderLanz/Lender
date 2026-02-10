@@ -51,7 +51,7 @@ pub type Lend<'lend, L> = <L as Lending<'lend>>::Lend;
 /// generally, please see [`core::iter`].
 pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// Internal method for compile-time covariance checking.
-    /// 
+    ///
     /// This method should rarely be implemented directly. Instead, use the
     /// provided macros:
     ///
@@ -834,7 +834,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         for<'all> <Lend<'all, Self> as Try>::Residual: Residual<B>,
         for<'all> B: FromLender<TryShunt<'all, &'a mut Self>>,
     {
-        try_process::<&'a mut Self, _, B>(self.by_ref(),|shunt: TryShunt<'_, &'a mut Self>| B::from_lender(shunt))
+        try_process::<&'a mut Self, _, B>(self.by_ref(), |shunt: TryShunt<'_, &'a mut Self>| B::from_lender(shunt))
     }
     /// The [`Lender`] version of [`Iterator::collect_into`].
     ///
@@ -1248,10 +1248,10 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// ```rust
     /// # use lender::prelude::*;
     /// let lender =
-    ///     ["a", "bbb", "cc"].into_iter().into_lender();
+    ///     [-3, 0, 1, 5, -10].into_iter().into_lender();
     /// assert_eq!(
-    ///     lender.max_by_key(|s| s.len()),
-    ///     Some("bbb")
+    ///     lender.max_by_key(|x: &i32| x.abs()),
+    ///     Some(-10)
     /// );
     /// ```
     #[inline]
@@ -1270,10 +1270,10 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// ```rust
     /// # use lender::prelude::*;
     /// let lender =
-    ///     ["a", "bbb", "cc"].into_iter().into_lender();
+    ///     [-3, 0, 1, 5, -10].into_iter().into_lender();
     /// assert_eq!(
-    ///     lender.max_by(|a, b| a.len().cmp(&b.len())),
-    ///     Some("bbb")
+    ///     lender.max_by(|a: &i32, b: &i32| a.abs().cmp(&b.abs())),
+    ///     Some(-10)
     /// );
     /// ```
     #[inline]
@@ -1297,10 +1297,10 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// ```rust
     /// # use lender::prelude::*;
     /// let lender =
-    ///     ["a", "bbb", "cc"].into_iter().into_lender();
+    ///     [-3, 0, 1, 5, -10].into_iter().into_lender();
     /// assert_eq!(
-    ///     lender.min_by_key(|s| s.len()),
-    ///     Some("a")
+    ///     lender.min_by_key(|x: &i32| x.abs()),
+    ///     Some(0)
     /// );
     /// ```
     #[inline]
@@ -1319,10 +1319,10 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// ```rust
     /// # use lender::prelude::*;
     /// let lender =
-    ///     ["a", "bbb", "cc"].into_iter().into_lender();
+    ///     [-3, 0, 1, 5, -10].into_iter().into_lender();
     /// assert_eq!(
-    ///     lender.min_by(|a, b| a.len().cmp(&b.len())),
-    ///     Some("a")
+    ///     lender.min_by(|a: &i32, b: &i32| a.abs().cmp(&b.abs())),
+    ///     Some(0)
     /// );
     /// ```
     #[inline]
@@ -1572,10 +1572,10 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// ```rust
     /// # use lender::prelude::*;
     /// # use core::cmp::Ordering;
-    /// let a = [1.0, 2.0].into_iter().into_lender();
-    /// let b = [1.0, 3.0].into_iter().into_lender();
+    /// let a = [1, 2].into_iter().into_lender();
+    /// let b = [1, 3].into_iter().into_lender();
     /// assert_eq!(
-    ///     a.partial_cmp_by(b, |x: f64, y: f64| x.partial_cmp(&y)),
+    ///     a.partial_cmp_by(b, |x: i32, y: i32| x.partial_cmp(&y)),
     ///     Some(Ordering::Less)
     /// );
     /// ```
@@ -1787,6 +1787,16 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// [`copied`](Lender::copied) or
     /// [`cloned`](Lender::cloned) instead if you need to
     /// collect into a container.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let lender =
+    ///     [1, 2, 3].into_iter().into_lender();
+    /// let v: Vec<i32> = lender.iter().collect();
+    /// assert_eq!(v, vec![1, 2, 3]);
+    /// ```
     #[inline]
     fn iter<'this>(self) -> Iter<'this, Self>
     where
@@ -1852,6 +1862,19 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// Converts a [`Lender`] into a [`FallibleLender`](crate::FallibleLender)
     /// by wrapping into `Result<Lend<'_, Self>, Infallible>` where
     /// `Infallible` is an error that can never actually happen.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let lender =
+    ///     [1, 2, 3].into_iter().into_lender();
+    /// let mut fallible = lender.into_fallible();
+    /// assert_eq!(fallible.next(), Ok(Some(1)));
+    /// assert_eq!(fallible.next(), Ok(Some(2)));
+    /// assert_eq!(fallible.next(), Ok(Some(3)));
+    /// assert_eq!(fallible.next(), Ok(None));
+    /// ```
     #[inline]
     fn into_fallible(self) -> IntoFallible<Self> where Self: Sized {
         IntoFallible::new(self)

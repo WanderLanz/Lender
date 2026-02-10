@@ -146,12 +146,12 @@ where
     E: 'a,
     for<'all> FallibleLend<'all, L>: Clone,
 {
-    #[inline]
+    #[inline(always)]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.next()
     }
 
-    #[inline]
+    #[inline(always)]
     fn advance_back_by(
         &mut self,
         _n: usize,
@@ -246,7 +246,7 @@ where
     L: ?Sized + CovariantFallibleLending,
     E: Clone,
 {
-    #[inline]
+    #[inline(always)]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.next()
     }

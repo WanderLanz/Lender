@@ -59,7 +59,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     ///   unsafe { core::mem::transmute(lend) } }`, which is a no-op. This is
     ///   unsafe because it is up to the implementor to guarantee that the
     ///   [`Lend`](FallibleLending::Lend) type is covariant in its lifetime.
-    /// 
+    ///
     /// See [`crate::Lender::__check_covariance`] for more details on how this
     /// method works.
     fn __check_covariance<'long: 'short, 'short>(
@@ -1924,6 +1924,9 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     }
 
     /// The [`FallibleLender`] version of [`Iterator::eq`].
+    ///
+    /// Note: Due to HRTB limitations, consider using
+    /// [`eq_by`](FallibleLender::eq_by) instead.
     #[inline]
     fn eq<L>(self, other: L) -> Result<bool, Self::Error>
     where
@@ -2217,6 +2220,17 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// Note: Due to HRTB limitations, consider using
     /// [`copied`](FallibleLender::copied), [`cloned`](FallibleLender::cloned),
     /// or [`owned`](FallibleLender::owned) instead when applicable.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// # use fallible_iterator::FallibleIterator;
+    /// let lender =
+    ///     [1, 2, 3].into_iter().into_lender().into_fallible();
+    /// let v: Vec<i32> = lender.iter().collect().unwrap();
+    /// assert_eq!(v, vec![1, 2, 3]);
+    /// ```
     #[inline]
     fn iter<'this>(self) -> Iter<'this, Self>
     where

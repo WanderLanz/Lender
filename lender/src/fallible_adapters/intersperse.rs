@@ -119,7 +119,7 @@ where
         })
     }
 
-    #[inline]
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         intersperse_size_hint(&self.lender, self.needs_sep)
     }
@@ -170,7 +170,7 @@ where
     }
 }
 
-impl<L: fmt::Debug, G: fmt::Debug> fmt::Debug for IntersperseWith<'_, L, G>
+impl<L: fmt::Debug, G> fmt::Debug for IntersperseWith<'_, L, G>
 where
     L: FallibleLender,
     for<'all> FallibleLend<'all, L>: fmt::Debug,
@@ -178,9 +178,8 @@ where
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("IntersperseWith")
             .field("lender", &self.lender)
-            .field("separator", &self.separator)
             .field("needs_sep", &self.needs_sep)
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 
@@ -239,7 +238,7 @@ where
         })
     }
 
-    #[inline]
+    #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         intersperse_size_hint(&self.lender, self.needs_sep)
     }

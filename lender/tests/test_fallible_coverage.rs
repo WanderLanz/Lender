@@ -6,8 +6,6 @@ use common::*;
 use fallible_iterator::{DoubleEndedFallibleIterator, FallibleIterator};
 
 // ============================================================================
-// New method tests (M5–M7, M11)
-// ============================================================================
 
 #[test]
 fn fallible_zip_nth_back_equal_length() {

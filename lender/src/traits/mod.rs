@@ -318,7 +318,7 @@ macro_rules! check_covariance {
 /// ```rust,ignore
 /// impl<L: Lender> Lender for MyAdapter<L> {
 ///     // SAFETY: the lend is that of L
-///     unsafe_assume_covariance!();  
+///     unsafe_assume_covariance!();
 ///     // ...
 /// }
 /// ```

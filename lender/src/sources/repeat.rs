@@ -96,7 +96,7 @@ where
         self.next()
     }
 
-    #[inline]
+    #[inline(always)]
     fn advance_back_by(&mut self, _n: usize) -> Result<(), core::num::NonZeroUsize> {
         Ok(())
     }
