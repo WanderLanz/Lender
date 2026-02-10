@@ -279,9 +279,7 @@ where
     fn nth_back(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         // SAFETY: 'a: 'lend, and Lend<'a, L> is covariant in 'a
         unsafe {
-            core::mem::transmute::<Option<Lend<'a, L>>, Option<Lend<'_, L>>>(
-                self.iter.nth_back(n),
-            )
+            core::mem::transmute::<Option<Lend<'a, L>>, Option<Lend<'_, L>>>(self.iter.nth_back(n))
         }
     }
 

@@ -265,10 +265,9 @@ where
         Ok(
             // SAFETY: 'a: 'lend
             unsafe {
-                core::mem::transmute::<
-                    Option<FallibleLend<'a, L>>,
-                    Option<FallibleLend<'_, L>>,
-                >(nth)
+                core::mem::transmute::<Option<FallibleLend<'a, L>>, Option<FallibleLend<'_, L>>>(
+                    nth,
+                )
             },
         )
     }
