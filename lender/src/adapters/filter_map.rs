@@ -35,7 +35,6 @@ impl<L, F> FilterMap<L, F> {
 }
 
 impl<L: fmt::Debug, F> fmt::Debug for FilterMap<L, F> {
-    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("FilterMap")
             .field("lender", &self.lender)

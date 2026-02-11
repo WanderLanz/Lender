@@ -2,17 +2,15 @@ use core::{fmt, num::NonZero};
 
 use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lending};
 
-/// Creates a new lender that returns mutable contiguous
-/// overlapping windows of fixed size over a slice.
+/// Creates a new lender that returns mutable contiguous overlapping windows of
+/// fixed size over a slice.
 ///
 /// This is the mutable, lending variant of
-/// [`windows`][windows].
-/// The const generic equivalent is
-/// [`array_windows_mut`].
+/// [`windows`](https://doc.rust-lang.org/stable/std/primitive.slice.html#method.windows).
+/// The const generic equivalent is [`array_windows_mut`].
 ///
-/// Note that the [`WindowsMutExt`] trait provides a convenient
-/// entry point for this function as a method on slices and
-/// arrays.
+/// Note that the [`WindowsMutExt`] trait provides a convenient entry point for
+/// this function as a method on slices and arrays.
 ///
 /// # Panics
 ///
@@ -29,8 +27,6 @@ use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lendi
 /// let mut lender = s.windows_mut(2);
 /// assert_eq!(lender.next(), Some(&mut [0, 1][..]));
 /// ```
-///
-/// [windows]: https://doc.rust-lang.org/stable/std/primitive.slice.html#method.windows
 #[inline]
 pub fn windows_mut<T>(slice: &mut [T], size: usize) -> WindowsMut<'_, T> {
     let size = NonZero::new(size).expect("window size must be non-zero");
@@ -140,18 +136,17 @@ impl<T> FusedLender for WindowsMut<'_, T> {}
 /// windows of fixed size over a slice.
 ///
 /// This is the mutable, lending variant of
-/// [`array_windows`][array_windows].
-/// The non-const generic equivalent is
-/// [`windows_mut`].
+/// [`array_windows`](https://doc.rust-lang.org/stable/std/primitive.slice.html#method.array_windows).
+/// The non-const generic equivalent is [`windows_mut`].
 ///
 /// Note that the [`WindowsMutExt`] trait provides a convenient
 /// entry point for this function as a method on slices and
 /// arrays.
 ///
-/// See [`array_windows`][array_windows]
+/// See
+/// [`array_windows`](https://doc.rust-lang.org/stable/std/primitive.slice.html#method.array_windows).
 /// for more information.
 ///
-/// [array_windows]: https://doc.rust-lang.org/stable/std/primitive.slice.html#method.array_windows
 ///
 /// # Panics
 ///

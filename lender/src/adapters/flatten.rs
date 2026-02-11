@@ -43,7 +43,6 @@ where
     for<'all> Lend<'all, L>: IntoLender,
     for<'all> <Lend<'all, L> as IntoLender>::Lender: fmt::Debug,
 {
-    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Flatten")
             .field("inner", &self.inner)
@@ -153,7 +152,6 @@ where
     for<'all> Lend<'all, Map<L, F>>: IntoLender,
     for<'all> <Lend<'all, Map<L, F>> as IntoLender>::Lender: fmt::Debug,
 {
-    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("FlatMap")
             .field("inner", &self.inner)
@@ -257,7 +255,6 @@ where
     for<'all> Lend<'all, L>: IntoLender,
     for<'all> <Lend<'all, L> as IntoLender>::Lender: fmt::Debug,
 {
-    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("FlattenCompat")
             .field("lender", &self.lender)

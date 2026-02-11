@@ -47,7 +47,6 @@ where
     for<'all> FallibleLend<'all, L>: IntoFallibleLender,
     for<'all> <FallibleLend<'all, L> as IntoFallibleLender>::FallibleLender: fmt::Debug,
 {
-    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Flatten")
             .field("inner", &self.inner)
@@ -163,7 +162,6 @@ where
     for<'all> FallibleLend<'all, Map<L, F>>: IntoFallibleLender,
     for<'all> <FallibleLend<'all, Map<L, F>> as IntoFallibleLender>::FallibleLender: fmt::Debug,
 {
-    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("FlatMap")
             .field("inner", &self.inner)
@@ -272,7 +270,6 @@ where
     for<'all> FallibleLend<'all, L>: IntoFallibleLender,
     for<'all> <FallibleLend<'all, L> as IntoFallibleLender>::FallibleLender: fmt::Debug,
 {
-    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("FlattenCompat")
             .field("lender", &self.lender)
