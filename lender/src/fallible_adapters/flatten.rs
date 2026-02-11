@@ -352,7 +352,8 @@ where
         *self.inner = None;
         loop {
             let Some(l) = self.lender.next()? else { break };
-            // SAFETY: inner is manually guaranteed to be the only lend alive of the inner lender
+            // SAFETY: inner is manually guaranteed to be the only
+            // lend alive of the inner lender
             *self.inner = Some(unsafe {
                 core::mem::transmute::<
                     <FallibleLend<'_, L> as IntoFallibleLender>::FallibleLender,
@@ -381,7 +382,8 @@ where
             acc = inner.fold(acc, &mut f)?;
         }
         while let Some(l) = self.lender.next()? {
-            // SAFETY: inner is manually guaranteed to be the only lend alive of the inner lender
+            // SAFETY: inner is manually guaranteed to be the only
+            // lend alive of the inner lender
             let sub = unsafe {
                 core::mem::transmute::<
                     <FallibleLend<'_, L> as IntoFallibleLender>::FallibleLender,

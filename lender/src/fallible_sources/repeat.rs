@@ -76,6 +76,7 @@ where
     L: ?Sized + CovariantFallibleLending + 'a,
     FallibleLend<'a, L>: Clone,
 {
+    #[inline]
     fn clone(&self) -> Self {
         Repeat {
             elt: self.elt.clone(),
@@ -184,6 +185,7 @@ impl<L, E: Clone> Clone for RepeatErr<L, E>
 where
     L: ?Sized + CovariantFallibleLending,
 {
+    #[inline]
     fn clone(&self) -> Self {
         RepeatErr {
             err: self.err.clone(),

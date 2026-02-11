@@ -21,6 +21,7 @@ where
     error: &'this mut Option<L::Error>,
 }
 
+#[inline]
 pub(crate) fn process<L, F, U>(lender: L, mut f: F) -> Result<U, (U, L::Error)>
 where
     L: FallibleLender,

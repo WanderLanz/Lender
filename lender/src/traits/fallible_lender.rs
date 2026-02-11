@@ -41,7 +41,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     type Error;
 
     /// Internal method for compile-time covariance checking.
-    /// 
+    ///
     /// This method should rarely be implemented directly. Instead, use the
     /// provided macros:
     ///
@@ -53,15 +53,18 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     ///   is covariant in its lifetime.
     ///
     /// - In all other cases (e.g., when implementing adapters), use
-    ///   [`unsafe_assume_covariance_fallible!`](crate::unsafe_assume_covariance_fallible)
+    ///   [`unsafe_assume_covariance_fallible!`][uacf]
     ///   in the [`FallibleLender`] impl. The macro
     ///   implements the method as `{
-    ///   unsafe { core::mem::transmute(lend) } }`, which is a no-op. This is
-    ///   unsafe because it is up to the implementor to guarantee that the
-    ///   [`Lend`](FallibleLending::Lend) type is covariant in its lifetime.
+    ///   unsafe { core::mem::transmute(lend) } }`, which is a no-op.
+    ///   This is unsafe because it is up to the implementor to
+    ///   guarantee that the [`Lend`](FallibleLending::Lend) type is
+    ///   covariant in its lifetime.
     ///
-    /// See [`crate::Lender::__check_covariance`] for more details on how this
-    /// method works.
+    /// See [`crate::Lender::__check_covariance`] for more details
+    /// on how this method works.
+    ///
+    /// [uacf]: crate::unsafe_assume_covariance_fallible
     fn __check_covariance<'long: 'short, 'short>(
         lend: *const &'short <Self as FallibleLending<'long>>::Lend, _: crate::Uncallable,
     ) -> *const &'short <Self as FallibleLending<'short>>::Lend;
@@ -76,7 +79,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     ///
     /// Every lend is only guaranteed to be valid one at a time for any kind of
     /// lender.
-    /// 
+    ///
     /// # Examples
     ///
     /// ```rust
@@ -94,8 +97,8 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
 
     /// Takes the next `chunk_size` lends of the lender with temporary lender
     /// [`Chunk`]. This is equivalent to cloning the lender and calling
-    /// [`take(len)`](FallibleLender::take) on it.
-    /// 
+    /// [`take(chunk_size)`](FallibleLender::take) on it.
+    ///
     /// # Examples
     ///
     /// ```rust
@@ -122,7 +125,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// [`next()`](FallibleLender::next) succeed. That is,
     /// [`next()`](FallibleLender::next) could return an [`Err`] in fewer
     /// calls than specified by the lower bound.
-    /// 
+    ///
     /// # Examples
     ///
     /// ```rust
@@ -156,7 +159,11 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         self.fold(0, |n, _| Ok(n + 1))
     }
 
-    /// Returns the last element of the lender.
+    /// Gets the last lend of the lender, if any, by consuming it.
+    ///
+    /// Unlike [`Iterator::last`], this method takes `&mut self`
+    /// rather than `self` because returning a lend that borrows
+    /// from the lender requires the lender to remain alive.
     ///
     /// # Examples
     ///
@@ -498,7 +505,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// lender.for_each(|&x| { sum += x; Ok(()) }).unwrap();
     /// assert_eq!(sum, 6);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn for_each<F>(self, mut f: F) -> Result<(), Self::Error>
     where
         Self: Sized,
@@ -1772,8 +1779,9 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// Note: This method requires a type implementing
     /// [`SumFallibleLender`]. For simple numeric
     /// sums, consider using [`owned()`](FallibleLender::owned)
-    /// and then
-    /// [`FallibleIterator::sum()`](https://docs.rs/fallible-iterator/latest/fallible_iterator/trait.FallibleIterator.html#method.sum).
+    /// and then [`FallibleIterator::sum()`][fi-sum].
+    ///
+    /// [fi-sum]: https://docs.rs/fallible-iterator/latest/fallible_iterator/trait.FallibleIterator.html#method.sum
     #[inline(always)]
     fn sum<S>(self) -> Result<S, Self::Error>
     where
@@ -1787,9 +1795,11 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     ///
     /// Note: This method requires a type implementing
     /// [`ProductFallibleLender`]. For simple
-    /// numeric products, consider using [`owned()`](FallibleLender::owned)
-    /// and then
-    /// [`FallibleIterator::product()`](https://docs.rs/fallible-iterator/latest/fallible_iterator/trait.FallibleIterator.html#method.product).
+    /// numeric products, consider using
+    /// [`owned()`](FallibleLender::owned) and then
+    /// [`FallibleIterator::product()`][fi-prod].
+    ///
+    /// [fi-prod]: https://docs.rs/fallible-iterator/latest/fallible_iterator/trait.FallibleIterator.html#method.product
     #[inline(always)]
     fn product<P>(self) -> Result<P, Self::Error>
     where
@@ -2209,7 +2219,6 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     ///
     /// ```rust
     /// # use lender::prelude::*;
-    /// # use std::convert::Infallible;
     /// let data = [1, 2, 3, 4, 5];
     /// let lender = data.iter().into_lender().into_fallible();
     /// let mut chunky = lender.chunky(2);

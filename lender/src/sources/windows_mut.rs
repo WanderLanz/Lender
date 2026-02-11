@@ -70,6 +70,7 @@ enum WindowPosition {
 
 impl WindowPosition {
     /// Drop the end of the slice that we most recently returned.
+    #[inline]
     fn update_slice<T>(self, slice: &mut &mut [T]) {
         match self {
             WindowPosition::Init => {}

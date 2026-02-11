@@ -4,7 +4,7 @@ use crate::{FallibleLender, Lender};
 ///
 /// This trait is similar to [`core::iter::Sum`], but for [`Lender`]s.
 ///
-/// # Example
+/// # Examples
 /// ```rust
 /// # use std::borrow::ToOwned;
 /// # use lender::{prelude::*, SumLender};

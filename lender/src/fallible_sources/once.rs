@@ -77,6 +77,7 @@ where
     L: ?Sized + CovariantFallibleLending,
     FallibleLend<'a, L>: Clone,
 {
+    #[inline]
     fn clone(&self) -> Self {
         Once {
             inner: self.inner.clone(),
@@ -172,6 +173,7 @@ impl<L, E: Clone> Clone for OnceErr<L, E>
 where
     L: ?Sized + CovariantFallibleLending,
 {
+    #[inline]
     fn clone(&self) -> Self {
         OnceErr {
             inner: self.inner.clone(),

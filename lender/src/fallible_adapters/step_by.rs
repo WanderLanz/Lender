@@ -139,6 +139,7 @@ impl<L> StepBy<L>
 where
     L: ExactSizeFallibleLender,
 {
+    #[inline]
     fn next_back_index_fallible(&self) -> usize {
         let rem = self.lender.len() % (self.step + 1);
         if self.first_take {

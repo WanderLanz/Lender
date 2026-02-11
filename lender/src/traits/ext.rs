@@ -23,10 +23,10 @@ impl<I: Iterator> IteratorExt<I> for I {
 
 /// Extension trait adding to [`IntoIterator`] the method
 /// [`into_into_lender`](IntoIteratorExt::into_into_lender), which turns an
-/// [`IntoIterator`] into a [`IntoLender`](crate::IntoLender) without
+/// [`IntoIterator`] into an [`IntoLender`](crate::IntoLender) without
 /// allocation.
 pub trait IntoIteratorExt<I: IntoIterator> {
-    /// Turn this [`IntoIterator`] into a [`IntoLender`](crate::IntoLender)
+    /// Turn this [`IntoIterator`] into an [`IntoLender`](crate::IntoLender)
     /// without allocation.
     ///
     /// This method is a convenient entry point for
@@ -69,7 +69,7 @@ impl<I: FallibleIterator> FallibleIteratorExt<I> for I {
 /// [1]: IntoFallibleIteratorExt::into_into_fallible_lender
 /// [`IntoFallibleLender`]: crate::IntoFallibleLender
 pub trait IntoFallibleIteratorExt<I: IntoFallibleIterator> {
-    /// Turn this [`IntoFallibleIterator`] into a
+    /// Turn this [`IntoFallibleIterator`] into an
     /// [`IntoFallibleLender`](crate::IntoFallibleLender) without allocation.
     ///
     /// This method is a convenient entry point for

@@ -82,7 +82,7 @@ impl<'lend, T: ?Sized + for<'all> DynLend<'all>> Lending<'lend> for DynLendShunt
 /// Users should not need to implement this trait directly. Use [`lend!`] for
 /// simple patterns or [`covariant_lend!`] for complex types.
 ///
-/// The required method [`__check_covariance`](CovariantLending::_check_covariance)
+/// The required method [`__check_covariance`](CovariantLending::__check_covariance)
 /// enforces covariance: its safe body `{ lend }` only compiles when the
 /// [`Lend`](Lending::Lend) type is covariant, so non-covariant types cannot
 /// implement this trait without `unsafe`. See the documentation of

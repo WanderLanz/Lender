@@ -43,6 +43,7 @@ pub struct RepeatWith<'a, L: ?Sized, F> {
 }
 
 impl<L: ?Sized, F: Clone> Clone for RepeatWith<'_, L, F> {
+    #[inline]
     fn clone(&self) -> Self {
         Self {
             f: self.f.clone(),

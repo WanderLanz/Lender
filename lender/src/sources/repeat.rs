@@ -38,6 +38,7 @@ where
     L: ?Sized + CovariantLending + 'a,
     Lend<'a, L>: Clone,
 {
+    #[inline]
     fn clone(&self) -> Self {
         Repeat {
             elt: self.elt.clone(),

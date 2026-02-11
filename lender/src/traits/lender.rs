@@ -206,7 +206,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// Yields the nth lend of the lender, if any, by consuming it. If the
     /// lender does not have enough lends, returns [`None`].
     ///
-    /// n is zero-indexed.
+    /// `n` is zero-indexed.
     ///
     /// # Examples
     ///

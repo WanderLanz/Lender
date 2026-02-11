@@ -38,6 +38,7 @@ where
     L: ?Sized + CovariantLending,
     Lend<'a, L>: Clone,
 {
+    #[inline]
     fn clone(&self) -> Self {
         Once {
             inner: self.inner.clone(),

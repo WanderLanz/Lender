@@ -78,6 +78,7 @@ pub struct RepeatWith<'a, L: ?Sized, E, F> {
 }
 
 impl<L: ?Sized, E, F: Clone> Clone for RepeatWith<'_, L, E, F> {
+    #[inline]
     fn clone(&self) -> Self {
         Self {
             f: self.f.clone(),
@@ -178,6 +179,7 @@ pub struct RepeatWithErr<L: ?Sized, F> {
 }
 
 impl<L: ?Sized, F: Clone> Clone for RepeatWithErr<L, F> {
+    #[inline]
     fn clone(&self) -> Self {
         Self {
             f: self.f.clone(),

@@ -229,6 +229,7 @@ where
     }
 }
 
+#[inline]
 fn intersperse_size_hint<L>(lender: &L, needs_sep: bool) -> (usize, Option<usize>)
 where
     L: Lender,

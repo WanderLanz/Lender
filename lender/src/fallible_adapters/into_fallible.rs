@@ -56,8 +56,41 @@ where
     }
 
     #[inline]
+    fn nth(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        Ok(self.lender.nth(n))
+    }
+
+    #[inline]
+    fn count(self) -> Result<usize, Self::Error>
+    where
+        Self: Sized,
+    {
+        Ok(self.lender.count())
+    }
+
+    #[inline]
+    fn last(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error>
+    where
+        Self: Sized,
+    {
+        Ok(self.lender.last())
+    }
+
+    #[inline]
     fn advance_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         Ok(self.lender.advance_by(n))
+    }
+
+    #[inline]
+    fn fold<B, F>(self, init: B, mut f: F) -> Result<B, Self::Error>
+    where
+        Self: Sized,
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
+    {
+        Ok(self.lender.fold(init, |acc, value| match f(acc, value) {
+            Ok(b) => b,
+            Err(e) => match e {},
+        }))
     }
 
     #[inline]
@@ -95,8 +128,25 @@ where
     }
 
     #[inline]
+    fn nth_back(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        Ok(self.lender.nth_back(n))
+    }
+
+    #[inline]
     fn advance_back_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         Ok(self.lender.advance_back_by(n))
+    }
+
+    #[inline]
+    fn rfold<B, F>(self, init: B, mut f: F) -> Result<B, Self::Error>
+    where
+        Self: Sized,
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
+    {
+        Ok(self.lender.rfold(init, |acc, value| match f(acc, value) {
+            Ok(b) => b,
+            Err(e) => match e {},
+        }))
     }
 
     #[inline]

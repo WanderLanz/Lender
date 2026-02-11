@@ -128,6 +128,7 @@ where
     }
 }
 
+#[inline]
 pub(crate) fn try_process<'a, L, F, U>(lender: L, mut f: F) -> ChangeOutputType<Lend<'a, L>, U>
 where
     L: Lender + 'a,
@@ -179,6 +180,7 @@ where
     for<'all> Lend<'all, L>: TupleLend<'all>,
 {
     type Lender = Empty<Self>;
+    #[inline(always)]
     fn into_lender(self) -> <Self as IntoLender>::Lender {
         empty()
     }
@@ -189,6 +191,7 @@ where
     for<'all> Lend<'all, L>: TupleLend<'all>,
 {
     type Lender = Empty<Self>;
+    #[inline(always)]
     fn into_lender(self) -> <Self as IntoLender>::Lender {
         empty()
     }
@@ -215,6 +218,7 @@ where
     type Error = L::Error;
 
     type FallibleLender = FallibleEmpty<Self, L::Error>;
+    #[inline(always)]
     fn into_fallible_lender(self) -> <Self as IntoFallibleLender>::FallibleLender {
         fallible_empty()
     }
@@ -227,11 +231,13 @@ where
     type Error = L::Error;
 
     type FallibleLender = FallibleEmpty<Self, L::Error>;
+    #[inline(always)]
     fn into_fallible_lender(self) -> <Self as IntoFallibleLender>::FallibleLender {
         fallible_empty()
     }
 }
 
+#[inline]
 pub(crate) fn unzip<L, ExtA, ExtB>(mut lender: L) -> (ExtA, ExtB)
 where
     L: Sized + Lender,
@@ -254,6 +260,7 @@ where
     (a, b)
 }
 
+#[inline]
 pub(crate) fn fallible_unzip<L, ExtA, ExtB>(mut lender: L) -> Result<(ExtA, ExtB), L::Error>
 where
     L: Sized + FallibleLender,

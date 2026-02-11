@@ -33,8 +33,6 @@ impl<L> Fuse<L> {
     }
 }
 
-impl<L> FusedLender for Fuse<L> where L: Lender {}
-
 impl<'lend, L> Lending<'lend> for Fuse<L>
 where
     L: Lender,
@@ -234,6 +232,8 @@ where
         }
     }
 }
+
+impl<L> FusedLender for Fuse<L> where L: Lender {}
 
 impl<L: Default> Default for Fuse<L> {
     #[inline(always)]

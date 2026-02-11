@@ -45,6 +45,7 @@ pub struct OnceWith<St, F> {
 }
 
 impl<St: Clone, F: Clone> Clone for OnceWith<St, F> {
+    #[inline]
     fn clone(&self) -> Self {
         Self {
             state: self.state.clone(),
