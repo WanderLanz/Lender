@@ -1,6 +1,7 @@
 mod empty;
 mod from_fn;
 mod from_iter;
+mod from_iter_ref;
 mod once;
 mod once_with;
 mod repeat;
@@ -13,6 +14,10 @@ pub use self::{
         FromIntoIter as FromIntoFallibleIter, FromIter as FromFallibleIter,
         LendIter as LendFallibleIter, from_into_iter as from_into_fallible_iter,
         from_iter as from_fallible_iter, lend_iter as lend_fallible_iter,
+    },
+    from_iter_ref::{
+        FromIterRef as FromFallibleIterRef,
+        from_iter_ref as from_fallible_iter_ref,
     },
     once::{
         Once as FallibleOnce, OnceErr as FallibleOnceErr, once as fallible_once,

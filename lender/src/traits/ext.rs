@@ -1,6 +1,9 @@
 use fallible_iterator::{FallibleIterator, IntoFallibleIterator};
 
-use crate::{FromFallibleIter, FromIntoFallibleIter, FromIntoIter, FromIter};
+use crate::{
+    FromFallibleIter, FromFallibleIterRef, FromIntoFallibleIter, FromIntoIter, FromIter,
+    FromIterRef,
+};
 
 /// Extension trait adding to [`Iterator`] the method
 /// [`into_lender`](IteratorExt::into_lender), which turns an [`Iterator`]
@@ -81,5 +84,47 @@ impl<I: IntoFallibleIterator> IntoFallibleIteratorExt<I> for I {
     #[inline(always)]
     fn into_into_fallible_lender(self) -> FromIntoFallibleIter<I> {
         crate::from_into_fallible_iter(self)
+    }
+}
+
+/// Extension trait adding to [`Iterator`] the method
+/// [`into_ref_lender`](IteratorRefExt::into_ref_lender),
+/// which turns an `Iterator<Item = T>` into a
+/// [`Lender`](crate::Lender) with `Lend<'lend> = &'lend T`.
+pub trait IteratorRefExt<I: Iterator> {
+    /// Turn this [`Iterator`] into a [`Lender`](crate::Lender)
+    /// that stores each element and lends a reference to it.
+    ///
+    /// This method is a convenient entry point for
+    /// [`from_iter_ref`](crate::from_iter_ref).
+    fn into_ref_lender(self) -> FromIterRef<I>;
+}
+
+impl<I: Iterator> IteratorRefExt<I> for I {
+    #[inline(always)]
+    fn into_ref_lender(self) -> FromIterRef<I> {
+        crate::from_iter_ref(self)
+    }
+}
+
+/// Extension trait adding to [`FallibleIterator`] the method
+/// [`into_fallible_ref_lender`](FallibleIteratorRefExt::into_fallible_ref_lender),
+/// which turns a `FallibleIterator<Item = T>` into a
+/// [`FallibleLender`](crate::FallibleLender) with `FallibleLend<'lend> = &'lend
+/// T`.
+pub trait FallibleIteratorRefExt<I: FallibleIterator> {
+    /// Turn this [`FallibleIterator`] into a
+    /// [`FallibleLender`](crate::FallibleLender) that stores
+    /// each element and lends a reference to it.
+    ///
+    /// This method is a convenient entry point for
+    /// [`from_fallible_iter_ref`](crate::from_fallible_iter_ref).
+    fn into_fallible_ref_lender(self) -> FromFallibleIterRef<I>;
+}
+
+impl<I: FallibleIterator> FallibleIteratorRefExt<I> for I {
+    #[inline(always)]
+    fn into_fallible_ref_lender(self) -> FromFallibleIterRef<I> {
+        crate::from_fallible_iter_ref(self)
     }
 }

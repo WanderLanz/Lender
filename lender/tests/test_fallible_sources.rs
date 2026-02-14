@@ -207,6 +207,114 @@ fn fallible_repeat_with() {
     assert_eq!(repeat_with_de.next().unwrap(), Some(99));
 }
 
+// ============================================================================
+// FromFallibleIterRef source tests
+// ============================================================================
+
+#[test]
+fn from_fallible_iter_ref_basic() {
+    use fallible_iterator::IteratorExt;
+
+    let mut lender = lender::from_fallible_iter_ref(
+        [1, 2, 3].into_iter().into_fallible(),
+    );
+    assert_eq!(lender.next().unwrap(), Some(&1));
+    assert_eq!(lender.next().unwrap(), Some(&2));
+    assert_eq!(lender.next().unwrap(), Some(&3));
+    assert!(lender.next().unwrap().is_none());
+}
+
+#[test]
+fn from_fallible_iter_ref_ext() {
+    use fallible_iterator::IteratorExt;
+
+    let mut lender =
+        [1, 2, 3].into_iter().into_fallible().into_fallible_ref_lender();
+    assert_eq!(lender.next().unwrap(), Some(&1));
+    assert_eq!(lender.next().unwrap(), Some(&2));
+    assert_eq!(lender.next().unwrap(), Some(&3));
+    assert!(lender.next().unwrap().is_none());
+}
+
+#[test]
+fn from_fallible_iter_ref_size_hint() {
+    use fallible_iterator::IteratorExt;
+
+    let lender = lender::from_fallible_iter_ref(
+        vec![1, 2, 3].into_iter().into_fallible(),
+    );
+    assert_eq!(lender.size_hint(), (3, Some(3)));
+}
+
+#[test]
+fn from_fallible_iter_ref_count() {
+    use fallible_iterator::IteratorExt;
+
+    let lender = lender::from_fallible_iter_ref(
+        vec![1, 2, 3].into_iter().into_fallible(),
+    );
+    assert_eq!(lender.count(), Ok(3));
+}
+
+#[test]
+fn from_fallible_iter_ref_nth() {
+    use fallible_iterator::IteratorExt;
+
+    let mut lender = lender::from_fallible_iter_ref(
+        [1, 2, 3, 4, 5].into_iter().into_fallible(),
+    );
+    assert_eq!(lender.nth(2).unwrap(), Some(&3));
+    assert_eq!(lender.next().unwrap(), Some(&4));
+}
+
+#[test]
+fn from_fallible_iter_ref_fold() {
+    use fallible_iterator::IteratorExt;
+
+    let sum = lender::from_fallible_iter_ref(
+        [1, 2, 3, 4, 5].into_iter().into_fallible(),
+    )
+    .fold(0, |acc, &x| Ok(acc + x));
+    assert_eq!(sum, Ok(15));
+}
+
+#[test]
+fn from_fallible_iter_ref_double_ended() {
+    use fallible_iterator::IteratorExt;
+
+    let mut lender = lender::from_fallible_iter_ref(
+        [1, 2, 3].into_iter().into_fallible(),
+    );
+    assert_eq!(lender.next_back().unwrap(), Some(&3));
+    assert_eq!(lender.next().unwrap(), Some(&1));
+    assert_eq!(lender.next_back().unwrap(), Some(&2));
+    assert!(lender.next().unwrap().is_none());
+}
+
+#[test]
+fn from_fallible_iter_ref_rfold() {
+    use fallible_iterator::IteratorExt;
+
+    let values = lender::from_fallible_iter_ref(
+        [1, 2, 3].into_iter().into_fallible(),
+    )
+    .rfold(Vec::new(), |mut acc, &x| {
+        acc.push(x);
+        Ok(acc)
+    });
+    assert_eq!(values, Ok(vec![3, 2, 1]));
+}
+
+#[test]
+fn from_fallible_iter_ref_from_trait() {
+    use fallible_iterator::IteratorExt;
+
+    let mut lender = lender::FromFallibleIterRef::from(
+        [1, 2, 3].into_iter().into_fallible(),
+    );
+    assert_eq!(lender.next().unwrap(), Some(&1));
+}
+
 #[test]
 fn from_fallible_fn() {
     use lender::from_fallible_fn;

@@ -1,6 +1,7 @@
 mod empty;
 mod from_fn;
 mod from_iter;
+mod from_iter_ref;
 mod once;
 mod once_with;
 mod repeat;
@@ -11,6 +12,7 @@ pub use self::{
     empty::{Empty, empty},
     from_fn::{FromFn, from_fn},
     from_iter::{FromIntoIter, FromIter, LendIter, from_into_iter, from_iter, lend_iter},
+    from_iter_ref::{FromIterRef, from_iter_ref},
     once::{Once, once},
     once_with::{OnceWith, once_with},
     repeat::{Repeat, repeat},

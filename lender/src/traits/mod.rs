@@ -15,7 +15,10 @@ pub use self::{
     },
     double_ended::{DoubleEndedFallibleLender, DoubleEndedLender},
     exact_size::{ExactSizeFallibleLender, ExactSizeLender},
-    ext::{FallibleIteratorExt, IntoFallibleIteratorExt, IntoIteratorExt, IteratorExt},
+    ext::{
+        FallibleIteratorExt, FallibleIteratorRefExt, IntoFallibleIteratorExt, IntoIteratorExt,
+        IteratorExt, IteratorRefExt,
+    },
     fallible_lender::{FallibleLend, FallibleLender, FallibleLending},
     lender::{Lend, Lender, Lending},
     marker::{FusedFallibleLender, FusedLender},

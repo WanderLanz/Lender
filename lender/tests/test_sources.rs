@@ -373,6 +373,137 @@ fn from_iter_fallible_coverage() {
 }
 
 // ============================================================================
+// FromIterRef source tests
+// ============================================================================
+
+#[test]
+fn from_iter_ref_basic() {
+    let mut lender = lender::from_iter_ref([1, 2, 3].into_iter());
+
+    assert_eq!(lender.next(), Some(&1));
+    assert_eq!(lender.next(), Some(&2));
+    assert_eq!(lender.next(), Some(&3));
+    assert_eq!(lender.next(), None);
+}
+
+#[test]
+fn from_iter_ref_ext() {
+    let mut lender = [1, 2, 3].into_iter().into_ref_lender();
+
+    assert_eq!(lender.next(), Some(&1));
+    assert_eq!(lender.next(), Some(&2));
+    assert_eq!(lender.next(), Some(&3));
+    assert_eq!(lender.next(), None);
+}
+
+#[test]
+fn from_iter_ref_size_hint() {
+    let lender = lender::from_iter_ref(vec![1, 2, 3].into_iter());
+    assert_eq!(lender.size_hint(), (3, Some(3)));
+}
+
+#[test]
+fn from_iter_ref_count() {
+    let lender = lender::from_iter_ref(vec![1, 2, 3].into_iter());
+    assert_eq!(lender.count(), 3);
+}
+
+#[test]
+fn from_iter_ref_nth() {
+    let mut lender = lender::from_iter_ref([1, 2, 3, 4, 5].into_iter());
+    assert_eq!(lender.nth(2), Some(&3));
+    assert_eq!(lender.next(), Some(&4));
+}
+
+#[test]
+fn from_iter_ref_advance_by() {
+    let mut lender = lender::from_iter_ref([1, 2, 3, 4, 5].into_iter());
+    assert_eq!(lender.advance_by(2), Ok(()));
+    assert_eq!(lender.next(), Some(&3));
+}
+
+#[test]
+fn from_iter_ref_advance_by_past_end() {
+    let mut lender = lender::from_iter_ref([1, 2].into_iter());
+    let result = lender.advance_by(5);
+    assert!(result.is_err());
+    assert_eq!(result.unwrap_err().get(), 3); // 5 - 2 = 3 remaining
+}
+
+#[test]
+fn from_iter_ref_last() {
+    let mut lender = lender::from_iter_ref([1, 2, 3].into_iter());
+    assert_eq!(lender.last(), Some(&3));
+}
+
+#[test]
+fn from_iter_ref_last_empty() {
+    let mut lender = lender::from_iter_ref(core::iter::empty::<i32>());
+    assert_eq!(lender.last(), None);
+}
+
+#[test]
+fn from_iter_ref_fold() {
+    let sum = lender::from_iter_ref([1, 2, 3, 4, 5].into_iter())
+        .fold(0, |acc, &x| acc + x);
+    assert_eq!(sum, 15);
+}
+
+#[test]
+fn from_iter_ref_double_ended() {
+    let mut lender = lender::from_iter_ref([1, 2, 3].into_iter());
+
+    assert_eq!(lender.next_back(), Some(&3));
+    assert_eq!(lender.next(), Some(&1));
+    assert_eq!(lender.next_back(), Some(&2));
+    assert_eq!(lender.next(), None);
+}
+
+#[test]
+fn from_iter_ref_nth_back() {
+    let mut lender = lender::from_iter_ref([1, 2, 3, 4, 5].into_iter());
+    assert_eq!(lender.nth_back(2), Some(&3));
+    assert_eq!(lender.next_back(), Some(&2));
+}
+
+#[test]
+fn from_iter_ref_advance_back_by() {
+    let mut lender = lender::from_iter_ref([1, 2, 3, 4, 5].into_iter());
+    assert_eq!(lender.advance_back_by(2), Ok(()));
+    assert_eq!(lender.next_back(), Some(&3));
+}
+
+#[test]
+fn from_iter_ref_advance_back_by_past_end() {
+    let mut lender = lender::from_iter_ref([1, 2].into_iter());
+    let result = lender.advance_back_by(5);
+    assert!(result.is_err());
+    assert_eq!(result.unwrap_err().get(), 3);
+}
+
+#[test]
+fn from_iter_ref_rfold() {
+    let values = lender::from_iter_ref([1, 2, 3].into_iter())
+        .rfold(Vec::new(), |mut acc, &x| {
+            acc.push(x);
+            acc
+        });
+    assert_eq!(values, vec![3, 2, 1]);
+}
+
+#[test]
+fn from_iter_ref_exact_size() {
+    let lender = lender::from_iter_ref(vec![1, 2, 3].into_iter());
+    assert_eq!(lender.len(), 3);
+}
+
+#[test]
+fn from_iter_ref_from_trait() {
+    let mut lender = lender::FromIterRef::from([1, 2, 3].into_iter());
+    assert_eq!(lender.next(), Some(&1));
+}
+
+// ============================================================================
 // LendIter source tests
 // ============================================================================
 

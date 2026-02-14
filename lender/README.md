@@ -46,6 +46,10 @@ where lend is `Clone`, [`copied`](https://docs.rs/lender/latest/lender/trait.Len
 [`owned`](https://docs.rs/lender/latest/lender/trait.Lender.html#method.owned) where lend is `ToOwned`, or
 [`iter`](https://docs.rs/lender/latest/lender/trait.Lender.html#method.iter) where the lender already satisfies the restrictions of `Iterator`.
 
+Turn an iterator into a lender with [`into_lender`](https://docs.rs/lender/latest/lender/trait.IntoLenderExt.html#tymethod.into_lender), which is just a pass-through, or
+[`into_ref_lender`](https://docs.rs/lender/latest/lender/trait.IteratorRefExt.html#tymethod.into_ref_lender) which stores the next item and returns a reference to it. [`lend_iter`](https://docs.rs/lender/latest/lender/fn.lend_iter.html) can be used instead to safely shorten the lifetime of references
+returned by an iterator, getting a lender.
+
 ## Features
 
 The `derive` feature (enabled by default) provides the
