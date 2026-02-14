@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.5.2]
+
+### New
+
+* Convenience `Lender::lender_by_ref` method that is equivalent to
+  `iter` followed by `into_ref_lender`.
+
 ## [0.5.1] - 2026-02-14
 
 ### New

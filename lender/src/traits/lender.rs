@@ -3,10 +3,10 @@ use core::{cmp::Ordering, num::NonZeroUsize, ops::ControlFlow};
 
 use crate::{
     Chain, Chunk, Chunky, Cloned, Convert, Copied, Covar, Cycle, DoubleEndedLender, Enumerate,
-    ExactSizeLender, ExtendLender, Filter, FilterMap, FirstShunt, FlatMap, Flatten, FromLender,
-    Fuse, ImplBound, Inspect, Intersperse, IntersperseWith, IntoFallible, IntoLender, Iter, Map,
-    MapIntoIter, MapWhile, Mutate, Owned, Peekable, ProductLender, Ref, Rev, Scan, SecondShunt,
-    Skip, SkipWhile, StepBy, SumLender, Take, TakeWhile, TryShunt, TupleLend, Zip,
+    ExactSizeLender, ExtendLender, Filter, FilterMap, FirstShunt, FlatMap, Flatten, FromIterRef,
+    FromLender, Fuse, ImplBound, Inspect, Intersperse, IntersperseWith, IntoFallible, IntoLender,
+    Iter, Map, MapIntoIter, MapWhile, Mutate, Owned, Peekable, ProductLender, Ref, Rev, Scan,
+    SecondShunt, Skip, SkipWhile, StepBy, SumLender, Take, TakeWhile, TryShunt, TupleLend, Zip,
     higher_order::{FnMutHKA, FnMutHKAOpt},
     try_process,
     try_trait_v2::{ChangeOutputType, FromResidual, Residual, Try, internal::NeverShortCircuit},
@@ -1805,6 +1805,38 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     {
         Iter::new(self)
     }
+
+    /// Turns this [`Lender`] into a new [`Lender`] that lends
+    /// references to the items of the original lender.
+    ///
+    /// This is a convenience for `self.iter().into_ref_lender()`: first,
+    /// [`iter`](Lender::iter) converts this lender into an [`Iterator`]; then,
+    /// [`into_ref_lender`](crate::traits::IteratorRefExt::into_ref_lender)
+    /// wraps it back into a [`Lender`] that stores each element and lends a
+    /// reference to it.
+    ///
+    /// [`iter`]: 
+    /// [`into_ref_lender`]: 
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let mut lender =
+    ///     [1, 2, 3].into_iter().into_lender()
+    ///         .lender_by_ref();
+    /// let item: &i32 = lender.next().unwrap();
+    /// assert_eq!(*item, 1);
+    /// ```
+    #[inline(always)]
+    fn lender_by_ref<'this>(self) -> FromIterRef<Iter<'this, Self>>
+    where
+        Self: Sized + 'this,
+        for<'all> Lend<'all, Self>: 'this,
+    {
+        crate::from_iter_ref(self.iter())
+    }
+
     /// A lending replacement for [`Iterator::array_chunks`].
     ///
     /// It is not possible to implement the exact behavior of

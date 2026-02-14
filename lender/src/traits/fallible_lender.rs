@@ -9,9 +9,10 @@ use crate::{
     Chain, Chunk, Chunky, Cloned, Copied, Covar, Cycle, DoubleEndedFallibleLender, Enumerate,
     ExactSizeFallibleLender, ExtendLender, FallibleFlatMap, FallibleFlatten, FallibleIntersperse,
     FallibleIntersperseWith, FalliblePeekable, FallibleTryShuntAdapter, Filter, FilterMap,
-    FirstShunt, FromLender, Fuse, ImplBound, Inspect, Iter, Map, MapErr, MapIntoIter, MapWhile,
-    Mutate, NonFallibleAdapter, Owned, ProductFallibleLender, Ref, Rev, Scan, SecondShunt, Skip,
-    SkipWhile, StepBy, SumFallibleLender, Take, TakeWhile, TupleLend, Zip, fallible_unzip,
+    FirstShunt, FromFallibleIterRef, FromLender, Fuse, ImplBound, Inspect, Iter, Map, MapErr,
+    MapIntoIter, MapWhile, Mutate, NonFallibleAdapter, Owned, ProductFallibleLender, Ref, Rev,
+    Scan, SecondShunt, Skip, SkipWhile, StepBy, SumFallibleLender, Take, TakeWhile, TupleLend, Zip,
+    fallible_unzip,
     higher_order::{FnMutHKARes, FnMutHKAResOpt},
     non_fallible_adapter,
     traits::collect::IntoFallibleLender,
@@ -2268,6 +2269,42 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         for<'all> FallibleLend<'all, Self>: 'this,
     {
         Iter::new(self)
+    }
+
+    /// Turns this [`FallibleLender`] into a new
+    /// [`FallibleLender`] that lends references to the items
+    /// of the original lender.
+    ///
+    /// This is a convenience for `self.iter().into_fallible_ref_lender()`:
+    /// first, [`iter`](FallibleLender::iter) converts this lender into a
+    /// [`FallibleIterator`](fallible_iterator::FallibleIterator); then,
+    /// [`into_fallible_ref_lender`](crate::traits::FallibleIteratorRefExt::into_fallible_ref_lender)
+    /// wraps it back into a [`FallibleLender`] that stores each element and
+    /// lends a reference to it.
+    ///
+    /// The resulting lender has
+    /// `FallibleLend<'lend> = &'lend FallibleLend<'this, Self>`.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use lender::prelude::*;
+    /// let mut lender =
+    ///     [1, 2, 3].into_iter().into_lender()
+    ///         .into_fallible().lender_by_ref();
+    /// let item: &i32 =
+    ///     lender.next().unwrap().unwrap();
+    /// assert_eq!(*item, 1);
+    /// ```
+    #[inline(always)]
+    fn lender_by_ref<'this>(
+        self,
+    ) -> FromFallibleIterRef<Iter<'this, Self>>
+    where
+        Self: Sized + 'this,
+        for<'all> FallibleLend<'all, Self>: 'this,
+    {
+        crate::from_fallible_iter_ref(self.iter())
     }
 }
 
