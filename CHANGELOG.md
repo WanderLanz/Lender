@@ -4,8 +4,8 @@
 
 ### New
 
-* New `FromIterRef` (fallible) adapter to create lenders from references to
-  element returned by iterators. Accessible throw the
+* New `FromIterRef` (fallible) source to create lenders from references to
+  elements returned by iterators. Accessible through the
   `into_ref_lender`/`into_fallible_ref_lender` extension methods.
 
 ## [0.5.0] - 2026-02-10

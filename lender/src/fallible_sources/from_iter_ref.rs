@@ -1,5 +1,9 @@
+use core::num::NonZeroUsize;
+use core::ops::ControlFlow;
+
 use fallible_iterator::{DoubleEndedFallibleIterator, FallibleIterator};
 
+use crate::try_trait_v2::Try;
 use crate::{DoubleEndedFallibleLender, FallibleLend, FallibleLender, FallibleLending};
 
 /// Creates a fallible lender that stores each element from a
@@ -80,16 +84,50 @@ impl<I: FallibleIterator> FallibleLender for FromIterRef<I> {
     }
 
     #[inline]
+    fn last<'call>(&'call mut self) -> Result<Option<FallibleLend<'call, Self>>, Self::Error>
+    where
+        Self: Sized,
+    {
+        self.current = None;
+        while let Some(item) = self.iter.next()? {
+            self.current = Some(item);
+        }
+        Ok(self.current.as_ref())
+    }
+
+    #[inline]
+    fn advance_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
+        for i in 0..n {
+            if self.iter.next()?.is_none() {
+                // SAFETY: `i` is always less than `n`.
+                return Ok(Err(unsafe { NonZeroUsize::new_unchecked(n - i) }));
+            }
+        }
+        Ok(Ok(()))
+    }
+
+    #[inline]
+    fn try_fold<B, F, R>(&mut self, mut init: B, mut f: F) -> Result<R, Self::Error>
+    where
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<R, Self::Error>,
+        R: Try<Output = B>,
+    {
+        while let Some(item) = self.iter.next()? {
+            match f(init, &item)?.branch() {
+                ControlFlow::Break(residual) => return Ok(R::from_residual(residual)),
+                ControlFlow::Continue(output) => init = output,
+            }
+        }
+        Ok(R::from_output(init))
+    }
+
+    #[inline]
     fn fold<B, F>(self, init: B, mut f: F) -> Result<B, Self::Error>
     where
         Self: Sized,
         F: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
     {
-        let mut current = self.current;
-        self.iter.fold(init, |acc, item| {
-            current = Some(item);
-            f(acc, current.as_ref().unwrap())
-        })
+        self.iter.fold(init, |acc, item| f(acc, &item))
     }
 }
 
@@ -101,16 +139,38 @@ impl<I: DoubleEndedFallibleIterator> DoubleEndedFallibleLender for FromIterRef<I
     }
 
     #[inline]
+    fn advance_back_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
+        for i in 0..n {
+            if self.iter.next_back()?.is_none() {
+                // SAFETY: `i` is always less than `n`.
+                return Ok(Err(unsafe { NonZeroUsize::new_unchecked(n - i) }));
+            }
+        }
+        Ok(Ok(()))
+    }
+
+    #[inline]
+    fn try_rfold<B, F, R>(&mut self, mut init: B, mut f: F) -> Result<R, Self::Error>
+    where
+        F: FnMut(B, FallibleLend<'_, Self>) -> Result<R, Self::Error>,
+        R: Try<Output = B>,
+    {
+        while let Some(item) = self.iter.next_back()? {
+            match f(init, &item)?.branch() {
+                ControlFlow::Break(residual) => return Ok(R::from_residual(residual)),
+                ControlFlow::Continue(output) => init = output,
+            }
+        }
+        Ok(R::from_output(init))
+    }
+
+    #[inline]
     fn rfold<B, F>(self, init: B, mut f: F) -> Result<B, Self::Error>
     where
         Self: Sized,
         F: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
     {
-        let mut current = self.current;
-        self.iter.rfold(init, |acc, item| {
-            current = Some(item);
-            f(acc, current.as_ref().unwrap())
-        })
+        self.iter.rfold(init, |acc, item| f(acc, &item))
     }
 }
 

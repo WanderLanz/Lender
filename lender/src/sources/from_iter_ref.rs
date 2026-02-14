@@ -1,6 +1,8 @@
 use core::iter::FusedIterator;
 use core::num::NonZeroUsize;
+use core::ops::ControlFlow;
 
+use crate::try_trait_v2::Try;
 use crate::{FusedLender, prelude::*};
 
 /// Creates a lender that stores each element from an iterator
@@ -92,10 +94,26 @@ impl<I: Iterator> Lender for FromIterRef<I> {
         Self: Sized,
     {
         self.current = None;
-        while let Some(x) = self.iter.next() {
+        for x in self.iter.by_ref() {
             self.current = Some(x);
         }
         self.current.as_ref()
+    }
+
+    #[inline]
+    fn try_fold<B, F, R>(&mut self, init: B, mut f: F) -> R
+    where
+        F: FnMut(B, Lend<'_, Self>) -> R,
+        R: Try<Output = B>,
+    {
+        let mut acc = init;
+        for item in self.iter.by_ref() {
+            acc = match f(acc, &item).branch() {
+                ControlFlow::Break(x) => return R::from_residual(x),
+                ControlFlow::Continue(x) => x,
+            };
+        }
+        R::from_output(acc)
     }
 
     #[inline]
@@ -104,11 +122,7 @@ impl<I: Iterator> Lender for FromIterRef<I> {
         Self: Sized,
         F: FnMut(B, Lend<'_, Self>) -> B,
     {
-        let mut current = self.current;
-        self.iter.fold(init, |acc, item| {
-            current = Some(item);
-            f(acc, current.as_ref().unwrap())
-        })
+        self.iter.fold(init, |acc, item| f(acc, &item))
     }
 }
 
@@ -137,16 +151,28 @@ impl<I: DoubleEndedIterator> DoubleEndedLender for FromIterRef<I> {
     }
 
     #[inline]
+    fn try_rfold<B, F, R>(&mut self, init: B, mut f: F) -> R
+    where
+        F: FnMut(B, Lend<'_, Self>) -> R,
+        R: Try<Output = B>,
+    {
+        let mut acc = init;
+        while let Some(item) = self.iter.next_back() {
+            acc = match f(acc, &item).branch() {
+                ControlFlow::Break(x) => return R::from_residual(x),
+                ControlFlow::Continue(x) => x,
+            };
+        }
+        R::from_output(acc)
+    }
+
+    #[inline]
     fn rfold<B, F>(self, init: B, mut f: F) -> B
     where
         Self: Sized,
         F: FnMut(B, Lend<'_, Self>) -> B,
     {
-        let mut current = self.current;
-        self.iter.rfold(init, |acc, item| {
-            current = Some(item);
-            f(acc, current.as_ref().unwrap())
-        })
+        self.iter.rfold(init, |acc, item| f(acc, &item))
     }
 }
 

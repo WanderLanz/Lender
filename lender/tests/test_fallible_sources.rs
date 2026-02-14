@@ -1,5 +1,6 @@
 //! Tests for fallible sources: empty, once, repeat, once_with, repeat_with
 
+use fallible_iterator::IteratorExt as _;
 use ::lender::prelude::*;
 
 // ============================================================================
@@ -313,6 +314,242 @@ fn from_fallible_iter_ref_from_trait() {
         [1, 2, 3].into_iter().into_fallible(),
     );
     assert_eq!(lender.next().unwrap(), Some(&1));
+}
+
+/// A [`FallibleIterator`] that yields items from a `Vec` and
+/// errors at a specific index.
+struct ErrorAtIter {
+    data: Vec<i32>,
+    front: usize,
+    back: usize,
+    error_at: usize,
+}
+
+impl ErrorAtIter {
+    fn new(data: Vec<i32>, error_at: usize) -> Self {
+        let back = data.len();
+        Self {
+            data,
+            front: 0,
+            back,
+            error_at,
+        }
+    }
+}
+
+impl fallible_iterator::FallibleIterator for ErrorAtIter {
+    type Item = i32;
+    type Error = String;
+
+    fn next(&mut self) -> Result<Option<Self::Item>, Self::Error> {
+        if self.front >= self.back {
+            Ok(None)
+        } else if self.front == self.error_at {
+            self.front += 1;
+            Err(format!("error at index {}", self.error_at))
+        } else {
+            let item = self.data[self.front];
+            self.front += 1;
+            Ok(Some(item))
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining = self.back - self.front;
+        (0, Some(remaining))
+    }
+}
+
+impl fallible_iterator::DoubleEndedFallibleIterator for ErrorAtIter {
+    fn next_back(&mut self) -> Result<Option<Self::Item>, Self::Error> {
+        if self.front >= self.back {
+            Ok(None)
+        } else {
+            self.back -= 1;
+            if self.back == self.error_at {
+                Err(format!("error at index {}", self.error_at))
+            } else {
+                Ok(Some(self.data[self.back]))
+            }
+        }
+    }
+}
+
+#[test]
+fn from_fallible_iter_ref_last() {
+    let mut lender = lender::from_fallible_iter_ref(
+        [1, 2, 3].into_iter().into_fallible(),
+    );
+    assert_eq!(lender.last().unwrap(), Some(&3));
+}
+
+#[test]
+fn from_fallible_iter_ref_last_empty() {
+    let mut lender = lender::from_fallible_iter_ref(
+        core::iter::empty::<i32>().into_fallible(),
+    );
+    assert_eq!(lender.last().unwrap(), None);
+}
+
+#[test]
+fn from_fallible_iter_ref_advance_by() {
+    let mut lender = lender::from_fallible_iter_ref(
+        [1, 2, 3, 4, 5].into_iter().into_fallible(),
+    );
+    assert_eq!(lender.advance_by(2).unwrap(), Ok(()));
+    assert_eq!(lender.next().unwrap(), Some(&3));
+}
+
+#[test]
+fn from_fallible_iter_ref_advance_by_past_end() {
+    let mut lender = lender::from_fallible_iter_ref(
+        [1, 2].into_iter().into_fallible(),
+    );
+    assert_eq!(
+        lender.advance_by(5).unwrap(),
+        Err(core::num::NonZeroUsize::new(3).unwrap())
+    );
+}
+
+#[test]
+fn from_fallible_iter_ref_advance_back_by() {
+    let mut lender = lender::from_fallible_iter_ref(
+        [1, 2, 3, 4, 5].into_iter().into_fallible(),
+    );
+    assert_eq!(lender.advance_back_by(2).unwrap(), Ok(()));
+    assert_eq!(lender.next_back().unwrap(), Some(&3));
+}
+
+#[test]
+fn from_fallible_iter_ref_advance_back_by_past_end() {
+    let mut lender = lender::from_fallible_iter_ref(
+        [1, 2].into_iter().into_fallible(),
+    );
+    assert_eq!(
+        lender.advance_back_by(5).unwrap(),
+        Err(core::num::NonZeroUsize::new(3).unwrap())
+    );
+}
+
+#[test]
+fn from_fallible_iter_ref_any() {
+    let mut lender = lender::from_fallible_iter_ref(
+        [1, 2, 3, 4, 5].into_iter().into_fallible(),
+    );
+    assert!(lender.any(|&x| Ok(x == 3)).unwrap());
+    assert_eq!(lender.next().unwrap(), Some(&4));
+}
+
+#[test]
+fn from_fallible_iter_ref_find() {
+    let mut lender = lender::from_fallible_iter_ref(
+        [1, 2, 3, 4, 5].into_iter().into_fallible(),
+    );
+    assert_eq!(
+        lender.find(|&&x| Ok(x > 2)).unwrap(),
+        Some(&3)
+    );
+    assert_eq!(lender.next().unwrap(), Some(&4));
+}
+
+#[test]
+fn from_fallible_iter_ref_rfind() {
+    let mut lender = lender::from_fallible_iter_ref(
+        [1, 2, 3, 4, 5].into_iter().into_fallible(),
+    );
+    assert_eq!(
+        lender.rfind(|&&x| Ok(x < 4)).unwrap(),
+        Some(&3)
+    );
+    assert_eq!(lender.next_back().unwrap(), Some(&2));
+}
+
+#[test]
+fn from_fallible_iter_ref_error_in_last() {
+    let mut lender =
+        lender::from_fallible_iter_ref(ErrorAtIter::new(vec![1, 2, 3], 1));
+    assert_eq!(lender.last().unwrap_err(), "error at index 1");
+}
+
+#[test]
+fn from_fallible_iter_ref_error_in_advance_by() {
+    let mut lender =
+        lender::from_fallible_iter_ref(ErrorAtIter::new(vec![1, 2, 3], 1));
+    assert_eq!(
+        lender.advance_by(3).unwrap_err(),
+        "error at index 1"
+    );
+}
+
+#[test]
+fn from_fallible_iter_ref_error_in_advance_back_by() {
+    let mut lender =
+        lender::from_fallible_iter_ref(ErrorAtIter::new(vec![1, 2, 3], 1));
+    assert_eq!(
+        lender.advance_back_by(3).unwrap_err(),
+        "error at index 1"
+    );
+}
+
+#[test]
+fn from_fallible_iter_ref_error_in_any() {
+    let mut lender =
+        lender::from_fallible_iter_ref(ErrorAtIter::new(vec![1, 2, 3], 1));
+    assert_eq!(
+        lender.any(|&x| Ok(x == 5)).unwrap_err(),
+        "error at index 1"
+    );
+}
+
+#[test]
+fn from_fallible_iter_ref_error_in_next() {
+    let mut lender =
+        lender::from_fallible_iter_ref(ErrorAtIter::new(vec![1, 2, 3], 1));
+    assert_eq!(lender.next().unwrap(), Some(&1));
+    assert_eq!(
+        lender.next().unwrap_err(),
+        "error at index 1"
+    );
+}
+
+#[test]
+fn from_fallible_iter_ref_error_in_nth() {
+    let mut lender =
+        lender::from_fallible_iter_ref(ErrorAtIter::new(vec![1, 2, 3], 2));
+    assert_eq!(
+        lender.nth(2).unwrap_err(),
+        "error at index 2"
+    );
+}
+
+#[test]
+fn from_fallible_iter_ref_error_in_fold() {
+    let result = lender::from_fallible_iter_ref(
+        ErrorAtIter::new(vec![1, 2, 3], 1),
+    )
+    .fold(0, |acc, &x| Ok(acc + x));
+    assert_eq!(result.unwrap_err(), "error at index 1");
+}
+
+#[test]
+fn from_fallible_iter_ref_error_in_next_back() {
+    let mut lender =
+        lender::from_fallible_iter_ref(ErrorAtIter::new(vec![1, 2, 3], 1));
+    assert_eq!(lender.next_back().unwrap(), Some(&3));
+    // index 1 errors when reached from the back
+    assert_eq!(
+        lender.next_back().unwrap_err(),
+        "error at index 1"
+    );
+}
+
+#[test]
+fn from_fallible_iter_ref_error_in_rfold() {
+    let result = lender::from_fallible_iter_ref(
+        ErrorAtIter::new(vec![1, 2, 3], 1),
+    )
+    .rfold(0, |acc, &x| Ok(acc + x));
+    assert_eq!(result.unwrap_err(), "error at index 1");
 }
 
 #[test]

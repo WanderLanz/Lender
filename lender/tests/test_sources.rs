@@ -423,6 +423,13 @@ fn from_iter_ref_advance_by() {
 }
 
 #[test]
+fn from_iter_ref_advance_by_zero() {
+    let mut lender = lender::from_iter_ref([1, 2, 3].into_iter());
+    assert_eq!(lender.advance_by(0), Ok(()));
+    assert_eq!(lender.next(), Some(&1));
+}
+
+#[test]
 fn from_iter_ref_advance_by_past_end() {
     let mut lender = lender::from_iter_ref([1, 2].into_iter());
     let result = lender.advance_by(5);
@@ -501,6 +508,40 @@ fn from_iter_ref_exact_size() {
 fn from_iter_ref_from_trait() {
     let mut lender = lender::FromIterRef::from([1, 2, 3].into_iter());
     assert_eq!(lender.next(), Some(&1));
+}
+
+#[test]
+fn from_iter_ref_any() {
+    let mut lender = lender::from_iter_ref([1, 2, 3, 4, 5].into_iter());
+    assert!(lender.any(|&x| x == 3));
+    // After finding 3, the lender should have remaining elements.
+    assert_eq!(lender.next(), Some(&4));
+}
+
+#[test]
+fn from_iter_ref_find() {
+    let mut lender = lender::from_iter_ref([1, 2, 3, 4, 5].into_iter());
+    assert_eq!(lender.find(|&&x| x > 2), Some(&3));
+    assert_eq!(lender.next(), Some(&4));
+}
+
+#[test]
+fn from_iter_ref_position() {
+    let mut lender = lender::from_iter_ref([10, 20, 30].into_iter());
+    assert_eq!(lender.position(|&x| x == 20), Some(1));
+}
+
+#[test]
+fn from_iter_ref_rfind() {
+    let mut lender = lender::from_iter_ref([1, 2, 3, 4, 5].into_iter());
+    assert_eq!(lender.rfind(|&&x| x < 4), Some(&3));
+    assert_eq!(lender.next_back(), Some(&2));
+}
+
+#[test]
+fn from_iter_ref_all() {
+    let mut lender = lender::from_iter_ref([2, 4, 6].into_iter());
+    assert!(lender.all(|&x| x % 2 == 0));
 }
 
 // ============================================================================
