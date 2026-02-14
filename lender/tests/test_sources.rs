@@ -451,8 +451,7 @@ fn from_iter_ref_last_empty() {
 
 #[test]
 fn from_iter_ref_fold() {
-    let sum = lender::from_iter_ref([1, 2, 3, 4, 5].into_iter())
-        .fold(0, |acc, &x| acc + x);
+    let sum = lender::from_iter_ref([1, 2, 3, 4, 5].into_iter()).fold(0, |acc, &x| acc + x);
     assert_eq!(sum, 15);
 }
 
@@ -490,11 +489,10 @@ fn from_iter_ref_advance_back_by_past_end() {
 
 #[test]
 fn from_iter_ref_rfold() {
-    let values = lender::from_iter_ref([1, 2, 3].into_iter())
-        .rfold(Vec::new(), |mut acc, &x| {
-            acc.push(x);
-            acc
-        });
+    let values = lender::from_iter_ref([1, 2, 3].into_iter()).rfold(Vec::new(), |mut acc, &x| {
+        acc.push(x);
+        acc
+    });
     assert_eq!(values, vec![3, 2, 1]);
 }
 

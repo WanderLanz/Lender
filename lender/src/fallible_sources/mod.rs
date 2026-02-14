@@ -15,10 +15,7 @@ pub use self::{
         LendIter as LendFallibleIter, from_into_iter as from_into_fallible_iter,
         from_iter as from_fallible_iter, lend_iter as lend_fallible_iter,
     },
-    from_iter_ref::{
-        FromIterRef as FromFallibleIterRef,
-        from_iter_ref as from_fallible_iter_ref,
-    },
+    from_iter_ref::{FromIterRef as FromFallibleIterRef, from_iter_ref as from_fallible_iter_ref},
     once::{
         Once as FallibleOnce, OnceErr as FallibleOnceErr, once as fallible_once,
         once_err as fallible_once_err,
