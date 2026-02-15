@@ -3,13 +3,12 @@ use crate::{
     FusedFallibleLender, higher_order::FnMutHKAResOpt,
 };
 
-impl<'lend, B, L, F> FallibleLending<'lend> for FilterMap<L, F>
+impl<'lend, L, F> FallibleLending<'lend> for FilterMap<L, F>
 where
-    F: FnMut(FallibleLend<'lend, L>) -> Result<Option<B>, L::Error>,
-    B: 'lend,
+    F: for<'all> FnMutHKAResOpt<'all, FallibleLend<'all, L>, L::Error>,
     L: FallibleLender,
 {
-    type Lend = B;
+    type Lend = <F as FnMutHKAResOpt<'lend, FallibleLend<'lend, L>, L::Error>>::B;
 }
 
 impl<L, F> FallibleLender for FilterMap<L, F>

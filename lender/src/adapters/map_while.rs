@@ -40,13 +40,12 @@ impl<L: fmt::Debug, P> fmt::Debug for MapWhile<L, P> {
     }
 }
 
-impl<'lend, B, L, P> Lending<'lend> for MapWhile<L, P>
+impl<'lend, L, P> Lending<'lend> for MapWhile<L, P>
 where
-    P: FnMut(Lend<'lend, L>) -> Option<B>,
+    P: for<'all> FnMutHKAOpt<'all, Lend<'all, L>>,
     L: Lender,
-    B: 'lend,
 {
-    type Lend = B;
+    type Lend = <P as FnMutHKAOpt<'lend, Lend<'lend, L>>>::B;
 }
 
 impl<L, P> Lender for MapWhile<L, P>

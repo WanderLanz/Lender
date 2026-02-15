@@ -43,13 +43,12 @@ impl<L: fmt::Debug, St: fmt::Debug, F> fmt::Debug for Scan<L, St, F> {
     }
 }
 
-impl<'lend, B, L, St, F> Lending<'lend> for Scan<L, St, F>
+impl<'lend, L, St, F> Lending<'lend> for Scan<L, St, F>
 where
-    F: FnMut((&'lend mut St, Lend<'lend, L>)) -> Option<B>,
+    F: for<'all> FnMutHKAOpt<'all, (&'all mut St, Lend<'all, L>)>,
     L: Lender,
-    B: 'lend,
 {
-    type Lend = B;
+    type Lend = <F as FnMutHKAOpt<'lend, (&'lend mut St, Lend<'lend, L>)>>::B;
 }
 
 impl<L, St, F> Lender for Scan<L, St, F>

@@ -2,13 +2,12 @@ use crate::{
     FallibleLend, FallibleLender, FallibleLending, MapWhile, higher_order::FnMutHKAResOpt,
 };
 
-impl<'lend, B, L, P> FallibleLending<'lend> for MapWhile<L, P>
+impl<'lend, L, P> FallibleLending<'lend> for MapWhile<L, P>
 where
-    P: FnMut(FallibleLend<'lend, L>) -> Result<Option<B>, L::Error>,
+    P: for<'all> FnMutHKAResOpt<'all, FallibleLend<'all, L>, L::Error>,
     L: FallibleLender,
-    B: 'lend,
 {
-    type Lend = B;
+    type Lend = <P as FnMutHKAResOpt<'lend, FallibleLend<'lend, L>, L::Error>>::B;
 }
 
 impl<L, P> FallibleLender for MapWhile<L, P>

@@ -7,6 +7,12 @@
 * Convenience `Lender::lender_by_ref` method that is equivalent to
   `iter` followed by `into_ref_lender`.
 
+### Fixed
+
+* `FilterMap`, `Scan`, and `MapWhile` (both standard and fallible) had an
+  additional parameter that was forcing a `'static` bound when extending the
+  trait. Now they are structured like `Map`.
+
 ## [0.5.1] - 2026-02-14
 
 ### New

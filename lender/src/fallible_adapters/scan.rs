@@ -1,12 +1,11 @@
 use crate::{FallibleLend, FallibleLender, FallibleLending, Scan, higher_order::FnMutHKAResOpt};
 
-impl<'lend, B, L, St, F> FallibleLending<'lend> for Scan<L, St, F>
+impl<'lend, L, St, F> FallibleLending<'lend> for Scan<L, St, F>
 where
-    F: FnMut((&'lend mut St, FallibleLend<'lend, L>)) -> Result<Option<B>, L::Error>,
+    F: for<'all> FnMutHKAResOpt<'all, (&'all mut St, FallibleLend<'all, L>), L::Error>,
     L: FallibleLender,
-    B: 'lend,
 {
-    type Lend = B;
+    type Lend = <F as FnMutHKAResOpt<'lend, (&'lend mut St, FallibleLend<'lend, L>), L::Error>>::B;
 }
 
 impl<L, St, F> FallibleLender for Scan<L, St, F>

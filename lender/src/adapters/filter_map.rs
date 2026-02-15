@@ -42,13 +42,12 @@ impl<L: fmt::Debug, F> fmt::Debug for FilterMap<L, F> {
     }
 }
 
-impl<'lend, B, L, F> Lending<'lend> for FilterMap<L, F>
+impl<'lend, L, F> Lending<'lend> for FilterMap<L, F>
 where
-    F: FnMut(Lend<'lend, L>) -> Option<B>,
-    B: 'lend,
+    F: for<'all> FnMutHKAOpt<'all, Lend<'all, L>>,
     L: Lender,
 {
-    type Lend = B;
+    type Lend = <F as FnMutHKAOpt<'lend, Lend<'lend, L>>>::B;
 }
 
 impl<L, F> Lender for FilterMap<L, F>
