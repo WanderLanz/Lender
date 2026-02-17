@@ -62,6 +62,14 @@ pub type Lend<'lend, L> = <L as Lending<'lend>>::Lend;
 /// which is an internal method for compile-time covariance checking. Adapters
 /// relying on covariance of other lenders should call this method for the
 /// lenders they are adapting.
+///
+/// The mechanism can be circumvented with unsafe code, and in this case the
+/// burden of checking covariance is on the implementor. However, there's no way
+/// to prevent that [`__check_covariance`](Lender::__check_covariance) is
+/// implemented vacuously using a non-returning statement (`todo!()`,
+/// `unimplemented!()`, `panic!()`, `loop {}`, etc.), unless you call the method
+/// explicitly somewhere in your code. Adapters will call recursively adapted
+/// lenders, but there is no way to force the call on the user-facing type.
 pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// Internal method for compile-time covariance checking.
     ///
