@@ -3,6 +3,14 @@ use crate::{
     FallibleLending, FusedFallibleLender, Mutate, try_trait_v2::Try,
 };
 
+impl<L: FallibleLender, F> Mutate<L, F> {
+    #[inline(always)]
+    pub(crate) fn new_fallible(lender: L, f: F) -> Mutate<L, F> {
+        let _ = L::__check_covariance(crate::CovariantProof::new());
+        Mutate { lender, f }
+    }
+}
+
 impl<'lend, L, F> FallibleLending<'lend> for Mutate<L, F>
 where
     L: FallibleLender,

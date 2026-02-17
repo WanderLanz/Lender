@@ -14,11 +14,6 @@ pub struct MapWhile<L, P> {
 }
 
 impl<L, P> MapWhile<L, P> {
-    #[inline(always)]
-    pub(crate) fn new(lender: L, predicate: Covar<P>) -> MapWhile<L, P> {
-        MapWhile { lender, predicate }
-    }
-
     /// Returns the inner lender.
     #[inline(always)]
     pub fn into_inner(self) -> L {
@@ -29,6 +24,14 @@ impl<L, P> MapWhile<L, P> {
     #[inline(always)]
     pub fn into_parts(self) -> (L, Covar<P>) {
         (self.lender, self.predicate)
+    }
+}
+
+impl<L: Lender, P> MapWhile<L, P> {
+    #[inline(always)]
+    pub(crate) fn new(lender: L, predicate: Covar<P>) -> MapWhile<L, P> {
+        let _ = L::__check_covariance(crate::CovariantProof::new());
+        MapWhile { lender, predicate }
     }
 }
 

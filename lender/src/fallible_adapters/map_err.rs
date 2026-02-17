@@ -18,9 +18,10 @@ pub struct MapErr<E, L, F> {
     _marker: PhantomData<fn() -> E>,
 }
 
-impl<E, L, F> MapErr<E, L, F> {
+impl<E, L: crate::FallibleLender, F> MapErr<E, L, F> {
     #[inline(always)]
     pub(crate) fn new(lender: L, f: F) -> Self {
+        let _ = L::__check_covariance(crate::CovariantProof::new());
         Self {
             lender,
             f,

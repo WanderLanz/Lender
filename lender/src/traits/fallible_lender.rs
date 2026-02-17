@@ -37,6 +37,20 @@ pub type FallibleLend<'lend, L> = <L as FallibleLending<'lend>>::Lend;
 ///
 /// For more about the concept of iterators
 /// generally, please see [`core::iter`].
+///
+/// # Covariance Checking
+///
+/// This crate provide a mechanism to guarantee that the
+/// [`Lend`](FallibleLending::Lend) type of a fallible lender is covariant in
+/// its lifetime. This is crucial to avoid undefined behavior, as many of the
+/// operations on lenders rely on covariance to ensure that lends do not outlive
+/// their lenders.
+///
+/// The mechanism is based on the
+/// [`__check_covariance`](FallibleLender::__check_covariance) method of this
+/// trait, which is an internal method for compile-time covariance checking.
+/// Adapters relying on covariance of other fallible lenders should call this
+/// method for the lenders they are adapting.
 pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all> {
     /// The error type.
     type Error;
@@ -49,26 +63,33 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     /// - When implementing source lenders (lenders with concrete
     ///   [`Lend`](FallibleLending::Lend) types), users should invoke
     ///   [`check_covariance_fallible!`](crate::check_covariance_fallible) in
-    ///   their [`FallibleLender`] impl. The macro implements the method as `{
-    ///   lend }`, which only compiles if the [`Lend`](FallibleLending::Lend) type
-    ///   is covariant in its lifetime.
+    ///   their [`FallibleLender`] impl. The macro implements the method as
+    ///   `{ proof }`, which only compiles if the
+    ///   [`Lend`](FallibleLending::Lend) type is covariant in its lifetime.
     ///
     /// - In all other cases (e.g., when implementing adapters), use
     ///   [`unsafe_assume_covariance_fallible!`][uacf]
     ///   in the [`FallibleLender`] impl. The macro
     ///   implements the method as `{
-    ///   unsafe { core::mem::transmute(lend) } }`, which is a no-op.
+    ///   unsafe { core::mem::transmute(proof) } }`, which is a no-op.
     ///   This is unsafe because it is up to the implementor to
     ///   guarantee that the [`Lend`](FallibleLending::Lend) type is
     ///   covariant in its lifetime.
+    ///
+    /// When relying on covariance of other types, this method should
+    /// be called in every constructor, or in every method requiring
+    /// covariance, of such types. In particular, adapters should call
+    /// this method for the lender they are adapting. The call makes it
+    /// impossible to implement the check with non-returning code
+    /// (`todo!()`, `unimplemented!()`, `panic!()`, `loop {}`, etc.).
     ///
     /// See [`crate::Lender::__check_covariance`] for more details
     /// on how this method works.
     ///
     /// [uacf]: crate::unsafe_assume_covariance_fallible
     fn __check_covariance<'long: 'short, 'short>(
-        lend: *const &'short <Self as FallibleLending<'long>>::Lend, _: crate::Uncallable,
-    ) -> *const &'short <Self as FallibleLending<'short>>::Lend;
+        proof: crate::CovariantProof<&'short <Self as FallibleLending<'long>>::Lend>,
+    ) -> crate::CovariantProof<&'short <Self as FallibleLending<'short>>::Lend>;
 
     /// Yields the next lend, if any, of the lender, or `Ok(None)` when iteration
     /// is finished.
@@ -118,7 +139,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     where
         Self: Sized,
     {
-        Chunk::new(self, chunk_size)
+        Chunk::new_fallible(self, chunk_size)
     }
 
     /// Gets the estimated minimum and maximum length of the lender. Both
@@ -287,7 +308,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     where
         Self: Sized,
     {
-        StepBy::new(self, step)
+        StepBy::new_fallible(self, step)
     }
 
     /// Chains the lender with another lender of the same type.
@@ -319,7 +340,8 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
             Self: Sized,
             U: IntoFallibleLender<Error = Self::Error> + for<'all> FallibleLending<'all, Lend = FallibleLend<'all, Self>>,
     {
-        Chain::new(self, other.into_fallible_lender())
+        let other = other.into_fallible_lender();
+        Chain::new_fallible(self, other)
     }
 
     /// Zips the lender with another lender of the same or different type.
@@ -345,7 +367,8 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     where
         Self: Sized,
     {
-        Zip::new(self, other.into_fallible_lender())
+        let other = other.into_fallible_lender();
+        Zip::new_fallible(self, other)
     }
 
     /// Intersperses each lend of this lender with the given separator.
@@ -435,7 +458,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Self: Sized,
         F: for<'all> FnMutHKARes<'all, FallibleLend<'all, Self>, Self::Error>,
     {
-        Map::new(self, f)
+        Map::new_fallible(self, f)
     }
 
     /// Maps the error of this lender using the given function.
@@ -539,7 +562,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Self: Sized,
         P: FnMut(&FallibleLend<'_, Self>) -> Result<bool, Self::Error>,
     {
-        Filter::new(self, predicate)
+        Filter::new_fallible(self, predicate)
     }
 
     /// Filters and maps this lender using the given function.
@@ -571,7 +594,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Self: Sized,
         F: for<'all> FnMutHKAResOpt<'all, FallibleLend<'all, Self>, Self::Error>,
     {
-        FilterMap::new(self, f)
+        FilterMap::new_fallible(self, f)
     }
 
     /// Enumerates this lender. Each lend is paired with its zero-based
@@ -596,7 +619,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     where
         Self: Sized,
     {
-        Enumerate::new(self)
+        Enumerate::new_fallible(self)
     }
 
     /// Makes this lender peekable, so that it is possible to peek at the next
@@ -646,7 +669,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Self: Sized,
         P: FnMut(&FallibleLend<'_, Self>) -> Result<bool, Self::Error>,
     {
-        SkipWhile::new(self, predicate)
+        SkipWhile::new_fallible(self, predicate)
     }
 
     /// Takes the first contiguous sequence of lends of this lender that
@@ -671,7 +694,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Self: Sized,
         P: FnMut(&FallibleLend<'_, Self>) -> Result<bool, Self::Error>,
     {
-        TakeWhile::new(self, predicate)
+        TakeWhile::new_fallible(self, predicate)
     }
 
     /// Maps this lender using the given function while it returns [`Some`].
@@ -704,7 +727,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Self: Sized,
         P: for<'all> FnMutHKAResOpt<'all, FallibleLend<'all, Self>, Self::Error>,
     {
-        MapWhile::new(self, predicate)
+        MapWhile::new_fallible(self, predicate)
     }
 
     /// Skips the first `n` lends of this lender.
@@ -726,7 +749,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     where
         Self: Sized,
     {
-        Skip::new(self, n)
+        Skip::new_fallible(self, n)
     }
 
     /// Takes the first `n` lends of this lender.
@@ -749,7 +772,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     where
         Self: Sized,
     {
-        Take::new(self, n)
+        Take::new_fallible(self, n)
     }
 
     /// The [`FallibleLender`] version of [`Iterator::scan`].
@@ -787,7 +810,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Self: Sized,
         F: for<'all> FnMutHKAResOpt<'all, (&'all mut St, FallibleLend<'all, Self>), Self::Error>,
     {
-        Scan::new(self, initial_state, f)
+        Scan::new_fallible(self, initial_state, f)
     }
 
     /// The [`FallibleLender`] version of [`Iterator::flat_map`].
@@ -891,7 +914,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     where
         Self: Sized,
     {
-        Fuse::new(self)
+        Fuse::new_fallible(self)
     }
 
     /// The [`FallibleLender`] version of [`Iterator::inspect`].
@@ -918,7 +941,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Self: Sized,
         F: FnMut(&FallibleLend<'_, Self>) -> Result<(), Self::Error>,
     {
-        Inspect::new(self, f)
+        Inspect::new_fallible(self, f)
     }
 
     // not std::iter
@@ -945,7 +968,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
         Self: Sized,
         F: FnMut(&mut FallibleLend<'_, Self>) -> Result<(), Self::Error>,
     {
-        Mutate::new(self, f)
+        Mutate::new_fallible(self, f)
     }
 
     /// The [`FallibleLender`] version of
@@ -1653,7 +1676,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     where
         Self: Sized + DoubleEndedFallibleLender,
     {
-        Rev::new(self)
+        Rev::new_fallible(self)
     }
 
     /// The [`FallibleLender`] version of [`Iterator::unzip`].
@@ -1772,7 +1795,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     where
         Self: Sized + Clone,
     {
-        Cycle::new(self)
+        Cycle::new_fallible(self)
     }
 
     /// The [`FallibleLender`] version of [`Iterator::sum`].

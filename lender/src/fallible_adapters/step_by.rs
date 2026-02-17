@@ -5,6 +5,19 @@ use crate::{
     FallibleLending, FusedFallibleLender, StepBy, try_trait_v2::Try,
 };
 
+impl<L: FallibleLender> StepBy<L> {
+    #[inline]
+    pub(crate) fn new_fallible(lender: L, step: usize) -> Self {
+        let _ = L::__check_covariance(crate::CovariantProof::new());
+        assert_ne!(step, 0);
+        StepBy {
+            lender,
+            step: step - 1,
+            first_take: true,
+        }
+    }
+}
+
 impl<'lend, L> FallibleLending<'lend> for StepBy<L>
 where
     L: FallibleLender,

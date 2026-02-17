@@ -1,6 +1,14 @@
 use crate::{
-    FallibleLend, FallibleLender, FallibleLending, MapWhile, higher_order::FnMutHKAResOpt,
+    Covar, FallibleLend, FallibleLender, FallibleLending, MapWhile, higher_order::FnMutHKAResOpt,
 };
+
+impl<L: FallibleLender, P> MapWhile<L, P> {
+    #[inline(always)]
+    pub(crate) fn new_fallible(lender: L, predicate: Covar<P>) -> MapWhile<L, P> {
+        let _ = L::__check_covariance(crate::CovariantProof::new());
+        MapWhile { lender, predicate }
+    }
+}
 
 impl<'lend, L, P> FallibleLending<'lend> for MapWhile<L, P>
 where

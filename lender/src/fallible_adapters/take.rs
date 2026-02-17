@@ -6,6 +6,14 @@ use crate::{
     FallibleLending, FusedFallibleLender, Take, try_trait_v2::Try,
 };
 
+impl<L: FallibleLender> Take<L> {
+    #[inline(always)]
+    pub(crate) fn new_fallible(lender: L, n: usize) -> Take<L> {
+        let _ = L::__check_covariance(crate::CovariantProof::new());
+        Take { lender, n }
+    }
+}
+
 impl<'lend, L> FallibleLending<'lend> for Take<L>
 where
     L: FallibleLender,

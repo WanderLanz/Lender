@@ -13,15 +13,18 @@ pub struct Rev<L> {
 }
 
 impl<L> Rev<L> {
-    #[inline(always)]
-    pub(crate) fn new(lender: L) -> Rev<L> {
-        Rev { lender }
-    }
-
     /// Returns the inner lender.
     #[inline(always)]
     pub fn into_inner(self) -> L {
         self.lender
+    }
+}
+
+impl<L: Lender> Rev<L> {
+    #[inline(always)]
+    pub(crate) fn new(lender: L) -> Rev<L> {
+        let _ = L::__check_covariance(crate::CovariantProof::new());
+        Rev { lender }
     }
 }
 
@@ -154,7 +157,7 @@ impl<L> FusedLender for Rev<L> where L: DoubleEndedLender + FusedLender {}
 
 impl<L> Default for Rev<L>
 where
-    L: Default,
+    L: Default + Lender,
 {
     #[inline(always)]
     fn default() -> Self {

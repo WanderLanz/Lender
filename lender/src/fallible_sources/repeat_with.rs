@@ -30,6 +30,7 @@ where
     L: ?Sized + CovariantFallibleLending + 'a,
     F: FnMut() -> FallibleLend<'a, L>,
 {
+    let _ = L::__check_covariance(crate::CovariantProof::new());
     RepeatWith {
         f,
         _marker: PhantomData,
@@ -58,6 +59,7 @@ pub fn repeat_with_err<L, F>(f: F) -> RepeatWithErr<L, F>
 where
     L: ?Sized + CovariantFallibleLending,
 {
+    let _ = L::__check_covariance(crate::CovariantProof::new());
     RepeatWithErr {
         f,
         _marker: PhantomData,

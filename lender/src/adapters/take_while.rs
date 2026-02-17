@@ -16,15 +16,6 @@ pub struct TakeWhile<L, P> {
 }
 
 impl<L, P> TakeWhile<L, P> {
-    #[inline(always)]
-    pub(crate) fn new(lender: L, predicate: P) -> TakeWhile<L, P> {
-        TakeWhile {
-            lender,
-            flag: false,
-            predicate,
-        }
-    }
-
     /// Returns the inner lender.
     #[inline(always)]
     pub fn into_inner(self) -> L {
@@ -35,6 +26,18 @@ impl<L, P> TakeWhile<L, P> {
     #[inline(always)]
     pub fn into_parts(self) -> (L, P) {
         (self.lender, self.predicate)
+    }
+}
+
+impl<L: Lender, P> TakeWhile<L, P> {
+    #[inline(always)]
+    pub(crate) fn new(lender: L, predicate: P) -> TakeWhile<L, P> {
+        let _ = L::__check_covariance(crate::CovariantProof::new());
+        TakeWhile {
+            lender,
+            flag: false,
+            predicate,
+        }
     }
 }
 

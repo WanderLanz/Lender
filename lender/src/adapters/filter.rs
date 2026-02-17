@@ -15,11 +15,6 @@ pub struct Filter<L, P> {
 }
 
 impl<L, P> Filter<L, P> {
-    #[inline(always)]
-    pub(crate) fn new(lender: L, predicate: P) -> Filter<L, P> {
-        Filter { lender, predicate }
-    }
-
     /// Returns the inner lender.
     #[inline(always)]
     pub fn into_inner(self) -> L {
@@ -30,6 +25,14 @@ impl<L, P> Filter<L, P> {
     #[inline(always)]
     pub fn into_parts(self) -> (L, P) {
         (self.lender, self.predicate)
+    }
+}
+
+impl<L: Lender, P> Filter<L, P> {
+    #[inline(always)]
+    pub(crate) fn new(lender: L, predicate: P) -> Filter<L, P> {
+        let _ = L::__check_covariance(crate::CovariantProof::new());
+        Filter { lender, predicate }
     }
 }
 

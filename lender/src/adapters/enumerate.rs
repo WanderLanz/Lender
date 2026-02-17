@@ -16,11 +16,6 @@ pub struct Enumerate<L> {
 }
 
 impl<L> Enumerate<L> {
-    #[inline(always)]
-    pub(crate) fn new(lender: L) -> Enumerate<L> {
-        Enumerate { lender, count: 0 }
-    }
-
     /// Returns the inner lender.
     #[inline(always)]
     pub fn into_inner(self) -> L {
@@ -31,6 +26,14 @@ impl<L> Enumerate<L> {
     #[inline(always)]
     pub fn into_parts(self) -> (L, usize) {
         (self.lender, self.count)
+    }
+}
+
+impl<L: Lender> Enumerate<L> {
+    #[inline(always)]
+    pub(crate) fn new(lender: L) -> Enumerate<L> {
+        let _ = L::__check_covariance(crate::CovariantProof::new());
+        Enumerate { lender, count: 0 }
     }
 }
 
@@ -184,7 +187,7 @@ where
 
 impl<L> FusedLender for Enumerate<L> where L: FusedLender {}
 
-impl<L: Default> Default for Enumerate<L> {
+impl<L: Default + Lender> Default for Enumerate<L> {
     #[inline(always)]
     fn default() -> Self {
         Enumerate::new(Default::default())

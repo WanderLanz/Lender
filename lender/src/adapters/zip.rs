@@ -39,11 +39,6 @@ pub struct Zip<A, B> {
 }
 
 impl<A, B> Zip<A, B> {
-    #[inline(always)]
-    pub(crate) fn new(a: A, b: B) -> Self {
-        Self { a, b }
-    }
-
     /// Returns the inner lenders.
     ///
     /// # Examples
@@ -64,6 +59,15 @@ impl<A, B> Zip<A, B> {
     #[inline(always)]
     pub fn into_inner(self) -> (A, B) {
         (self.a, self.b)
+    }
+}
+
+impl<A: Lender, B: Lender> Zip<A, B> {
+    #[inline(always)]
+    pub(crate) fn new(a: A, b: B) -> Self {
+        let _ = A::__check_covariance(crate::CovariantProof::new());
+        let _ = B::__check_covariance(crate::CovariantProof::new());
+        Self { a, b }
     }
 }
 

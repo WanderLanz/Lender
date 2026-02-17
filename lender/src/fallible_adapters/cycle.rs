@@ -4,6 +4,17 @@ use crate::{
 };
 use core::{num::NonZeroUsize, ops::ControlFlow};
 
+impl<L: Clone + FallibleLender> Cycle<L> {
+    #[inline]
+    pub(crate) fn new_fallible(lender: L) -> Cycle<L> {
+        let _ = L::__check_covariance(crate::CovariantProof::new());
+        Cycle {
+            orig: lender.clone(),
+            lender,
+        }
+    }
+}
+
 impl<'lend, L> FallibleLending<'lend> for Cycle<L>
 where
     L: Clone + FallibleLender,

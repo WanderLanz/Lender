@@ -20,18 +20,24 @@ impl<L> Cycle<L>
 where
     L: Clone,
 {
-    #[inline]
-    pub(crate) fn new(lender: L) -> Cycle<L> {
-        Cycle {
-            orig: lender.clone(),
-            lender,
-        }
-    }
-
     /// Returns the original and cloned inner lenders.
     #[inline(always)]
     pub fn into_parts(self) -> (L, L) {
         (self.orig, self.lender)
+    }
+}
+
+impl<L> Cycle<L>
+where
+    L: Clone + Lender,
+{
+    #[inline]
+    pub(crate) fn new(lender: L) -> Cycle<L> {
+        let _ = L::__check_covariance(crate::CovariantProof::new());
+        Cycle {
+            orig: lender.clone(),
+            lender,
+        }
     }
 }
 

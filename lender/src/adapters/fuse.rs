@@ -18,18 +18,21 @@ pub struct Fuse<L> {
 }
 
 impl<L> Fuse<L> {
-    #[inline(always)]
-    pub(crate) fn new(lender: L) -> Fuse<L> {
-        Fuse {
-            lender,
-            flag: false,
-        }
-    }
-
     /// Returns the inner lender.
     #[inline(always)]
     pub fn into_inner(self) -> L {
         self.lender
+    }
+}
+
+impl<L: Lender> Fuse<L> {
+    #[inline(always)]
+    pub(crate) fn new(lender: L) -> Fuse<L> {
+        let _ = L::__check_covariance(crate::CovariantProof::new());
+        Fuse {
+            lender,
+            flag: false,
+        }
     }
 }
 
@@ -235,9 +238,9 @@ where
 
 impl<L> FusedLender for Fuse<L> where L: Lender {}
 
-impl<L: Default> Default for Fuse<L> {
+impl<L: Default + Lender> Default for Fuse<L> {
     #[inline(always)]
     fn default() -> Self {
-        Self::new(L::default())
+        Fuse::new(L::default())
     }
 }

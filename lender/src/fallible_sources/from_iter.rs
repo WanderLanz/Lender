@@ -205,6 +205,7 @@ where
     L: ?Sized + CovariantFallibleLending + 'a,
     I: FallibleIterator<Item = FallibleLend<'a, L>>,
 {
+    let _ = L::__check_covariance(crate::CovariantProof::new());
     LendIter {
         iter,
         _marker: core::marker::PhantomData,

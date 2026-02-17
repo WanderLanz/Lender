@@ -15,10 +15,9 @@ impl<'lend> lender::Lending<'lend> for Invariant {
 
 impl lender::CovariantLending for Invariant {
     fn __check_covariance<'long: 'short, 'short>(
-        lend: *const &'short <Self as lender::Lending<'long>>::Lend,
-        _: lender::Uncallable,
-    ) -> *const &'short <Self as lender::Lending<'short>>::Lend {
-        lend
+        proof: lender::CovariantProof<<Self as lender::Lending<'long>>::Lend>,
+    ) -> lender::CovariantProof<<Self as lender::Lending<'short>>::Lend> {
+        proof
     }
 }
 
@@ -30,10 +29,9 @@ impl<'lend> lender::FallibleLending<'lend> for FallibleInvariant {
 
 impl lender::CovariantFallibleLending for FallibleInvariant {
     fn __check_covariance<'long: 'short, 'short>(
-        lend: *const &'short <Self as lender::FallibleLending<'long>>::Lend,
-        _: lender::Uncallable,
-    ) -> *const &'short <Self as lender::FallibleLending<'short>>::Lend {
-        lend
+        proof: lender::CovariantProof<&'short <Self as lender::FallibleLending<'long>>::Lend>,
+    ) -> lender::CovariantProof<&'short <Self as lender::FallibleLending<'short>>::Lend> {
+        proof
     }
 }
 

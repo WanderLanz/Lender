@@ -16,11 +16,6 @@ pub struct FilterMap<L, F> {
 }
 
 impl<L, F> FilterMap<L, F> {
-    #[inline(always)]
-    pub(crate) fn new(lender: L, f: Covar<F>) -> FilterMap<L, F> {
-        FilterMap { lender, f }
-    }
-
     /// Returns the inner lender.
     #[inline(always)]
     pub fn into_inner(self) -> L {
@@ -31,6 +26,14 @@ impl<L, F> FilterMap<L, F> {
     #[inline(always)]
     pub fn into_parts(self) -> (L, Covar<F>) {
         (self.lender, self.f)
+    }
+}
+
+impl<L: Lender, F> FilterMap<L, F> {
+    #[inline(always)]
+    pub(crate) fn new(lender: L, f: Covar<F>) -> FilterMap<L, F> {
+        let _ = L::__check_covariance(crate::CovariantProof::new());
+        FilterMap { lender, f }
     }
 }
 

@@ -22,6 +22,7 @@ where
 {
     #[inline]
     pub(crate) fn new(lender: L) -> Self {
+        let _ = L::__check_covariance(crate::CovariantProof::new());
         Self {
             inner: FlattenCompat::new(lender),
         }
@@ -124,6 +125,7 @@ where
 {
     #[inline]
     pub(crate) fn new(lender: L, f: Covar<F>) -> Self {
+        let _ = L::__check_covariance(crate::CovariantProof::new());
         Self {
             inner: FlattenCompat::new(Map::new(lender, f)),
         }
@@ -239,6 +241,7 @@ where
 {
     #[inline]
     pub(crate) fn new(lender: L) -> Self {
+        let _ = L::__check_covariance(crate::CovariantProof::new());
         Self {
             inner: MaybeDangling::new(None),
             lender: AliasableBox::from_unique(alloc::boxed::Box::new(lender)),

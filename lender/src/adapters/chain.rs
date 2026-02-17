@@ -17,18 +17,22 @@ pub struct Chain<A, B> {
 }
 
 impl<A, B> Chain<A, B> {
-    #[inline]
-    pub(crate) fn new(a: A, b: B) -> Self {
-        Self {
-            a: Fuse::new(a),
-            b: Fuse::new(b),
-        }
-    }
-
     /// Returns the two inner lenders.
     #[inline(always)]
     pub fn into_inner(self) -> (A, B) {
         (self.a.into_inner(), self.b.into_inner())
+    }
+}
+
+impl<A: Lender, B: Lender> Chain<A, B> {
+    #[inline]
+    pub(crate) fn new(a: A, b: B) -> Self {
+        let _ = A::__check_covariance(crate::CovariantProof::new());
+        let _ = B::__check_covariance(crate::CovariantProof::new());
+        Self {
+            a: Fuse::new(a),
+            b: Fuse::new(b),
+        }
     }
 }
 
@@ -217,7 +221,7 @@ where
 {
 }
 
-impl<A: Default, B: Default> Default for Chain<A, B> {
+impl<A: Default + Lender, B: Default + Lender> Default for Chain<A, B> {
     #[inline(always)]
     fn default() -> Self {
         Chain::new(Default::default(), Default::default())

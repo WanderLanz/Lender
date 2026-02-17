@@ -6,6 +6,17 @@ use crate::{
     try_trait_v2::{FromResidual, Try},
 };
 
+impl<L: FallibleLender> Fuse<L> {
+    #[inline(always)]
+    pub(crate) fn new_fallible(lender: L) -> Fuse<L> {
+        let _ = L::__check_covariance(crate::CovariantProof::new());
+        Fuse {
+            lender,
+            flag: false,
+        }
+    }
+}
+
 impl<'lend, L> FallibleLending<'lend> for Fuse<L>
 where
     L: FallibleLender,

@@ -3,6 +3,15 @@ use crate::{
     FallibleLending, FusedFallibleLender, Zip,
 };
 
+impl<A: FallibleLender, B: FallibleLender> Zip<A, B> {
+    #[inline(always)]
+    pub(crate) fn new_fallible(a: A, b: B) -> Self {
+        let _ = A::__check_covariance(crate::CovariantProof::new());
+        let _ = B::__check_covariance(crate::CovariantProof::new());
+        Self { a, b }
+    }
+}
+
 impl<'lend, A, B> FallibleLending<'lend> for Zip<A, B>
 where
     A: FallibleLender,

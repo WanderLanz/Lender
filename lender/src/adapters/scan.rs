@@ -16,11 +16,6 @@ pub struct Scan<L, St, F> {
 }
 
 impl<L, St, F> Scan<L, St, F> {
-    #[inline(always)]
-    pub(crate) fn new(lender: L, state: St, f: Covar<F>) -> Scan<L, St, F> {
-        Scan { lender, state, f }
-    }
-
     /// Returns the inner lender.
     #[inline(always)]
     pub fn into_inner(self) -> L {
@@ -31,6 +26,14 @@ impl<L, St, F> Scan<L, St, F> {
     #[inline(always)]
     pub fn into_parts(self) -> (L, St, Covar<F>) {
         (self.lender, self.state, self.f)
+    }
+}
+
+impl<L: Lender, St, F> Scan<L, St, F> {
+    #[inline(always)]
+    pub(crate) fn new(lender: L, state: St, f: Covar<F>) -> Scan<L, St, F> {
+        let _ = L::__check_covariance(crate::CovariantProof::new());
+        Scan { lender, state, f }
     }
 }
 

@@ -1,10 +1,22 @@
 use core::{num::NonZeroUsize, ops::ControlFlow};
 
 use crate::{
-    Chain, DoubleEndedFallibleLender, FallibleLend, FallibleLender, FallibleLending,
+    Chain, DoubleEndedFallibleLender, FallibleLend, FallibleLender, FallibleLending, Fuse,
     FusedFallibleLender,
     try_trait_v2::{FromResidual, Try},
 };
+
+impl<A: FallibleLender, B: FallibleLender> Chain<A, B> {
+    #[inline]
+    pub(crate) fn new_fallible(a: A, b: B) -> Self {
+        let _ = A::__check_covariance(crate::CovariantProof::new());
+        let _ = B::__check_covariance(crate::CovariantProof::new());
+        Self {
+            a: Fuse::new_fallible(a),
+            b: Fuse::new_fallible(b),
+        }
+    }
+}
 
 impl<'lend, A, B> FallibleLending<'lend> for Chain<A, B>
 where

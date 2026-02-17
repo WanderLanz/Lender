@@ -17,11 +17,6 @@ pub struct Take<L> {
 }
 
 impl<L> Take<L> {
-    #[inline(always)]
-    pub(crate) fn new(lender: L, n: usize) -> Take<L> {
-        Take { lender, n }
-    }
-
     /// Returns the inner lender.
     #[inline(always)]
     pub fn into_inner(self) -> L {
@@ -32,6 +27,14 @@ impl<L> Take<L> {
     #[inline(always)]
     pub fn into_parts(self) -> (L, usize) {
         (self.lender, self.n)
+    }
+}
+
+impl<L: Lender> Take<L> {
+    #[inline(always)]
+    pub(crate) fn new(lender: L, n: usize) -> Take<L> {
+        let _ = L::__check_covariance(crate::CovariantProof::new());
+        Take { lender, n }
     }
 }
 

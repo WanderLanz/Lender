@@ -1,7 +1,15 @@
 use crate::{
-    DoubleEndedFallibleLender, ExactSizeFallibleLender, FallibleLend, FallibleLender,
+    Covar, DoubleEndedFallibleLender, ExactSizeFallibleLender, FallibleLend, FallibleLender,
     FallibleLending, FusedFallibleLender, Map, higher_order::FnMutHKARes,
 };
+
+impl<L: FallibleLender, F> Map<L, F> {
+    #[inline(always)]
+    pub(crate) fn new_fallible(lender: L, f: Covar<F>) -> Map<L, F> {
+        let _ = L::__check_covariance(crate::CovariantProof::new());
+        Map { lender, f }
+    }
+}
 
 impl<'lend, L, F> FallibleLending<'lend> for Map<L, F>
 where

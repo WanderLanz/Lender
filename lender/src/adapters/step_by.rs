@@ -17,16 +17,6 @@ pub struct StepBy<L> {
 }
 
 impl<L> StepBy<L> {
-    #[inline]
-    pub(crate) fn new(lender: L, step: usize) -> Self {
-        assert_ne!(step, 0);
-        StepBy {
-            lender,
-            step: step - 1,
-            first_take: true,
-        }
-    }
-
     /// Returns the inner lender.
     #[inline(always)]
     pub fn into_inner(self) -> L {
@@ -37,6 +27,19 @@ impl<L> StepBy<L> {
     #[inline(always)]
     pub fn into_parts(self) -> (L, usize) {
         (self.lender, self.step + 1)
+    }
+}
+
+impl<L: Lender> StepBy<L> {
+    #[inline]
+    pub(crate) fn new(lender: L, step: usize) -> Self {
+        let _ = L::__check_covariance(crate::CovariantProof::new());
+        assert_ne!(step, 0);
+        StepBy {
+            lender,
+            step: step - 1,
+            first_take: true,
+        }
     }
 }
 

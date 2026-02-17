@@ -19,6 +19,7 @@ where
     L: ?Sized + CovariantLending + 'a,
     for<'all> Lend<'all, L>: Clone,
 {
+    let _ = L::__check_covariance(crate::CovariantProof::new());
     Repeat { elt }
 }
 

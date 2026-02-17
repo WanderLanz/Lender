@@ -5,6 +5,18 @@ use crate::{
     try_trait_v2::Try,
 };
 
+impl<L: FallibleLender, P> SkipWhile<L, P> {
+    #[inline(always)]
+    pub(crate) fn new_fallible(lender: L, predicate: P) -> SkipWhile<L, P> {
+        let _ = L::__check_covariance(crate::CovariantProof::new());
+        SkipWhile {
+            lender,
+            flag: false,
+            predicate,
+        }
+    }
+}
+
 impl<'lend, L, P> FallibleLending<'lend> for SkipWhile<L, P>
 where
     P: FnMut(&FallibleLend<'lend, L>) -> Result<bool, L::Error>,

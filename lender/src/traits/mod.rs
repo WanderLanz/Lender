@@ -62,9 +62,18 @@ impl<'a, A, B> TupleLend<'a> for &'a mut (A, B) {
     }
 }
 
-/// Uninhabited type used to make `__check_covariance` methods uncallable.
+/// A covariance witness whose private field prevents construction
+/// outside this crate, making it impossible to bypass covariance
+/// checks without `unsafe`.
 #[doc(hidden)]
-pub enum Uncallable {}
+pub struct CovariantProof<T>(core::marker::PhantomData<fn() -> T>);
+
+impl<T> CovariantProof<T> {
+    #[doc(hidden)]
+    pub(crate) fn new() -> Self {
+        CovariantProof(core::marker::PhantomData)
+    }
+}
 
 /// Internal struct used to implement [`lend!`], do not use directly.
 #[doc(hidden)]
@@ -85,30 +94,29 @@ impl<'lend, T: ?Sized + for<'all> DynLend<'all>> Lending<'lend> for DynLendShunt
 /// Users should not need to implement this trait directly. Use [`lend!`] for
 /// simple patterns or [`covariant_lend!`] for complex types.
 ///
-/// The required method [`__check_covariance`](CovariantLending::__check_covariance)
-/// enforces covariance: its safe body `{ lend }` only compiles when the
+/// The required method
+/// [`__check_covariance`](CovariantLending::__check_covariance) enforces
+/// covariance: its safe body `{ proof }` only compiles when the
 /// [`Lend`](Lending::Lend) type is covariant, so non-covariant types cannot
-/// implement this trait without `unsafe`. See the documentation of
+/// implement this trait without `unsafe` with a returning body. See the
+/// documentation of
 /// [`Lender::__check_covariance`](crate::Lender::__check_covariance) for
 /// details.
 #[doc(hidden)]
 pub trait CovariantLending: for<'all> Lending<'all> {
     fn __check_covariance<'long: 'short, 'short>(
-        lend: *const <Self as Lending<'long>>::Lend,
-        _: Uncallable,
-    ) -> *const <Self as Lending<'short>>::Lend;
+        proof: CovariantProof<<Self as Lending<'long>>::Lend>,
+    ) -> CovariantProof<<Self as Lending<'short>>::Lend>;
 }
 
 // SAFETY: lend!() only accepts type patterns that are syntactically covariant
 // in 'lend (references, slices, tuples of identifiers, etc.)
 impl<T: ?Sized + for<'all> DynLend<'all>> CovariantLending for DynLendShunt<T> {
-    #[allow(clippy::not_unsafe_ptr_arg_deref)]
     fn __check_covariance<'long: 'short, 'short>(
-        lend: *const <Self as Lending<'long>>::Lend,
-        _: Uncallable,
-    ) -> *const <Self as Lending<'short>>::Lend {
+        proof: CovariantProof<<Self as Lending<'long>>::Lend>,
+    ) -> CovariantProof<<Self as Lending<'short>>::Lend> {
         // SAFETY: lend!() only accepts syntactically covariant patterns
-        unsafe { core::mem::transmute(lend) }
+        unsafe { core::mem::transmute(proof) }
     }
 }
 
@@ -264,8 +272,9 @@ macro_rules! lend {
 /// This macro must be invoked inside `impl Lender for T` blocks where the
 /// [`Lend`](Lending::Lend) type is concrete (not defined in terms of another
 /// lender's [`Lend`](Lending::Lend) type). It expands to the
-/// `__check_covariance` method implementation with body `{ lend }`, which only
-/// compiles if the [`Lend`](Lending::Lend) type is covariant in its lifetime.
+/// `__check_covariance` method implementation with body `{ proof }`, which
+/// only compiles if the [`Lend`](Lending::Lend) type is covariant in its
+/// lifetime.
 ///
 /// For adapters that delegate to underlying lenders, use
 /// [`unsafe_assume_covariance!`](crate::unsafe_assume_covariance!) instead.
@@ -297,10 +306,9 @@ macro_rules! lend {
 macro_rules! check_covariance {
     () => {
         fn __check_covariance<'long: 'short, 'short>(
-            lend: *const <Self as Lending<'long>>::Lend,
-            _: $crate::Uncallable,
-        ) -> *const <Self as Lending<'short>>::Lend {
-            lend
+            proof: $crate::CovariantProof<<Self as Lending<'long>>::Lend>,
+        ) -> $crate::CovariantProof<<Self as Lending<'short>>::Lend> {
+            proof
         }
     };
 }
@@ -310,8 +318,8 @@ macro_rules! check_covariance {
 /// Use this macro for adapters whose [`Lend`](Lending::Lend) type is defined in
 /// terms of another lender's [`Lend`](Lending::Lend) type (e.g., `type Lend =
 /// Lend<'lend, L>`). The macro expands to the `__check_covariance` method
-/// implementation with body `{ unsafe { core::mem::transmute(lend) } }`, which
-/// skips the covariance check, as it always compiles.
+/// implementation with body `{ unsafe { core::mem::transmute(proof) } }`,
+/// which skips the covariance check, as it always compiles.
 ///
 /// For lenders with concrete [`Lend`](Lending::Lend) types, use
 /// [`check_covariance!`] instead.
@@ -336,13 +344,11 @@ macro_rules! check_covariance {
 #[macro_export]
 macro_rules! unsafe_assume_covariance {
     () => {
-        #[allow(clippy::not_unsafe_ptr_arg_deref)]
         fn __check_covariance<'long: 'short, 'short>(
-            lend: *const <Self as Lending<'long>>::Lend,
-            _: $crate::Uncallable,
-        ) -> *const <Self as Lending<'short>>::Lend {
+            proof: $crate::CovariantProof<<Self as Lending<'long>>::Lend>,
+        ) -> $crate::CovariantProof<<Self as Lending<'short>>::Lend> {
             // SAFETY: Covariance is assumed by the caller of this macro
-            unsafe { core::mem::transmute(lend) }
+            unsafe { core::mem::transmute(proof) }
         }
     };
 }
@@ -406,13 +412,12 @@ macro_rules! covariant_lend {
         }
 
         // Covariance is enforced by the required _check_covariance method:
-        // its body `{ lend }` only compiles if $T is covariant in 'lend.
+        // its body `{ proof }` only compiles if $T is covariant in 'lend.
         impl $crate::CovariantLending for $name {
             fn __check_covariance<'long: 'short, 'short>(
-                lend: *const <Self as $crate::Lending<'long>>::Lend,
-                _: $crate::Uncallable,
-            ) -> *const <Self as $crate::Lending<'short>>::Lend {
-                lend
+                proof: $crate::CovariantProof<<Self as $crate::Lending<'long>>::Lend>,
+            ) -> $crate::CovariantProof<<Self as $crate::Lending<'short>>::Lend> {
+                proof
             }
         }
     };
@@ -484,13 +489,12 @@ macro_rules! covariant_fallible_lend {
         }
 
         // Covariance is enforced by the required _check_covariance method:
-        // its body `{ lend }` only compiles if $T is covariant in 'lend.
+        // its body `{ proof }` only compiles if $T is covariant in 'lend.
         impl $crate::CovariantFallibleLending for $name {
             fn __check_covariance<'long: 'short, 'short>(
-                lend: *const &'short <Self as $crate::FallibleLending<'long>>::Lend,
-                _: $crate::Uncallable,
-            ) -> *const &'short <Self as $crate::FallibleLending<'short>>::Lend {
-                lend
+                proof: $crate::CovariantProof<&'short <Self as $crate::FallibleLending<'long>>::Lend>,
+            ) -> $crate::CovariantProof<&'short <Self as $crate::FallibleLending<'short>>::Lend> {
+                proof
             }
         }
     };
@@ -504,10 +508,9 @@ macro_rules! covariant_fallible_lend {
 macro_rules! check_covariance_fallible {
     () => {
         fn __check_covariance<'long: 'short, 'short>(
-            lend: *const &'short <Self as FallibleLending<'long>>::Lend,
-            _: $crate::Uncallable,
-        ) -> *const &'short <Self as FallibleLending<'short>>::Lend {
-            lend
+            proof: $crate::CovariantProof<&'short <Self as FallibleLending<'long>>::Lend>,
+        ) -> $crate::CovariantProof<&'short <Self as FallibleLending<'short>>::Lend> {
+            proof
         }
     };
 }
@@ -521,13 +524,11 @@ macro_rules! check_covariance_fallible {
 #[macro_export]
 macro_rules! unsafe_assume_covariance_fallible {
     () => {
-        #[allow(clippy::not_unsafe_ptr_arg_deref)]
         fn __check_covariance<'long: 'short, 'short>(
-            lend: *const &'short <Self as FallibleLending<'long>>::Lend,
-            _: $crate::Uncallable,
-        ) -> *const &'short <Self as FallibleLending<'short>>::Lend {
+            proof: $crate::CovariantProof<&'short <Self as FallibleLending<'long>>::Lend>,
+        ) -> $crate::CovariantProof<&'short <Self as FallibleLending<'short>>::Lend> {
             // SAFETY: Covariance is assumed by the caller of this macro
-            unsafe { core::mem::transmute(lend) }
+            unsafe { core::mem::transmute(proof) }
         }
     };
 }
@@ -548,9 +549,8 @@ impl<'lend, T: ?Sized + for<'all> DynFallibleLend<'all>> FallibleLending<'lend>
 #[doc(hidden)]
 pub trait CovariantFallibleLending: for<'all> FallibleLending<'all> {
     fn __check_covariance<'long: 'short, 'short>(
-        lend: *const &'short <Self as FallibleLending<'long>>::Lend,
-        _: Uncallable,
-    ) -> *const &'short <Self as FallibleLending<'short>>::Lend;
+        proof: CovariantProof<&'short <Self as FallibleLending<'long>>::Lend>,
+    ) -> CovariantProof<&'short <Self as FallibleLending<'short>>::Lend>;
 }
 
 // SAFETY: fallible_lend!() only accepts type patterns that are syntactically
@@ -558,13 +558,11 @@ pub trait CovariantFallibleLending: for<'all> FallibleLending<'all> {
 impl<T: ?Sized + for<'all> DynFallibleLend<'all>> CovariantFallibleLending
     for DynFallibleLendShunt<T>
 {
-    #[allow(clippy::not_unsafe_ptr_arg_deref)]
     fn __check_covariance<'long: 'short, 'short>(
-        lend: *const &'short <Self as FallibleLending<'long>>::Lend,
-        _: Uncallable,
-    ) -> *const &'short <Self as FallibleLending<'short>>::Lend {
+        proof: CovariantProof<&'short <Self as FallibleLending<'long>>::Lend>,
+    ) -> CovariantProof<&'short <Self as FallibleLending<'short>>::Lend> {
         // SAFETY: fallible_lend!() only accepts syntactically covariant patterns
-        unsafe { core::mem::transmute(lend) }
+        unsafe { core::mem::transmute(proof) }
     }
 }
 

@@ -1,4 +1,14 @@
-use crate::{FallibleLend, FallibleLender, FallibleLending, Scan, higher_order::FnMutHKAResOpt};
+use crate::{
+    Covar, FallibleLend, FallibleLender, FallibleLending, Scan, higher_order::FnMutHKAResOpt,
+};
+
+impl<L: FallibleLender, St, F> Scan<L, St, F> {
+    #[inline(always)]
+    pub(crate) fn new_fallible(lender: L, state: St, f: Covar<F>) -> Scan<L, St, F> {
+        let _ = L::__check_covariance(crate::CovariantProof::new());
+        Scan { lender, state, f }
+    }
+}
 
 impl<'lend, L, St, F> FallibleLending<'lend> for Scan<L, St, F>
 where

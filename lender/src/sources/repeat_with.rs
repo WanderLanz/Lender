@@ -26,6 +26,7 @@ where
     L: ?Sized + CovariantLending + 'a,
     F: FnMut() -> Lend<'a, L>,
 {
+    let _ = L::__check_covariance(crate::CovariantProof::new());
     RepeatWith {
         f,
         _marker: PhantomData,

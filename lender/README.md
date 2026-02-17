@@ -27,7 +27,7 @@ This crate provides a lender trait and an associated library of utility methods,
 “utilizing” [#84533](https://github.com/rust-lang/rust/issues/84533) and [#25860](https://github.com/rust-lang/rust/issues/25860)
 to implement the [lender design based on higher-rank trait bounds proposed by Sabrina Jewson](https://sabrinajewson.org/blog/the-better-alternative-to-lifetime-gats).
 
-Similarly to what happens with standard iterators, besides the fundamental  [`Lender`] trait there is an
+Similarly to what happens with standard iterators, besides the fundamental [`Lender`] trait there is an
 [`IntoLender`] trait, and methods such as [`for_each`](https://docs.rs/lender/latest/lender/trait.Lender.html#method.for_each).
 
 Indeed, the crate implements for [`Lender`] all of the methods of [`Iterator`],
@@ -86,7 +86,7 @@ challenging:
 ```text
 lender.for_each(
     covar_mut!(for<'lend> |item: &'lend mut TYPE| {
-        // do something with item of type TYPE 
+        // do something with item of type TYPE
     })
 );
 ```
@@ -109,21 +109,21 @@ while let Some(item) = lender.next()? {
 }
 ```
 
-If you want to handle the error, you can use a three-armed match statement: 
+If you want to handle the error, you can use a three-armed match statement:
 
 ```text
 loop {
     match lender.next() {
         Err(e) => { /* handle error */ },
         Ok(None) => { /* end of iteration */ },
-        Ok(Some(item)) => { /* do something with item */ },  
+        Ok(Some(item)) => { /* do something with item */ },
     }
 }
 ```
 
 If you have a [`Lender`] you can make it into a [`FallibleLender`] with
-[`into_fallible`], and analogously for an [`IntoLender`]. You can also 
-[obtain a fallible lender from a fallible iterator]. In general, all 
+[`into_fallible`], and analogously for an [`IntoLender`]. You can also
+[obtain a fallible lender from a fallible iterator]. In general, all
 reasonable automatic conversions between iterators and lenders (fallible or not)
 are provided.
 
@@ -139,7 +139,7 @@ fn read_lender<L>(mut lender: L)
 where
     L: Lender + for<'lend> Lending<'lend, Lend = &'lend str>,
 {
-    let _: Option<&'_ str> = lender.next(); 
+    let _: Option<&'_ str> = lender.next();
 }
 ```
 
@@ -348,7 +348,7 @@ pub trait Lender {
     fn next(&mut self) -> Option<Self::Lend<'_>>;
 }
 
-fn read_lender<L: Lender>(lender: L) 
+fn read_lender<L: Lender>(lender: L)
     where for<'lend> L::Lend<'lend>: AsRef<str> {}
 ```
 
@@ -366,25 +366,36 @@ This is a very technical section, so feel free to skip it if you're not interest
 in the details the design choices behind this crate.
 
 To guarantee that the lend type is covariant in the lifetime parameter,
-we use an uncallable method in the [`CovariantLending`] and [`Lender`] traits:
+we use a method in the [`CovariantLending`] and [`Lender`] traits based
+on [`CovariantProof<T>`], a newtype wrapping a private `PhantomData<fn() -> T>`
+(which is covariant in `T`):
+
 ```rust,ignore
 fn __check_covariance<'long: 'short, 'short>(
-    lend: *const <Self as Lending<'long>>::Lend, _: crate::Uncallable,
-) -> *const <Self as Lending<'short>>::Lend;
+    proof: CovariantProof<<Self as Lending<'long>>::Lend>,
+) -> CovariantProof<<Self as Lending<'short>>::Lend>;
 ```
 
-If this method is implemented as `{ lend }`, then the compiler will check that
-the type `*const <Self as Lending<'long>>::Lend` is convertible to `*const <Self
-as Lending<'short>>::Lend`, given that `'long` outlives `'short`. For this to
-happen, `<Self as Lending<'long>>::Lend` must be a subtype of `<Self as
-Lending<'short>>::Lend`, which is equivalent to covariance.
+If this method is implemented as `{ proof }`, then the compiler will
+check that `CovariantProof<Lend<'long>>` is convertible to
+`CovariantProof<Lend<'short>>`, given that `'long` outlives `'short`.
+Since `CovariantProof<T>` is covariant in `T`, this is only possible
+when `Lend<'long>` is a subtype of `Lend<'short>`, which is the
+definition of covariance.
 
-This is what the [`check_covariance!`] macro does for [`Lender`] impls. The
-[`unsafe_assume_covariance!`] macro, instead, implements this method as `{
-unsafe { core::mem::transmute(lend) } }`, which tells the compiler to assume
-covariance without checking it: it is in this case a responsibility of the
-programmer to ensure that covariance holds (as the caller of an `unsafe` block
-must ensure the safety invariants).
+This is what the [`check_covariance!`] macro does for [`Lender`] impls.
+The [`unsafe_assume_covariance!`] macro, instead, implements this method
+as `{ unsafe { core::mem::transmute(proof) } }`, which tells the
+compiler to assume covariance without checking it: it is in this case a
+responsibility of the programmer to ensure that covariance holds (as
+the caller of an `unsafe` block must ensure the safety invariants).
+
+Since the private field of [`CovariantProof`] prevents construction
+outside the crate, users cannot bypass the check without `unsafe`.
+Moreover, source factory functions and adapter constructors call
+`__check_covariance` on the types they use, making it impossible to
+circumvent the check with non-returning code (`todo!()`,
+`unimplemented!()`, `panic!()`, `loop {}`, etc.).
 
 [`CovariantLending`] is a separate trait that depends on [`Lending`]. It
 is the trait required by methods that just require a [`Lending`] impl but
@@ -461,3 +472,5 @@ but if you see any unsafe code that can be made safe, please let us know!
 [`covariant_lend`]: https://docs.rs/lender/latest/lender/macro.covariant_lend.html
 [`Iterator`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html
 [`__check_covariance`]: https://docs.rs/lender/latest/lender/trait.Lender.html#tymethod.__check_covariance
+[`CovariantProof<T>`]: https://docs.rs/lender/latest/lender/struct.CovariantProof.html
+[`CovariantProof`]: https://docs.rs/lender/latest/lender/struct.CovariantProof.html

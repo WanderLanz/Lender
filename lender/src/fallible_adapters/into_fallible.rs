@@ -17,9 +17,10 @@ pub struct IntoFallible<L> {
     pub(crate) lender: L,
 }
 
-impl<L> IntoFallible<L> {
+impl<L: crate::Lender> IntoFallible<L> {
     #[inline(always)]
     pub(crate) fn new(lender: L) -> Self {
+        let _ = L::__check_covariance(crate::CovariantProof::new());
         Self { lender }
     }
 

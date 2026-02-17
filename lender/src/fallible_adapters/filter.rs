@@ -3,6 +3,14 @@ use crate::{
     FusedFallibleLender, try_trait_v2::Try,
 };
 
+impl<L: FallibleLender, P> Filter<L, P> {
+    #[inline(always)]
+    pub(crate) fn new_fallible(lender: L, predicate: P) -> Filter<L, P> {
+        let _ = L::__check_covariance(crate::CovariantProof::new());
+        Filter { lender, predicate }
+    }
+}
+
 impl<'lend, L, P> FallibleLending<'lend> for Filter<L, P>
 where
     P: FnMut(&FallibleLend<'lend, L>) -> Result<bool, L::Error>,

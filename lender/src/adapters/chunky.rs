@@ -50,6 +50,7 @@ where
 {
     #[inline]
     pub(crate) fn new(lender: L, chunk_size: usize) -> Self {
+        let _ = L::__check_covariance(crate::CovariantProof::new());
         assert!(chunk_size != 0, "chunk size must be non-zero");
         let len = lender.len().div_ceil(chunk_size);
         Self {
@@ -66,6 +67,7 @@ where
 {
     #[inline]
     pub(crate) fn new_fallible(lender: L, chunk_size: usize) -> Self {
+        let _ = L::__check_covariance(crate::CovariantProof::new());
         assert!(chunk_size != 0, "chunk size must be non-zero");
         let len = lender.len().div_ceil(chunk_size);
         Self {

@@ -5,6 +5,14 @@ use crate::{
     FallibleLending, FusedFallibleLender, Skip, try_trait_v2::Try,
 };
 
+impl<L: FallibleLender> Skip<L> {
+    #[inline(always)]
+    pub(crate) fn new_fallible(lender: L, n: usize) -> Skip<L> {
+        let _ = L::__check_covariance(crate::CovariantProof::new());
+        Skip { lender, n }
+    }
+}
+
 impl<'lend, L> FallibleLending<'lend> for Skip<L>
 where
     L: FallibleLender,

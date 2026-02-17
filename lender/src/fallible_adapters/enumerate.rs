@@ -5,6 +5,14 @@ use crate::{
     FallibleLending, FusedFallibleLender, try_trait_v2::Try,
 };
 
+impl<L: FallibleLender> Enumerate<L> {
+    #[inline(always)]
+    pub(crate) fn new_fallible(lender: L) -> Enumerate<L> {
+        let _ = L::__check_covariance(crate::CovariantProof::new());
+        Enumerate { lender, count: 0 }
+    }
+}
+
 impl<'lend, L> FallibleLending<'lend> for Enumerate<L>
 where
     L: FallibleLender,

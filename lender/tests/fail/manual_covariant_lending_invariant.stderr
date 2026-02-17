@@ -1,27 +1,13 @@
-error[E0053]: method `__check_covariance` has an incompatible type for trait
-  --> tests/fail/manual_covariant_lending_invariant.rs:18:15
-   |
-18 |         lend: *const &'short <Self as lender::Lending<'long>>::Lend,
-   |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Cell<Option<&'long String>>`, found `&'long Cell<Option<&'long String>>`
-   |
-   = note: expected signature `fn(*const &'long Cell<Option<&'long String>>, Uncallable) -> *const &'short Cell<Option<&'short String>>`
-              found signature `fn(*const &'short &'long Cell<Option<&'long String>>, Uncallable) -> *const &'short &'short Cell<Option<&'short String>>`
-help: change the parameter type to match the trait
-   |
-18 -         lend: *const &'short <Self as lender::Lending<'long>>::Lend,
-18 +         lend: *const &'long Cell<Option<&'long String>>,
-   |
-
 error: lifetime may not live long enough
-  --> tests/fail/manual_covariant_lending_invariant.rs:21:9
+  --> tests/fail/manual_covariant_lending_invariant.rs:20:9
    |
 17 |     fn __check_covariance<'long: 'short, 'short>(
    |                           -----          ------ lifetime `'short` defined here
    |                           |
    |                           lifetime `'long` defined here
 ...
-21 |         lend
-   |         ^^^^ associated function was supposed to return data with lifetime `'long` but it is returning data with lifetime `'short`
+20 |         proof
+   |         ^^^^^ associated function was supposed to return data with lifetime `'long` but it is returning data with lifetime `'short`
    |
    = help: consider adding the following bound: `'short: 'long`
    = note: requirement occurs because of the type `Cell<Option<&String>>`, which makes the generic argument `Option<&String>` invariant
@@ -29,15 +15,15 @@ error: lifetime may not live long enough
    = help: see <https://doc.rust-lang.org/nomicon/subtyping.html> for more information about variance
 
 error: lifetime may not live long enough
-  --> tests/fail/manual_covariant_lending_invariant.rs:36:9
+  --> tests/fail/manual_covariant_lending_invariant.rs:34:9
    |
-32 |     fn __check_covariance<'long: 'short, 'short>(
+31 |     fn __check_covariance<'long: 'short, 'short>(
    |                           -----          ------ lifetime `'short` defined here
    |                           |
    |                           lifetime `'long` defined here
 ...
-36 |         lend
-   |         ^^^^ associated function was supposed to return data with lifetime `'long` but it is returning data with lifetime `'short`
+34 |         proof
+   |         ^^^^^ associated function was supposed to return data with lifetime `'long` but it is returning data with lifetime `'short`
    |
    = help: consider adding the following bound: `'short: 'long`
    = note: requirement occurs because of the type `Cell<Option<&String>>`, which makes the generic argument `Option<&String>` invariant

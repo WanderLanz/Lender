@@ -4,6 +4,14 @@ use crate::{
     Chunk, FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender, try_trait_v2::Try,
 };
 
+impl<T: FallibleLender> Chunk<'_, T> {
+    #[inline(always)]
+    pub(crate) fn new_fallible(lender: &mut T, len: usize) -> Chunk<'_, T> {
+        let _ = T::__check_covariance(crate::CovariantProof::new());
+        Chunk { lender, len }
+    }
+}
+
 impl<'lend, T> FallibleLending<'lend> for Chunk<'_, T>
 where
     T: FallibleLender,

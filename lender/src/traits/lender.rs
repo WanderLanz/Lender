@@ -49,6 +49,19 @@ pub type Lend<'lend, L> = <L as Lending<'lend>>::Lend;
 ///
 /// For more about the concept of iterators
 /// generally, please see [`core::iter`].
+///
+/// # Covariance Checking
+///
+/// This crate provide a mechanism to guarantee that the [`Lend`](Lending::Lend)
+/// type of a lender is covariant in its lifetime. This is crucial to avoid
+/// undefined behavior, as many of the operations on lenders rely on covariance
+/// to ensure that lends do not outlive their lenders.
+///
+/// The mechanism is based on the
+/// [`__check_covariance`](Lender::__check_covariance) method of this trait,
+/// which is an internal method for compile-time covariance checking. Adapters
+/// relying on covariance of other lenders should call this method for the
+/// lenders they are adapting.
 pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// Internal method for compile-time covariance checking.
     ///
@@ -58,22 +71,30 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// - When implementing source lenders (lenders with concrete
     ///   [`Lend`](Lending::Lend) types), use
     ///   [`check_covariance!`](crate::check_covariance) in the [`Lender`] impl.
-    ///   The macro implements the method as `{ lend }`, which only compiles if
+    ///   The macro implements the method as `{ proof }`, which only compiles if
     ///   the [`Lend`](Lending::Lend) type is covariant in its lifetime. This
-    ///   happens because `*const <Self as Lending<'long>>::Lend` can be coerced
-    ///   into `*const <Self as Lending<'short>>::Lend` only if `<Self as
-    ///   Lending<'long>>::Lend` is a subtype of `<Self as
-    ///   Lending<'short>>::Lend`, which is the definition of covariance.
+    ///   happens because [`CovariantProof<T>`](crate::CovariantProof) is
+    ///   covariant in `T`, so an implicit coercion from
+    ///   `CovariantProof<Lend<'long>>` to `CovariantProof<Lend<'short>>` is
+    ///   only possible when `Lend<'long>` is a subtype of `Lend<'short>`,
+    ///   which is the definition of covariance.
     ///
     /// - In all other cases (e.g., when implementing adapters), use
     ///   [`unsafe_assume_covariance!`](crate::unsafe_assume_covariance) in the
     ///   [`Lender`] impl. The macro implements the method as `{ unsafe {
-    ///   core::mem::transmute(lend) } }`, which is a no-op. This is unsafe because
-    ///   it is up to the implementor to guarantee that the [`Lend`](Lending::Lend)
-    ///   type is covariant in its lifetime.
+    ///   core::mem::transmute(proof) } }`, which is a no-op. This is unsafe
+    ///   because it is up to the implementor to guarantee that the
+    ///   [`Lend`](Lending::Lend) type is covariant in its lifetime.
+    /// 
+    /// When relying on covariance of other types, this method should be called
+    /// in every constructor, or in every method requiring covariance, of such
+    /// types. In particular, adapters should call this method for the lender
+    /// they are adapting. The call makes it impossible to implement the check with
+    /// non-returning code (`todo!()`, `unimplemented!()`, `panic!()`, `loop
+    /// {}`, etc.).
     fn __check_covariance<'long: 'short, 'short>(
-        lend: *const <Self as Lending<'long>>::Lend, _: crate::Uncallable,
-    ) -> *const <Self as Lending<'short>>::Lend;
+        proof: crate::CovariantProof<<Self as Lending<'long>>::Lend>,
+    ) -> crate::CovariantProof<<Self as Lending<'short>>::Lend>;
 
     /// Yields the next lend, if any, of the lender.
     ///
@@ -270,7 +291,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
         Self: Sized,
         for<'all> U: IntoLender + Lending<'all, Lend = Lend<'all, Self>>,
     {
-        Chain::new(self, other.into_lender())
+        let other = other.into_lender();
+        Chain::new(self, other)
     }
     /// Zips the lender with another lender of the same or different type.
     ///
@@ -290,7 +312,8 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     where
         Self: Sized,
     {
-        Zip::new(self, other.into_lender())
+        let other = other.into_lender();
+        Zip::new(self, other)
     }
     /// Intersperses each lend of this lender with the given separator.
     ///

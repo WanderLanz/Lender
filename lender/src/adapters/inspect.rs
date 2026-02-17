@@ -17,11 +17,6 @@ pub struct Inspect<L, F> {
 }
 
 impl<L, F> Inspect<L, F> {
-    #[inline(always)]
-    pub(crate) fn new(lender: L, f: F) -> Inspect<L, F> {
-        Inspect { lender, f }
-    }
-
     /// Returns the inner lender.
     #[inline(always)]
     pub fn into_inner(self) -> L {
@@ -32,6 +27,14 @@ impl<L, F> Inspect<L, F> {
     #[inline(always)]
     pub fn into_parts(self) -> (L, F) {
         (self.lender, self.f)
+    }
+}
+
+impl<L: Lender, F> Inspect<L, F> {
+    #[inline(always)]
+    pub(crate) fn new(lender: L, f: F) -> Inspect<L, F> {
+        let _ = L::__check_covariance(crate::CovariantProof::new());
+        Inspect { lender, f }
     }
 }
 

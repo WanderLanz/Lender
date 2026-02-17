@@ -136,6 +136,7 @@ where
     for<'all> <Lend<'all, L> as Try>::Residual: Residual<U>,
     for<'all> F: FnMut(TryShunt<'all, L>) -> U,
 {
+    let _ = L::__check_covariance(crate::CovariantProof::new());
     let mut residual = None;
     // SAFETY: residual is manually guaranteed to be the only lend alive after `f`.
     #[allow(clippy::deref_addrof)]

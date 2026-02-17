@@ -3,6 +3,14 @@ use crate::{
     FallibleLending, FusedFallibleLender, Inspect,
 };
 
+impl<L: FallibleLender, F> Inspect<L, F> {
+    #[inline(always)]
+    pub(crate) fn new_fallible(lender: L, f: F) -> Inspect<L, F> {
+        let _ = L::__check_covariance(crate::CovariantProof::new());
+        Inspect { lender, f }
+    }
+}
+
 impl<'lend, L, F> FallibleLending<'lend> for Inspect<L, F>
 where
     L: FallibleLender,
