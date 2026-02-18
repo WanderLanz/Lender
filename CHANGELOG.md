@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.6.1] - 2026-02-18
+
+## Fixed
+
+- Closed loophole in covariance-checking macro that was
+  skipping covariance checks when using elided lifetimes.
+
+- Now macros use `$crate::` to refer to internal items.
+
+- Ported documentation about `#![with]`.
+
 ## [0.6.0] - 2026-02-17
 
 ### New

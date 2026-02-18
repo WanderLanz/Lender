@@ -3,15 +3,127 @@
 //! - Flexible function signatures, to work around function lifetime
 //!   signature restrictions.
 //!
-//! - Higher-Rank Closures, with macro checking covariance of return types with
-//!   respect to bound lifetimes.
+//! - Higher-Rank Closures, with macro checking covariance of return
+//!   types with respect to bound lifetimes.
 //!
-//! - [`Covar`] transparent wrapper to mark covariance-checked closures.
+//! - [`Covar`] transparent wrapper to mark covariance-checked
+//!   closures.
 //!
 //! Use the [`covar!`](`crate::covar`),
 //! [`covar_mut!`](`crate::covar_mut`), or
 //! [`covar_once!`](`crate::covar_once`) macros to create a
 //! covariance-checked higher-rank closure wrapped in [`Covar`].
+//!
+//! These macros are modified versions of the
+//! [`higher_order_closure!`](https://crates.io/crates/higher-order-closure)
+//! macro, adding a covariance check and the [`Covar`] wrapper.
+//! They share the same underlying mechanism: a "funnel" helper
+//! function whose `Fn` trait bounds enforce the desired higher-order
+//! signature on the closure.
+//!
+//! # Lifetime elision
+//!
+//! When the closure has a return type, an explicit `for<'a>` clause
+//! is **required** so that the macro can name the lifetime it
+//! checks for covariance:
+//!
+//! ```rust
+//! # use lender::prelude::*;
+//! let mut data = [1, 2, 3];
+//! let mut lender = lender::windows_mut(&mut data, 2)
+//!     .map(covar_mut!(
+//!         for<'lend> |w: &'lend mut [i32]| -> &'lend mut i32 {
+//!             &mut w[0]
+//!         }
+//!     ));
+//! assert_eq!(lender.next(), Some(&mut 1));
+//! ```
+//!
+//! When the closure has **no** return type (i.e., it returns `()`),
+//! the `for<>` clause can be omitted. In that case, [lifetime
+//! elision rules for function
+//! signatures](https://doc.rust-lang.org/reference/lifetime-elision.html#lifetime-elision-in-functions)
+//! apply inside the funnel's `Fn` trait bound, making the
+//! closure higher-order automatically. No covariance check is
+//! needed because `()` is trivially covariant.
+//!
+//! ```rust
+//! # use lender::prelude::*;
+//! let mut data = [0, 1, 0, 0, 0, 0, 0, 0, 0];
+//! lender::windows_mut(&mut data, 3)
+//!     .for_each(|w| {
+//!         w[2] = w[0] + w[1];
+//!     });
+//! assert_eq!(data, [0, 1, 1, 2, 3, 5, 8, 13, 21]);
+//! ```
+//!
+//! # Outer generic parameters: `#![with<…>]`
+//!
+//! The macros internally generate a helper function, so generic
+//! parameters from the enclosing scope are not directly available
+//! in the closure signature (similar to how nested `fn` items
+//! cannot use outer generics). The `#![with<…>]` attribute
+//! re-introduces them:
+//!
+//! ```rust
+//! # use lender::prelude::*;
+//! fn display_first<T: core::fmt::Display>(data: &mut [T]) {
+//!     let mut lender = lender::windows_mut(data, 1)
+//!         .map(covar_mut!(
+//!             #![with<T: core::fmt::Display>]
+//!             for<'lend> |w: &'lend mut [T]|
+//!                 -> &'lend dyn core::fmt::Display
+//!             {
+//!                 &w[0]
+//!             }
+//!         ));
+//!     if let Some(d) = lender.next() {
+//!         println!("{d}");
+//!     }
+//! }
+//! # display_first(&mut [1, 2, 3]);
+//! ```
+//!
+//! The generics inside `#![with<…>]` support a restricted syntax:
+//!
+//! - **Lifetime parameters** with at most one super-lifetime bound:
+//!   `'a`, `'b: 'a`.
+//!
+//! - **Type parameters** with an optional `?Sized`, followed by an
+//!   optional lifetime bound, followed by an optional trait bound:
+//!   `T`, `U: ?Sized + 'a + core::fmt::Debug`.
+//!
+//! For bounds that exceed this "simple shape", use a `where` clause
+//! after the generics:
+//!
+//! ```rust
+//! # use lender::prelude::*;
+//! fn display_debug<T>(data: &mut [T])
+//! where
+//!     T: core::fmt::Display + core::fmt::Debug,
+//! {
+//!     let mut lender = lender::windows_mut(data, 1)
+//!         .map(covar_mut!(
+//!             #![with<T>
+//!                 where T: core::fmt::Display
+//!                        + core::fmt::Debug
+//!             ]
+//!             for<'lend> |w: &'lend mut [T]|
+//!                 -> &'lend dyn core::fmt::Display
+//!             {
+//!                 &w[0]
+//!             }
+//!         ));
+//!     if let Some(d) = lender.next() {
+//!         println!("{d}");
+//!     }
+//! }
+//! # display_debug(&mut [1, 2, 3]);
+//! ```
+//!
+//! In practice, bounds inside `#![with<…>]` are seldom needed
+//! because the generics are only used for the *signature* of the
+//! closure, not its body.
 
 /// A transparent wrapper that seals a closure whose covariance has been
 /// verified at construction time by the [`covar!`](crate::covar),
@@ -143,6 +255,17 @@ impl<'b, A, B: 'b, E, F: FnMut(A) -> Result<Option<B>, E>> FnMutHKAResOpt<'b, A,
 #[macro_export]
 macro_rules! __covar__ {
     // Case 1: With for<'lifetime> and return type - includes covariance check
+    //
+    // $hr ("higher-rank") is the universally quantified lifetime
+    // from the `for<'hr>` clause.  It is the lifetime whose
+    // covariance in $Ret the macro checks.
+    //
+    // $lt ("lifetime") are optional *outer* lifetime parameters
+    // introduced via `#![with<'a, 'b, …>]`.  They let $Ret
+    // reference lifetimes from the enclosing scope that are NOT
+    // higher-rank.  They appear in __CovarCheck and
+    // __check_covariance but are passed through unchanged — only
+    // $hr is tested for covariance.
     (
         $F:ident,
         $(#![
@@ -208,7 +331,14 @@ macro_rules! __covar__ {
                 // with respect to the bound lifetime. The PhantomData<&'a ()>
                 // ensures the lifetime is used even if $Ret doesn't contain it.
                 #[allow(dead_code)]
-                struct __CovarCheck<$hr>(
+                struct __CovarCheck<
+                    $(
+                        $($(
+                            $lt,
+                        )+)?
+                    )?
+                    $hr
+                >(
                     ::core::marker::PhantomData<fn() -> ($Ret, &$hr ())>
                 );
 
@@ -216,9 +346,30 @@ macro_rules! __covar__ {
                 // is covariant in the lifetime parameter. See the documentation of
                 // Lender::__check_covariance for details.
                 #[allow(dead_code)]
-                fn __check_covariance<'__long: '__short, '__short>(
-                    x: *const __CovarCheck<'__long>,
-                ) -> *const __CovarCheck<'__short> {
+                fn __check_covariance<
+                    $(
+                        $($(
+                            $lt,
+                        )+)?
+                    )?
+                    '__long: '__short, '__short
+                >(
+                    x: *const __CovarCheck<
+                        $(
+                            $($(
+                                $lt,
+                            )+)?
+                        )?
+                        '__long
+                    >,
+                ) -> *const __CovarCheck<
+                    $(
+                        $($(
+                            $lt,
+                        )+)?
+                    )?
+                    '__short
+                > {
                     x
                 }
 
@@ -232,7 +383,15 @@ macro_rules! __covar__ {
         ) }
     );
 
-    // Case 2: Without for<> or without return type - no covariance check needed
+    // Case 2: No return type - no covariance check needed
+    //
+    // Without a return type the closure returns `()`, which is
+    // trivially covariant, so no check is required.
+    //
+    // A return type WITHOUT a `for<>` clause intentionally fails to
+    // match either case, producing a compile error: the user must
+    // provide an explicit `for<'a>` so that the covariance check in
+    // Case 1 can name the lifetime it checks.
     (
         $F:ident,
         $(#![
@@ -262,12 +421,10 @@ macro_rules! __covar__ {
         $( for<$hr:lifetime> )?
         $( move $(@$move:tt)?)?
         | $($arg:tt : $Arg:ty),* $(,)?|
-        $( -> $Ret:ty)?
         $body:block
     ) => (
-        // SAFETY: Case 2 has no for<> with return type, so no
-        // covariance issue arises (the return type does not borrow
-        // from a higher-rank lifetime).
+        // SAFETY: no return type means the closure returns `()`,
+        // which is covariant in every lifetime.
         unsafe { $crate::higher_order::Covar::__new(
         ({
             fn __funnel__<
@@ -292,7 +449,7 @@ macro_rules! __covar__ {
                 f: __Closure,
             ) -> __Closure
             where
-                __Closure : $(for<$hr>)? ::core::ops::$F($($Arg),*)$( -> $Ret)?,
+                __Closure : $(for<$hr>)? ::core::ops::$F($($Arg),*),
                 $($($($wc)*)?)?
             {
                 f
