@@ -306,8 +306,8 @@ macro_rules! lend {
 macro_rules! check_covariance {
     () => {
         fn __check_covariance<'long: 'short, 'short>(
-            proof: $crate::CovariantProof<<Self as Lending<'long>>::Lend>,
-        ) -> $crate::CovariantProof<<Self as Lending<'short>>::Lend> {
+            proof: $crate::CovariantProof<<Self as $crate::Lending<'long>>::Lend>,
+        ) -> $crate::CovariantProof<<Self as $crate::Lending<'short>>::Lend> {
             proof
         }
     };
@@ -345,8 +345,8 @@ macro_rules! check_covariance {
 macro_rules! unsafe_assume_covariance {
     () => {
         fn __check_covariance<'long: 'short, 'short>(
-            proof: $crate::CovariantProof<<Self as Lending<'long>>::Lend>,
-        ) -> $crate::CovariantProof<<Self as Lending<'short>>::Lend> {
+            proof: $crate::CovariantProof<<Self as $crate::Lending<'long>>::Lend>,
+        ) -> $crate::CovariantProof<<Self as $crate::Lending<'short>>::Lend> {
             // SAFETY: Covariance is assumed by the caller of this macro
             unsafe { core::mem::transmute(proof) }
         }
@@ -508,8 +508,8 @@ macro_rules! covariant_fallible_lend {
 macro_rules! check_covariance_fallible {
     () => {
         fn __check_covariance<'long: 'short, 'short>(
-            proof: $crate::CovariantProof<&'short <Self as FallibleLending<'long>>::Lend>,
-        ) -> $crate::CovariantProof<&'short <Self as FallibleLending<'short>>::Lend> {
+            proof: $crate::CovariantProof<&'short <Self as $crate::FallibleLending<'long>>::Lend>,
+        ) -> $crate::CovariantProof<&'short <Self as $crate::FallibleLending<'short>>::Lend> {
             proof
         }
     };
@@ -525,8 +525,8 @@ macro_rules! check_covariance_fallible {
 macro_rules! unsafe_assume_covariance_fallible {
     () => {
         fn __check_covariance<'long: 'short, 'short>(
-            proof: $crate::CovariantProof<&'short <Self as FallibleLending<'long>>::Lend>,
-        ) -> $crate::CovariantProof<&'short <Self as FallibleLending<'short>>::Lend> {
+            proof: $crate::CovariantProof<&'short <Self as $crate::FallibleLending<'long>>::Lend>,
+        ) -> $crate::CovariantProof<&'short <Self as $crate::FallibleLending<'short>>::Lend> {
             // SAFETY: Covariance is assumed by the caller of this macro
             unsafe { core::mem::transmute(proof) }
         }
