@@ -339,7 +339,16 @@ macro_rules! __covar__ {
                     )?
                     $hr
                 >(
-                    ::core::marker::PhantomData<fn() -> ($Ret, &$hr ())>
+                    ::core::marker::PhantomData<
+                        (
+                            fn() -> ($Ret, &$hr ()),
+                            $(
+                                $($(
+                                    &$lt (),
+                                )+)?
+                            )?
+                        )
+                    >
                 );
 
                 // This function only compiles if __CovarCheck (and thus $Ret)
