@@ -1,8 +1,15 @@
 # Change Log
 
+## [0.6.2] - 2026-02-18
+
+### Fixed
+
+- Missing lifetimes in `PhantomData` was causing compiler
+  error when using `#![with]` with covariance-check macros.
+
 ## [0.6.1] - 2026-02-18
 
-## Fixed
+### Fixed
 
 - Closed loophole in covariance-checking macro that was
   skipping covariance checks when using elided lifetimes.

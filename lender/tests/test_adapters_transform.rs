@@ -378,6 +378,24 @@ fn map_try_rfold_additional() {
     assert_eq!(result, Some(12)); // 6 + 4 + 2 = 12
 }
 
+// Regression test: #![with<'a, ...>] lifetimes that do not appear in
+// the return type must not trigger "unused lifetime parameter" errors.
+#[allow(clippy::needless_lifetimes)]
+#[test]
+fn map_with_unused_lifetime() {
+    fn inner<'a>(data: &'a mut [i32]) {
+        let mut lender = lender::windows_mut(data, 1).map(covar_mut!(
+            #![with<'a>]
+            for<'lend> |w: &'lend mut [i32]| -> i32 { w[0] * 2 }
+        ));
+        assert_eq!(lender.next(), Some(2));
+        assert_eq!(lender.next(), Some(4));
+        assert_eq!(lender.next(), Some(6));
+        assert_eq!(lender.next(), None);
+    }
+    inner(&mut [1, 2, 3]);
+}
+
 // ============================================================================
 // Scan adapter tests
 // Semantics: like fold but yields intermediate states
