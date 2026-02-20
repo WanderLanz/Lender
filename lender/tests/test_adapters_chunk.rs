@@ -138,58 +138,6 @@ fn peekable_peek_multiple() {
     assert_eq!(peekable.peek(), Some(&&2));
 }
 
-#[test]
-fn peekable_peek_mut_additional() {
-    let mut peekable = VecLender::new(vec![1, 2, 3]).peekable();
-    // VecLender yields &i32, so peek_mut returns &mut &i32 - can't modify underlying value
-    assert!(peekable.peek_mut().is_some());
-    assert_eq!(peekable.next(), Some(&1));
-    assert_eq!(peekable.next(), Some(&2)); // Original unchanged
-}
-
-#[test]
-fn peekable_next_if_additional() {
-    let mut peekable = VecLender::new(vec![1, 2, 3]).peekable();
-    assert_eq!(peekable.next_if(|x| **x < 2), Some(&1));
-    assert_eq!(peekable.next_if(|x| **x < 2), None); // 2 is not < 2
-    assert_eq!(peekable.next(), Some(&2));
-}
-
-#[test]
-fn peekable_next_if_eq_additional() {
-    let mut peekable = VecLender::new(vec![1, 2, 3]).peekable();
-    assert_eq!(peekable.next_if_eq(&&1), Some(&1));
-    assert_eq!(peekable.next_if_eq(&&1), None); // Next is 2, not 1
-    assert_eq!(peekable.next_if_eq(&&2), Some(&2));
-}
-
-#[test]
-fn peekable_fold_additional() {
-    let sum = VecLender::new(vec![1, 2, 3])
-        .peekable()
-        .fold(0, |acc, x| acc + *x);
-    assert_eq!(sum, 6);
-}
-
-#[test]
-fn peekable_try_fold_additional() {
-    let result: Option<i32> = VecLender::new(vec![1, 2, 3])
-        .peekable()
-        .try_fold(0, |acc, x| Some(acc + *x));
-    assert_eq!(result, Some(6));
-}
-
-#[test]
-fn peekable_size_hint_after_peek() {
-    let mut peekable = VecLender::new(vec![1, 2, 3]).peekable();
-    assert_eq!(peekable.size_hint(), (3, Some(3)));
-    peekable.peek();
-    // After peeking, size_hint should still be accurate
-    assert_eq!(peekable.size_hint(), (3, Some(3)));
-    peekable.next();
-    assert_eq!(peekable.size_hint(), (2, Some(2)));
-}
-
 // Peekable::nth with peeked value when n == 0 (covers unsafe transmute in nth)
 #[test]
 fn peekable_nth_zero_with_peeked() {

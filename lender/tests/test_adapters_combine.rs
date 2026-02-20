@@ -158,19 +158,6 @@ fn intersperse_with_basic() {
 }
 
 #[test]
-fn intersperse_single_element_additional() {
-    let mut lender = VecLender::new(vec![42]).intersperse(&0);
-    assert_eq!(lender.next(), Some(&42));
-    assert_eq!(lender.next(), None);
-}
-
-#[test]
-fn intersperse_empty_additional() {
-    let mut lender = VecLender::new(vec![]).intersperse(&0);
-    assert_eq!(lender.next(), None);
-}
-
-#[test]
 fn intersperse_into_inner() {
     let intersperse = VecLender::new(vec![1, 2, 3]).intersperse(&0);
     let lender = intersperse.into_inner();

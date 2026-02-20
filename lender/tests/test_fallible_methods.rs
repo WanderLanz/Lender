@@ -973,7 +973,12 @@ fn fallible_lender_find_map() {
     use lender::FallibleLender;
 
     let mut fallible = VecFallibleLender::new(vec![1, 2, 3, 4, 5]);
-    let result = fallible.find_map(|x: &i32| Ok(if *x > 3 { Some(*x * 10) } else { None }));
+    let result = fallible.find_map(covar_mut!(for<'all> |x: &'all i32| -> Result<
+        Option<i32>,
+        core::convert::Infallible,
+    > {
+        Ok(if *x > 3 { Some(*x * 10) } else { None })
+    }));
     assert_eq!(result, Ok(Some(40)));
 }
 

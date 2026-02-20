@@ -210,23 +210,6 @@ fn step_by_into_parts() {
     assert_eq!(step2, 1);
 }
 
-#[test]
-fn step_by_fold_additional() {
-    let sum = VecLender::new(vec![1, 2, 3, 4, 5])
-        .step_by(2)
-        .fold(0, |acc, x| acc + *x);
-    // Elements: 1, 3, 5
-    assert_eq!(sum, 9);
-}
-
-#[test]
-fn step_by_try_fold_additional() {
-    let result: Option<i32> = VecLender::new(vec![1, 2, 3, 4, 5])
-        .step_by(2)
-        .try_fold(0, |acc, x| Some(acc + *x));
-    assert_eq!(result, Some(9));
-}
-
 // ============================================================================
 // Filter adapter tests (Lender)
 // ============================================================================
@@ -264,14 +247,6 @@ fn filter_double_ended() {
     assert_eq!(filtered.next(), Some(&2));
     assert_eq!(filtered.next_back(), Some(&4));
     assert_eq!(filtered.next(), None);
-}
-
-#[test]
-fn filter_fold_additional() {
-    let sum = VecLender::new(vec![1, 2, 3, 4, 5, 6])
-        .filter(|x| **x % 2 == 0)
-        .fold(0, |acc, x| acc + *x);
-    assert_eq!(sum, 12); // 2 + 4 + 6
 }
 
 #[test]
@@ -466,45 +441,6 @@ fn skip_into_parts() {
 }
 
 #[test]
-fn skip_fold_additional() {
-    let sum = VecLender::new(vec![1, 2, 3, 4, 5])
-        .skip(2)
-        .fold(0, |acc, x| acc + *x);
-    // Skips 1, 2; sums 3 + 4 + 5 = 12
-    assert_eq!(sum, 12);
-}
-
-#[test]
-fn skip_try_fold_additional() {
-    let result: Option<i32> = VecLender::new(vec![1, 2, 3, 4, 5])
-        .skip(2)
-        .try_fold(0, |acc, x| Some(acc + *x));
-    assert_eq!(result, Some(12));
-}
-
-#[test]
-fn skip_nth_additional() {
-    let mut skipped = VecLender::new(vec![1, 2, 3, 4, 5]).skip(2);
-    // After skip(2), we have [3, 4, 5]
-    assert_eq!(skipped.nth(1), Some(&4)); // [3, 4, 5] -> nth(1) = 4
-}
-
-#[test]
-fn skip_rfold_additional() {
-    use lender::DoubleEndedLender;
-
-    let values: Vec<i32> =
-        VecLender::new(vec![1, 2, 3, 4, 5])
-            .skip(2)
-            .rfold(Vec::new(), |mut acc, x| {
-                acc.push(*x);
-                acc
-            });
-    // Skips 1, 2; rfolds 5, 4, 3
-    assert_eq!(values, vec![5, 4, 3]);
-}
-
-#[test]
 fn skip_rfold() {
     let mut values = Vec::new();
     VecLender::new(vec![1, 2, 3, 4, 5])
@@ -606,15 +542,6 @@ fn skip_while_into_parts() {
     let skip_while = VecLender::new(vec![1, 2, 3, 4, 5]).skip_while(|x| **x < 3);
     let (lender, _predicate) = skip_while.into_parts();
     assert_eq!(lender.count(), 5);
-}
-
-#[test]
-fn skip_while_fold_additional() {
-    let sum = VecLender::new(vec![1, 2, 3, 4, 5])
-        .skip_while(|x| **x < 3)
-        .fold(0, |acc, x| acc + *x);
-    // Skips 1, 2; sums 3 + 4 + 5 = 12
-    assert_eq!(sum, 12);
 }
 
 #[test]

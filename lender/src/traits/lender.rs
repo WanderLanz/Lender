@@ -1135,26 +1135,38 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     }
     /// The [`Lender`] version of [`Iterator::find_map`].
     ///
+    /// Note that functions passed to this method must be built
+    /// using the [`covar!`](crate::covar) or
+    /// [`covar_mut!`](crate::covar_mut) macros, which also check
+    /// for covariance of the returned type.
+    ///
     /// # Examples
     ///
     /// ```rust
     /// # use lender::prelude::*;
     /// let mut data = [1, 2, 3];
-    /// let mut lender = lender::lend_iter::<lend!(&'lend mut i32), _>(data.iter_mut());
-    /// let found = lender.find_map(|x: &mut i32| {
-    ///     if *x > 1 { Some(*x) } else { None }
-    /// });
+    /// let mut lender =
+    ///     lender::lend_iter::<lend!(&'lend mut i32), _>(
+    ///         data.iter_mut(),
+    ///     );
+    /// let found = lender.find_map(covar_mut!(
+    ///     for<'all> |x: &'all mut i32| -> Option<i32> {
+    ///         if *x > 1 { Some(*x) } else { None }
+    ///     }
+    /// ));
     /// assert_eq!(found, Some(2));
     /// ```
     #[inline]
-    fn find_map<'a, F>(&'a mut self, mut f: F) -> Option<<F as FnMutHKAOpt<'a, Lend<'a, Self>>>::B>
+    fn find_map<'a, F>(&'a mut self, f: Covar<F>) -> Option<<F as FnMutHKAOpt<'a, Lend<'a, Self>>>::B>
     where
         Self: Sized,
         F: for<'all> FnMutHKAOpt<'all, Lend<'all, Self>>,
     {
+        let mut f = f.into_inner();
         while let Some(x) = self.next() {
             if let Some(y) = f(x) {
-                // SAFETY: polonius return
+                // SAFETY: polonius return; covariance of the
+                // output is guaranteed by Covar
                 return Some(unsafe {
                     core::mem::transmute::<
                         <F as FnMutHKAOpt<'_, Lend<'_, Self>>>::B,

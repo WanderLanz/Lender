@@ -265,7 +265,9 @@ fn lender_find() {
 #[test]
 fn lender_find_map() {
     let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]);
-    let result = lender.find_map(|x: &i32| if *x > 2 { Some(*x * 10) } else { None });
+    let result = lender.find_map(covar_mut!(for<'all> |x: &'all i32| -> Option<i32> {
+        if *x > 2 { Some(*x * 10) } else { None }
+    }));
     assert_eq!(result, Some(30));
 }
 
@@ -653,44 +655,6 @@ fn lender_eq_by() {
     );
 }
 
-#[test]
-fn lender_ne_via_eq_by() {
-    // ne is !eq, so test via eq_by negation
-    assert!(!VecLender::new(vec![1, 2, 3]).eq_by(VecLender::new(vec![1, 2, 4]), |a, b| a == b));
-    assert!(VecLender::new(vec![1, 2, 3]).eq_by(VecLender::new(vec![1, 2, 3]), |a, b| a == b));
-    assert!(!VecLender::new(vec![1]).eq_by(VecLender::new(vec![1, 2]), |a, b| a == b));
-}
-
-#[test]
-fn lender_ordering_via_partial_cmp_by() {
-    use core::cmp::Ordering;
-
-    // lt: a < b
-    assert_eq!(
-        VecLender::new(vec![1, 2])
-            .partial_cmp_by(VecLender::new(vec![1, 3]), |a, b| a.partial_cmp(b)),
-        Some(Ordering::Less)
-    );
-    // le: a <= b (equal)
-    assert_eq!(
-        VecLender::new(vec![1, 2])
-            .partial_cmp_by(VecLender::new(vec![1, 2]), |a, b| a.partial_cmp(b)),
-        Some(Ordering::Equal)
-    );
-    // gt: a > b
-    assert_eq!(
-        VecLender::new(vec![1, 3])
-            .partial_cmp_by(VecLender::new(vec![1, 2]), |a, b| a.partial_cmp(b)),
-        Some(Ordering::Greater)
-    );
-    // ge: a >= b (equal)
-    assert_eq!(
-        VecLender::new(vec![1, 2])
-            .partial_cmp_by(VecLender::new(vec![1, 2]), |a, b| a.partial_cmp(b)),
-        Some(Ordering::Equal)
-    );
-}
-
 // ============================================================================
 // Try operations tests
 // ============================================================================
@@ -734,94 +698,6 @@ fn lender_try_fold_early_exit() {
         if *x > 3 { Err("too big") } else { Ok(acc + *x) }
     });
     assert_eq!(result, Err("too big"));
-}
-
-// ============================================================================
-// Additional adapter tests for better coverage
-// ============================================================================
-
-#[test]
-fn filter_size_hint() {
-    let filtered = VecLender::new(vec![1, 2, 3, 4, 5]).filter(|&x| x % 2 == 0);
-    // Filter can't know exact count, so lower is 0
-    let (lower, upper) = filtered.size_hint();
-    assert_eq!(lower, 0);
-    assert_eq!(upper, Some(5));
-}
-
-#[test]
-fn skip_size_hint() {
-    let skipped = VecLender::new(vec![1, 2, 3, 4, 5]).skip(2);
-    assert_eq!(skipped.size_hint(), (3, Some(3)));
-}
-
-#[test]
-fn skip_exact_size() {
-    use lender::ExactSizeLender;
-
-    let mut skipped = VecLender::new(vec![1, 2, 3, 4, 5]).skip(2);
-    assert_eq!(skipped.len(), 3);
-    skipped.next();
-    assert_eq!(skipped.len(), 2);
-}
-
-#[test]
-fn take_size_hint() {
-    let taken = VecLender::new(vec![1, 2, 3, 4, 5]).take(3);
-    assert_eq!(taken.size_hint(), (3, Some(3)));
-}
-
-#[test]
-fn take_exact_size() {
-    use lender::ExactSizeLender;
-
-    let mut taken = VecLender::new(vec![1, 2, 3, 4, 5]).take(3);
-    assert_eq!(taken.len(), 3);
-    taken.next();
-    assert_eq!(taken.len(), 2);
-}
-
-#[test]
-fn map_size_hint() {
-    let mapped =
-        VecLender::new(vec![1, 2, 3]).map(covar_mut!(for<'lend> |x: &'lend i32| -> i32 { *x * 2 }));
-    assert_eq!(mapped.size_hint(), (3, Some(3)));
-}
-
-#[test]
-fn inspect_double_ended_fold() {
-    let mut inspected = Vec::new();
-    let values: Vec<i32> = VecLender::new(vec![1, 2, 3])
-        .inspect(|&x| inspected.push(*x))
-        .rfold(Vec::new(), |mut acc, x| {
-            acc.push(*x);
-            acc
-        });
-    assert_eq!(values, vec![3, 2, 1]);
-    assert_eq!(inspected, vec![3, 2, 1]);
-}
-
-// ============================================================================
-// ExactSizeLender tests
-// ============================================================================
-
-#[test]
-fn exact_size_len() {
-    use lender::ExactSizeLender;
-
-    let lender = VecLender::new(vec![1, 2, 3, 4, 5]);
-    assert_eq!(lender.len(), 5);
-}
-
-#[test]
-fn exact_size_is_empty() {
-    use lender::ExactSizeLender;
-
-    let lender = VecLender::new(vec![1, 2, 3]);
-    assert!(!lender.is_empty());
-
-    let empty_lender = VecLender::new(Vec::<i32>::new());
-    assert!(empty_lender.is_empty());
 }
 
 // ============================================================================

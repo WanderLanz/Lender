@@ -1398,28 +1398,39 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
 
     /// The [`FallibleLender`] version of [`Iterator::find_map`].
     ///
+    /// Note that functions passed to this method must be built
+    /// using the [`covar!`](crate::covar) or
+    /// [`covar_mut!`](crate::covar_mut) macros, which also check
+    /// for covariance of the returned type.
+    ///
     /// # Examples
     ///
     /// ```rust
     /// # use lender::prelude::*;
     /// let mut lender =
     ///     [1, 2, 3].into_iter().into_lender().into_fallible();
-    /// let found = lender.find_map(|x: i32| {
-    ///     Ok(if x > 1 { Some(x * 10) } else { None })
-    /// });
+    /// let found = lender.find_map(covar_mut!(
+    ///     for<'all> |x: i32|
+    ///         -> Result<Option<i32>, core::convert::Infallible>
+    ///     {
+    ///         Ok(if x > 1 { Some(x * 10) } else { None })
+    ///     }
+    /// ));
     /// assert_eq!(found, Ok(Some(20)));
     /// ```
     #[allow(clippy::type_complexity)]
     #[inline]
-    fn find_map<'a, F>(&'a mut self, mut f: F) -> Result<Option<<F as FnMutHKAResOpt<'a, FallibleLend<'a, Self>, Self::Error>>::B>, Self::Error>
+    fn find_map<'a, F>(&'a mut self, f: Covar<F>) -> Result<Option<<F as FnMutHKAResOpt<'a, FallibleLend<'a, Self>, Self::Error>>::B>, Self::Error>
     where
         Self: Sized,
         F: for<'all> FnMutHKAResOpt<'all, FallibleLend<'all, Self>, Self::Error>,
     {
+        let mut f = f.into_inner();
         while let Some(x) = self.next()? {
             if let Some(y) = f(x)? {
                 return Ok(Some(
-                    // SAFETY: polonius return
+                    // SAFETY: polonius return; covariance of the
+                    // output is guaranteed by Covar
                     unsafe {
                         core::mem::transmute::<
                             <F as FnMutHKAResOpt<'_, FallibleLend<'_, Self>, Self::Error>>::B,

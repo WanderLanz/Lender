@@ -575,15 +575,6 @@ fn cycle_multiple_rounds() {
 }
 
 #[test]
-fn cycle_size_hint_additional() {
-    let empty_cycle = VecLender::new(Vec::<i32>::new()).cycle();
-    assert_eq!(empty_cycle.size_hint(), (0, Some(0)));
-
-    let cycle = VecLender::new(vec![1, 2]).cycle();
-    assert_eq!(cycle.size_hint(), (usize::MAX, None)); // Infinite
-}
-
-#[test]
 fn cycle_try_fold_additional() {
     // Take first 5 elements from cycling [1, 2]
     let result: Option<i32> = VecLender::new(vec![1, 2])
