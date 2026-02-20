@@ -108,7 +108,7 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     ///   core::mem::transmute(proof) } }`, which is a no-op. It is up to the
     ///   implementor to guarantee that the [`Lend`](Lending::Lend) type is
     ///   covariant in its lifetime.
-    /// 
+    ///
     /// When relying on covariance of other types, this method should be called
     /// in every constructor, or in every method requiring covariance, of such
     /// types. In particular, adapters should call this method using the

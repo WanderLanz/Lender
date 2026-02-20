@@ -48,7 +48,7 @@ impl<L: core::fmt::Debug, O, F> core::fmt::Debug for MapIntoIter<L, O, F> {
 
 impl<L: Lender, O, F: FnMut(Lend<'_, L>) -> O> Iterator for MapIntoIter<L, O, F> {
     type Item = O;
-    #[inline]
+    #[inline(always)]
     fn next(&mut self) -> Option<O> {
         self.lender.next().map(&mut self.f)
     }
@@ -58,7 +58,7 @@ impl<L: Lender, O, F: FnMut(Lend<'_, L>) -> O> Iterator for MapIntoIter<L, O, F>
         self.lender.size_hint()
     }
 
-    #[inline]
+    #[inline(always)]
     fn nth(&mut self, n: usize) -> Option<O> {
         self.lender.nth(n).map(&mut self.f)
     }
@@ -76,12 +76,12 @@ impl<L: Lender, O, F: FnMut(Lend<'_, L>) -> O> Iterator for MapIntoIter<L, O, F>
 impl<L: DoubleEndedLender, O, F: FnMut(Lend<'_, L>) -> O> DoubleEndedIterator
     for MapIntoIter<L, O, F>
 {
-    #[inline]
+    #[inline(always)]
     fn next_back(&mut self) -> Option<O> {
         self.lender.next_back().map(&mut self.f)
     }
 
-    #[inline]
+    #[inline(always)]
     fn nth_back(&mut self, n: usize) -> Option<O> {
         self.lender.nth_back(n).map(&mut self.f)
     }

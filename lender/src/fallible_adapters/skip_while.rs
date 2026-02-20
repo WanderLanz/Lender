@@ -11,8 +11,8 @@ impl<L: FallibleLender, P> SkipWhile<L, P> {
         crate::__check_fallible_lender_covariance::<L>();
         SkipWhile {
             lender,
-            flag: false,
             predicate,
+            flag: false,
         }
     }
 }

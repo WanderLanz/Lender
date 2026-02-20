@@ -32,7 +32,7 @@ where
     L: for<'all> Lending<'all, Lend = &'all T>,
 {
     type Item = T;
-    #[inline]
+    #[inline(always)]
     fn next(&mut self) -> Option<Self::Item> {
         self.lender.next().cloned()
     }
@@ -55,7 +55,7 @@ where
         self.lender.count()
     }
 
-    #[inline]
+    #[inline(always)]
     fn nth(&mut self, n: usize) -> Option<Self::Item> {
         self.lender.nth(n).cloned()
     }
@@ -67,7 +67,7 @@ where
     T: Clone,
     L: for<'all> Lending<'all, Lend = &'all T>,
 {
-    #[inline]
+    #[inline(always)]
     fn next_back(&mut self) -> Option<Self::Item> {
         self.lender.next_back().cloned()
     }

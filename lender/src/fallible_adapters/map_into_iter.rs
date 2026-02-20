@@ -9,7 +9,7 @@ where
 {
     type Item = O;
     type Error = L::Error;
-    #[inline]
+    #[inline(always)]
     fn next(&mut self) -> Result<Option<O>, Self::Error> {
         self.lender.next()?.map(&mut self.f).transpose()
     }
@@ -19,7 +19,7 @@ where
         self.lender.size_hint()
     }
 
-    #[inline]
+    #[inline(always)]
     fn nth(&mut self, n: usize) -> Result<Option<O>, Self::Error> {
         self.lender.nth(n)?.map(&mut self.f).transpose()
     }
@@ -40,7 +40,7 @@ where
     L: DoubleEndedFallibleLender,
     F: FnMut(FallibleLend<'_, L>) -> Result<O, L::Error>,
 {
-    #[inline]
+    #[inline(always)]
     fn next_back(&mut self) -> Result<Option<O>, Self::Error> {
         self.lender.next_back()?.map(&mut self.f).transpose()
     }

@@ -11,8 +11,8 @@ use crate::{FusedLender, Lend, Lender, Lending, try_trait_v2::Try};
 #[must_use = "lenders are lazy and do nothing unless consumed"]
 pub struct TakeWhile<L, P> {
     pub(crate) lender: L,
-    pub(crate) flag: bool,
     pub(crate) predicate: P,
+    pub(crate) flag: bool,
 }
 
 impl<L, P> TakeWhile<L, P> {
@@ -35,8 +35,8 @@ impl<L: Lender, P> TakeWhile<L, P> {
         crate::__check_lender_covariance::<L>();
         TakeWhile {
             lender,
-            flag: false,
             predicate,
+            flag: false,
         }
     }
 }
@@ -45,6 +45,7 @@ impl<L: fmt::Debug, P> fmt::Debug for TakeWhile<L, P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("TakeWhile")
             .field("lender", &self.lender)
+            .field("flag", &self.flag)
             .finish_non_exhaustive()
     }
 }

@@ -11,8 +11,8 @@ impl<L: FallibleLender, P> TakeWhile<L, P> {
         crate::__check_fallible_lender_covariance::<L>();
         TakeWhile {
             lender,
-            flag: false,
             predicate,
+            flag: false,
         }
     }
 }
