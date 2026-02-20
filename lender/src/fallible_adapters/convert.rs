@@ -42,7 +42,7 @@ pub struct Convert<E, I> {
 impl<E, I: crate::Lender> Convert<E, I> {
     #[inline(always)]
     pub(crate) fn new(iter: I) -> Self {
-        let _ = <I as crate::Lender>::__check_covariance(crate::CovariantProof::new());
+        crate::__check_lender_covariance::<I>();
         Self {
             iter,
             _marker: PhantomData,

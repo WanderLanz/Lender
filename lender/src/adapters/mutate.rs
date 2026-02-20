@@ -33,7 +33,7 @@ impl<L, F> Mutate<L, F> {
 impl<L: Lender, F> Mutate<L, F> {
     #[inline(always)]
     pub(crate) fn new(lender: L, f: F) -> Mutate<L, F> {
-        let _ = L::__check_covariance(crate::CovariantProof::new());
+        crate::__check_lender_covariance::<L>();
         Mutate { lender, f }
     }
 }

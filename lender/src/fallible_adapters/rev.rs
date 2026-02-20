@@ -8,7 +8,7 @@ use crate::{
 impl<L: FallibleLender> Rev<L> {
     #[inline(always)]
     pub(crate) fn new_fallible(lender: L) -> Rev<L> {
-        let _ = L::__check_covariance(crate::CovariantProof::new());
+        crate::__check_fallible_lender_covariance::<L>();
         Rev { lender }
     }
 }

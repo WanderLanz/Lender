@@ -8,7 +8,7 @@ use crate::{
 impl<L: FallibleLender> StepBy<L> {
     #[inline]
     pub(crate) fn new_fallible(lender: L, step: usize) -> Self {
-        let _ = L::__check_covariance(crate::CovariantProof::new());
+        crate::__check_fallible_lender_covariance::<L>();
         assert_ne!(step, 0);
         StepBy {
             lender,

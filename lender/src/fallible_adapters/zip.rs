@@ -6,8 +6,8 @@ use crate::{
 impl<A: FallibleLender, B: FallibleLender> Zip<A, B> {
     #[inline(always)]
     pub(crate) fn new_fallible(a: A, b: B) -> Self {
-        let _ = A::__check_covariance(crate::CovariantProof::new());
-        let _ = B::__check_covariance(crate::CovariantProof::new());
+        crate::__check_fallible_lender_covariance::<A>();
+        crate::__check_fallible_lender_covariance::<B>();
         Self { a, b }
     }
 }

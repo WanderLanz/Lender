@@ -254,7 +254,7 @@ where
 {
     #[inline]
     pub(crate) fn new(lender: L) -> Self {
-        let _ = L::__check_covariance(crate::CovariantProof::new());
+        crate::__check_fallible_lender_covariance::<L>();
         Self {
             inner: MaybeDangling::new(None),
             lender: AliasableBox::from_unique(alloc::boxed::Box::new(lender)),

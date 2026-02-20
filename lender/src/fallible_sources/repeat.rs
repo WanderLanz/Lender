@@ -25,7 +25,7 @@ where
     L: ?Sized + CovariantFallibleLending + 'a,
     for<'all> FallibleLend<'all, L>: Clone,
 {
-    let _ = L::__check_covariance(crate::CovariantProof::new());
+    crate::__check_fallible_lending_covariance::<L>();
     Repeat {
         elt,
         _marker: PhantomData,
@@ -53,7 +53,7 @@ where
     L: ?Sized + CovariantFallibleLending,
     E: Clone,
 {
-    let _ = L::__check_covariance(crate::CovariantProof::new());
+    crate::__check_fallible_lending_covariance::<L>();
     RepeatErr {
         err: error,
         _marker: PhantomData,

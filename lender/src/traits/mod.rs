@@ -62,17 +62,48 @@ impl<'a, A, B> TupleLend<'a> for &'a mut (A, B) {
     }
 }
 
-/// A covariance witness whose private field prevents construction
-/// outside this crate, making it impossible to bypass covariance
-/// checks without `unsafe`.
+/// A zero-sized type covariant in `L` whose private field prevents construction
+/// outside this crate, making it impossible to implement
+/// [`Lender::__check_covariance`], [`CovariantLending::__check_covariance`],
+/// [`FallibleLender::__check_covariance`], or
+/// [`CovariantFallibleLending::__check_covariance`] with a returning body
+/// without `unsafe`.
 #[doc(hidden)]
-pub struct CovariantProof<T>(core::marker::PhantomData<fn() -> T>);
+pub struct CovariantProof<L>(core::marker::PhantomData<fn() -> L>);
 
 impl<T> CovariantProof<T> {
     #[doc(hidden)]
     pub(crate) fn new() -> Self {
         CovariantProof(core::marker::PhantomData)
     }
+}
+
+/// Calls [`Lender::__check_covariance`] on `L`, detecting
+/// non-returning implementations at runtime.
+#[inline(always)]
+pub fn __check_lender_covariance<L: Lender + ?Sized>() {
+    let _ = L::__check_covariance(CovariantProof::new());
+}
+
+/// Calls [`CovariantLending::__check_covariance`] on `L`, detecting
+/// non-returning implementations at runtime.
+#[inline(always)]
+pub fn __check_lending_covariance<L: CovariantLending + ?Sized>() {
+    let _ = L::__check_covariance(CovariantProof::new());
+}
+
+/// Calls [`FallibleLender::__check_covariance`] on `L`, detecting
+/// non-returning implementations at runtime.
+#[inline(always)]
+pub fn __check_fallible_lender_covariance<L: FallibleLender + ?Sized>() {
+    let _ = L::__check_covariance(CovariantProof::new());
+}
+
+/// Calls [`CovariantFallibleLending::__check_covariance`] on `L`, detecting
+/// non-returning implementations at runtime.
+#[inline(always)]
+pub fn __check_fallible_lending_covariance<L: CovariantFallibleLending + ?Sized>() {
+    let _ = L::__check_covariance(CovariantProof::new());
 }
 
 /// Internal struct used to implement [`lend!`], do not use directly.
@@ -83,26 +114,25 @@ impl<'lend, T: ?Sized + for<'all> DynLend<'all>> Lending<'lend> for DynLendShunt
     type Lend = <T as DynLend<'lend>>::Lend;
 }
 
-/// Marker trait certifying that the [`Lend`](Lending::Lend) type is covariant
-/// in its lifetime parameter.
+/// Trait used to certify that the [`Lend`](Lending::Lend) associated type is
+/// covariant in its lifetime parameter.
 ///
-/// This trait is automatically implemented for types created by [`lend!`] and
-/// [`covariant_lend!`]. It is required by [`lend_iter`](crate::lend_iter) and
-/// similar functions that perform lifetime transmutes which are only sound when
-/// the lend type is covariant.
-///
-/// Users should not need to implement this trait directly. Use [`lend!`] for
-/// simple patterns or [`covariant_lend!`] for complex types.
+/// Methods such as [`lend_iter`](crate::lend_iter) perform lifetime transmutes
+/// that are only sound when the [`Lend`](Lending::Lend) type is covariant in
+/// its lifetime.
 ///
 /// The required method
 /// [`__check_covariance`](CovariantLending::__check_covariance) enforces
-/// covariance: its safe body `{ proof }` only compiles when the
-/// [`Lend`](Lending::Lend) type is covariant, so non-covariant types cannot
-/// implement this trait without `unsafe` with a returning body. See the
-/// documentation of
+/// covariance: see the documentation of
 /// [`Lender::__check_covariance`](crate::Lender::__check_covariance) for
 /// details.
-#[doc(hidden)]
+///
+/// Users of a [`CovariantLending`] should call [`__check_lending_covariance`]
+/// to detect non-returning implementations at runtime.
+///
+/// You should never need to implement this trait directly: use
+/// [`lend!`](crate::lend!) for simple patterns or
+/// [`covariant_lend!`](crate::covariant_lend!) for complex types.
 pub trait CovariantLending: for<'all> Lending<'all> {
     fn __check_covariance<'long: 'short, 'short>(
         proof: CovariantProof<<Self as Lending<'long>>::Lend>,
@@ -112,6 +142,7 @@ pub trait CovariantLending: for<'all> Lending<'all> {
 // SAFETY: lend!() only accepts type patterns that are syntactically covariant
 // in 'lend (references, slices, tuples of identifiers, etc.)
 impl<T: ?Sized + for<'all> DynLend<'all>> CovariantLending for DynLendShunt<T> {
+    #[inline(always)]
     fn __check_covariance<'long: 'short, 'short>(
         proof: CovariantProof<<Self as Lending<'long>>::Lend>,
     ) -> CovariantProof<<Self as Lending<'short>>::Lend> {
@@ -305,6 +336,7 @@ macro_rules! lend {
 #[macro_export]
 macro_rules! check_covariance {
     () => {
+        #[inline(always)]
         fn __check_covariance<'long: 'short, 'short>(
             proof: $crate::CovariantProof<<Self as $crate::Lending<'long>>::Lend>,
         ) -> $crate::CovariantProof<<Self as $crate::Lending<'short>>::Lend> {
@@ -344,6 +376,7 @@ macro_rules! check_covariance {
 #[macro_export]
 macro_rules! unsafe_assume_covariance {
     () => {
+        #[inline(always)]
         fn __check_covariance<'long: 'short, 'short>(
             proof: $crate::CovariantProof<<Self as $crate::Lending<'long>>::Lend>,
         ) -> $crate::CovariantProof<<Self as $crate::Lending<'short>>::Lend> {
@@ -411,9 +444,10 @@ macro_rules! covariant_lend {
             type Lend = $T;
         }
 
-        // Covariance is enforced by the required _check_covariance method:
+        // Covariance is enforced by the required __check_covariance method:
         // its body `{ proof }` only compiles if $T is covariant in 'lend.
         impl $crate::CovariantLending for $name {
+            #[inline(always)]
             fn __check_covariance<'long: 'short, 'short>(
                 proof: $crate::CovariantProof<<Self as $crate::Lending<'long>>::Lend>,
             ) -> $crate::CovariantProof<<Self as $crate::Lending<'short>>::Lend> {
@@ -488,12 +522,13 @@ macro_rules! covariant_fallible_lend {
             type Lend = $T;
         }
 
-        // Covariance is enforced by the required _check_covariance method:
+        // Covariance is enforced by the required __check_covariance method:
         // its body `{ proof }` only compiles if $T is covariant in 'lend.
         impl $crate::CovariantFallibleLending for $name {
+            #[inline(always)]
             fn __check_covariance<'long: 'short, 'short>(
-                proof: $crate::CovariantProof<&'short <Self as $crate::FallibleLending<'long>>::Lend>,
-            ) -> $crate::CovariantProof<&'short <Self as $crate::FallibleLending<'short>>::Lend> {
+                proof: $crate::CovariantProof<<Self as $crate::FallibleLending<'long>>::Lend>,
+            ) -> $crate::CovariantProof<<Self as $crate::FallibleLending<'short>>::Lend> {
                 proof
             }
         }
@@ -507,9 +542,10 @@ macro_rules! covariant_fallible_lend {
 #[macro_export]
 macro_rules! check_covariance_fallible {
     () => {
+        #[inline(always)]
         fn __check_covariance<'long: 'short, 'short>(
-            proof: $crate::CovariantProof<&'short <Self as $crate::FallibleLending<'long>>::Lend>,
-        ) -> $crate::CovariantProof<&'short <Self as $crate::FallibleLending<'short>>::Lend> {
+            proof: $crate::CovariantProof<<Self as $crate::FallibleLending<'long>>::Lend>,
+        ) -> $crate::CovariantProof<<Self as $crate::FallibleLending<'short>>::Lend> {
             proof
         }
     };
@@ -524,9 +560,10 @@ macro_rules! check_covariance_fallible {
 #[macro_export]
 macro_rules! unsafe_assume_covariance_fallible {
     () => {
+        #[inline(always)]
         fn __check_covariance<'long: 'short, 'short>(
-            proof: $crate::CovariantProof<&'short <Self as $crate::FallibleLending<'long>>::Lend>,
-        ) -> $crate::CovariantProof<&'short <Self as $crate::FallibleLending<'short>>::Lend> {
+            proof: $crate::CovariantProof<<Self as $crate::FallibleLending<'long>>::Lend>,
+        ) -> $crate::CovariantProof<<Self as $crate::FallibleLending<'short>>::Lend> {
             // SAFETY: Covariance is assumed by the caller of this macro
             unsafe { core::mem::transmute(proof) }
         }
@@ -543,14 +580,31 @@ impl<'lend, T: ?Sized + for<'all> DynFallibleLend<'all>> FallibleLending<'lend>
     type Lend = <T as DynFallibleLend<'lend>>::Lend;
 }
 
-/// Fallible counterpart to [`CovariantLending`].
+/// Trait used to certify that the [`Lend`](FallibleLending::Lend) associated
+/// type is covariant in its lifetime parameter.
 ///
-/// See [`CovariantLending`] for details on the covariance enforcement mechanism.
-#[doc(hidden)]
+/// Methods such as [`lend_fallible_iter`](crate::lend_fallible_iter) perform
+/// lifetime transmutes that are only sound when the [`Lend`](FallibleLending::Lend)
+/// type is covariant in its lifetime.
+///
+/// The required method
+/// [`__check_covariance`](CovariantFallibleLending::__check_covariance)
+/// enforces covariance: see the documentation of
+/// [`FallibleLender::__check_covariance`](crate::FallibleLender::__check_covariance)
+/// for details.
+///
+/// Users of a [`CovariantFallibleLending`] should call
+/// [`__check_fallible_lending_covariance`] to detect non-returning
+/// implementations at runtime.
+///
+/// You should never need to implement this trait directly: use
+/// [`fallible_lend!`](crate::fallible_lend) for simple patterns or
+/// [`covariant_fallible_lend!`](crate::covariant_fallible_lend!) for complex
+/// types.
 pub trait CovariantFallibleLending: for<'all> FallibleLending<'all> {
     fn __check_covariance<'long: 'short, 'short>(
-        proof: CovariantProof<&'short <Self as FallibleLending<'long>>::Lend>,
-    ) -> CovariantProof<&'short <Self as FallibleLending<'short>>::Lend>;
+        proof: CovariantProof<<Self as FallibleLending<'long>>::Lend>,
+    ) -> CovariantProof<<Self as FallibleLending<'short>>::Lend>;
 }
 
 // SAFETY: fallible_lend!() only accepts type patterns that are syntactically
@@ -558,9 +612,10 @@ pub trait CovariantFallibleLending: for<'all> FallibleLending<'all> {
 impl<T: ?Sized + for<'all> DynFallibleLend<'all>> CovariantFallibleLending
     for DynFallibleLendShunt<T>
 {
+    #[inline(always)]
     fn __check_covariance<'long: 'short, 'short>(
-        proof: CovariantProof<&'short <Self as FallibleLending<'long>>::Lend>,
-    ) -> CovariantProof<&'short <Self as FallibleLending<'short>>::Lend> {
+        proof: CovariantProof<<Self as FallibleLending<'long>>::Lend>,
+    ) -> CovariantProof<<Self as FallibleLending<'short>>::Lend> {
         // SAFETY: fallible_lend!() only accepts syntactically covariant patterns
         unsafe { core::mem::transmute(proof) }
     }

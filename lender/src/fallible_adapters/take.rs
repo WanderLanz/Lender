@@ -9,7 +9,7 @@ use crate::{
 impl<L: FallibleLender> Take<L> {
     #[inline(always)]
     pub(crate) fn new_fallible(lender: L, n: usize) -> Take<L> {
-        let _ = L::__check_covariance(crate::CovariantProof::new());
+        crate::__check_fallible_lender_covariance::<L>();
         Take { lender, n }
     }
 }

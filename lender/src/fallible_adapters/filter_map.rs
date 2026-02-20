@@ -6,7 +6,7 @@ use crate::{
 impl<L: FallibleLender, F> FilterMap<L, F> {
     #[inline(always)]
     pub(crate) fn new_fallible(lender: L, f: Covar<F>) -> FilterMap<L, F> {
-        let _ = L::__check_covariance(crate::CovariantProof::new());
+        crate::__check_fallible_lender_covariance::<L>();
         FilterMap { lender, f }
     }
 }

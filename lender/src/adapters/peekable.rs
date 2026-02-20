@@ -32,7 +32,7 @@ where
 {
     #[inline(always)]
     pub(crate) fn new(lender: L) -> Peekable<'this, L> {
-        let _ = L::__check_covariance(crate::CovariantProof::new());
+        crate::__check_lender_covariance::<L>();
         Peekable {
             peeked: MaybeDangling::new(None),
             lender: AliasableBox::from_unique(alloc::boxed::Box::new(lender)),

@@ -33,7 +33,7 @@ where
 {
     #[inline]
     pub(crate) fn new(lender: L) -> Cycle<L> {
-        let _ = L::__check_covariance(crate::CovariantProof::new());
+        crate::__check_lender_covariance::<L>();
         Cycle {
             orig: lender.clone(),
             lender,

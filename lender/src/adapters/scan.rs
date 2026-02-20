@@ -32,7 +32,7 @@ impl<L, St, F> Scan<L, St, F> {
 impl<L: Lender, St, F> Scan<L, St, F> {
     #[inline(always)]
     pub(crate) fn new(lender: L, state: St, f: Covar<F>) -> Scan<L, St, F> {
-        let _ = L::__check_covariance(crate::CovariantProof::new());
+        crate::__check_lender_covariance::<L>();
         Scan { lender, state, f }
     }
 }

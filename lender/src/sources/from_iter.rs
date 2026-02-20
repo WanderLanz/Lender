@@ -184,7 +184,7 @@ where
     L: ?Sized + CovariantLending + 'a,
     I: Iterator<Item = Lend<'a, L>>,
 {
-    let _ = L::__check_covariance(crate::CovariantProof::new());
+    crate::__check_lending_covariance::<L>();
     LendIter {
         iter,
         _marker: core::marker::PhantomData,

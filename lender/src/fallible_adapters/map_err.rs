@@ -21,7 +21,7 @@ pub struct MapErr<E, L, F> {
 impl<E, L: crate::FallibleLender, F> MapErr<E, L, F> {
     #[inline(always)]
     pub(crate) fn new(lender: L, f: F) -> Self {
-        let _ = L::__check_covariance(crate::CovariantProof::new());
+        crate::__check_fallible_lender_covariance::<L>();
         Self {
             lender,
             f,

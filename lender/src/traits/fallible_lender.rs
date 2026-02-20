@@ -35,69 +35,83 @@ pub type FallibleLend<'lend, L> = <L as FallibleLending<'lend>>::Lend;
 /// This is the main fallible lender trait. For more about the concept of lenders
 /// generally, please see the [crate documentation](crate).
 ///
-/// For more about the concept of iterators
-/// generally, please see [`core::iter`].
+/// For more about the concept of iterators generally, please see
+/// [`core::iter`].
 ///
 /// # Covariance Checking
 ///
-/// This crate provide a mechanism to guarantee that the
-/// [`Lend`](FallibleLending::Lend) type of a fallible lender is covariant in
-/// its lifetime. This is crucial to avoid undefined behavior, as many of the
+/// This trait provides a mechanism to guarantee that its
+/// [`Lend`](FallibleLending::Lend) associated type is covariant in its
+/// lifetime. This is crucial to avoid undefined behavior, as many of the
 /// operations on lenders rely on covariance to ensure that lends do not outlive
 /// their lenders.
 ///
 /// The mechanism is based on the
 /// [`__check_covariance`](FallibleLender::__check_covariance) method of this
-/// trait, which is an internal method for compile-time covariance checking.
-/// Adapters relying on covariance of other fallible lenders should call this
-/// method for the lenders they are adapting.
+/// trait, which can be implemented with a safe, returning body only if the
+/// [`Lend`](FallibleLending::Lend) type is covariant in its lifetime.
 ///
-/// The mechanism can be circumvented with unsafe code, and in this case the
+/// # Non-Returning Implementations
+///
+/// Covariance checks can be circumvented with unsafe code, and in this case the
 /// burden of checking covariance is on the implementor. However, there's no way
 /// to prevent that [`__check_covariance`](FallibleLender::__check_covariance)
 /// is implemented vacuously using a non-returning statement (`todo!()`,
 /// `unimplemented!()`, `panic!()`, `loop {}`, etc.), unless you call the method
-/// explicitly somewhere in your code. Adapters will call recursively adapted
-/// lenders, but there is no way to force the call on the user-facing type.
+/// explicitly somewhere in your code using
+/// [`__check_fallible_lender_covariance`](crate::__check_fallible_lender_covariance).
+///
+/// If you implement an adapter, you should call
+/// [`__check_fallible_lender_covariance`](crate::__check_fallible_lender_covariance)
+/// for the fallible lenders you are adapting.
+///
+/// However, there is no automatic way to guarantee that the user-facing
+/// covariance check is returning. In case you are paranoid, you can invoke in
+/// the entry point of your code
+/// [`__check_fallible_lender_covariance`](crate::__check_fallible_lender_covariance)
+/// for all fallible lender types you use.
 pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all> {
     /// The error type.
     type Error;
 
-    /// Internal method for compile-time covariance checking.
+    /// Internal method for checking the covariance of the
+    /// [`Lend`](FallibleLending::Lend) associated type of this fallible lender.
+    ///
+    /// All implementations must be `#[inline(always)]` to ensure that the
+    /// covariance check has no cost.
     ///
     /// This method should rarely be implemented directly. Instead, use the
     /// provided macros:
     ///
-    /// - When implementing source lenders (lenders with concrete
-    ///   [`Lend`](FallibleLending::Lend) types), users should invoke
-    ///   [`check_covariance_fallible!`](crate::check_covariance_fallible) in
-    ///   their [`FallibleLender`] impl. The macro implements the method as
-    ///   `{ proof }`, which only compiles if the
-    ///   [`Lend`](FallibleLending::Lend) type is covariant in its lifetime.
+    /// - When implementing source fallible lenders (lenders with concrete
+    ///   [`Lend`](FallibleLending::Lend) types), use
+    ///   [`check_covariance_fallible!`](crate::check_covariance_fallible) in the
+    ///   [`FallibleLender`] impl. The macro implements the method as `{ proof }`,
+    ///   which only compiles if the [`Lend`](FallibleLending::Lend) type is
+    ///   covariant in its lifetime. This happens because
+    ///   [`CovariantProof<L>`](crate::CovariantProof) is covariant in `L`, so an
+    ///   implicit coercion from `CovariantProof<Lend<'long>>` to
+    ///   `CovariantProof<Lend<'short>>` is only possible when `Lend<'long>` is a
+    ///   subtype of `Lend<'short>`, which is the definition of covariance.
     ///
     /// - In all other cases (e.g., when implementing adapters), use
-    ///   [`unsafe_assume_covariance_fallible!`][uacf]
-    ///   in the [`FallibleLender`] impl. The macro
-    ///   implements the method as `{
-    ///   unsafe { core::mem::transmute(proof) } }`, which is a no-op.
-    ///   This is unsafe because it is up to the implementor to
-    ///   guarantee that the [`Lend`](FallibleLending::Lend) type is
-    ///   covariant in its lifetime.
+    ///   [`unsafe_assume_covariance_fallible!`](crate::unsafe_assume_covariance_fallible)
+    ///   in the [`FallibleLender`] impl. The macro implements the method as `{
+    ///   unsafe { core::mem::transmute(proof) } }`, which is a no-op. It is up to
+    ///   the implementor to guarantee that the [`Lend`](FallibleLending::Lend)
+    ///   type is covariant in its lifetime.
     ///
-    /// When relying on covariance of other types, this method should
-    /// be called in every constructor, or in every method requiring
-    /// covariance, of such types. In particular, adapters should call
-    /// this method for the lender they are adapting. The call makes it
-    /// impossible to implement the check with non-returning code
-    /// (`todo!()`, `unimplemented!()`, `panic!()`, `loop {}`, etc.).
-    ///
-    /// See [`crate::Lender::__check_covariance`] for more details
-    /// on how this method works.
-    ///
-    /// [uacf]: crate::unsafe_assume_covariance_fallible
+    /// When relying on covariance of other types, this method should be called
+    /// in every constructor, or in every method requiring covariance, of such
+    /// types. In particular, adapters should call this method using the
+    /// function
+    /// [`__check_fallible_lender_covariance`](crate::__check_fallible_lender_covariance)
+    /// for the lender they are adapting. The call makes it impossible to
+    /// implement the check with non-returning code (`todo!()`,
+    /// `unimplemented!()`, `panic!()`, `loop {}`, etc.).
     fn __check_covariance<'long: 'short, 'short>(
-        proof: crate::CovariantProof<&'short <Self as FallibleLending<'long>>::Lend>,
-    ) -> crate::CovariantProof<&'short <Self as FallibleLending<'short>>::Lend>;
+        proof: crate::CovariantProof<<Self as FallibleLending<'long>>::Lend>,
+    ) -> crate::CovariantProof<<Self as FallibleLending<'short>>::Lend>;
 
     /// Yields the next lend, if any, of the lender, or `Ok(None)` when iteration
     /// is finished.
@@ -440,7 +454,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     ///
     /// Note that functions passed to this method must be built using the
     /// [`covar!`](crate::covar) or [`covar_mut!`](crate::covar_mut) macros, which also
-    /// checks for covariance of the returned type.
+    /// check for covariance of the returned type.
     ///
     /// # Examples
     ///
@@ -577,7 +591,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     ///
     /// Note that functions passed to this method must be built using the
     /// [`covar!`](crate::covar) or [`covar_mut!`](crate::covar_mut) macros, which also
-    /// checks for covariance of the returned type.
+    /// check for covariance of the returned type.
     ///
     /// # Examples
     ///
@@ -709,7 +723,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     ///
     /// Note that functions passed to this method must be built using the
     /// [`covar!`](crate::covar) or [`covar_mut!`](crate::covar_mut) macros, which also
-    /// checks for covariance of the returned type.
+    /// check for covariance of the returned type.
     ///
     /// # Examples
     ///
@@ -787,7 +801,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     ///
     /// Note that functions passed to this method must be built using the
     /// [`covar!`](crate::covar) or [`covar_mut!`](crate::covar_mut) macros, which also
-    /// checks for covariance of the returned type.
+    /// check for covariance of the returned type.
     ///
     /// # Examples
     ///
@@ -825,7 +839,7 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     ///
     /// Note that functions passed to this method must be built using the
     /// [`covar!`](crate::covar) or [`covar_mut!`](crate::covar_mut) macros, which also
-    /// checks for covariance of the returned type.
+    /// check for covariance of the returned type.
     ///
     /// # Examples
     ///

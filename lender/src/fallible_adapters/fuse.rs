@@ -9,7 +9,7 @@ use crate::{
 impl<L: FallibleLender> Fuse<L> {
     #[inline(always)]
     pub(crate) fn new_fallible(lender: L) -> Fuse<L> {
-        let _ = L::__check_covariance(crate::CovariantProof::new());
+        crate::__check_fallible_lender_covariance::<L>();
         Fuse {
             lender,
             flag: false,

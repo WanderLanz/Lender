@@ -30,7 +30,7 @@ impl<L, P> MapWhile<L, P> {
 impl<L: Lender, P> MapWhile<L, P> {
     #[inline(always)]
     pub(crate) fn new(lender: L, predicate: Covar<P>) -> MapWhile<L, P> {
-        let _ = L::__check_covariance(crate::CovariantProof::new());
+        crate::__check_lender_covariance::<L>();
         MapWhile { lender, predicate }
     }
 }

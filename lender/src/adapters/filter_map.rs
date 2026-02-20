@@ -32,7 +32,7 @@ impl<L, F> FilterMap<L, F> {
 impl<L: Lender, F> FilterMap<L, F> {
     #[inline(always)]
     pub(crate) fn new(lender: L, f: Covar<F>) -> FilterMap<L, F> {
-        let _ = L::__check_covariance(crate::CovariantProof::new());
+        crate::__check_lender_covariance::<L>();
         FilterMap { lender, f }
     }
 }

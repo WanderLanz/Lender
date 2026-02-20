@@ -33,7 +33,7 @@ impl<L> StepBy<L> {
 impl<L: Lender> StepBy<L> {
     #[inline]
     pub(crate) fn new(lender: L, step: usize) -> Self {
-        let _ = L::__check_covariance(crate::CovariantProof::new());
+        crate::__check_lender_covariance::<L>();
         assert_ne!(step, 0);
         StepBy {
             lender,

@@ -6,7 +6,7 @@ use crate::{
 impl<L: FallibleLender, F> Mutate<L, F> {
     #[inline(always)]
     pub(crate) fn new_fallible(lender: L, f: F) -> Mutate<L, F> {
-        let _ = L::__check_covariance(crate::CovariantProof::new());
+        crate::__check_fallible_lender_covariance::<L>();
         Mutate { lender, f }
     }
 }

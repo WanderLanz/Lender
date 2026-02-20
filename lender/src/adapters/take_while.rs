@@ -32,7 +32,7 @@ impl<L, P> TakeWhile<L, P> {
 impl<L: Lender, P> TakeWhile<L, P> {
     #[inline(always)]
     pub(crate) fn new(lender: L, predicate: P) -> TakeWhile<L, P> {
-        let _ = L::__check_covariance(crate::CovariantProof::new());
+        crate::__check_lender_covariance::<L>();
         TakeWhile {
             lender,
             flag: false,

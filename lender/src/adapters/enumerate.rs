@@ -32,7 +32,7 @@ impl<L> Enumerate<L> {
 impl<L: Lender> Enumerate<L> {
     #[inline(always)]
     pub(crate) fn new(lender: L) -> Enumerate<L> {
-        let _ = L::__check_covariance(crate::CovariantProof::new());
+        crate::__check_lender_covariance::<L>();
         Enumerate { lender, count: 0 }
     }
 }

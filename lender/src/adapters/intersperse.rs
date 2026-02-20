@@ -28,7 +28,7 @@ where
 {
     #[inline(always)]
     pub(crate) fn new(lender: L, separator: Lend<'this, L>) -> Self {
-        let _ = L::__check_covariance(crate::CovariantProof::new());
+        crate::__check_lender_covariance::<L>();
         Self {
             separator,
             needs_sep: false,
@@ -143,7 +143,7 @@ where
 {
     #[inline(always)]
     pub(crate) fn new(lender: L, separator: G) -> Self {
-        let _ = L::__check_covariance(crate::CovariantProof::new());
+        crate::__check_lender_covariance::<L>();
         Self {
             lender: Peekable::new(lender),
             separator,

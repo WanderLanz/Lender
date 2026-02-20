@@ -33,7 +33,7 @@ impl<L, F> Inspect<L, F> {
 impl<L: Lender, F> Inspect<L, F> {
     #[inline(always)]
     pub(crate) fn new(lender: L, f: F) -> Inspect<L, F> {
-        let _ = L::__check_covariance(crate::CovariantProof::new());
+        crate::__check_lender_covariance::<L>();
         Inspect { lender, f }
     }
 }

@@ -50,10 +50,11 @@
 //! ```rust
 //! # use lender::prelude::*;
 //! let mut data = [0, 1, 0, 0, 0, 0, 0, 0, 0];
-//! lender::windows_mut(&mut data, 3)
-//!     .for_each(|w| {
+//! lender::windows_mut(&mut data, 3).for_each(
+//!     covar_mut!(|w: &mut [i32]| {
 //!         w[2] = w[0] + w[1];
-//!     });
+//!     }).into_inner()
+//! );
 //! assert_eq!(data, [0, 1, 1, 2, 3, 5, 8, 13, 21]);
 //! ```
 //!
@@ -130,10 +131,10 @@
 /// [`covar_mut!`](crate::covar_mut), or [`covar_once!`](crate::covar_once)
 /// macros.
 ///
-/// Adapter structs like [`Map`](crate::Map) store `Covar<F>` and call the
-/// inner closure through [`as_inner`](Covar::as_inner) and
-/// [`as_inner_mut`](Covar::as_inner_mut), or
-/// [`into_inner`](Covar::into_inner).
+/// Adapter structs like [`Map`](crate::Map) and sources like
+/// [`once_with`](crate::once_with) store `Covar<F>` and call the inner closure
+/// through [`as_inner`](Covar::as_inner) and
+/// [`as_inner_mut`](Covar::as_inner_mut), or [`into_inner`](Covar::into_inner).
 ///
 /// `Covar<F>` cannot be constructed safely by user code (the
 /// constructor is unsafe, and also hidden to discourage usage).
@@ -144,10 +145,10 @@ pub struct Covar<F>(F);
 impl<F> Covar<F> {
     /// Creates a new `Covar<F>`.
     ///
-    /// Please don't use this constructor unless you really need to. The
-    /// main usage is creation of covariance-checked closures inside
-    /// adapters for which covariance is known in advance, such
-    /// as [`Map`](crate::Map).
+    /// Please don't use this constructor unless you really need to. The main
+    /// usage is creation of covariance-checked closures in the
+    /// [`covar!`](crate::covar), [`covar_mut!`](crate::covar_mut), and
+    /// [`covar_once!`](crate::covar_once) macros.
     ///
     /// # Safety
     ///
@@ -155,7 +156,7 @@ impl<F> Covar<F> {
     /// respect to any lifetime parameters in its signature. This is
     /// guaranteed by the [`covar!`](crate::covar),
     /// [`covar_mut!`](crate::covar_mut), and
-    /// [`covar_once!`](crate::covar_once) macros (for one parameter).
+    /// [`covar_once!`](crate::covar_once) macros.
     #[doc(hidden)]
     #[inline(always)]
     pub unsafe fn __new(f: F) -> Self {
@@ -354,6 +355,7 @@ macro_rules! __covar__ {
                 // This function only compiles if __CovarCheck (and thus $Ret)
                 // is covariant in the lifetime parameter. See the documentation of
                 // Lender::__check_covariance for details.
+                #[inline(always)]
                 #[allow(dead_code)]
                 fn __check_covariance<
                     $(
@@ -479,10 +481,9 @@ macro_rules! __covar__ {
 /// `for<'a>` bounds). This ensures that the return type is covariant in the
 /// bound lifetime, which is required for soundness with lending iterators.
 ///
-/// Use `covar_once!` when the closure will only be called once
-/// (e.g., with [`Lender::fold`](crate::Lender::fold)). For
-/// closures that may be called multiple times, use
-/// [`covar_mut!`](crate::covar_mut) or
+/// Use `covar_once!` when the closure will only be called once (e.g., with
+/// [`Lender::once_with`](crate::once_with)). For closures that may be
+/// called multiple times, use [`covar_mut!`](crate::covar_mut) or
 /// [`covar!`](crate::covar).
 ///
 /// # Syntax

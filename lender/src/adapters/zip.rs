@@ -65,8 +65,8 @@ impl<A, B> Zip<A, B> {
 impl<A: Lender, B: Lender> Zip<A, B> {
     #[inline(always)]
     pub(crate) fn new(a: A, b: B) -> Self {
-        let _ = A::__check_covariance(crate::CovariantProof::new());
-        let _ = B::__check_covariance(crate::CovariantProof::new());
+        crate::__check_lender_covariance::<A>();
+        crate::__check_lender_covariance::<B>();
         Self { a, b }
     }
 }

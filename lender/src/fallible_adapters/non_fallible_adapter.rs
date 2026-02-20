@@ -27,7 +27,7 @@ where
     L: FallibleLender,
     for<'all> F: FnMut(NonFallibleAdapter<'all, L>) -> U,
 {
-    let _ = L::__check_covariance(crate::CovariantProof::new());
+    crate::__check_fallible_lender_covariance::<L>();
     let mut error = None;
     let adapter = NonFallibleAdapter {
         lender,

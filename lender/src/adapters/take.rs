@@ -33,7 +33,7 @@ impl<L> Take<L> {
 impl<L: Lender> Take<L> {
     #[inline(always)]
     pub(crate) fn new(lender: L, n: usize) -> Take<L> {
-        let _ = L::__check_covariance(crate::CovariantProof::new());
+        crate::__check_lender_covariance::<L>();
         Take { lender, n }
     }
 }

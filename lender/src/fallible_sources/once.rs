@@ -28,7 +28,7 @@ use crate::{
 pub fn once<'a, L: ?Sized + CovariantFallibleLending, E>(
     value: FallibleLend<'a, L>,
 ) -> Once<'a, L, E> {
-    let _ = L::__check_covariance(crate::CovariantProof::new());
+    crate::__check_fallible_lending_covariance::<L>();
     Once {
         inner: Some(value),
         _marker: PhantomData,
@@ -52,7 +52,7 @@ pub fn once<'a, L: ?Sized + CovariantFallibleLending, E>(
 /// ```
 #[inline]
 pub fn once_err<L: ?Sized + CovariantFallibleLending, E>(error: E) -> OnceErr<L, E> {
-    let _ = L::__check_covariance(crate::CovariantProof::new());
+    crate::__check_fallible_lending_covariance::<L>();
     OnceErr {
         inner: Some(error),
         _marker: PhantomData,

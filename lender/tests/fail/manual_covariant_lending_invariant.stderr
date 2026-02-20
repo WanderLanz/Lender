@@ -1,3 +1,17 @@
+error[E0053]: method `__check_covariance` has an incompatible type for trait
+  --> tests/fail/manual_covariant_lending_invariant.rs:32:16
+   |
+32 |         proof: lender::CovariantProof<&'short <Self as lender::FallibleLending<'long>>::Lend>,
+   |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Cell<Option<&'long String>>`, found `&'long Cell<Option<&'long String>>`
+   |
+   = note: expected signature `fn(CovariantProof<&'long Cell<Option<&'long String>>>) -> CovariantProof<&'short Cell<Option<&'short String>>>`
+              found signature `fn(CovariantProof<&'short &'long Cell<Option<&'long String>>>) -> CovariantProof<&'short &'short Cell<Option<&'short String>>>`
+help: change the parameter type to match the trait
+   |
+32 -         proof: lender::CovariantProof<&'short <Self as lender::FallibleLending<'long>>::Lend>,
+32 +         proof: CovariantProof<&'long Cell<Option<&'long String>>>,
+   |
+
 error: lifetime may not live long enough
   --> tests/fail/manual_covariant_lending_invariant.rs:20:9
    |

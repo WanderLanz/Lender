@@ -26,7 +26,7 @@ where
     L: ?Sized + CovariantLending + 'a,
     F: FnMut() -> Lend<'a, L>,
 {
-    let _ = L::__check_covariance(crate::CovariantProof::new());
+    crate::__check_lending_covariance::<L>();
     RepeatWith {
         f,
         _marker: PhantomData,
@@ -72,7 +72,6 @@ where
     L: ?Sized + CovariantLending + 'a,
     F: FnMut() -> Lend<'a, L>,
 {
-    // SAFETY: the lend is the return type of F
     crate::unsafe_assume_covariance!();
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {

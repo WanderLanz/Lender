@@ -32,7 +32,7 @@ impl<L> Skip<L> {
 impl<L: Lender> Skip<L> {
     #[inline(always)]
     pub(crate) fn new(lender: L, n: usize) -> Skip<L> {
-        let _ = L::__check_covariance(crate::CovariantProof::new());
+        crate::__check_lender_covariance::<L>();
         Skip { lender, n }
     }
 }

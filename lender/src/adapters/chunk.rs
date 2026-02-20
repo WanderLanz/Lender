@@ -30,7 +30,7 @@ impl<'s, T> Chunk<'s, T> {
 impl<'s, T: Lender> Chunk<'s, T> {
     #[inline(always)]
     pub(crate) fn new(lender: &'s mut T, len: usize) -> Self {
-        let _ = T::__check_covariance(crate::CovariantProof::new());
+        crate::__check_lender_covariance::<T>();
         Self { lender, len }
     }
 }

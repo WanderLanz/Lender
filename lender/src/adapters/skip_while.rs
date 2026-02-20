@@ -31,7 +31,7 @@ impl<L, P> SkipWhile<L, P> {
 impl<L: Lender, P> SkipWhile<L, P> {
     #[inline(always)]
     pub(crate) fn new(lender: L, predicate: P) -> SkipWhile<L, P> {
-        let _ = L::__check_covariance(crate::CovariantProof::new());
+        crate::__check_lender_covariance::<L>();
         SkipWhile {
             lender,
             flag: false,

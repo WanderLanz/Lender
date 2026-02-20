@@ -1,11 +1,25 @@
 # Change Log
 
+## [unreleased]
+
+### New
+
+- Functions `__check_lender_covariance`, `__check_fallible_lender_covariance`,
+  `__check_lending_covariance` and `__check_fallible_lending_covariance` to
+  check covariance of lenders and lends in custom implementations.
+
+### Fixed
+
+- `find_map` implementations were missing covariance checks.
+
+- Removed spurious `&'short` reference from fallible covariance checks.
+
 ## [0.6.2] - 2026-02-18
 
 ### Fixed
 
 - Missing lifetimes in `PhantomData` was causing compiler
-  error when using `#![with]` with covariance-check macros.
+  errors when using `#![with]` with covariance-check macros.
 
 ## [0.6.1] - 2026-02-18
 

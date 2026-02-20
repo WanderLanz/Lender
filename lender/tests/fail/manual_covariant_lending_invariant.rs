@@ -1,8 +1,8 @@
 // Test that manually implementing CovariantLending / CovariantFallibleLending
 // for a type with an invariant Lend fails to compile, even when providing the
-// required _check_covariance method.
+// required __check_covariance method.
 //
-// Before the _check_covariance method was added to the traits, this would have
+// Before the __check_covariance method was added to the traits, this would have
 // compiled silently; the traits were empty markers with no enforcement.
 
 use std::cell::Cell;

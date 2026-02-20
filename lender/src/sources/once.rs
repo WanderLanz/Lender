@@ -17,7 +17,7 @@ use crate::{
 /// ```
 #[inline]
 pub fn once<'a, L: ?Sized + CovariantLending>(value: Lend<'a, L>) -> Once<'a, L> {
-    let _ = L::__check_covariance(crate::CovariantProof::new());
+    crate::__check_lending_covariance::<L>();
     Once { inner: Some(value) }
 }
 

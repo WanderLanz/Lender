@@ -8,7 +8,7 @@ use crate::{
 impl<L: FallibleLender, P> TakeWhile<L, P> {
     #[inline(always)]
     pub(crate) fn new_fallible(lender: L, predicate: P) -> TakeWhile<L, P> {
-        let _ = L::__check_covariance(crate::CovariantProof::new());
+        crate::__check_fallible_lender_covariance::<L>();
         TakeWhile {
             lender,
             flag: false,

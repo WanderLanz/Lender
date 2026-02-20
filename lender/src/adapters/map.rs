@@ -33,7 +33,7 @@ impl<L, F> Map<L, F> {
 impl<L: Lender, F> Map<L, F> {
     #[inline(always)]
     pub(crate) fn new(lender: L, f: Covar<F>) -> Map<L, F> {
-        let _ = L::__check_covariance(crate::CovariantProof::new());
+        crate::__check_lender_covariance::<L>();
         Map { lender, f }
     }
 }

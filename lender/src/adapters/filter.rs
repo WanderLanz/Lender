@@ -31,7 +31,7 @@ impl<L, P> Filter<L, P> {
 impl<L: Lender, P> Filter<L, P> {
     #[inline(always)]
     pub(crate) fn new(lender: L, predicate: P) -> Filter<L, P> {
-        let _ = L::__check_covariance(crate::CovariantProof::new());
+        crate::__check_lender_covariance::<L>();
         Filter { lender, predicate }
     }
 }
