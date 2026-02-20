@@ -7,7 +7,7 @@ use common::*;
 // ============================================================================
 
 #[test]
-fn lines_str() {
+fn test_lines_str() {
     use std::io;
 
     struct LinesStr<B> {
@@ -46,7 +46,7 @@ fn lines_str() {
 }
 
 #[test]
-fn simple_lender() {
+fn test_simple_lender() {
     struct MyLender<'a, T: 'a>(&'a mut T);
     impl<'lend, 'a, T: 'a> Lending<'lend> for MyLender<'a, T> {
         type Lend = &'lend mut T;
@@ -70,7 +70,7 @@ fn simple_lender() {
 }
 
 #[test]
-fn from_lender() {
+fn test_from_lender() {
     let mut vec = vec![1, 2, 3, 4, 5];
     let windows = WindowsMut {
         slice: &mut vec,
@@ -97,7 +97,7 @@ fn from_lender() {
 }
 
 #[test]
-fn try_collect() {
+fn test_try_collect() {
     use stable_try_trait_v2::ChangeOutputType;
 
     const ERR_MSG: &str = "Try Collect Error";
@@ -199,7 +199,7 @@ fn try_collect() {
 // ============================================================================
 
 #[test]
-fn lender_advance_by() {
+fn test_lender_advance_by() {
     use core::num::NonZeroUsize;
 
     let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]);
@@ -217,7 +217,7 @@ fn lender_advance_by() {
 }
 
 #[test]
-fn lender_count() {
+fn test_lender_count() {
     let lender = VecLender::new(vec![1, 2, 3, 4, 5]);
     assert_eq!(lender.count(), 5);
 
@@ -226,7 +226,7 @@ fn lender_count() {
 }
 
 #[test]
-fn lender_last() {
+fn test_lender_last() {
     let mut lender = VecLender::new(vec![1, 2, 3]);
     assert_eq!(lender.last(), Some(&3));
 
@@ -235,35 +235,35 @@ fn lender_last() {
 }
 
 #[test]
-fn lender_for_each() {
+fn test_lender_for_each() {
     let mut collected = Vec::new();
     VecLender::new(vec![1, 2, 3]).for_each(|x| collected.push(*x));
     assert_eq!(collected, vec![1, 2, 3]);
 }
 
 #[test]
-fn lender_all() {
+fn test_lender_all() {
     assert!(VecLender::new(vec![2, 4, 6]).all(|x| *x % 2 == 0));
     assert!(!VecLender::new(vec![2, 3, 6]).all(|x| *x % 2 == 0));
     assert!(VecLender::new(vec![]).all(|_x: &i32| false)); // vacuously true
 }
 
 #[test]
-fn lender_any() {
+fn test_lender_any() {
     assert!(VecLender::new(vec![1, 2, 3]).any(|x| *x == 2));
     assert!(!VecLender::new(vec![1, 2, 3]).any(|x| *x == 10));
     assert!(!VecLender::new(vec![]).any(|_x: &i32| true)); // vacuously false
 }
 
 #[test]
-fn lender_find() {
+fn test_lender_find() {
     let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]);
     assert_eq!(lender.find(|&x| *x > 2), Some(&3));
     assert_eq!(lender.find(|&x| *x > 10), None);
 }
 
 #[test]
-fn lender_find_map() {
+fn test_lender_find_map() {
     let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]);
     let result = lender.find_map(covar_mut!(for<'all> |x: &'all i32| -> Option<i32> {
         if *x > 2 { Some(*x * 10) } else { None }
@@ -272,7 +272,7 @@ fn lender_find_map() {
 }
 
 #[test]
-fn lender_position() {
+fn test_lender_position() {
     let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]);
     assert_eq!(lender.position(|x| *x == 3), Some(2));
 
@@ -281,7 +281,7 @@ fn lender_position() {
 }
 
 #[test]
-fn lender_max() {
+fn test_lender_max() {
     // max/min/reduce/etc. require `for<'all> Lend<'all, Self>: ToOwned<Owned = T>`.
     // For a reference-yielding lender (Lend = &'lend i32), the HRTB cannot be
     // satisfied because T would need to depend on 'lend. We test via from_iter
@@ -293,7 +293,7 @@ fn lender_max() {
 }
 
 #[test]
-fn lender_min() {
+fn test_lender_min() {
     assert_eq!(vec![3, 1, 5, 2, 4].into_iter().into_lender().min(), Some(1));
     assert_eq!(Vec::<i32>::new().into_iter().into_lender().min(), None);
     // Per Iterator::min docs: "If several elements are equally minimum, the first element is returned."
@@ -301,7 +301,7 @@ fn lender_min() {
 }
 
 #[test]
-fn lender_max_by_key() {
+fn test_lender_max_by_key() {
     assert_eq!(
         vec![-3, 0, 1, 5, -2]
             .into_iter()
@@ -312,7 +312,7 @@ fn lender_max_by_key() {
 }
 
 #[test]
-fn lender_min_by_key() {
+fn test_lender_min_by_key() {
     assert_eq!(
         vec![-3, 0, 1, 5, -2]
             .into_iter()
@@ -323,7 +323,7 @@ fn lender_min_by_key() {
 }
 
 #[test]
-fn lender_max_by() {
+fn test_lender_max_by() {
     assert_eq!(
         vec![1, 5, 3]
             .into_iter()
@@ -342,7 +342,7 @@ fn lender_max_by() {
 }
 
 #[test]
-fn lender_min_by() {
+fn test_lender_min_by() {
     assert_eq!(
         vec![3, 1, 5]
             .into_iter()
@@ -361,7 +361,7 @@ fn lender_min_by() {
 }
 
 #[test]
-fn lender_is_sorted() {
+fn test_lender_is_sorted() {
     assert!(vec![1, 2, 3, 4].into_iter().into_lender().is_sorted());
     assert!(vec![1, 1, 2, 2].into_iter().into_lender().is_sorted());
     assert!(!vec![1, 3, 2].into_iter().into_lender().is_sorted());
@@ -370,7 +370,7 @@ fn lender_is_sorted() {
 }
 
 #[test]
-fn lender_is_sorted_by() {
+fn test_lender_is_sorted_by() {
     // Sorted in reverse order
     assert!(
         vec![4, 3, 2, 1]
@@ -381,7 +381,7 @@ fn lender_is_sorted_by() {
 }
 
 #[test]
-fn lender_is_sorted_by_key() {
+fn test_lender_is_sorted_by_key() {
     // Sorted by absolute value
     assert!(
         vec![0, -1, 2, -3]
@@ -396,7 +396,7 @@ fn lender_is_sorted_by_key() {
 // ============================================================================
 
 #[test]
-fn lender_reduce() {
+fn test_lender_reduce() {
     // reduce requires `for<'all> Lend<'all, Self>: ToOwned<Owned = T>`, use from_iter
     assert_eq!(
         vec![1, 2, 3, 4]
@@ -421,7 +421,7 @@ fn lender_reduce() {
 }
 
 #[test]
-fn lender_try_reduce() {
+fn test_lender_try_reduce() {
     // try_reduce requires ToOwned, so use from_iter with owned values.
     // Return type is ChangeOutputType<R, Option<T>> = Result<Option<i32>, &str>.
     let result: Result<Option<i32>, &str> = vec![1, 2, 3]
@@ -459,7 +459,7 @@ fn lender_try_reduce() {
 }
 
 #[test]
-fn lender_partition() {
+fn test_lender_partition() {
     #[derive(Default)]
     struct I32Vec(Vec<i32>);
 
@@ -494,7 +494,7 @@ fn lender_partition() {
 }
 
 #[test]
-fn lender_sum() {
+fn test_lender_sum() {
     struct I32Sum(i32);
 
     impl lender::SumLender<VecLender> for I32Sum {
@@ -511,7 +511,7 @@ fn lender_sum() {
 }
 
 #[test]
-fn lender_product() {
+fn test_lender_product() {
     struct I32Product(i32);
 
     impl lender::ProductLender<VecLender> for I32Product {
@@ -528,7 +528,7 @@ fn lender_product() {
 }
 
 #[test]
-fn lender_unzip() {
+fn test_lender_unzip() {
     // A lender over (i32, i32) tuples
     struct TupleLender {
         data: Vec<(i32, i32)>,
@@ -570,7 +570,7 @@ fn lender_unzip() {
 // ============================================================================
 
 #[test]
-fn lender_cmp() {
+fn test_lender_cmp() {
     use core::cmp::Ordering;
 
     assert_eq!(
@@ -602,7 +602,7 @@ fn lender_cmp() {
 }
 
 #[test]
-fn lender_cmp_by() {
+fn test_lender_cmp_by() {
     use core::cmp::Ordering;
 
     // Compare by absolute value
@@ -618,7 +618,7 @@ fn lender_cmp_by() {
 }
 
 #[test]
-fn lender_partial_cmp_by() {
+fn test_lender_partial_cmp_by() {
     use core::cmp::Ordering;
 
     assert_eq!(
@@ -644,7 +644,7 @@ fn lender_partial_cmp_by() {
 }
 
 #[test]
-fn lender_eq_by() {
+fn test_lender_eq_by() {
     assert!(VecLender::new(vec![1, 2, 3]).eq_by(VecLender::new(vec![1, 2, 3]), |a, b| a == b));
     assert!(!VecLender::new(vec![1, 2, 3]).eq_by(VecLender::new(vec![1, 2, 4]), |a, b| a == b));
     assert!(!VecLender::new(vec![1, 2]).eq_by(VecLender::new(vec![1, 2, 3]), |a, b| a == b));
@@ -660,7 +660,7 @@ fn lender_eq_by() {
 // ============================================================================
 
 #[test]
-fn lender_try_for_each() {
+fn test_lender_try_for_each() {
     let mut sum = 0;
     let result: Result<(), &str> = VecLender::new(vec![1, 2, 3]).try_for_each(|x| {
         sum += *x;
@@ -671,7 +671,7 @@ fn lender_try_for_each() {
 }
 
 #[test]
-fn lender_try_for_each_early_exit() {
+fn test_lender_try_for_each_early_exit() {
     let mut sum = 0;
     let result: Result<(), &str> = VecLender::new(vec![1, 2, 3, 4, 5]).try_for_each(|x| {
         if *x > 3 {
@@ -686,14 +686,14 @@ fn lender_try_for_each_early_exit() {
 }
 
 #[test]
-fn lender_try_fold() {
+fn test_lender_try_fold() {
     let result: Result<i32, &str> =
         VecLender::new(vec![1, 2, 3]).try_fold(0, |acc, x| Ok(acc + *x));
     assert_eq!(result, Ok(6));
 }
 
 #[test]
-fn lender_try_fold_early_exit() {
+fn test_lender_try_fold_early_exit() {
     let result: Result<i32, &str> = VecLender::new(vec![1, 2, 3, 4, 5]).try_fold(0, |acc, x| {
         if *x > 3 { Err("too big") } else { Ok(acc + *x) }
     });
@@ -705,21 +705,21 @@ fn lender_try_fold_early_exit() {
 // ============================================================================
 
 #[test]
-fn lender_try_find_found() {
+fn test_lender_try_find_found() {
     let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]);
     let result: Result<Option<&i32>, String> = lender.try_find(|x| Ok(**x == 3));
     assert_eq!(result, Ok(Some(&3)));
 }
 
 #[test]
-fn lender_try_find_not_found() {
+fn test_lender_try_find_not_found() {
     let mut lender = VecLender::new(vec![1, 2, 3]);
     let result: Result<Option<&i32>, String> = lender.try_find(|x| Ok(**x == 99));
     assert_eq!(result, Ok(None));
 }
 
 #[test]
-fn lender_try_find_short_circuit() {
+fn test_lender_try_find_short_circuit() {
     let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]);
     let result: Result<Option<&i32>, String> = lender.try_find(|x| {
         if **x == 3 {
@@ -732,7 +732,7 @@ fn lender_try_find_short_circuit() {
 }
 
 #[test]
-fn lender_try_find_empty() {
+fn test_lender_try_find_empty() {
     let mut lender = VecLender::new(vec![]);
     let result: Result<Option<&i32>, String> = lender.try_find(|_| Ok(true));
     assert_eq!(result, Ok(None));
@@ -743,39 +743,39 @@ fn lender_try_find_empty() {
 // ============================================================================
 
 #[test]
-fn lender_is_partitioned_true() {
+fn test_lender_is_partitioned_true() {
     // All true elements come before all false elements
     let lender = VecLender::new(vec![2, 4, 6, 1, 3, 5]);
     assert!(lender.is_partitioned(|x| *x % 2 == 0));
 }
 
 #[test]
-fn lender_is_partitioned_all_true() {
+fn test_lender_is_partitioned_all_true() {
     let lender = VecLender::new(vec![2, 4, 6]);
     assert!(lender.is_partitioned(|x| *x % 2 == 0));
 }
 
 #[test]
-fn lender_is_partitioned_all_false() {
+fn test_lender_is_partitioned_all_false() {
     let lender = VecLender::new(vec![1, 3, 5]);
     assert!(lender.is_partitioned(|x| *x % 2 == 0));
 }
 
 #[test]
-fn lender_is_partitioned_false() {
+fn test_lender_is_partitioned_false() {
     // false, true, false — not partitioned
     let lender = VecLender::new(vec![1, 2, 3]);
     assert!(!lender.is_partitioned(|x| *x % 2 == 0));
 }
 
 #[test]
-fn lender_is_partitioned_empty() {
+fn test_lender_is_partitioned_empty() {
     let lender = VecLender::new(vec![]);
     assert!(lender.is_partitioned(|_: &i32| true));
 }
 
 #[test]
-fn lender_collect_into() {
+fn test_lender_collect_into() {
     let lender = VecLender::new(vec![1, 2, 3, 4, 5]);
     let mut result = I32Collector(Vec::new());
     lender.collect_into(&mut result);
@@ -783,7 +783,7 @@ fn lender_collect_into() {
 }
 
 #[test]
-fn lender_collect_into_existing() {
+fn test_lender_collect_into_existing() {
     let lender = VecLender::new(vec![4, 5, 6]);
     let mut result = I32Collector(vec![1, 2, 3]);
     lender.collect_into(&mut result);
@@ -804,7 +804,7 @@ fn lender_collect_into_existing() {
 // ============================================================================
 
 #[test]
-fn lender_by_ref() {
+fn test_lender_by_ref() {
     let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]);
     // Use by_ref to take 2 elements without consuming the lender
     {
@@ -822,7 +822,7 @@ fn lender_by_ref() {
 }
 
 #[test]
-fn lender_by_ref_with_skip() {
+fn test_lender_by_ref_with_skip() {
     let mut lender = VecLender::new(vec![1, 2, 3, 4, 5, 6]);
     // Skip 2 via by_ref
     {

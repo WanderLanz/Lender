@@ -1874,9 +1874,6 @@ pub trait Lender: for<'all /* where Self: 'all */> Lending<'all> {
     /// wraps it back into a [`Lender`] that stores each element and lends a
     /// reference to it.
     ///
-    /// [`iter`]: 
-    /// [`into_ref_lender`]: 
-    ///
     /// # Examples
     ///
     /// ```rust

@@ -12,7 +12,7 @@ use common::*;
 // ============================================================================
 
 #[test]
-fn peekable_basic() {
+fn test_peekable_basic() {
     let mut peekable = VecLender::new(vec![1, 2, 3]).peekable();
 
     // peek() returns reference to next element
@@ -36,7 +36,7 @@ fn peekable_basic() {
 }
 
 #[test]
-fn peekable_peek_mut() {
+fn test_peekable_peek_mut() {
     // Note: VecLender now yields &i32, so peek_mut() returns &mut &i32.
     // We can't modify the underlying value, but can still test peek_mut exists
     let mut peekable = VecLender::new(vec![1, 2, 3]).peekable();
@@ -48,7 +48,7 @@ fn peekable_peek_mut() {
 }
 
 #[test]
-fn peekable_next_if() {
+fn test_peekable_next_if() {
     let mut peekable = VecLender::new(vec![1, 2, 3, 4]).peekable();
 
     // next_if returns Some if predicate matches
@@ -61,7 +61,7 @@ fn peekable_next_if() {
 }
 
 #[test]
-fn peekable_next_if_eq() {
+fn test_peekable_next_if_eq() {
     let mut peekable = VecLender::new(vec![1, 2, 3]).peekable();
 
     // next_if_eq returns Some if element equals given value
@@ -72,14 +72,14 @@ fn peekable_next_if_eq() {
 }
 
 #[test]
-fn peekable_empty() {
+fn test_peekable_empty() {
     let mut peekable = VecLender::new(vec![]).peekable();
     assert_eq!(peekable.peek(), None);
     assert_eq!(peekable.next(), None);
 }
 
 #[test]
-fn peekable_count() {
+fn test_peekable_count() {
     // count() should include peeked element
     let mut peekable = VecLender::new(vec![1, 2, 3, 4, 5]).peekable();
     peekable.peek(); // peek first element
@@ -87,7 +87,7 @@ fn peekable_count() {
 }
 
 #[test]
-fn peekable_nth() {
+fn test_peekable_nth() {
     let mut peekable = VecLender::new(vec![1, 2, 3, 4, 5]).peekable();
 
     // nth(2) should skip 1, 2 and return 3
@@ -96,13 +96,13 @@ fn peekable_nth() {
 }
 
 #[test]
-fn peekable_last() {
+fn test_peekable_last() {
     let mut peekable = VecLender::new(vec![1, 2, 3]).peekable();
     assert_eq!(peekable.last(), Some(&3));
 }
 
 #[test]
-fn peekable_fold() {
+fn test_peekable_fold() {
     let sum = VecLender::new(vec![1, 2, 3, 4])
         .peekable()
         .fold(0, |acc, x| acc + *x);
@@ -110,7 +110,7 @@ fn peekable_fold() {
 }
 
 #[test]
-fn peekable_size_hint() {
+fn test_peekable_size_hint() {
     let mut peekable = VecLender::new(vec![1, 2, 3]).peekable();
     assert_eq!(peekable.size_hint(), (3, Some(3)));
 
@@ -123,14 +123,14 @@ fn peekable_size_hint() {
 }
 
 #[test]
-fn peekable_into_inner() {
+fn test_peekable_into_inner() {
     let peekable = VecLender::new(vec![1, 2, 3]).peekable();
     let inner = peekable.into_inner();
     assert_eq!(inner.data, vec![1, 2, 3]);
 }
 
 #[test]
-fn peekable_peek_multiple() {
+fn test_peekable_peek_multiple() {
     let mut peekable = VecLender::new(vec![1, 2, 3]).peekable();
     assert_eq!(peekable.peek(), Some(&&1));
     assert_eq!(peekable.peek(), Some(&&1)); // Peeking again returns same value
@@ -140,7 +140,7 @@ fn peekable_peek_multiple() {
 
 // Peekable::nth with peeked value when n == 0 (covers unsafe transmute in nth)
 #[test]
-fn peekable_nth_zero_with_peeked() {
+fn test_peekable_nth_zero_with_peeked() {
     let mut peekable = VecLender::new(vec![1, 2, 3]).peekable();
     // Peek to store a value
     assert_eq!(peekable.peek(), Some(&&1));
@@ -151,7 +151,7 @@ fn peekable_nth_zero_with_peeked() {
 
 // Peekable::last with peeked value (covers unsafe transmute in last)
 #[test]
-fn peekable_last_with_peeked_only() {
+fn test_peekable_last_with_peeked_only() {
     let mut peekable = VecLender::new(vec![1]).peekable();
     // Peek the only value
     assert_eq!(peekable.peek(), Some(&&1));
@@ -163,7 +163,7 @@ fn peekable_last_with_peeked_only() {
 // Peekable::next_back with peeked value when underlying lender is empty
 // (covers unsafe transmute in next_back)
 #[test]
-fn peekable_next_back_with_peeked_exhausted() {
+fn test_peekable_next_back_with_peeked_exhausted() {
     use lender::DoubleEndedLender;
 
     let mut peekable = VecLender::new(vec![1]).peekable();
@@ -175,7 +175,7 @@ fn peekable_next_back_with_peeked_exhausted() {
 }
 
 #[test]
-fn peekable_rfold_with_peeked() {
+fn test_peekable_rfold_with_peeked() {
     let mut peekable = VecLender::new(vec![1, 2, 3]).peekable();
     assert_eq!(peekable.peek(), Some(&&1));
     // rfold processes back-to-front: 3, 2, then peeked 1
@@ -187,7 +187,7 @@ fn peekable_rfold_with_peeked() {
 }
 
 #[test]
-fn peekable_try_rfold_with_peeked_complete() {
+fn test_peekable_try_rfold_with_peeked_complete() {
     use lender::DoubleEndedLender;
 
     let mut peekable = VecLender::new(vec![1, 2, 3]).peekable();
@@ -203,7 +203,7 @@ fn peekable_try_rfold_with_peeked_complete() {
 // Covers the ControlFlow::Break path in try_rfold where the peeked value
 // is stored back.
 #[test]
-fn peekable_try_rfold_with_peeked_break() {
+fn test_peekable_try_rfold_with_peeked_break() {
     use lender::DoubleEndedLender;
 
     let mut peekable = VecLender::new(vec![1, 2, 3]).peekable();
@@ -224,7 +224,7 @@ fn peekable_try_rfold_with_peeked_break() {
 // ============================================================================
 
 #[test]
-fn chunk_basic() {
+fn test_chunk_basic() {
     let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]);
     let mut chunk = lender.next_chunk(3);
 
@@ -239,7 +239,7 @@ fn chunk_basic() {
 }
 
 #[test]
-fn chunk_larger_than_remaining() {
+fn test_chunk_larger_than_remaining() {
     let mut lender = VecLender::new(vec![1, 2]);
     let mut chunk = lender.next_chunk(5);
 
@@ -249,14 +249,14 @@ fn chunk_larger_than_remaining() {
 }
 
 #[test]
-fn chunk_empty_lender() {
+fn test_chunk_empty_lender() {
     let mut lender = VecLender::new(vec![]);
     let mut chunk = lender.next_chunk(3);
     assert_eq!(chunk.next(), None);
 }
 
 #[test]
-fn chunk_size_hint() {
+fn test_chunk_size_hint() {
     let mut chunky = VecLender::new(vec![1, 2, 3, 4, 5]).chunky(3);
     let chunk = chunky.next().unwrap();
     // Chunk has max 3 elements, underlying has 5
@@ -264,7 +264,7 @@ fn chunk_size_hint() {
 }
 
 #[test]
-fn chunk_into_parts() {
+fn test_chunk_into_parts() {
     let mut chunky = VecLender::new(vec![1, 2, 3]).chunky(2);
     let chunk = chunky.next().unwrap();
     let (lender, remaining) = chunk.into_parts();
@@ -278,7 +278,7 @@ fn chunk_into_parts() {
 // ============================================================================
 
 #[test]
-fn chunky_basic() {
+fn test_chunky_basic() {
     let mut chunky = VecLender::new(vec![1, 2, 3, 4, 5, 6]).chunky(2);
 
     // First chunk: 1, 2
@@ -304,7 +304,7 @@ fn chunky_basic() {
 }
 
 #[test]
-fn chunky_uneven() {
+fn test_chunky_uneven() {
     // 5 elements with chunk size 2 = 3 chunks (2, 2, 1)
     let mut chunky = VecLender::new(vec![1, 2, 3, 4, 5]).chunky(2);
 
@@ -327,7 +327,7 @@ fn chunky_uneven() {
 }
 
 #[test]
-fn chunky_size_hint() {
+fn test_chunky_size_hint() {
     let chunky = VecLender::new(vec![1, 2, 3, 4, 5, 6]).chunky(2);
     assert_eq!(chunky.size_hint(), (3, Some(3)));
 
@@ -336,13 +336,13 @@ fn chunky_size_hint() {
 }
 
 #[test]
-fn chunky_count() {
+fn test_chunky_count() {
     let chunky = VecLender::new(vec![1, 2, 3, 4, 5, 6, 7]).chunky(3);
     assert_eq!(chunky.count(), 3); // ceil(7/3) = 3
 }
 
 #[test]
-fn chunky_fold() {
+fn test_chunky_fold() {
     // Count number of chunks
     let num_chunks = VecLender::new(vec![1, 2, 3, 4, 5])
         .chunky(2)
@@ -351,7 +351,7 @@ fn chunky_fold() {
 }
 
 #[test]
-fn chunky_size_hint_decreases() {
+fn test_chunky_size_hint_decreases() {
     let mut chunky = VecLender::new(vec![1, 2, 3, 4, 5, 6]).chunky(2);
     // 6 elements, chunk_size 2 -> 3 chunks
     assert_eq!(chunky.size_hint(), (3, Some(3)));
@@ -368,7 +368,7 @@ fn chunky_size_hint_decreases() {
 }
 
 #[test]
-fn chunky_try_fold() {
+fn test_chunky_try_fold() {
     // Test try_fold - if we only consume part of each chunk, the unconsumed
     // elements are lost and the next chunk starts from the current position.
     // This tests the "partial consumption" case.
@@ -393,7 +393,7 @@ fn chunky_try_fold() {
 }
 
 #[test]
-fn chunky_try_fold_full_consumption() {
+fn test_chunky_try_fold_full_consumption() {
     // When each chunk is fully consumed, we get the expected chunked results
     let result: Option<i32> =
         VecLender::new(vec![1, 2, 3, 4, 5, 6])
@@ -409,7 +409,7 @@ fn chunky_try_fold_full_consumption() {
 }
 
 #[test]
-fn chunky_into_parts() {
+fn test_chunky_into_parts() {
     let chunky = VecLender::new(vec![1, 2, 3]).chunky(2);
     let (lender, chunk_size) = chunky.into_parts();
     assert_eq!(chunk_size, 2);
@@ -417,7 +417,7 @@ fn chunky_into_parts() {
 }
 
 #[test]
-fn chunky_into_inner() {
+fn test_chunky_into_inner() {
     let chunky = VecLender::new(vec![1, 2, 3]).chunky(2);
     let lender = chunky.into_inner();
     assert_eq!(lender.count(), 3);
@@ -425,6 +425,6 @@ fn chunky_into_inner() {
 
 #[test]
 #[should_panic(expected = "chunk size must be non-zero")]
-fn chunky_zero_panics() {
+fn test_chunky_zero_panics() {
     let _ = VecLender::new(vec![1, 2, 3]).chunky(0);
 }

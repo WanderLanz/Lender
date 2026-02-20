@@ -12,7 +12,7 @@ use common::*;
 // ============================================================================
 
 #[test]
-fn zip_basic() {
+fn test_zip_basic() {
     let mut zipped = VecLender::new(vec![1, 2, 3]).zip(VecLender::new(vec![10, 20, 30]));
 
     assert_eq!(zipped.next(), Some((&1, &10)));
@@ -22,7 +22,7 @@ fn zip_basic() {
 }
 
 #[test]
-fn zip_different_lengths() {
+fn test_zip_different_lengths() {
     // Stops at shorter lender
     let mut zipped = VecLender::new(vec![1, 2]).zip(VecLender::new(vec![10, 20, 30]));
 
@@ -32,7 +32,7 @@ fn zip_different_lengths() {
 }
 
 #[test]
-fn zip_double_ended() {
+fn test_zip_double_ended() {
     let mut zipped = VecLender::new(vec![1, 2, 3]).zip(VecLender::new(vec![10, 20, 30]));
 
     assert_eq!(zipped.next_back(), Some((&3, &30)));
@@ -42,7 +42,7 @@ fn zip_double_ended() {
 }
 
 #[test]
-fn zip_fold() {
+fn test_zip_fold() {
     let sum = VecLender::new(vec![1, 2, 3])
         .zip(VecLender::new(vec![10, 20, 30]))
         .fold(0, |acc, (a, b)| acc + *a + *b);
@@ -51,21 +51,21 @@ fn zip_fold() {
 }
 
 #[test]
-fn zip_nth() {
+fn test_zip_nth() {
     let mut zipped = VecLender::new(vec![1, 2, 3, 4]).zip(VecLender::new(vec![10, 20, 30, 40]));
     assert_eq!(zipped.nth(2), Some((&3, &30)));
     assert_eq!(zipped.next(), Some((&4, &40)));
 }
 
 #[test]
-fn zip_size_hint_additional() {
+fn test_zip_size_hint_additional() {
     let zipped = VecLender::new(vec![1, 2, 3]).zip(VecLender::new(vec![4, 5, 6, 7]));
     // Zip takes the minimum
     assert_eq!(zipped.size_hint(), (3, Some(3)));
 }
 
 #[test]
-fn zip_try_fold_additional() {
+fn test_zip_try_fold_additional() {
     let result: Option<i32> = VecLender::new(vec![1, 2, 3])
         .zip(VecLender::new(vec![4, 5, 6]))
         .try_fold(0, |acc, (a, b)| Some(acc + *a + *b));
@@ -73,7 +73,7 @@ fn zip_try_fold_additional() {
 }
 
 #[test]
-fn zip_try_rfold_additional() {
+fn test_zip_try_rfold_additional() {
     let result: Option<i32> = VecLender::new(vec![1, 2, 3])
         .zip(VecLender::new(vec![4, 5, 6]))
         .try_rfold(0, |acc, (a, b)| Some(acc + *a + *b));
@@ -81,7 +81,7 @@ fn zip_try_rfold_additional() {
 }
 
 #[test]
-fn zip_into_inner() {
+fn test_zip_into_inner() {
     let zip = VecLender::new(vec![1, 2, 3]).zip(VecLender::new(vec![4, 5, 6]));
     let (a, b) = zip.into_inner();
     assert_eq!(a.count(), 3);
@@ -89,7 +89,7 @@ fn zip_into_inner() {
 }
 
 #[test]
-fn zip_rfold() {
+fn test_zip_rfold() {
     let mut values = Vec::new();
     VecLender::new(vec![1, 2, 3])
         .zip(VecLender::new(vec![10, 20, 30]))
@@ -105,7 +105,7 @@ fn zip_rfold() {
 // ============================================================================
 
 #[test]
-fn intersperse_basic() {
+fn test_intersperse_basic() {
     let mut interspersed = VecLender::new(vec![1, 2, 3]).intersperse(&0);
 
     assert_eq!(interspersed.next(), Some(&1));
@@ -117,7 +117,7 @@ fn intersperse_basic() {
 }
 
 #[test]
-fn intersperse_single_element() {
+fn test_intersperse_single_element() {
     let mut interspersed = VecLender::new(vec![42]).intersperse(&0);
 
     assert_eq!(interspersed.next(), Some(&42));
@@ -125,13 +125,13 @@ fn intersperse_single_element() {
 }
 
 #[test]
-fn intersperse_empty() {
+fn test_intersperse_empty() {
     let mut interspersed = VecLender::new(vec![]).intersperse(&0);
     assert_eq!(interspersed.next(), None);
 }
 
 #[test]
-fn intersperse_fold() {
+fn test_intersperse_fold() {
     let sum = VecLender::new(vec![1, 2, 3])
         .intersperse(&10)
         .fold(0, |acc, x| acc + *x);
@@ -140,7 +140,7 @@ fn intersperse_fold() {
 }
 
 #[test]
-fn intersperse_with_basic() {
+fn test_intersperse_with_basic() {
     const SEP1: i32 = 10;
     const SEP2: i32 = 20;
     let mut counter = 0;
@@ -158,14 +158,14 @@ fn intersperse_with_basic() {
 }
 
 #[test]
-fn intersperse_into_inner() {
+fn test_intersperse_into_inner() {
     let intersperse = VecLender::new(vec![1, 2, 3]).intersperse(&0);
     let lender = intersperse.into_inner();
     assert_eq!(lender.count(), 3);
 }
 
 #[test]
-fn intersperse_try_fold_additional() {
+fn test_intersperse_try_fold_additional() {
     let result: Option<i32> = VecLender::new(vec![1, 2, 3])
         .intersperse(&10)
         .try_fold(0, |acc, x| Some(acc + *x));
@@ -175,7 +175,7 @@ fn intersperse_try_fold_additional() {
 
 // Intersperse with separator clone (covers unsafe transmute in next)
 #[test]
-fn intersperse_separator_coverage() {
+fn test_intersperse_separator_coverage() {
     let mut intersperse = VecLender::new(vec![1, 2, 3]).intersperse(&0);
     // Consume all to exercise the separator clone path
     let mut results = Vec::new();
@@ -187,7 +187,7 @@ fn intersperse_separator_coverage() {
 
 // IntersperseWith (covers unsafe transmute in next)
 #[test]
-fn intersperse_with_coverage() {
+fn test_intersperse_with_coverage() {
     let mut intersperse = VecLender::new(vec![1, 2, 3]).intersperse_with(|| &0);
     let mut results = Vec::new();
     while let Some(x) = intersperse.next() {
@@ -197,7 +197,7 @@ fn intersperse_with_coverage() {
 }
 
 #[test]
-fn intersperse_try_fold_early_exit() {
+fn test_intersperse_try_fold_early_exit() {
     // try_fold that stops early via None
     let result: Option<i32> =
         VecLender::new(vec![1, 2, 3])
@@ -213,7 +213,7 @@ fn intersperse_try_fold_early_exit() {
 }
 
 #[test]
-fn intersperse_try_fold_empty() {
+fn test_intersperse_try_fold_empty() {
     let result: Option<i32> = VecLender::new(vec![])
         .intersperse(&10)
         .try_fold(0, |acc, x| Some(acc + *x));
@@ -221,7 +221,7 @@ fn intersperse_try_fold_empty() {
 }
 
 #[test]
-fn intersperse_try_fold_single() {
+fn test_intersperse_try_fold_single() {
     let result: Option<i32> = VecLender::new(vec![42])
         .intersperse(&10)
         .try_fold(0, |acc, x| Some(acc + *x));
@@ -229,7 +229,7 @@ fn intersperse_try_fold_single() {
 }
 
 #[test]
-fn intersperse_fold_empty() {
+fn test_intersperse_fold_empty() {
     let sum = VecLender::new(vec![])
         .intersperse(&10)
         .fold(0, |acc, x: &i32| acc + *x);
@@ -237,7 +237,7 @@ fn intersperse_fold_empty() {
 }
 
 #[test]
-fn intersperse_fold_single() {
+fn test_intersperse_fold_single() {
     let sum = VecLender::new(vec![42])
         .intersperse(&10)
         .fold(0, |acc, x| acc + *x);
@@ -245,7 +245,7 @@ fn intersperse_fold_single() {
 }
 
 #[test]
-fn intersperse_with_try_fold() {
+fn test_intersperse_with_try_fold() {
     let result: Option<i32> = VecLender::new(vec![1, 2, 3])
         .intersperse_with(|| &10)
         .try_fold(0, |acc, x| Some(acc + *x));
@@ -254,7 +254,7 @@ fn intersperse_with_try_fold() {
 }
 
 #[test]
-fn intersperse_with_try_fold_early_exit() {
+fn test_intersperse_with_try_fold_early_exit() {
     let result: Option<i32> = VecLender::new(vec![1, 2, 3])
         .intersperse_with(|| &10)
         .try_fold(
@@ -267,7 +267,7 @@ fn intersperse_with_try_fold_early_exit() {
 }
 
 #[test]
-fn intersperse_with_try_fold_empty() {
+fn test_intersperse_with_try_fold_empty() {
     let result: Option<i32> = VecLender::new(vec![])
         .intersperse_with(|| &10)
         .try_fold(0, |acc, x| Some(acc + *x));
@@ -275,7 +275,7 @@ fn intersperse_with_try_fold_empty() {
 }
 
 #[test]
-fn intersperse_with_try_fold_single() {
+fn test_intersperse_with_try_fold_single() {
     let result: Option<i32> = VecLender::new(vec![42])
         .intersperse_with(|| &10)
         .try_fold(0, |acc, x| Some(acc + *x));
@@ -283,7 +283,7 @@ fn intersperse_with_try_fold_single() {
 }
 
 #[test]
-fn intersperse_with_fold() {
+fn test_intersperse_with_fold() {
     let sum = VecLender::new(vec![1, 2, 3])
         .intersperse_with(|| &10)
         .fold(0, |acc, x| acc + *x);
@@ -292,7 +292,7 @@ fn intersperse_with_fold() {
 }
 
 #[test]
-fn intersperse_with_fold_empty() {
+fn test_intersperse_with_fold_empty() {
     let sum = VecLender::new(vec![])
         .intersperse_with(|| &10)
         .fold(0, |acc, x: &i32| acc + *x);
@@ -300,7 +300,7 @@ fn intersperse_with_fold_empty() {
 }
 
 #[test]
-fn intersperse_with_fold_single() {
+fn test_intersperse_with_fold_single() {
     let sum = VecLender::new(vec![42])
         .intersperse_with(|| &10)
         .fold(0, |acc, x| acc + *x);
@@ -308,7 +308,7 @@ fn intersperse_with_fold_single() {
 }
 
 #[test]
-fn intersperse_for_each() {
+fn test_intersperse_for_each() {
     let mut items = Vec::new();
     VecLender::new(vec![1, 2, 3])
         .intersperse(&0)
@@ -317,7 +317,7 @@ fn intersperse_for_each() {
 }
 
 #[test]
-fn intersperse_with_for_each() {
+fn test_intersperse_with_for_each() {
     let mut items = Vec::new();
     VecLender::new(vec![1, 2, 3])
         .intersperse_with(|| &0)
@@ -326,13 +326,13 @@ fn intersperse_with_for_each() {
 }
 
 #[test]
-fn intersperse_count() {
+fn test_intersperse_count() {
     let count = VecLender::new(vec![1, 2, 3]).intersperse(&0).count();
     assert_eq!(count, 5); // 3 elements + 2 separators
 }
 
 #[test]
-fn intersperse_with_count() {
+fn test_intersperse_with_count() {
     let count = VecLender::new(vec![1, 2, 3])
         .intersperse_with(|| &0)
         .count();
@@ -344,7 +344,7 @@ fn intersperse_with_count() {
 // ============================================================================
 
 #[test]
-fn flatten_basic() {
+fn test_flatten_basic() {
     let mut flattened = VecOfVecLender::new(vec![vec![1, 2], vec![3, 4], vec![5]]).flatten();
 
     assert_eq!(flattened.next(), Some(&1));
@@ -356,7 +356,7 @@ fn flatten_basic() {
 }
 
 #[test]
-fn flatten_empty_inner() {
+fn test_flatten_empty_inner() {
     let mut flattened = VecOfVecLender::new(vec![vec![1], vec![], vec![2, 3]]).flatten();
 
     assert_eq!(flattened.next(), Some(&1));
@@ -366,7 +366,7 @@ fn flatten_empty_inner() {
 }
 
 #[test]
-fn flatten_empty_outer() {
+fn test_flatten_empty_outer() {
     let mut flattened = VecOfVecLender::new(vec![]).flatten();
     assert_eq!(flattened.next(), None);
 }
@@ -376,7 +376,7 @@ fn flatten_empty_outer() {
 // ============================================================================
 
 #[test]
-fn flat_map_basic() {
+fn test_flat_map_basic() {
     // flat_map: for each element n, produce n copies of n
     let mut l =
         [1, 2, 3]
@@ -395,7 +395,7 @@ fn flat_map_basic() {
 }
 
 #[test]
-fn flat_map_empty_outer() {
+fn test_flat_map_empty_outer() {
     let mut l = std::iter::empty::<i32>().into_lender().flat_map(covar_mut!(
         for<'lend> |n: i32| -> FromIter<std::ops::Range<i32>> { (0..n).into_lender() }
     ));
@@ -403,7 +403,7 @@ fn flat_map_empty_outer() {
 }
 
 #[test]
-fn flat_map_empty_inner() {
+fn test_flat_map_empty_inner() {
     // All inner lenders are empty
     let mut l =
         [0, 0, 0]
@@ -416,7 +416,7 @@ fn flat_map_empty_inner() {
 }
 
 #[test]
-fn flat_map_mixed_empty_nonempty() {
+fn test_flat_map_mixed_empty_nonempty() {
     let mut l =
         [1, 0, 2]
             .into_iter()
@@ -436,20 +436,20 @@ fn flat_map_mixed_empty_nonempty() {
 // ============================================================================
 
 #[test]
-fn flatten_fold() {
+fn test_flatten_fold() {
     let lender = VecOfVecLender::new(vec![vec![1, 2], vec![3], vec![4, 5]]);
     let result = lender.flatten().fold(0, |acc, x| acc + x);
     assert_eq!(result, 15); // 1+2+3+4+5
 }
 
 #[test]
-fn flatten_count() {
+fn test_flatten_count() {
     let lender = VecOfVecLender::new(vec![vec![1, 2], vec![], vec![3, 4, 5]]);
     assert_eq!(lender.flatten().count(), 5);
 }
 
 #[test]
-fn flatten_try_fold() {
+fn test_flatten_try_fold() {
     let lender = VecOfVecLender::new(vec![vec![1, 2], vec![3, 4], vec![5]]);
     let result: Result<i32, i32> = lender.flatten().try_fold(0, |acc, x| {
         let new = acc + x;
@@ -459,14 +459,14 @@ fn flatten_try_fold() {
 }
 
 #[test]
-fn flatten_fold_empty() {
+fn test_flatten_fold_empty() {
     let lender = VecOfVecLender::new(vec![]);
     let result = lender.flatten().fold(0, |acc, x: &i32| acc + x);
     assert_eq!(result, 0);
 }
 
 #[test]
-fn flatten_count_empty() {
+fn test_flatten_count_empty() {
     let lender = VecOfVecLender::new(vec![]);
     assert_eq!(lender.flatten().count(), 0);
 }

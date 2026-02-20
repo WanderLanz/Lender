@@ -10,7 +10,7 @@ use common::*;
 // Chain adapter tests (Lender)
 // ============================================================================
 #[test]
-fn chain_basic_forward_iteration() {
+fn test_chain_basic_forward_iteration() {
     // Documented semantics: "first yield all lends from self, then all lends from other"
     let mut chained = VecLender::new(vec![1, 2]).chain(VecLender::new(vec![3, 4]));
 
@@ -27,7 +27,7 @@ fn chain_basic_forward_iteration() {
 }
 
 #[test]
-fn chain_double_ended_iteration() {
+fn test_chain_double_ended_iteration() {
     // DoubleEndedLender: next_back should yield from the *second* lender first
     let mut chained = VecLender::new(vec![1, 2]).chain(VecLender::new(vec![3, 4]));
 
@@ -42,7 +42,7 @@ fn chain_double_ended_iteration() {
 }
 
 #[test]
-fn chain_mixed_forward_backward() {
+fn test_chain_mixed_forward_backward() {
     // Mixed iteration: front and back should not interfere incorrectly
     let mut chained = VecLender::new(vec![1, 2, 3]).chain(VecLender::new(vec![4, 5, 6]));
 
@@ -63,7 +63,7 @@ fn chain_mixed_forward_backward() {
 }
 
 #[test]
-fn chain_empty_first_lender() {
+fn test_chain_empty_first_lender() {
     // When first lender is empty, should immediately yield from second
     let mut chained = VecLender::new(vec![]).chain(VecLender::new(vec![1, 2]));
 
@@ -73,7 +73,7 @@ fn chain_empty_first_lender() {
 }
 
 #[test]
-fn chain_empty_second_lender() {
+fn test_chain_empty_second_lender() {
     // When second lender is empty, should yield from first then be exhausted
     let mut chained = VecLender::new(vec![1, 2]).chain(VecLender::new(vec![]));
 
@@ -83,14 +83,14 @@ fn chain_empty_second_lender() {
 }
 
 #[test]
-fn chain_both_empty() {
+fn test_chain_both_empty() {
     let mut chained = VecLender::new(vec![]).chain(VecLender::new(vec![]));
     assert_eq!(chained.next(), None);
     assert_eq!(chained.next_back(), None);
 }
 
 #[test]
-fn chain_count() {
+fn test_chain_count() {
     // count() should return total elements from both lenders
     let chained = VecLender::new(vec![1, 2, 3]).chain(VecLender::new(vec![4, 5]));
     assert_eq!(chained.count(), 5);
@@ -101,7 +101,7 @@ fn chain_count() {
 }
 
 #[test]
-fn chain_nth() {
+fn test_chain_nth() {
     // nth(n) should skip n elements and return the (n+1)th
     let mut chained = VecLender::new(vec![1, 2, 3]).chain(VecLender::new(vec![4, 5, 6]));
 
@@ -119,7 +119,7 @@ fn chain_nth() {
 }
 
 #[test]
-fn chain_nth_crossing_boundary() {
+fn test_chain_nth_crossing_boundary() {
     // nth that crosses the boundary between first and second lender
     let mut chained = VecLender::new(vec![1, 2]).chain(VecLender::new(vec![3, 4, 5]));
 
@@ -130,7 +130,7 @@ fn chain_nth_crossing_boundary() {
 }
 
 #[test]
-fn chain_nth_back() {
+fn test_chain_nth_back() {
     // nth_back(n) should skip n elements from the back
     let mut chained = VecLender::new(vec![1, 2, 3]).chain(VecLender::new(vec![4, 5, 6]));
 
@@ -146,7 +146,7 @@ fn chain_nth_back() {
 }
 
 #[test]
-fn chain_last() {
+fn test_chain_last() {
     // last() should return the last element of the second lender (if non-empty)
     let mut chained = VecLender::new(vec![1, 2]).chain(VecLender::new(vec![3, 4]));
     assert_eq!(chained.last(), Some(&4));
@@ -161,7 +161,7 @@ fn chain_last() {
 }
 
 #[test]
-fn chain_find() {
+fn test_chain_find() {
     // find() should search first lender, then second
     let mut chained = VecLender::new(vec![1, 2, 3]).chain(VecLender::new(vec![4, 5, 6]));
 
@@ -173,7 +173,7 @@ fn chain_find() {
 }
 
 #[test]
-fn chain_rfind() {
+fn test_chain_rfind() {
     // rfind() should search second lender first (from back), then first
     let mut chained = VecLender::new(vec![1, 2, 3]).chain(VecLender::new(vec![4, 5, 6]));
 
@@ -184,7 +184,7 @@ fn chain_rfind() {
 }
 
 #[test]
-fn chain_size_hint() {
+fn test_chain_size_hint() {
     // size_hint should be sum of both lenders' hints
     let chained = VecLender::new(vec![1, 2, 3]).chain(VecLender::new(vec![4, 5]));
     assert_eq!(chained.size_hint(), (5, Some(5)));
@@ -194,7 +194,7 @@ fn chain_size_hint() {
 }
 
 #[test]
-fn chain_fold() {
+fn test_chain_fold() {
     // fold should process all elements from both lenders
     let sum = VecLender::new(vec![1, 2, 3])
         .chain(VecLender::new(vec![4, 5, 6]))
@@ -203,7 +203,7 @@ fn chain_fold() {
 }
 
 #[test]
-fn chain_rfold() {
+fn test_chain_rfold() {
     // rfold should process elements in reverse order (second lender first, from back)
     let mut order = Vec::new();
     VecLender::new(vec![1, 2, 3])
@@ -214,7 +214,7 @@ fn chain_rfold() {
 }
 
 #[test]
-fn chain_into_inner() {
+fn test_chain_into_inner() {
     // into_inner should return the original lenders
     let chained = VecLender::new(vec![1, 2]).chain(VecLender::new(vec![3, 4]));
     let (a, b) = chained.into_inner();
@@ -224,14 +224,14 @@ fn chain_into_inner() {
 }
 
 #[test]
-fn advance_by_chain_additional() {
+fn test_advance_by_chain_additional() {
     let mut chained = VecLender::new(vec![1, 2]).chain(VecLender::new(vec![3, 4]));
     assert_eq!(chained.advance_by(3), Ok(())); // Skip 1, 2, 3
     assert_eq!(chained.next(), Some(&4));
 }
 
 #[test]
-fn advance_back_by_chain_additional() {
+fn test_advance_back_by_chain_additional() {
     use lender::DoubleEndedLender;
 
     let mut chained = VecLender::new(vec![1, 2]).chain(VecLender::new(vec![3, 4]));
@@ -288,7 +288,7 @@ impl Lender for UnfusedLender {
 }
 
 #[test]
-fn fuse_basic_iteration() {
+fn test_fuse_basic_iteration() {
     // Basic case: fuse should not change behavior for normal lenders
     let mut fused = VecLender::new(vec![1, 2, 3]).fuse();
 
@@ -302,7 +302,7 @@ fn fuse_basic_iteration() {
 }
 
 #[test]
-fn fuse_guarantees_none_after_exhaustion() {
+fn test_fuse_guarantees_none_after_exhaustion() {
     // With a non-fused lender that would return Some after None,
     // fuse() should ensure it keeps returning None
     let mut fused = UnfusedLender::new(vec![1, 2, 3]).fuse();
@@ -318,7 +318,7 @@ fn fuse_guarantees_none_after_exhaustion() {
 }
 
 #[test]
-fn fuse_double_ended() {
+fn test_fuse_double_ended() {
     let mut fused = VecLender::new(vec![1, 2, 3, 4]).fuse();
 
     assert_eq!(fused.next(), Some(&1));
@@ -334,7 +334,7 @@ fn fuse_double_ended() {
 }
 
 #[test]
-fn fuse_nth() {
+fn test_fuse_nth() {
     let mut fused = VecLender::new(vec![1, 2, 3, 4, 5]).fuse();
 
     // nth(2) skips 1, 2 and returns 3
@@ -350,7 +350,7 @@ fn fuse_nth() {
 }
 
 #[test]
-fn fuse_nth_back() {
+fn test_fuse_nth_back() {
     let mut fused = VecLender::new(vec![1, 2, 3, 4, 5]).fuse();
 
     // nth_back(1) skips 5 and returns 4
@@ -367,7 +367,7 @@ fn fuse_nth_back() {
 }
 
 #[test]
-fn fuse_last() {
+fn test_fuse_last() {
     // last() should return the last element
     let mut fused = VecLender::new(vec![1, 2, 3]).fuse();
     assert_eq!(fused.last(), Some(&3));
@@ -381,7 +381,7 @@ fn fuse_last() {
 }
 
 #[test]
-fn fuse_count() {
+fn test_fuse_count() {
     // count() should return total elements
     let fused = VecLender::new(vec![1, 2, 3, 4, 5]).fuse();
     assert_eq!(fused.count(), 5);
@@ -391,7 +391,7 @@ fn fuse_count() {
 }
 
 #[test]
-fn fuse_size_hint() {
+fn test_fuse_size_hint() {
     let fused = VecLender::new(vec![1, 2, 3]).fuse();
     assert_eq!(fused.size_hint(), (3, Some(3)));
 
@@ -400,7 +400,7 @@ fn fuse_size_hint() {
 }
 
 #[test]
-fn fuse_size_hint_after_exhaustion() {
+fn test_fuse_size_hint_after_exhaustion() {
     let mut fused = VecLender::new(vec![1, 2]).fuse();
 
     assert_eq!(fused.size_hint(), (2, Some(2)));
@@ -414,7 +414,7 @@ fn fuse_size_hint_after_exhaustion() {
 }
 
 #[test]
-fn fuse_fold() {
+fn test_fuse_fold() {
     let sum = VecLender::new(vec![1, 2, 3, 4])
         .fuse()
         .fold(0, |acc, x| acc + *x);
@@ -422,7 +422,7 @@ fn fuse_fold() {
 }
 
 #[test]
-fn fuse_rfold() {
+fn test_fuse_rfold() {
     let mut order = Vec::new();
     VecLender::new(vec![1, 2, 3])
         .fuse()
@@ -431,7 +431,7 @@ fn fuse_rfold() {
 }
 
 #[test]
-fn fuse_find() {
+fn test_fuse_find() {
     let mut fused = VecLender::new(vec![1, 2, 3, 4, 5]).fuse();
 
     assert_eq!(fused.find(|x| **x > 2), Some(&3));
@@ -442,7 +442,7 @@ fn fuse_find() {
 }
 
 #[test]
-fn fuse_rfind() {
+fn test_fuse_rfind() {
     let mut fused = VecLender::new(vec![1, 2, 3, 4, 5]).fuse();
 
     assert_eq!(fused.rfind(|x| **x < 4), Some(&3));
@@ -453,7 +453,7 @@ fn fuse_rfind() {
 }
 
 #[test]
-fn fuse_exact_size() {
+fn test_fuse_exact_size() {
     use lender::ExactSizeLender;
 
     let mut fused = VecLender::new(vec![1, 2, 3]).fuse();
@@ -475,14 +475,14 @@ fn fuse_exact_size() {
 }
 
 #[test]
-fn fuse_into_inner() {
+fn test_fuse_into_inner() {
     let fused = VecLender::new(vec![1, 2, 3]).fuse();
     let inner = fused.into_inner();
     assert_eq!(inner.data, vec![1, 2, 3]);
 }
 
 #[test]
-fn fuse_after_none() {
+fn test_fuse_after_none() {
     // Create a lender that returns None then Some (normally not allowed behavior)
     struct FlickeringLender {
         count: i32,
@@ -517,7 +517,7 @@ fn fuse_after_none() {
 // ============================================================================
 
 #[test]
-fn cycle_basic() {
+fn test_cycle_basic() {
     let mut cycled = VecLender::new(vec![1, 2, 3]).cycle();
 
     // First cycle
@@ -533,7 +533,7 @@ fn cycle_basic() {
 }
 
 #[test]
-fn cycle_single_element() {
+fn test_cycle_single_element() {
     let mut cycled = VecLender::new(vec![42]).cycle();
 
     for _ in 0..10 {
@@ -542,7 +542,7 @@ fn cycle_single_element() {
 }
 
 #[test]
-fn cycle_empty() {
+fn test_cycle_empty() {
     // cycle() on empty lender should return None forever
     let mut cycled = VecLender::new(vec![]).cycle();
 
@@ -552,7 +552,7 @@ fn cycle_empty() {
 }
 
 #[test]
-fn cycle_size_hint() {
+fn test_cycle_size_hint() {
     // For non-empty lender, size_hint is (usize::MAX, None) - infinite
     let cycled = VecLender::new(vec![1, 2, 3]).cycle();
     let (lower, upper) = cycled.size_hint();
@@ -565,7 +565,7 @@ fn cycle_size_hint() {
 }
 
 #[test]
-fn cycle_multiple_rounds() {
+fn test_cycle_multiple_rounds() {
     let mut cycle = VecLender::new(vec![1, 2]).cycle();
     assert_eq!(cycle.next(), Some(&1));
     assert_eq!(cycle.next(), Some(&2));
@@ -575,7 +575,7 @@ fn cycle_multiple_rounds() {
 }
 
 #[test]
-fn cycle_try_fold_additional() {
+fn test_cycle_try_fold_additional() {
     // Take first 5 elements from cycling [1, 2]
     let result: Option<i32> = VecLender::new(vec![1, 2])
         .cycle()
@@ -586,7 +586,7 @@ fn cycle_try_fold_additional() {
 }
 
 #[test]
-fn cycle_advance_by_within_first_cycle() {
+fn test_cycle_advance_by_within_first_cycle() {
     let mut cycled = VecLender::new(vec![1, 2, 3]).cycle();
     // Advance 2 within the first cycle
     assert_eq!(cycled.advance_by(2), Ok(()));
@@ -595,7 +595,7 @@ fn cycle_advance_by_within_first_cycle() {
 }
 
 #[test]
-fn cycle_advance_by_across_cycles() {
+fn test_cycle_advance_by_across_cycles() {
     let mut cycled = VecLender::new(vec![1, 2, 3]).cycle();
     // Advance 5: skips [1,2,3] (first cycle) + [1,2] (second cycle)
     assert_eq!(cycled.advance_by(5), Ok(()));
@@ -604,7 +604,7 @@ fn cycle_advance_by_across_cycles() {
 }
 
 #[test]
-fn cycle_advance_by_exact_cycle_boundary() {
+fn test_cycle_advance_by_exact_cycle_boundary() {
     let mut cycled = VecLender::new(vec![1, 2, 3]).cycle();
     // Advance exactly one full cycle
     assert_eq!(cycled.advance_by(3), Ok(()));
@@ -613,7 +613,7 @@ fn cycle_advance_by_exact_cycle_boundary() {
 }
 
 #[test]
-fn cycle_advance_by_empty() {
+fn test_cycle_advance_by_empty() {
     use core::num::NonZeroUsize;
 
     let mut cycled = VecLender::new(vec![]).cycle();
@@ -626,7 +626,7 @@ fn cycle_advance_by_empty() {
 // ============================================================================
 
 #[test]
-fn rev_basic() {
+fn test_rev_basic() {
     let mut reversed = VecLender::new(vec![1, 2, 3]).rev();
 
     assert_eq!(reversed.next(), Some(&3));
@@ -636,7 +636,7 @@ fn rev_basic() {
 }
 
 #[test]
-fn rev_double_ended() {
+fn test_rev_double_ended() {
     let mut reversed = VecLender::new(vec![1, 2, 3]).rev();
 
     // next_back on Rev is next on original
@@ -645,7 +645,7 @@ fn rev_double_ended() {
 }
 
 #[test]
-fn rev_fold() {
+fn test_rev_fold() {
     let mut order = Vec::new();
     VecLender::new(vec![1, 2, 3])
         .rev()
@@ -654,7 +654,7 @@ fn rev_fold() {
 }
 
 #[test]
-fn rev_rfold() {
+fn test_rev_rfold() {
     let mut order = Vec::new();
     VecLender::new(vec![1, 2, 3])
         .rev()
@@ -664,21 +664,21 @@ fn rev_rfold() {
 }
 
 #[test]
-fn rev_nth() {
+fn test_rev_nth() {
     let mut reversed = VecLender::new(vec![1, 2, 3, 4, 5]).rev();
     // nth(2) on reversed: skips 5, 4 and returns 3
     assert_eq!(reversed.nth(2), Some(&3));
 }
 
 #[test]
-fn rev_nth_back() {
+fn test_rev_nth_back() {
     let mut reversed = VecLender::new(vec![1, 2, 3, 4, 5]).rev();
     // nth_back(1) on reversed: skips 1 and returns 2
     assert_eq!(reversed.nth_back(1), Some(&2));
 }
 
 #[test]
-fn rev_double_rev() {
+fn test_rev_double_rev() {
     // Reversing twice should give original order
     let mut lender = VecLender::new(vec![1, 2, 3]).rev().rev();
     assert_eq!(lender.next(), Some(&1));
@@ -687,7 +687,7 @@ fn rev_double_rev() {
 }
 
 #[test]
-fn rev_try_fold_additional() {
+fn test_rev_try_fold_additional() {
     let result: Option<i32> = VecLender::new(vec![1, 2, 3])
         .rev()
         .try_fold(0, |acc, x| Some(acc + *x));
@@ -695,7 +695,7 @@ fn rev_try_fold_additional() {
 }
 
 #[test]
-fn rev_try_rfold_additional() {
+fn test_rev_try_rfold_additional() {
     let result: Option<i32> = VecLender::new(vec![1, 2, 3])
         .rev()
         .try_rfold(0, |acc, x| Some(acc + *x));

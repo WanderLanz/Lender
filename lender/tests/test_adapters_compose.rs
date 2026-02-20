@@ -11,7 +11,7 @@ use common::*;
 // ============================================================================
 
 #[test]
-fn zip_nth_back_equal_length() {
+fn test_zip_nth_back_equal_length() {
     let mut zipped =
         VecLender::new(vec![1, 2, 3, 4, 5]).zip(VecLender::new(vec![10, 20, 30, 40, 50]));
     // nth_back(0) yields the last pair
@@ -23,7 +23,7 @@ fn zip_nth_back_equal_length() {
 }
 
 #[test]
-fn zip_nth_back_unequal_length() {
+fn test_zip_nth_back_unequal_length() {
     let mut zipped = VecLender::new(vec![1, 2, 3, 4, 5]).zip(VecLender::new(vec![10, 20, 30]));
     // Zip length is min(5, 3) = 3, so effective pairs are (1,10),(2,20),(3,30).
     // nth_back(0) should yield (3,30)
@@ -34,13 +34,13 @@ fn zip_nth_back_unequal_length() {
 }
 
 #[test]
-fn zip_nth_back_empty() {
+fn test_zip_nth_back_empty() {
     let mut zipped = VecLender::new(vec![]).zip(VecLender::new(vec![1, 2]));
     assert_eq!(zipped.nth_back(0), None);
 }
 
 #[test]
-fn zip_nth_back_first_shorter() {
+fn test_zip_nth_back_first_shorter() {
     // First lender shorter than second — tests the a_sz < b_sz branch
     // in Zip::nth_back where b.advance_back_by() trims the excess.
     let mut zipped = VecLender::new(vec![10, 20, 30]).zip(VecLender::new(vec![1, 2, 3, 4, 5]));
@@ -53,40 +53,40 @@ fn zip_nth_back_first_shorter() {
 }
 
 #[test]
-fn step_by_count_basic() {
+fn test_step_by_count_basic() {
     let lender = VecLender::new(vec![1, 2, 3, 4, 5, 6, 7]);
     // step=2 yields [1, 3, 5, 7] → count = 4
     assert_eq!(lender.step_by(2).count(), 4);
 }
 
 #[test]
-fn step_by_count_step_one() {
+fn test_step_by_count_step_one() {
     let lender = VecLender::new(vec![1, 2, 3]);
     assert_eq!(lender.step_by(1).count(), 3);
 }
 
 #[test]
-fn step_by_count_empty() {
+fn test_step_by_count_empty() {
     let lender = VecLender::new(vec![]);
     assert_eq!(lender.step_by(3).count(), 0);
 }
 
 #[test]
-fn step_by_count_larger_step() {
+fn test_step_by_count_larger_step() {
     let lender = VecLender::new(vec![1, 2, 3]);
     // step=10 yields only the first element
     assert_eq!(lender.step_by(10).count(), 1);
 }
 
 #[test]
-fn chunk_count() {
+fn test_chunk_count() {
     let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]);
     let chunk = lender.next_chunk(3);
     assert_eq!(chunk.count(), 3);
 }
 
 #[test]
-fn chunk_count_larger_than_remaining() {
+fn test_chunk_count_larger_than_remaining() {
     let mut lender = VecLender::new(vec![1, 2]);
     let chunk = lender.next_chunk(5);
     // Underlying only has 2 elements even though chunk_size is 5
@@ -94,14 +94,14 @@ fn chunk_count_larger_than_remaining() {
 }
 
 #[test]
-fn chunk_count_empty() {
+fn test_chunk_count_empty() {
     let mut lender = VecLender::new(vec![]);
     let chunk = lender.next_chunk(3);
     assert_eq!(chunk.count(), 0);
 }
 
 #[test]
-fn chunk_nth_within_range() {
+fn test_chunk_nth_within_range() {
     let mut lender = VecLender::new(vec![10, 20, 30, 40, 50]);
     let mut chunk = lender.next_chunk(4);
     // nth(2) should skip first 2 elements and return the 3rd (30)
@@ -112,7 +112,7 @@ fn chunk_nth_within_range() {
 }
 
 #[test]
-fn chunk_nth_past_end() {
+fn test_chunk_nth_past_end() {
     let mut lender = VecLender::new(vec![10, 20, 30]);
     let mut chunk = lender.next_chunk(3);
     // nth(5) is past the chunk boundary
@@ -122,7 +122,7 @@ fn chunk_nth_past_end() {
 }
 
 #[test]
-fn chunk_nth_zero() {
+fn test_chunk_nth_zero() {
     let mut lender = VecLender::new(vec![10, 20, 30]);
     let mut chunk = lender.next_chunk(3);
     assert_eq!(chunk.nth(0), Some(&10));
@@ -132,7 +132,7 @@ fn chunk_nth_zero() {
 }
 
 #[test]
-fn chunk_try_fold_full() {
+fn test_chunk_try_fold_full() {
     let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]);
     let mut chunk = lender.next_chunk(4);
     let result: Result<i32, ()> = chunk.try_fold(0, |acc, x| Ok(acc + *x));
@@ -140,7 +140,7 @@ fn chunk_try_fold_full() {
 }
 
 #[test]
-fn chunk_try_fold_early_exit() {
+fn test_chunk_try_fold_early_exit() {
     let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]);
     let mut chunk = lender.next_chunk(5);
     // Stop when accumulator exceeds 5
@@ -152,7 +152,7 @@ fn chunk_try_fold_early_exit() {
 }
 
 #[test]
-fn chunk_fold_full() {
+fn test_chunk_fold_full() {
     let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]);
     let chunk = lender.next_chunk(4);
     let result = chunk.fold(0, |acc, x| acc + *x);
@@ -160,7 +160,7 @@ fn chunk_fold_full() {
 }
 
 #[test]
-fn chunk_fold_partial_underlying() {
+fn test_chunk_fold_partial_underlying() {
     let mut lender = VecLender::new(vec![1, 2]);
     let chunk = lender.next_chunk(5);
     let result = chunk.fold(0, |acc, x| acc + *x);
@@ -172,7 +172,7 @@ fn chunk_fold_partial_underlying() {
 // ============================================================================
 
 #[test]
-fn compose_filter_map_fold() {
+fn test_compose_filter_map_fold() {
     // filter even numbers, map to doubled, then fold sum
     let result = VecLender::new(vec![1, 2, 3, 4, 5, 6])
         .filter(|x| *x % 2 == 0)
@@ -183,7 +183,7 @@ fn compose_filter_map_fold() {
 }
 
 #[test]
-fn compose_skip_take() {
+fn test_compose_skip_take() {
     let mut lender = VecLender::new(vec![1, 2, 3, 4, 5, 6, 7, 8]).skip(2).take(3);
     assert_eq!(lender.next(), Some(&3));
     assert_eq!(lender.next(), Some(&4));
@@ -192,7 +192,7 @@ fn compose_skip_take() {
 }
 
 #[test]
-fn compose_chain_filter() {
+fn test_compose_chain_filter() {
     let a = VecLender::new(vec![1, 2, 3]);
     let b = VecLender::new(vec![4, 5, 6]);
     let result = a.chain(b).filter(|x| **x > 2).count();
@@ -201,7 +201,7 @@ fn compose_chain_filter() {
 }
 
 #[test]
-fn compose_rev_take() {
+fn test_compose_rev_take() {
     let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]).rev().take(3);
     assert_eq!(lender.next(), Some(&5));
     assert_eq!(lender.next(), Some(&4));
@@ -210,7 +210,7 @@ fn compose_rev_take() {
 }
 
 #[test]
-fn compose_flatten_filter_map() {
+fn test_compose_flatten_filter_map() {
     let result = VecOfVecLender::new(vec![vec![1, 2, 3], vec![4, 5, 6]])
         .flatten()
         .filter(|x| **x % 2 == 1)
@@ -221,7 +221,7 @@ fn compose_flatten_filter_map() {
 }
 
 #[test]
-fn compose_enumerate_skip_take() {
+fn test_compose_enumerate_skip_take() {
     let mut lender = VecLender::new(vec![10, 20, 30, 40, 50])
         .enumerate()
         .skip(1)
@@ -232,7 +232,7 @@ fn compose_enumerate_skip_take() {
 }
 
 #[test]
-fn compose_filter_inspect_count() {
+fn test_compose_filter_inspect_count() {
     let mut seen = Vec::new();
     let count = VecLender::new(vec![1, 2, 3, 4, 5])
         .filter(|x| **x > 2)
@@ -243,7 +243,7 @@ fn compose_filter_inspect_count() {
 }
 
 #[test]
-fn compose_step_by_chain() {
+fn test_compose_step_by_chain() {
     let a = VecLender::new(vec![1, 2, 3, 4, 5, 6]).step_by(2);
     let b = VecLender::new(vec![10, 20]);
     let mut lender = a.chain(b);
@@ -257,7 +257,7 @@ fn compose_step_by_chain() {
 }
 
 #[test]
-fn compose_zip_map_fold() {
+fn test_compose_zip_map_fold() {
     let a = VecLender::new(vec![1, 2, 3]);
     let b = VecLender::new(vec![10, 20, 30]);
     let result = a
@@ -271,7 +271,7 @@ fn compose_zip_map_fold() {
 }
 
 #[test]
-fn compose_take_while_skip_while() {
+fn test_compose_take_while_skip_while() {
     let mut lender = VecLender::new(vec![1, 2, 3, 4, 5, 6, 7])
         .skip_while(|x| **x < 3)
         .take_while(|x| **x <= 5);
@@ -286,7 +286,7 @@ fn compose_take_while_skip_while() {
 // ============================================================================
 
 #[test]
-fn chain_size_hint_no_overflow() {
+fn test_chain_size_hint_no_overflow() {
     // Chain two lenders with size hints that would overflow if added naively
 
     let a = std::iter::repeat_n(&1, usize::MAX / 2 + 1).into_lender();
@@ -299,7 +299,7 @@ fn chain_size_hint_no_overflow() {
 }
 
 #[test]
-fn intersperse_size_hint_no_overflow() {
+fn test_intersperse_size_hint_no_overflow() {
     // Intersperse doubles size minus 1; test with large size hints
     // that would overflow if not handled with saturating arithmetic
 
@@ -311,7 +311,7 @@ fn intersperse_size_hint_no_overflow() {
 }
 
 #[test]
-fn step_by_large_step() {
+fn test_step_by_large_step() {
     // Test step_by with very large step values
     let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]).step_by(1000);
     assert_eq!(lender.next(), Some(&1));
@@ -319,7 +319,7 @@ fn step_by_large_step() {
 }
 
 #[test]
-fn step_by_step_equals_len() {
+fn test_step_by_step_equals_len() {
     // Step size equals lender length
     let mut lender = VecLender::new(vec![1, 2, 3]).step_by(3);
     assert_eq!(lender.next(), Some(&1));
@@ -327,7 +327,7 @@ fn step_by_step_equals_len() {
 }
 
 #[test]
-fn advance_by_zero() {
+fn test_advance_by_zero() {
     // Advance by 0 should be a no-op
     let mut lender = VecLender::new(vec![1, 2, 3]);
     assert_eq!(lender.advance_by(0), Ok(()));
@@ -335,7 +335,7 @@ fn advance_by_zero() {
 }
 
 #[test]
-fn advance_by_exact_length() {
+fn test_advance_by_exact_length() {
     // Advance by exact remaining length should succeed
     let mut lender = VecLender::new(vec![1, 2, 3]);
     assert_eq!(lender.advance_by(3), Ok(()));
@@ -343,7 +343,7 @@ fn advance_by_exact_length() {
 }
 
 #[test]
-fn advance_by_more_than_length() {
+fn test_advance_by_more_than_length() {
     use core::num::NonZeroUsize;
     let mut lender = VecLender::new(vec![1, 2]);
     // Trying to advance by 5 when only 2 elements remain
@@ -353,7 +353,7 @@ fn advance_by_more_than_length() {
 }
 
 #[test]
-fn nth_zero() {
+fn test_nth_zero() {
     // nth(0) should be equivalent to next()
     let mut lender = VecLender::new(vec![1, 2, 3]);
     assert_eq!(lender.nth(0), Some(&1));
@@ -361,7 +361,7 @@ fn nth_zero() {
 }
 
 #[test]
-fn nth_beyond_length() {
+fn test_nth_beyond_length() {
     // nth beyond length returns None
     let mut lender = VecLender::new(vec![1, 2, 3]);
     assert_eq!(lender.nth(10), None);
@@ -369,14 +369,14 @@ fn nth_beyond_length() {
 }
 
 #[test]
-fn take_zero() {
+fn test_take_zero() {
     // take(0) should yield nothing
     let mut lender = VecLender::new(vec![1, 2, 3]).take(0);
     assert_eq!(lender.next(), None);
 }
 
 #[test]
-fn boundary_skip_zero() {
+fn test_boundary_skip_zero() {
     // skip(0) should be a no-op
     let mut lender = VecLender::new(vec![1, 2, 3]).skip(0);
     assert_eq!(lender.next(), Some(&1));

@@ -7,7 +7,7 @@ use common::*;
 // ============================================================================
 
 #[test]
-fn map_into_iter_basic() {
+fn test_map_into_iter_basic() {
     // MapIntoIter converts a lender to an iterator by applying a function
     let iter = VecLender::new(vec![1, 2, 3]).map_into_iter(|x| *x * 2);
     let collected: Vec<i32> = iter.collect();
@@ -15,13 +15,13 @@ fn map_into_iter_basic() {
 }
 
 #[test]
-fn map_into_iter_size_hint() {
+fn test_map_into_iter_size_hint() {
     let iter = VecLender::new(vec![1, 2, 3, 4, 5]).map_into_iter(|x| *x);
     assert_eq!(iter.size_hint(), (5, Some(5)));
 }
 
 #[test]
-fn map_into_iter_double_ended() {
+fn test_map_into_iter_double_ended() {
     let mut iter = VecLender::new(vec![1, 2, 3]).map_into_iter(|x| *x * 2);
     assert_eq!(iter.next_back(), Some(6));
     assert_eq!(iter.next(), Some(2));
@@ -30,27 +30,27 @@ fn map_into_iter_double_ended() {
 }
 
 #[test]
-fn map_into_iter_exact_size() {
+fn test_map_into_iter_exact_size() {
     let iter = VecLender::new(vec![1, 2, 3]).map_into_iter(|x| *x);
     assert_eq!(iter.len(), 3);
 }
 
 #[test]
-fn map_into_iter_into_inner() {
+fn test_map_into_iter_into_inner() {
     let iter = VecLender::new(vec![1, 2, 3]).map_into_iter(|x| *x * 2);
     let lender = iter.into_inner();
     assert_eq!(lender.count(), 3);
 }
 
 #[test]
-fn map_into_iter_into_parts() {
+fn test_map_into_iter_into_parts() {
     let iter = VecLender::new(vec![1, 2, 3]).map_into_iter(|x| *x * 2);
     let (lender, _f) = iter.into_parts();
     assert_eq!(lender.count(), 3);
 }
 
 #[test]
-fn map_into_iter_fold() {
+fn test_map_into_iter_fold() {
     let sum = VecLender::new(vec![1, 2, 3])
         .map_into_iter(|x| *x * 2)
         .sum::<i32>();
@@ -58,7 +58,7 @@ fn map_into_iter_fold() {
 }
 
 #[test]
-fn map_into_iter_fold_empty() {
+fn test_map_into_iter_fold_empty() {
     let sum = VecLender::new(vec![])
         .map_into_iter(|x: &i32| *x * 2)
         .sum::<i32>();
@@ -66,7 +66,7 @@ fn map_into_iter_fold_empty() {
 }
 
 #[test]
-fn map_into_iter_rfold() {
+fn test_map_into_iter_rfold() {
     let result = VecLender::new(vec![1, 2, 3])
         .map_into_iter(|x| *x * 2)
         .rfold(Vec::new(), |mut acc, x| {
@@ -77,7 +77,7 @@ fn map_into_iter_rfold() {
 }
 
 #[test]
-fn map_into_iter_rfold_empty() {
+fn test_map_into_iter_rfold_empty() {
     let result = VecLender::new(vec![])
         .map_into_iter(|x: &i32| *x * 2)
         .rfold(Vec::new(), |mut acc, x| {
@@ -89,7 +89,7 @@ fn map_into_iter_rfold_empty() {
 
 #[test]
 #[allow(clippy::iter_nth_zero)]
-fn map_into_iter_nth() {
+fn test_map_into_iter_nth() {
     let mut iter = VecLender::new(vec![1, 2, 3, 4, 5]).map_into_iter(|x| *x * 10);
     assert_eq!(iter.nth(0), Some(10));
     assert_eq!(iter.nth(2), Some(40));
@@ -97,7 +97,7 @@ fn map_into_iter_nth() {
 }
 
 #[test]
-fn map_into_iter_nth_back() {
+fn test_map_into_iter_nth_back() {
     let mut iter = VecLender::new(vec![1, 2, 3, 4, 5]).map_into_iter(|x| *x * 10);
     assert_eq!(iter.nth_back(0), Some(50));
     assert_eq!(iter.nth_back(2), Some(20));
@@ -105,7 +105,7 @@ fn map_into_iter_nth_back() {
 }
 
 #[test]
-fn map_into_iter_nth_out_of_bounds() {
+fn test_map_into_iter_nth_out_of_bounds() {
     let mut iter = VecLender::new(vec![1, 2]).map_into_iter(|x| *x);
     assert_eq!(iter.nth(10), None);
 }
@@ -115,7 +115,7 @@ fn map_into_iter_nth_out_of_bounds() {
 // ============================================================================
 
 #[test]
-fn iter_adapter_basic() {
+fn test_iter_adapter_basic() {
     // Iter works when the lend type can outlive the lender borrow
     // Using from_iter which yields owned values
     let iter = vec![1, 2, 3].into_iter().into_lender().iter();
@@ -124,13 +124,13 @@ fn iter_adapter_basic() {
 }
 
 #[test]
-fn iter_adapter_size_hint() {
+fn test_iter_adapter_size_hint() {
     let iter = vec![1, 2, 3, 4, 5].into_iter().into_lender().iter();
     assert_eq!(iter.size_hint(), (5, Some(5)));
 }
 
 #[test]
-fn iter_adapter_double_ended() {
+fn test_iter_adapter_double_ended() {
     let mut iter = vec![1, 2, 3].into_iter().into_lender().iter();
     assert_eq!(iter.next_back(), Some(3));
     assert_eq!(iter.next(), Some(1));
@@ -139,13 +139,13 @@ fn iter_adapter_double_ended() {
 }
 
 #[test]
-fn iter_adapter_exact_size() {
+fn test_iter_adapter_exact_size() {
     let iter = vec![1, 2, 3].into_iter().into_lender().iter();
     assert_eq!(iter.len(), 3);
 }
 
 #[test]
-fn iter_adapter_into_inner() {
+fn test_iter_adapter_into_inner() {
     let iter = vec![1, 2, 3].into_iter().into_lender().iter();
     let lender = iter.into_inner();
     assert_eq!(lender.count(), 3);

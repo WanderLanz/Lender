@@ -9,7 +9,7 @@ use common::*;
 // ============================================================================
 
 #[test]
-fn into_fallible_adapter() {
+fn test_into_fallible_adapter() {
     use lender::prelude::*;
 
     // Test converting a normal lender to fallible
@@ -31,7 +31,7 @@ fn into_fallible_adapter() {
 }
 
 #[test]
-fn map_err_adapter() {
+fn test_map_err_adapter() {
     use lender::{fallible_lend, fallible_once, fallible_once_err};
 
     // Test mapping error type
@@ -49,7 +49,7 @@ fn map_err_adapter() {
 }
 
 #[test]
-fn fallible_peekable_adapter() {
+fn test_fallible_peekable_adapter() {
     use lender::{FalliblePeekable, from_fallible_fn};
 
     // Test peeking functionality
@@ -91,7 +91,7 @@ fn fallible_peekable_adapter() {
 }
 
 #[test]
-fn intersperse_adapters() {
+fn test_intersperse_adapters() {
     use lender::from_fallible_fn;
 
     // Test intersperse with fixed separator
@@ -150,7 +150,7 @@ fn intersperse_adapters() {
 }
 
 #[test]
-fn map_adapters() {
+fn test_map_adapters() {
     let data = vec![1, 2, 3];
 
     let mut iter = data
@@ -185,7 +185,7 @@ impl FallibleLender for Wrapper {
 }
 
 #[test]
-fn flatten_adapters() {
+fn test_flatten_adapters() {
     let data = vec![
         Wrapper(vec![1, 2, 3]),
         Wrapper(vec![1, 2, 3]),
@@ -206,7 +206,7 @@ fn flatten_adapters() {
 }
 
 #[test]
-fn flat_map_adapters() {
+fn test_flat_map_adapters() {
     let data = vec![1, 2, 3];
 
     let mut iter = data
@@ -227,7 +227,7 @@ fn flat_map_adapters() {
 }
 
 #[test]
-fn fallible_flatten_fold() {
+fn test_fallible_flatten_fold() {
     let data = vec![Wrapper(vec![1, 2]), Wrapper(vec![3]), Wrapper(vec![4, 5])];
     let iter = data.into_iter().into_lender().into_fallible().flatten();
     let result = iter.fold(0, |acc, x| Ok(acc + x)).unwrap();
@@ -235,7 +235,7 @@ fn fallible_flatten_fold() {
 }
 
 #[test]
-fn fallible_flatten_fold_empty() {
+fn test_fallible_flatten_fold_empty() {
     let data: Vec<Wrapper> = vec![];
     let iter = data.into_iter().into_lender().into_fallible().flatten();
     let result = iter.fold(0, |acc, x: i32| Ok(acc + x)).unwrap();
@@ -243,21 +243,21 @@ fn fallible_flatten_fold_empty() {
 }
 
 #[test]
-fn fallible_flatten_count() {
+fn test_fallible_flatten_count() {
     let data = vec![Wrapper(vec![1, 2]), Wrapper(vec![]), Wrapper(vec![3, 4, 5])];
     let iter = data.into_iter().into_lender().into_fallible().flatten();
     assert_eq!(iter.count().unwrap(), 5);
 }
 
 #[test]
-fn fallible_flatten_count_empty() {
+fn test_fallible_flatten_count_empty() {
     let data: Vec<Wrapper> = vec![];
     let iter = data.into_iter().into_lender().into_fallible().flatten();
     assert_eq!(iter.count().unwrap(), 0);
 }
 
 #[test]
-fn fallible_flatten_try_fold() {
+fn test_fallible_flatten_try_fold() {
     let data = vec![Wrapper(vec![1, 2]), Wrapper(vec![3, 4]), Wrapper(vec![5])];
     let mut iter = data.into_iter().into_lender().into_fallible().flatten();
     let result: Result<i32, i32> = iter
@@ -270,7 +270,7 @@ fn fallible_flatten_try_fold() {
 }
 
 #[test]
-fn fallible_flat_map_fold() {
+fn test_fallible_flat_map_fold() {
     let data = vec![1, 2, 3];
     let iter = data
         .into_iter()
@@ -285,7 +285,7 @@ fn fallible_flat_map_fold() {
 }
 
 #[test]
-fn fallible_flat_map_count() {
+fn test_fallible_flat_map_count() {
     let data = vec![1, 2, 3];
     let iter = data
         .into_iter()
@@ -303,7 +303,7 @@ fn fallible_flat_map_count() {
 // ============================================================================
 
 #[test]
-fn exact_size_fallible_lender_basic() {
+fn test_exact_size_fallible_lender_basic() {
     use lender::ExactSizeFallibleLender;
 
     let mut lender = VecFallibleLender::new(vec![1, 2, 3, 4, 5]);
@@ -322,7 +322,7 @@ fn exact_size_fallible_lender_basic() {
 }
 
 #[test]
-fn double_ended_fallible_lender_basic() {
+fn test_double_ended_fallible_lender_basic() {
     use lender::DoubleEndedFallibleLender;
 
     let mut lender = VecFallibleLender::new(vec![1, 2, 3, 4, 5]);
@@ -338,7 +338,7 @@ fn double_ended_fallible_lender_basic() {
 }
 
 #[test]
-fn fused_fallible_lender_basic() {
+fn test_fused_fallible_lender_basic() {
     use lender::FusedFallibleLender;
 
     fn assert_fused<L: FusedFallibleLender>(_: &L) {}
@@ -359,7 +359,7 @@ fn fused_fallible_lender_basic() {
 // ============================================================================
 
 #[test]
-fn fallible_trait_adapters_map() {
+fn test_fallible_trait_adapters_map() {
     use lender::{ExactSizeFallibleLender, FusedFallibleLender};
 
     fn assert_exact_size<L: ExactSizeFallibleLender>(_: &L) {}
@@ -376,7 +376,7 @@ fn fallible_trait_adapters_map() {
 }
 
 #[test]
-fn fallible_trait_adapters_filter() {
+fn test_fallible_trait_adapters_filter() {
     use lender::FusedFallibleLender;
 
     fn assert_fused<L: FusedFallibleLender>(_: &L) {}
@@ -388,7 +388,7 @@ fn fallible_trait_adapters_filter() {
 }
 
 #[test]
-fn fallible_trait_adapters_enumerate() {
+fn test_fallible_trait_adapters_enumerate() {
     use lender::{DoubleEndedFallibleLender, ExactSizeFallibleLender, FusedFallibleLender};
 
     fn assert_exact_size<L: ExactSizeFallibleLender>(_: &L) {}
@@ -404,7 +404,7 @@ fn fallible_trait_adapters_enumerate() {
 }
 
 #[test]
-fn fallible_trait_adapters_skip() {
+fn test_fallible_trait_adapters_skip() {
     use lender::{DoubleEndedFallibleLender, ExactSizeFallibleLender, FusedFallibleLender};
 
     fn assert_exact_size<L: ExactSizeFallibleLender>(_: &L) {}
@@ -427,7 +427,7 @@ fn fallible_trait_adapters_skip() {
 }
 
 #[test]
-fn fallible_trait_adapters_take() {
+fn test_fallible_trait_adapters_take() {
     use lender::{DoubleEndedFallibleLender, ExactSizeFallibleLender, FusedFallibleLender};
 
     fn assert_exact_size<L: ExactSizeFallibleLender>(_: &L) {}
@@ -450,7 +450,7 @@ fn fallible_trait_adapters_take() {
 }
 
 #[test]
-fn fallible_trait_adapters_zip() {
+fn test_fallible_trait_adapters_zip() {
     use lender::{DoubleEndedFallibleLender, ExactSizeFallibleLender, FusedFallibleLender};
 
     fn assert_exact_size<L: ExactSizeFallibleLender>(_: &L) {}
@@ -475,7 +475,7 @@ fn fallible_trait_adapters_zip() {
 }
 
 #[test]
-fn fallible_trait_adapters_rev() {
+fn test_fallible_trait_adapters_rev() {
     use lender::{DoubleEndedFallibleLender, ExactSizeFallibleLender, FusedFallibleLender};
 
     fn assert_exact_size<L: ExactSizeFallibleLender>(_: &L) {}
@@ -498,7 +498,7 @@ fn fallible_trait_adapters_rev() {
 }
 
 #[test]
-fn fallible_trait_adapters_step_by() {
+fn test_fallible_trait_adapters_step_by() {
     use lender::{DoubleEndedFallibleLender, ExactSizeFallibleLender};
 
     fn assert_exact_size<L: ExactSizeFallibleLender>(_: &L) {}
@@ -526,7 +526,7 @@ fn fallible_trait_adapters_step_by() {
 }
 
 #[test]
-fn fallible_trait_adapters_chain() {
+fn test_fallible_trait_adapters_chain() {
     use lender::FusedFallibleLender;
 
     fn assert_fused<L: FusedFallibleLender>(_: &L) {}
@@ -547,7 +547,7 @@ fn fallible_trait_adapters_chain() {
 }
 
 #[test]
-fn fallible_trait_adapters_inspect() {
+fn test_fallible_trait_adapters_inspect() {
     use lender::{ExactSizeFallibleLender, FusedFallibleLender};
 
     fn assert_exact_size<L: ExactSizeFallibleLender>(_: &L) {}
@@ -561,7 +561,7 @@ fn fallible_trait_adapters_inspect() {
 }
 
 #[test]
-fn fallible_trait_adapters_fuse() {
+fn test_fallible_trait_adapters_fuse() {
     use lender::{ExactSizeFallibleLender, FusedFallibleLender};
 
     fn assert_exact_size<L: ExactSizeFallibleLender>(_: &L) {}
@@ -579,7 +579,7 @@ fn fallible_trait_adapters_fuse() {
 // ============================================================================
 
 #[test]
-fn fallible_lender_max_by() {
+fn test_fallible_lender_max_by() {
     use lender::FallibleLender;
 
     // Use into_iter to get owned values, since max_by uses ToOwned
@@ -597,7 +597,7 @@ fn fallible_lender_max_by() {
 }
 
 #[test]
-fn fallible_lender_min_by() {
+fn test_fallible_lender_min_by() {
     use lender::FallibleLender;
 
     let fallible: lender::IntoFallible<_> = vec![3, 1, 5].into_iter().into_lender().into_fallible();
@@ -618,7 +618,7 @@ fn fallible_lender_min_by() {
 // ============================================================================
 
 #[test]
-fn fallible_into_fallible_basic() {
+fn test_fallible_into_fallible_basic() {
     use lender::FallibleLender;
 
     let mut fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3]).into_fallible();
@@ -630,13 +630,13 @@ fn fallible_into_fallible_basic() {
 }
 
 #[test]
-fn fallible_into_fallible_size_hint() {
+fn test_fallible_into_fallible_size_hint() {
     let fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3]).into_fallible();
     assert_eq!(fallible.size_hint(), (3, Some(3)));
 }
 
 #[test]
-fn fallible_into_fallible_double_ended() {
+fn test_fallible_into_fallible_double_ended() {
     use lender::DoubleEndedFallibleLender;
 
     let mut fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3]).into_fallible();
@@ -648,7 +648,7 @@ fn fallible_into_fallible_double_ended() {
 }
 
 #[test]
-fn fallible_into_fallible_exact_size() {
+fn test_fallible_into_fallible_exact_size() {
     use lender::ExactSizeFallibleLender;
 
     let fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3]).into_fallible();
@@ -656,7 +656,7 @@ fn fallible_into_fallible_exact_size() {
 }
 
 #[test]
-fn fallible_into_fallible_try_fold() {
+fn test_fallible_into_fallible_try_fold() {
     use lender::FallibleLender;
 
     let mut fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3]).into_fallible();
@@ -667,7 +667,7 @@ fn fallible_into_fallible_try_fold() {
 }
 
 #[test]
-fn fallible_into_fallible_try_rfold() {
+fn test_fallible_into_fallible_try_rfold() {
     use lender::DoubleEndedFallibleLender;
 
     let mut fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3]).into_fallible();
@@ -678,7 +678,7 @@ fn fallible_into_fallible_try_rfold() {
 }
 
 #[test]
-fn fallible_into_inner() {
+fn test_fallible_into_inner() {
     let fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3]).into_fallible();
     let inner = fallible.into_inner();
     assert_eq!(inner.count(), 3);
@@ -689,7 +689,7 @@ fn fallible_into_inner() {
 // ============================================================================
 
 #[test]
-fn fallible_map_err_try_fold_ok() {
+fn test_fallible_map_err_try_fold_ok() {
     // Use ErrorAtLender with error_at beyond range so no error
     let lender = ErrorAtLender::new(vec![1, 2, 3], 100);
     let mut mapped = lender.map_err(|e| format!("mapped: {}", e));
@@ -698,7 +698,7 @@ fn fallible_map_err_try_fold_ok() {
 }
 
 #[test]
-fn fallible_map_err_try_fold_inner_error() {
+fn test_fallible_map_err_try_fold_inner_error() {
     let lender = ErrorAtLender::new(vec![1, 2, 3, 4], 2);
     let mut mapped = lender.map_err(|e| format!("mapped: {}", e));
     let result: Result<Result<i32, ()>, _> = mapped.try_fold(0, |acc, x| Ok(Ok(acc + *x)));
@@ -706,7 +706,7 @@ fn fallible_map_err_try_fold_inner_error() {
 }
 
 #[test]
-fn fallible_map_err_try_fold_closure_error() {
+fn test_fallible_map_err_try_fold_closure_error() {
     let lender = ErrorAtLender::new(vec![1, 2, 3, 4], 100);
     let mut mapped = lender.map_err(|e| format!("mapped: {}", e));
     let result: Result<Result<i32, String>, _> = mapped.try_fold(0, |acc, x| {
@@ -721,7 +721,7 @@ fn fallible_map_err_try_fold_closure_error() {
 }
 
 #[test]
-fn fallible_map_err_try_fold_break() {
+fn test_fallible_map_err_try_fold_break() {
     let lender = ErrorAtLender::new(vec![1, 2, 3, 4], 100);
     let mut mapped = lender.map_err(|e| format!("mapped: {}", e));
     let result: Result<Result<i32, i32>, _> = mapped.try_fold(0, |acc, x| {
@@ -736,7 +736,7 @@ fn fallible_map_err_try_fold_break() {
 }
 
 #[test]
-fn fallible_map_err_fold_ok() {
+fn test_fallible_map_err_fold_ok() {
     let lender = ErrorAtLender::new(vec![1, 2, 3], 100);
     let result = lender
         .map_err(|e| format!("mapped: {}", e))
@@ -745,7 +745,7 @@ fn fallible_map_err_fold_ok() {
 }
 
 #[test]
-fn fallible_map_err_fold_inner_error() {
+fn test_fallible_map_err_fold_inner_error() {
     let lender = ErrorAtLender::new(vec![1, 2, 3, 4], 2);
     let result = lender
         .map_err(|e| format!("mapped: {}", e))
@@ -754,7 +754,7 @@ fn fallible_map_err_fold_inner_error() {
 }
 
 #[test]
-fn fallible_map_err_fold_closure_error() {
+fn test_fallible_map_err_fold_closure_error() {
     let lender = ErrorAtLender::new(vec![1, 2, 3, 4], 100);
     let result = lender
         .map_err(|e| format!("mapped: {}", e))
@@ -769,7 +769,7 @@ fn fallible_map_err_fold_closure_error() {
 }
 
 #[test]
-fn fallible_map_err_try_rfold_ok() {
+fn test_fallible_map_err_try_rfold_ok() {
     let lender = VecFallibleLender::new(vec![1, 2, 3]);
     let mut mapped = lender.map_err(|e: std::convert::Infallible| match e {});
     let result: Result<Result<Vec<i32>, ()>, _> = mapped.try_rfold(Vec::new(), |mut acc, x| {
@@ -780,7 +780,7 @@ fn fallible_map_err_try_rfold_ok() {
 }
 
 #[test]
-fn fallible_map_err_try_rfold_closure_error() {
+fn test_fallible_map_err_try_rfold_closure_error() {
     let lender = VecFallibleLender::new(vec![1, 2, 3, 4, 5]);
     let mut mapped = lender.map_err(|e: std::convert::Infallible| match e {});
     let result: Result<Result<i32, String>, _> = mapped.try_rfold(0, |acc, x| {
@@ -794,7 +794,7 @@ fn fallible_map_err_try_rfold_closure_error() {
 }
 
 #[test]
-fn fallible_map_err_try_rfold_break() {
+fn test_fallible_map_err_try_rfold_break() {
     let lender = VecFallibleLender::new(vec![1, 2, 3, 4, 5]);
     let mut mapped = lender.map_err(|e: std::convert::Infallible| match e {});
     let result: Result<Result<i32, i32>, _> = mapped.try_rfold(0, |acc, x| {
@@ -810,7 +810,7 @@ fn fallible_map_err_try_rfold_break() {
 }
 
 #[test]
-fn fallible_map_err_try_rfold_inner_error() {
+fn test_fallible_map_err_try_rfold_inner_error() {
     // Convert wrapping a lender with an Err item produces an error
     // during try_rfold, which MapErr must map through its closure.
     let data: Vec<Result<i32, String>> = vec![Ok(1), Err("inner error".into()), Ok(3)];
@@ -826,7 +826,7 @@ fn fallible_map_err_try_rfold_inner_error() {
 }
 
 #[test]
-fn fallible_map_err_rfold_ok() {
+fn test_fallible_map_err_rfold_ok() {
     let lender = VecFallibleLender::new(vec![1, 2, 3]);
     let result = lender
         .map_err(|e: std::convert::Infallible| match e {})
@@ -838,7 +838,7 @@ fn fallible_map_err_rfold_ok() {
 }
 
 #[test]
-fn fallible_map_err_rfold_closure_error() {
+fn test_fallible_map_err_rfold_closure_error() {
     let lender = VecFallibleLender::new(vec![1, 2, 3, 4, 5]);
     let result = lender
         .map_err(|e: std::convert::Infallible| match e {})
@@ -853,7 +853,7 @@ fn fallible_map_err_rfold_closure_error() {
 }
 
 #[test]
-fn fallible_map_err_rfold_inner_error() {
+fn test_fallible_map_err_rfold_inner_error() {
     // Same scenario but for rfold (not try_rfold).
     let data: Vec<Result<i32, String>> = vec![Ok(1), Err("inner error".into()), Ok(3)];
     let convert = data.into_iter().into_lender().convert::<String>();
@@ -867,21 +867,21 @@ fn fallible_map_err_rfold_inner_error() {
 }
 
 #[test]
-fn fallible_map_err_into_inner() {
+fn test_fallible_map_err_into_inner() {
     let lender = ErrorAtLender::new(vec![1, 2, 3], 100);
     let mapped = lender.map_err(|e| format!("mapped: {}", e));
     let _inner = mapped.into_inner();
 }
 
 #[test]
-fn fallible_map_err_into_parts() {
+fn test_fallible_map_err_into_parts() {
     let lender = ErrorAtLender::new(vec![1, 2, 3], 100);
     let mapped = lender.map_err(|e| format!("mapped: {}", e));
     let (_inner, _f) = mapped.into_parts();
 }
 
 #[test]
-fn fallible_map_err_debug() {
+fn test_fallible_map_err_debug() {
     let lender = ErrorAtLender::new(vec![1, 2, 3], 100);
     let mapped = lender.map_err(|e| format!("mapped: {}", e));
     let debug_str = format!("{:?}", mapped);
@@ -889,7 +889,7 @@ fn fallible_map_err_debug() {
 }
 
 #[test]
-fn fallible_map_err_next_ok() {
+fn test_fallible_map_err_next_ok() {
     let lender = VecFallibleLender::new(vec![1, 2, 3]);
     let mut mapped = lender.map_err(|e: std::convert::Infallible| match e {});
     assert_eq!(mapped.next().unwrap(), Some(&1));
@@ -899,7 +899,7 @@ fn fallible_map_err_next_ok() {
 }
 
 #[test]
-fn fallible_map_err_next_error() {
+fn test_fallible_map_err_next_error() {
     let lender = ErrorAtLender::new(vec![1, 2, 3], 1);
     let mut mapped = lender.map_err(|e| format!("mapped: {}", e));
     assert_eq!(mapped.next().unwrap(), Some(&1));
@@ -907,49 +907,49 @@ fn fallible_map_err_next_error() {
 }
 
 #[test]
-fn fallible_map_err_count() {
+fn test_fallible_map_err_count() {
     let lender = ErrorAtLender::new(vec![1, 2, 3], 100);
     let count = lender.map_err(|e| format!("mapped: {}", e)).count();
     assert_eq!(count.unwrap(), 3);
 }
 
 #[test]
-fn fallible_map_err_count_error() {
+fn test_fallible_map_err_count_error() {
     let lender = ErrorAtLender::new(vec![1, 2, 3], 1);
     let count = lender.map_err(|e| format!("mapped: {}", e)).count();
     assert!(count.is_err());
 }
 
 #[test]
-fn fallible_map_err_nth() {
+fn test_fallible_map_err_nth() {
     let lender = ErrorAtLender::new(vec![1, 2, 3, 4, 5], 100);
     let mut mapped = lender.map_err(|e| format!("mapped: {}", e));
     assert_eq!(mapped.nth(2).unwrap(), Some(&3));
 }
 
 #[test]
-fn fallible_map_err_nth_error() {
+fn test_fallible_map_err_nth_error() {
     let lender = ErrorAtLender::new(vec![1, 2, 3, 4, 5], 1);
     let mut mapped = lender.map_err(|e| format!("mapped: {}", e));
     assert!(mapped.nth(2).is_err());
 }
 
 #[test]
-fn fallible_map_err_last() {
+fn test_fallible_map_err_last() {
     let lender = ErrorAtLender::new(vec![1, 2, 3], 100);
     let mut mapped = lender.map_err(|e| format!("mapped: {}", e));
     assert_eq!(mapped.last().unwrap(), Some(&3));
 }
 
 #[test]
-fn fallible_map_err_last_error() {
+fn test_fallible_map_err_last_error() {
     let lender = ErrorAtLender::new(vec![1, 2, 3], 1);
     let mut mapped = lender.map_err(|e| format!("mapped: {}", e));
     assert!(mapped.last().is_err());
 }
 
 #[test]
-fn fallible_map_err_advance_by() {
+fn test_fallible_map_err_advance_by() {
     let lender = ErrorAtLender::new(vec![1, 2, 3, 4, 5], 100);
     let mut mapped = lender.map_err(|e| format!("mapped: {}", e));
     assert_eq!(mapped.advance_by(2), Ok(Ok(())));
@@ -957,14 +957,14 @@ fn fallible_map_err_advance_by() {
 }
 
 #[test]
-fn fallible_map_err_advance_by_error() {
+fn test_fallible_map_err_advance_by_error() {
     let lender = ErrorAtLender::new(vec![1, 2, 3, 4, 5], 1);
     let mut mapped = lender.map_err(|e| format!("mapped: {}", e));
     assert!(mapped.advance_by(3).is_err());
 }
 
 #[test]
-fn fallible_map_err_next_back() {
+fn test_fallible_map_err_next_back() {
     let lender = VecFallibleLender::new(vec![1, 2, 3]);
     let mut mapped = lender.map_err(|e: std::convert::Infallible| match e {});
     assert_eq!(mapped.next_back().unwrap(), Some(&3));
@@ -974,14 +974,14 @@ fn fallible_map_err_next_back() {
 }
 
 #[test]
-fn fallible_map_err_nth_back() {
+fn test_fallible_map_err_nth_back() {
     let lender = VecFallibleLender::new(vec![1, 2, 3, 4, 5]);
     let mut mapped = lender.map_err(|e: std::convert::Infallible| match e {});
     assert_eq!(mapped.nth_back(2).unwrap(), Some(&3));
 }
 
 #[test]
-fn fallible_map_err_advance_back_by() {
+fn test_fallible_map_err_advance_back_by() {
     let lender = VecFallibleLender::new(vec![1, 2, 3, 4, 5]);
     let mut mapped = lender.map_err(|e: std::convert::Infallible| match e {});
     assert_eq!(mapped.advance_back_by(2), Ok(Ok(())));
@@ -989,14 +989,14 @@ fn fallible_map_err_advance_back_by() {
 }
 
 #[test]
-fn fallible_map_err_size_hint() {
+fn test_fallible_map_err_size_hint() {
     let lender = VecFallibleLender::new(vec![1, 2, 3]);
     let mapped = lender.map_err(|e: std::convert::Infallible| match e {});
     assert_eq!(mapped.size_hint(), (3, Some(3)));
 }
 
 #[test]
-fn fallible_map_err_len_is_empty() {
+fn test_fallible_map_err_len_is_empty() {
     use lender::ExactSizeFallibleLender;
     let lender = VecFallibleLender::new(vec![1, 2, 3]);
     let mapped = lender.map_err(|e: std::convert::Infallible| match e {});
@@ -1014,7 +1014,7 @@ fn fallible_map_err_len_is_empty() {
 // ============================================================================
 
 #[test]
-fn fallible_convert_try_fold_ok() {
+fn test_fallible_convert_try_fold_ok() {
     let data = vec![Ok(1), Ok(2), Ok(3)];
     let mut lender = data.into_iter().into_lender().convert::<&str>();
     let result: Result<Result<i32, ()>, _> = lender.try_fold(0, |acc, x| Ok(Ok(acc + x)));
@@ -1022,7 +1022,7 @@ fn fallible_convert_try_fold_ok() {
 }
 
 #[test]
-fn fallible_convert_try_fold_item_error() {
+fn test_fallible_convert_try_fold_item_error() {
     let data: Vec<Result<i32, &str>> = vec![Ok(1), Ok(2), Err("oops"), Ok(4)];
     let mut lender = data.into_iter().into_lender().convert::<&str>();
     let result: Result<Result<i32, ()>, _> = lender.try_fold(0, |acc, x| Ok(Ok(acc + x)));
@@ -1030,7 +1030,7 @@ fn fallible_convert_try_fold_item_error() {
 }
 
 #[test]
-fn fallible_convert_try_fold_closure_error() {
+fn test_fallible_convert_try_fold_closure_error() {
     let data: Vec<Result<i32, String>> = vec![Ok(1), Ok(2), Ok(3), Ok(4)];
     let mut lender = data.into_iter().into_lender().convert::<String>();
     let result: Result<Result<i32, String>, _> = lender.try_fold(0, |acc, x| {
@@ -1044,7 +1044,7 @@ fn fallible_convert_try_fold_closure_error() {
 }
 
 #[test]
-fn fallible_convert_try_fold_break() {
+fn test_fallible_convert_try_fold_break() {
     let data: Vec<Result<i32, &str>> = vec![Ok(1), Ok(2), Ok(3), Ok(4)];
     let mut lender = data.into_iter().into_lender().convert::<&str>();
     let result: Result<Result<i32, i32>, _> = lender.try_fold(0, |acc, x| {
@@ -1059,7 +1059,7 @@ fn fallible_convert_try_fold_break() {
 }
 
 #[test]
-fn fallible_convert_fold_ok() {
+fn test_fallible_convert_fold_ok() {
     let data = vec![Ok(1), Ok(2), Ok(3)];
     let result = data
         .into_iter()
@@ -1070,7 +1070,7 @@ fn fallible_convert_fold_ok() {
 }
 
 #[test]
-fn fallible_convert_fold_item_error() {
+fn test_fallible_convert_fold_item_error() {
     let data: Vec<Result<i32, &str>> = vec![Ok(1), Ok(2), Err("oops"), Ok(4)];
     let result = data
         .into_iter()
@@ -1081,7 +1081,7 @@ fn fallible_convert_fold_item_error() {
 }
 
 #[test]
-fn fallible_convert_fold_closure_error() {
+fn test_fallible_convert_fold_closure_error() {
     let data: Vec<Result<i32, String>> = vec![Ok(1), Ok(2), Ok(3), Ok(4)];
     let result = data
         .into_iter()
@@ -1098,7 +1098,7 @@ fn fallible_convert_fold_closure_error() {
 }
 
 #[test]
-fn fallible_convert_fold_empty() {
+fn test_fallible_convert_fold_empty() {
     let data: Vec<Result<i32, &str>> = vec![];
     let result = data
         .into_iter()
@@ -1109,7 +1109,7 @@ fn fallible_convert_fold_empty() {
 }
 
 #[test]
-fn fallible_convert_next_back() {
+fn test_fallible_convert_next_back() {
     let data = vec![Ok(1), Ok(2), Ok(3)];
     let mut lender = data.into_iter().into_lender().convert::<&str>();
     assert_eq!(lender.next_back().unwrap(), Some(3));
@@ -1119,14 +1119,14 @@ fn fallible_convert_next_back() {
 }
 
 #[test]
-fn fallible_convert_next_back_error() {
+fn test_fallible_convert_next_back_error() {
     let data: Vec<Result<i32, &str>> = vec![Ok(1), Ok(2), Err("back error")];
     let mut lender = data.into_iter().into_lender().convert::<&str>();
     assert_eq!(lender.next_back().unwrap_err(), "back error");
 }
 
 #[test]
-fn fallible_convert_next_back_exhausted() {
+fn test_fallible_convert_next_back_exhausted() {
     let data: Vec<Result<i32, &str>> = vec![Ok(1)];
     let mut lender = data.into_iter().into_lender().convert::<&str>();
     assert_eq!(lender.next_back().unwrap(), Some(1));
@@ -1134,7 +1134,7 @@ fn fallible_convert_next_back_exhausted() {
 }
 
 #[test]
-fn fallible_convert_try_rfold_ok() {
+fn test_fallible_convert_try_rfold_ok() {
     let data = vec![Ok(1), Ok(2), Ok(3)];
     let mut lender = data.into_iter().into_lender().convert::<&str>();
     let result: Result<Result<Vec<i32>, ()>, _> = lender.try_rfold(Vec::new(), |mut acc, x| {
@@ -1145,7 +1145,7 @@ fn fallible_convert_try_rfold_ok() {
 }
 
 #[test]
-fn fallible_convert_try_rfold_item_error() {
+fn test_fallible_convert_try_rfold_item_error() {
     let data: Vec<Result<i32, &str>> = vec![Ok(1), Err("oops"), Ok(3)];
     let mut lender = data.into_iter().into_lender().convert::<&str>();
     let result: Result<Result<Vec<i32>, ()>, _> = lender.try_rfold(Vec::new(), |mut acc, x| {
@@ -1157,7 +1157,7 @@ fn fallible_convert_try_rfold_item_error() {
 }
 
 #[test]
-fn fallible_convert_try_rfold_closure_error() {
+fn test_fallible_convert_try_rfold_closure_error() {
     let data: Vec<Result<i32, String>> = vec![Ok(1), Ok(2), Ok(3), Ok(4)];
     let mut lender = data.into_iter().into_lender().convert::<String>();
     let result: Result<Result<i32, String>, _> = lender.try_rfold(0, |acc, x| {
@@ -1172,7 +1172,7 @@ fn fallible_convert_try_rfold_closure_error() {
 }
 
 #[test]
-fn fallible_convert_try_rfold_break() {
+fn test_fallible_convert_try_rfold_break() {
     let data: Vec<Result<i32, &str>> = vec![Ok(1), Ok(2), Ok(3), Ok(4)];
     let mut lender = data.into_iter().into_lender().convert::<&str>();
     let result: Result<Result<i32, i32>, _> = lender.try_rfold(0, |acc, x| {
@@ -1188,7 +1188,7 @@ fn fallible_convert_try_rfold_break() {
 }
 
 #[test]
-fn fallible_convert_rfold_ok() {
+fn test_fallible_convert_rfold_ok() {
     let data = vec![Ok(1), Ok(2), Ok(3)];
     let result =
         data.into_iter()
@@ -1202,7 +1202,7 @@ fn fallible_convert_rfold_ok() {
 }
 
 #[test]
-fn fallible_convert_rfold_item_error() {
+fn test_fallible_convert_rfold_item_error() {
     let data: Vec<Result<i32, &str>> = vec![Ok(1), Err("oops"), Ok(3)];
     let result =
         data.into_iter()
@@ -1216,7 +1216,7 @@ fn fallible_convert_rfold_item_error() {
 }
 
 #[test]
-fn fallible_convert_rfold_closure_error() {
+fn test_fallible_convert_rfold_closure_error() {
     let data: Vec<Result<i32, String>> = vec![Ok(1), Ok(2), Ok(3)];
     let result = data
         .into_iter()
@@ -1233,7 +1233,7 @@ fn fallible_convert_rfold_closure_error() {
 }
 
 #[test]
-fn fallible_convert_rfold_empty() {
+fn test_fallible_convert_rfold_empty() {
     let data: Vec<Result<i32, &str>> = vec![];
     let result = data
         .into_iter()
@@ -1244,7 +1244,7 @@ fn fallible_convert_rfold_empty() {
 }
 
 #[test]
-fn fallible_convert_into_inner() {
+fn test_fallible_convert_into_inner() {
     let data: Vec<Result<i32, &str>> = vec![Ok(1), Ok(2), Ok(3)];
     let lender = data.into_iter().into_lender().convert::<&str>();
     let mut inner = lender.into_inner();
@@ -1253,7 +1253,7 @@ fn fallible_convert_into_inner() {
 }
 
 #[test]
-fn fallible_convert_exact_size() {
+fn test_fallible_convert_exact_size() {
     use lender::ExactSizeFallibleLender;
     let data: Vec<Result<i32, &str>> = vec![Ok(1), Ok(2), Ok(3)];
     let lender = data.into_iter().into_lender().convert::<&str>();
@@ -1262,7 +1262,7 @@ fn fallible_convert_exact_size() {
 }
 
 #[test]
-fn fallible_convert_exact_size_empty() {
+fn test_fallible_convert_exact_size_empty() {
     use lender::ExactSizeFallibleLender;
     let data: Vec<Result<i32, &str>> = vec![];
     let lender = data.into_iter().into_lender().convert::<&str>();
@@ -1271,7 +1271,7 @@ fn fallible_convert_exact_size_empty() {
 }
 
 #[test]
-fn fallible_convert_size_hint() {
+fn test_fallible_convert_size_hint() {
     let data: Vec<Result<i32, &str>> = vec![Ok(1), Ok(2), Ok(3)];
     let lender = data.into_iter().into_lender().convert::<&str>();
     assert_eq!(lender.size_hint(), (3, Some(3)));

@@ -8,7 +8,7 @@ use common::*;
 // ============================================================================
 
 #[test]
-fn fallible_lender_next_chunk() {
+fn test_fallible_lender_next_chunk() {
     use lender::FallibleLender;
 
     let mut fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
@@ -19,7 +19,7 @@ fn fallible_lender_next_chunk() {
 }
 
 #[test]
-fn fallible_lender_count() {
+fn test_fallible_lender_count() {
     use lender::FallibleLender;
 
     let fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
@@ -27,7 +27,7 @@ fn fallible_lender_count() {
 }
 
 #[test]
-fn fallible_lender_last() {
+fn test_fallible_lender_last() {
     use lender::FallibleLender;
 
     let mut fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3]).into_fallible();
@@ -35,7 +35,7 @@ fn fallible_lender_last() {
 }
 
 #[test]
-fn fallible_lender_advance_by() {
+fn test_fallible_lender_advance_by() {
     use lender::FallibleLender;
 
     let mut fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
@@ -44,7 +44,7 @@ fn fallible_lender_advance_by() {
 }
 
 #[test]
-fn fallible_lender_nth() {
+fn test_fallible_lender_nth() {
     use lender::FallibleLender;
 
     let mut fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
@@ -52,7 +52,7 @@ fn fallible_lender_nth() {
 }
 
 #[test]
-fn fallible_lender_step_by() {
+fn test_fallible_lender_step_by() {
     use lender::FallibleLender;
 
     let fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
@@ -64,7 +64,7 @@ fn fallible_lender_step_by() {
 }
 
 #[test]
-fn fallible_lender_chain() {
+fn test_fallible_lender_chain() {
     use lender::FallibleLender;
 
     let fallible1: lender::IntoFallible<_> = VecLender::new(vec![1, 2]).into_fallible();
@@ -78,7 +78,7 @@ fn fallible_lender_chain() {
 }
 
 #[test]
-fn fallible_lender_zip() {
+fn test_fallible_lender_zip() {
     use lender::FallibleLender;
 
     let fallible1: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3]).into_fallible();
@@ -91,7 +91,7 @@ fn fallible_lender_zip() {
 }
 
 #[test]
-fn fallible_lender_map() {
+fn test_fallible_lender_map() {
     use lender::FallibleLender;
 
     let fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3]).into_fallible();
@@ -106,7 +106,7 @@ fn fallible_lender_map() {
 }
 
 #[test]
-fn fallible_lender_filter() {
+fn test_fallible_lender_filter() {
     use lender::FallibleLender;
 
     let fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3, 4, 5, 6]).into_fallible();
@@ -118,7 +118,7 @@ fn fallible_lender_filter() {
 }
 
 #[test]
-fn fallible_lender_enumerate() {
+fn test_fallible_lender_enumerate() {
     use lender::FallibleLender;
 
     let fallible: lender::IntoFallible<_> = VecLender::new(vec![10, 20, 30]).into_fallible();
@@ -130,7 +130,7 @@ fn fallible_lender_enumerate() {
 }
 
 #[test]
-fn fallible_lender_skip() {
+fn test_fallible_lender_skip() {
     use lender::FallibleLender;
 
     let fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
@@ -142,7 +142,7 @@ fn fallible_lender_skip() {
 }
 
 #[test]
-fn fallible_lender_take() {
+fn test_fallible_lender_take() {
     use lender::FallibleLender;
 
     let fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
@@ -154,7 +154,7 @@ fn fallible_lender_take() {
 }
 
 #[test]
-fn fallible_lender_skip_while() {
+fn test_fallible_lender_skip_while() {
     use lender::FallibleLender;
 
     let fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
@@ -166,7 +166,7 @@ fn fallible_lender_skip_while() {
 }
 
 #[test]
-fn fallible_lender_take_while() {
+fn test_fallible_lender_take_while() {
     use lender::FallibleLender;
 
     let fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
@@ -178,7 +178,7 @@ fn fallible_lender_take_while() {
 }
 
 #[test]
-fn fallible_lender_inspect() {
+fn test_fallible_lender_inspect() {
     use lender::FallibleLender;
 
     let mut inspected = Vec::new();
@@ -194,7 +194,7 @@ fn fallible_lender_inspect() {
 }
 
 #[test]
-fn fallible_lender_fuse() {
+fn test_fallible_lender_fuse() {
     use lender::FallibleLender;
 
     let fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2]).into_fallible();
@@ -206,7 +206,7 @@ fn fallible_lender_fuse() {
 }
 
 #[test]
-fn fallible_lender_fold() {
+fn test_fallible_lender_fold() {
     use lender::FallibleLender;
 
     let fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
@@ -215,7 +215,7 @@ fn fallible_lender_fold() {
 }
 
 #[test]
-fn fallible_lender_for_each() {
+fn test_fallible_lender_for_each() {
     use lender::FallibleLender;
 
     let mut collected = Vec::new();
@@ -229,7 +229,7 @@ fn fallible_lender_for_each() {
 }
 
 #[test]
-fn fallible_lender_all() {
+fn test_fallible_lender_all() {
     use lender::FallibleLender;
 
     let mut fallible: lender::IntoFallible<_> = VecLender::new(vec![2, 4, 6]).into_fallible();
@@ -240,7 +240,7 @@ fn fallible_lender_all() {
 }
 
 #[test]
-fn fallible_lender_any() {
+fn test_fallible_lender_any() {
     use lender::FallibleLender;
 
     let mut fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 3, 5]).into_fallible();
@@ -251,7 +251,7 @@ fn fallible_lender_any() {
 }
 
 #[test]
-fn fallible_lender_find() {
+fn test_fallible_lender_find() {
     use lender::FallibleLender;
 
     let mut fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
@@ -259,7 +259,7 @@ fn fallible_lender_find() {
 }
 
 #[test]
-fn fallible_lender_position() {
+fn test_fallible_lender_position() {
     use lender::FallibleLender;
 
     let mut fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
@@ -267,7 +267,7 @@ fn fallible_lender_position() {
 }
 
 #[test]
-fn fallible_lender_rposition() {
+fn test_fallible_lender_rposition() {
     use lender::FallibleLender;
 
     let mut fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
@@ -275,7 +275,7 @@ fn fallible_lender_rposition() {
 }
 
 #[test]
-fn lender_convert() {
+fn test_lender_convert() {
     use lender::FallibleLender;
 
     let data = vec![Ok(1), Ok(2), Err("oops")];
@@ -286,7 +286,7 @@ fn lender_convert() {
 }
 
 #[test]
-fn fallible_lender_chunky() {
+fn test_fallible_lender_chunky() {
     use lender::FallibleLender;
 
     let fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3, 4, 5, 6]).into_fallible();
@@ -299,7 +299,7 @@ fn fallible_lender_chunky() {
 }
 
 #[test]
-fn fallible_lender_rev() {
+fn test_fallible_lender_rev() {
     use lender::FallibleLender;
 
     let fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3]).into_fallible();
@@ -315,7 +315,7 @@ fn fallible_lender_rev() {
 // ============================================================================
 
 #[test]
-fn double_ended_fallible_advance_back_by() {
+fn test_double_ended_fallible_advance_back_by() {
     use lender::DoubleEndedFallibleLender;
 
     let mut fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
@@ -324,7 +324,7 @@ fn double_ended_fallible_advance_back_by() {
 }
 
 #[test]
-fn double_ended_fallible_nth_back() {
+fn test_double_ended_fallible_nth_back() {
     use lender::DoubleEndedFallibleLender;
 
     let mut fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
@@ -332,7 +332,7 @@ fn double_ended_fallible_nth_back() {
 }
 
 #[test]
-fn double_ended_fallible_try_rfold() {
+fn test_double_ended_fallible_try_rfold() {
     use lender::DoubleEndedFallibleLender;
 
     let mut fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3]).into_fallible();
@@ -342,7 +342,7 @@ fn double_ended_fallible_try_rfold() {
 }
 
 #[test]
-fn double_ended_fallible_rfold() {
+fn test_double_ended_fallible_rfold() {
     use lender::DoubleEndedFallibleLender;
 
     let fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3]).into_fallible();
@@ -359,7 +359,7 @@ fn double_ended_fallible_rfold() {
 // ============================================================================
 
 #[test]
-fn fallible_peekable_nth_zero_with_peeked() {
+fn test_fallible_peekable_nth_zero_with_peeked() {
     use lender::FallibleLender;
 
     let fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3]).into_fallible();
@@ -373,7 +373,7 @@ fn fallible_peekable_nth_zero_with_peeked() {
 
 // FalliblePeekable::last with peeked value
 #[test]
-fn fallible_peekable_last_with_peeked_only() {
+fn test_fallible_peekable_last_with_peeked_only() {
     use lender::FallibleLender;
 
     let fallible: lender::IntoFallible<_> = VecLender::new(vec![1]).into_fallible();
@@ -386,7 +386,7 @@ fn fallible_peekable_last_with_peeked_only() {
 
 // FalliblePeekable::next_back with peeked value when underlying lender is empty
 #[test]
-fn fallible_peekable_next_back_with_peeked_exhausted() {
+fn test_fallible_peekable_next_back_with_peeked_exhausted() {
     use lender::DoubleEndedFallibleLender;
 
     let fallible: lender::IntoFallible<_> = VecLender::new(vec![1]).into_fallible();
@@ -399,7 +399,7 @@ fn fallible_peekable_next_back_with_peeked_exhausted() {
 
 // FalliblePeekable::peek_mut (covers unsafe transmute in peek_mut)
 #[test]
-fn fallible_peekable_peek_mut() {
+fn test_fallible_peekable_peek_mut() {
     use lender::FallibleLender;
 
     let fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3]).into_fallible();
@@ -411,7 +411,7 @@ fn fallible_peekable_peek_mut() {
 
 // FalliblePeekable::next_if (covers unsafe transmute in next_if)
 #[test]
-fn fallible_peekable_next_if_match() {
+fn test_fallible_peekable_next_if_match() {
     use lender::FallibleLender;
 
     let fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3]).into_fallible();
@@ -423,7 +423,7 @@ fn fallible_peekable_next_if_match() {
 }
 
 #[test]
-fn fallible_peekable_next_if_no_match() {
+fn test_fallible_peekable_next_if_no_match() {
     use lender::FallibleLender;
 
     let fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3]).into_fallible();
@@ -435,7 +435,7 @@ fn fallible_peekable_next_if_no_match() {
 }
 
 #[test]
-fn fallible_peekable_rfold_with_peeked() {
+fn test_fallible_peekable_rfold_with_peeked() {
     use lender::DoubleEndedFallibleLender;
     use lender::FallibleLender;
 
@@ -451,7 +451,7 @@ fn fallible_peekable_rfold_with_peeked() {
 }
 
 #[test]
-fn fallible_peekable_try_rfold_with_peeked_complete() {
+fn test_fallible_peekable_try_rfold_with_peeked_complete() {
     use lender::DoubleEndedFallibleLender;
     use lender::FallibleLender;
 
@@ -470,7 +470,7 @@ fn fallible_peekable_try_rfold_with_peeked_complete() {
 // Covers the ControlFlow::Break path in fallible Peekable::try_rfold
 // where the peeked value is stored back.
 #[test]
-fn fallible_peekable_try_rfold_with_peeked_break() {
+fn test_fallible_peekable_try_rfold_with_peeked_break() {
     use lender::DoubleEndedFallibleLender;
     use lender::FallibleLender;
 
@@ -502,7 +502,7 @@ fn fallible_peekable_try_rfold_with_peeked_break() {
 // it from working with .iter(). We test with owned values via into_iter().into_lender().into_fallible()
 // which yields i32 (Copy type with no lifetime issues).
 #[test]
-fn iter_fallible_iterator_next() {
+fn test_iter_fallible_iterator_next() {
     use fallible_iterator::FallibleIterator;
 
     let fallible = vec![1, 2, 3].into_iter().into_lender().into_fallible();
@@ -515,7 +515,7 @@ fn iter_fallible_iterator_next() {
 
 // Iter adapter DoubleEndedFallibleIterator next_back (covers unsafe transmute in next_back)
 #[test]
-fn iter_double_ended_fallible_iterator_next_back() {
+fn test_iter_double_ended_fallible_iterator_next_back() {
     use fallible_iterator::DoubleEndedFallibleIterator;
 
     let fallible = vec![1, 2, 3].into_iter().into_lender().into_fallible();
@@ -536,7 +536,7 @@ fn iter_double_ended_fallible_iterator_next_back() {
 
 // Cycle fallible next (covers unsafe reborrow in next)
 #[test]
-fn cycle_fallible_next_coverage() {
+fn test_cycle_fallible_next_coverage() {
     use lender::FallibleLender;
 
     let fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2]).into_fallible();
@@ -555,7 +555,7 @@ fn cycle_fallible_next_coverage() {
 // ============================================================================
 
 #[test]
-fn fallible_lender_nth_past_end() {
+fn test_fallible_lender_nth_past_end() {
     use core::num::NonZeroUsize;
     use lender::{FallibleLend, FallibleLender, FallibleLending, FusedFallibleLender};
 
@@ -591,7 +591,7 @@ fn fallible_lender_nth_past_end() {
 }
 
 #[test]
-fn double_ended_fallible_nth_back_past_end() {
+fn test_double_ended_fallible_nth_back_past_end() {
     use core::num::NonZeroUsize;
     use lender::{
         DoubleEndedFallibleLender, FallibleLend, FallibleLender, FallibleLending,
@@ -640,7 +640,7 @@ fn double_ended_fallible_nth_back_past_end() {
 // ============================================================================
 
 #[test]
-fn fallible_lender_cmp() {
+fn test_fallible_lender_cmp() {
     use core::cmp::Ordering;
     use lender::FallibleLender;
 
@@ -662,7 +662,7 @@ fn fallible_lender_cmp() {
 }
 
 #[test]
-fn fallible_lender_partial_cmp() {
+fn test_fallible_lender_partial_cmp() {
     use core::cmp::Ordering;
     use lender::FallibleLender;
 
@@ -682,7 +682,7 @@ fn fallible_lender_partial_cmp() {
 }
 
 #[test]
-fn fallible_lender_eq() {
+fn test_fallible_lender_eq() {
     use lender::FallibleLender;
 
     let a = [1, 2, 3].into_iter().into_lender().into_fallible();
@@ -699,7 +699,7 @@ fn fallible_lender_eq() {
 }
 
 #[test]
-fn fallible_lender_ne() {
+fn test_fallible_lender_ne() {
     use lender::FallibleLender;
 
     let a = [1, 2, 3].into_iter().into_lender().into_fallible();
@@ -712,7 +712,7 @@ fn fallible_lender_ne() {
 }
 
 #[test]
-fn fallible_lender_lt() {
+fn test_fallible_lender_lt() {
     use lender::FallibleLender;
 
     let a = [1, 2].into_iter().into_lender().into_fallible();
@@ -729,7 +729,7 @@ fn fallible_lender_lt() {
 }
 
 #[test]
-fn fallible_lender_le() {
+fn test_fallible_lender_le() {
     use lender::FallibleLender;
 
     let a = [1, 2].into_iter().into_lender().into_fallible();
@@ -746,7 +746,7 @@ fn fallible_lender_le() {
 }
 
 #[test]
-fn fallible_lender_gt() {
+fn test_fallible_lender_gt() {
     use lender::FallibleLender;
 
     let a = [1, 3].into_iter().into_lender().into_fallible();
@@ -759,7 +759,7 @@ fn fallible_lender_gt() {
 }
 
 #[test]
-fn fallible_lender_ge() {
+fn test_fallible_lender_ge() {
     use lender::FallibleLender;
 
     let a = [1, 3].into_iter().into_lender().into_fallible();
@@ -780,7 +780,7 @@ fn fallible_lender_ge() {
 // ============================================================================
 
 #[test]
-fn fallible_lender_reduce() {
+fn test_fallible_lender_reduce() {
     use lender::FallibleLender;
 
     let result = vec![1, 2, 3, 4]
@@ -799,7 +799,7 @@ fn fallible_lender_reduce() {
 }
 
 #[test]
-fn fallible_lender_max() {
+fn test_fallible_lender_max() {
     use lender::FallibleLender;
 
     assert_eq!(
@@ -821,7 +821,7 @@ fn fallible_lender_max() {
 }
 
 #[test]
-fn fallible_lender_min() {
+fn test_fallible_lender_min() {
     use lender::FallibleLender;
 
     assert_eq!(
@@ -835,7 +835,7 @@ fn fallible_lender_min() {
 }
 
 #[test]
-fn fallible_lender_max_by() {
+fn test_fallible_lender_max_by() {
     use lender::FallibleLender;
 
     assert_eq!(
@@ -849,7 +849,7 @@ fn fallible_lender_max_by() {
 }
 
 #[test]
-fn fallible_lender_min_by() {
+fn test_fallible_lender_min_by() {
     use lender::FallibleLender;
 
     assert_eq!(
@@ -863,7 +863,7 @@ fn fallible_lender_min_by() {
 }
 
 #[test]
-fn fallible_lender_max_by_key() {
+fn test_fallible_lender_max_by_key() {
     use lender::FallibleLender;
 
     assert_eq!(
@@ -877,7 +877,7 @@ fn fallible_lender_max_by_key() {
 }
 
 #[test]
-fn fallible_lender_min_by_key() {
+fn test_fallible_lender_min_by_key() {
     use lender::FallibleLender;
 
     assert_eq!(
@@ -891,7 +891,7 @@ fn fallible_lender_min_by_key() {
 }
 
 #[test]
-fn fallible_lender_is_sorted() {
+fn test_fallible_lender_is_sorted() {
     use lender::FallibleLender;
 
     assert_eq!(
@@ -913,7 +913,7 @@ fn fallible_lender_is_sorted() {
 }
 
 #[test]
-fn fallible_lender_is_sorted_by() {
+fn test_fallible_lender_is_sorted_by() {
     use lender::FallibleLender;
 
     assert_eq!(
@@ -927,7 +927,7 @@ fn fallible_lender_is_sorted_by() {
 }
 
 #[test]
-fn fallible_lender_is_sorted_by_key() {
+fn test_fallible_lender_is_sorted_by_key() {
     use lender::FallibleLender;
 
     assert_eq!(
@@ -945,7 +945,7 @@ fn fallible_lender_is_sorted_by_key() {
 // ============================================================================
 
 #[test]
-fn fallible_lender_by_ref() {
+fn test_fallible_lender_by_ref() {
     use lender::FallibleLender;
 
     let mut fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3, 4, 5]).into_fallible();
@@ -969,7 +969,7 @@ fn fallible_lender_by_ref() {
 // ============================================================================
 
 #[test]
-fn fallible_lender_find_map() {
+fn test_fallible_lender_find_map() {
     use lender::FallibleLender;
 
     let mut fallible = VecFallibleLender::new(vec![1, 2, 3, 4, 5]);
@@ -996,7 +996,7 @@ fn fallible_lender_find_map() {
 // ============================================================================
 
 #[test]
-fn fallible_lender_sum() {
+fn test_fallible_lender_sum() {
     use lender::{FallibleLender, SumFallibleLender};
 
     struct I32Sum(i32);
@@ -1019,7 +1019,7 @@ fn fallible_lender_sum() {
 // ============================================================================
 
 #[test]
-fn fallible_lender_product() {
+fn test_fallible_lender_product() {
     use lender::{FallibleLender, ProductFallibleLender};
 
     struct I32Product(i32);
@@ -1042,7 +1042,7 @@ fn fallible_lender_product() {
 // ============================================================================
 
 #[test]
-fn fallible_lender_unzip() {
+fn test_fallible_lender_unzip() {
     use fallible_iterator::FallibleIterator;
     use lender::FallibleLender;
 

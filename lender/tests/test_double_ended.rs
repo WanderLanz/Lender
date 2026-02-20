@@ -7,7 +7,7 @@ use common::*;
 // ============================================================================
 
 #[test]
-fn double_ended_lender_next_back() {
+fn test_double_ended_lender_next_back() {
     let mut lender = VecLender::new(vec![1, 2, 3]);
     assert_eq!(lender.next_back(), Some(&3));
     assert_eq!(lender.next_back(), Some(&2));
@@ -16,7 +16,7 @@ fn double_ended_lender_next_back() {
 }
 
 #[test]
-fn double_ended_lender_advance_back_by() {
+fn test_double_ended_lender_advance_back_by() {
     use core::num::NonZeroUsize;
 
     let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]);
@@ -33,7 +33,7 @@ fn double_ended_lender_advance_back_by() {
 }
 
 #[test]
-fn double_ended_lender_nth_back() {
+fn test_double_ended_lender_nth_back() {
     let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]);
 
     // nth_back(1) skips 5 and returns 4
@@ -43,14 +43,14 @@ fn double_ended_lender_nth_back() {
 }
 
 #[test]
-fn double_ended_lender_rfind() {
+fn test_double_ended_lender_rfind() {
     let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]);
     // rfind searches from back
     assert_eq!(lender.rfind(|&&x| x < 4), Some(&3));
 }
 
 #[test]
-fn double_ended_lender_rposition() {
+fn test_double_ended_lender_rposition() {
     let mut lender = VecLender::new(vec![1, 2, 3, 2, 1]);
     // rposition searches from the end but returns a front-based index
     // Element 2 appears at indices 1 and 3; searching from the end finds index 3 first
@@ -62,7 +62,7 @@ fn double_ended_lender_rposition() {
 // ============================================================================
 
 #[test]
-fn double_ended_try_rfold() {
+fn test_double_ended_try_rfold() {
     use lender::DoubleEndedLender;
 
     let result: Option<i32> = VecLender::new(vec![1, 2, 3]).try_rfold(0, |acc, x| Some(acc + *x));
@@ -70,7 +70,7 @@ fn double_ended_try_rfold() {
 }
 
 #[test]
-fn double_ended_rfold() {
+fn test_double_ended_rfold() {
     use lender::DoubleEndedLender;
 
     let values: Vec<i32> = VecLender::new(vec![1, 2, 3]).rfold(Vec::new(), |mut acc, &x| {
@@ -85,21 +85,21 @@ fn double_ended_rfold() {
 // ============================================================================
 
 #[test]
-fn double_ended_empty() {
+fn test_double_ended_empty() {
     let mut lender = VecLender::new(vec![]);
     assert_eq!(lender.next_back(), None);
     assert_eq!(lender.nth_back(0), None);
 }
 
 #[test]
-fn double_ended_single_element() {
+fn test_double_ended_single_element() {
     let mut lender = VecLender::new(vec![42]);
     assert_eq!(lender.next_back(), Some(&42));
     assert_eq!(lender.next_back(), None);
 }
 
 #[test]
-fn double_ended_mixed_iteration() {
+fn test_double_ended_mixed_iteration() {
     let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]);
     assert_eq!(lender.next(), Some(&1));
     assert_eq!(lender.next_back(), Some(&5));
@@ -115,7 +115,7 @@ fn double_ended_mixed_iteration() {
 // ============================================================================
 
 #[test]
-fn double_ended_rev() {
+fn test_double_ended_rev() {
     let mut lender = VecLender::new(vec![1, 2, 3]).rev();
     assert_eq!(lender.next(), Some(&3));
     assert_eq!(lender.next(), Some(&2));
@@ -124,7 +124,7 @@ fn double_ended_rev() {
 }
 
 #[test]
-fn double_ended_rev_next_back() {
+fn test_double_ended_rev_next_back() {
     // Rev.next_back() should iterate forward through the original
     let mut lender = VecLender::new(vec![1, 2, 3]).rev();
     assert_eq!(lender.next_back(), Some(&1));
@@ -134,7 +134,7 @@ fn double_ended_rev_next_back() {
 }
 
 #[test]
-fn double_ended_chain() {
+fn test_double_ended_chain() {
     let a = VecLender::new(vec![1, 2]);
     let b = VecLender::new(vec![3, 4]);
     let mut lender = a.chain(b);
@@ -151,7 +151,7 @@ fn double_ended_chain() {
 }
 
 #[test]
-fn double_ended_take() {
+fn test_double_ended_take() {
     let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]).take(3);
     assert_eq!(lender.next_back(), Some(&3));
     assert_eq!(lender.next_back(), Some(&2));
@@ -160,7 +160,7 @@ fn double_ended_take() {
 }
 
 #[test]
-fn double_ended_skip() {
+fn test_double_ended_skip() {
     let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]).skip(2);
     // Skip 2 from front, so remaining is [3, 4, 5]
     assert_eq!(lender.next_back(), Some(&5));
@@ -170,7 +170,7 @@ fn double_ended_skip() {
 }
 
 #[test]
-fn double_ended_step_by() {
+fn test_double_ended_step_by() {
     // step_by(2) on [1,2,3,4,5,6] yields [1,3,5] forward
     // and [6,4,2] backward from non-stepped perspective,
     // but DoubleEndedLender requires ExactSizeLender
@@ -182,7 +182,7 @@ fn double_ended_step_by() {
 }
 
 #[test]
-fn double_ended_zip() {
+fn test_double_ended_zip() {
     let a = VecLender::new(vec![1, 2, 3]);
     let b = VecLender::new(vec![4, 5, 6]);
     let mut lender = lender::zip(a, b);
@@ -194,7 +194,7 @@ fn double_ended_zip() {
 }
 
 #[test]
-fn double_ended_enumerate() {
+fn test_double_ended_enumerate() {
     let mut lender = VecLender::new(vec![10, 20, 30]).enumerate();
     assert_eq!(lender.next_back(), Some((2, &30)));
     assert_eq!(lender.next(), Some((0, &10)));
@@ -203,7 +203,7 @@ fn double_ended_enumerate() {
 }
 
 #[test]
-fn double_ended_fuse() {
+fn test_double_ended_fuse() {
     let mut lender = VecLender::new(vec![1, 2, 3]).fuse();
     assert_eq!(lender.next_back(), Some(&3));
     assert_eq!(lender.next(), Some(&1));
@@ -213,7 +213,7 @@ fn double_ended_fuse() {
 }
 
 #[test]
-fn double_ended_peekable() {
+fn test_double_ended_peekable() {
     let mut lender = VecLender::new(vec![1, 2, 3]).peekable();
     // Peek first (from front)
     assert_eq!(lender.peek(), Some(&&1));
@@ -226,7 +226,7 @@ fn double_ended_peekable() {
 }
 
 #[test]
-fn double_ended_filter() {
+fn test_double_ended_filter() {
     let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]).filter(|&x| x % 2 == 0);
     // From back: 4, 2
     assert_eq!(lender.next_back(), Some(&4));
@@ -236,7 +236,7 @@ fn double_ended_filter() {
 }
 
 #[test]
-fn double_ended_filter_map() {
+fn test_double_ended_filter_map() {
     let mut lender = VecLender::new(vec![1, 2, 3, 4, 5]).filter_map(covar_mut!(
         for<'lend> |x: &'lend i32| -> Option<i32> {
             if *x % 2 == 0 { Some(*x * 10) } else { None }
@@ -248,7 +248,7 @@ fn double_ended_filter_map() {
 }
 
 #[test]
-fn double_ended_map() {
+fn test_double_ended_map() {
     let mut lender =
         VecLender::new(vec![1, 2, 3]).map(covar_mut!(for<'lend> |x: &'lend i32| -> i32 { *x * 2 }));
     assert_eq!(lender.next_back(), Some(6));
@@ -258,7 +258,7 @@ fn double_ended_map() {
 }
 
 #[test]
-fn double_ended_inspect() {
+fn test_double_ended_inspect() {
     let mut seen = Vec::new();
     let mut lender = VecLender::new(vec![1, 2, 3]).inspect(|&x| seen.push(*x));
     assert_eq!(lender.next_back(), Some(&3));
@@ -269,7 +269,7 @@ fn double_ended_inspect() {
 }
 
 #[test]
-fn double_ended_mutate() {
+fn test_double_ended_mutate() {
     let mut seen = Vec::new();
     let mut lender = VecLender::new(vec![1, 2, 3]).mutate(|x| seen.push(**x));
     assert_eq!(lender.next_back(), Some(&3));
