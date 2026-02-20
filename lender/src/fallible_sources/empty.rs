@@ -18,7 +18,7 @@ use crate::{
 /// let x: Result<Option<&i32>, String> = e.next();
 /// assert_eq!(x, Ok(None));
 /// ```
-#[inline(always)]
+#[inline]
 pub const fn empty<L: ?Sized + for<'all> FallibleLending<'all>, E>() -> Empty<L, E> {
     Empty(marker::PhantomData)
 }
@@ -55,12 +55,12 @@ where
     // SAFETY: the lend is the type parameter L
     crate::unsafe_assume_covariance_fallible!();
 
-    #[inline(always)]
+    #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         Ok(None)
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         (0, Some(0))
     }
@@ -70,7 +70,7 @@ impl<L, E> DoubleEndedFallibleLender for Empty<L, E>
 where
     L: ?Sized + for<'all> FallibleLending<'all>,
 {
-    #[inline(always)]
+    #[inline]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         Ok(None)
     }

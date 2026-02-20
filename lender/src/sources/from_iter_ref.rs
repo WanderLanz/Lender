@@ -58,7 +58,7 @@ impl<I: Iterator> Lender for FromIterRef<I> {
         self.current.as_ref()
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
     }
@@ -69,7 +69,7 @@ impl<I: Iterator> Lender for FromIterRef<I> {
         self.current.as_ref()
     }
 
-    #[inline(always)]
+    #[inline]
     fn count(self) -> usize
     where
         Self: Sized,
@@ -177,7 +177,7 @@ impl<I: DoubleEndedIterator> DoubleEndedLender for FromIterRef<I> {
 }
 
 impl<I: ExactSizeIterator> ExactSizeLender for FromIterRef<I> {
-    #[inline(always)]
+    #[inline]
     fn len(&self) -> usize {
         self.iter.len()
     }
@@ -186,7 +186,7 @@ impl<I: ExactSizeIterator> ExactSizeLender for FromIterRef<I> {
 impl<I: FusedIterator> FusedLender for FromIterRef<I> {}
 
 impl<I: Iterator> From<I> for FromIterRef<I> {
-    #[inline(always)]
+    #[inline]
     fn from(iter: I) -> Self {
         from_iter_ref(iter)
     }

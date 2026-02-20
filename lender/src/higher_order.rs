@@ -158,25 +158,25 @@ impl<F> Covar<F> {
     /// [`covar_mut!`](crate::covar_mut), and
     /// [`covar_once!`](crate::covar_once) macros.
     #[doc(hidden)]
-    #[inline(always)]
+    #[inline]
     pub unsafe fn __new(f: F) -> Self {
         Covar(f)
     }
 
     /// Returns a reference to the inner closure.
-    #[inline(always)]
+    #[inline]
     pub fn as_inner(&self) -> &F {
         &self.0
     }
 
     /// Returns a mutable reference to the inner closure.
-    #[inline(always)]
+    #[inline]
     pub fn as_inner_mut(&mut self) -> &mut F {
         &mut self.0
     }
 
     /// Unwraps and returns the inner closure.
-    #[inline(always)]
+    #[inline]
     pub fn into_inner(self) -> F {
         self.0
     }
@@ -355,7 +355,7 @@ macro_rules! __covar__ {
                 // This function only compiles if __CovarCheck (and thus $Ret)
                 // is covariant in the lifetime parameter. See the documentation of
                 // Lender::__check_covariance for details.
-                #[inline(always)]
+                #[inline]
                 #[allow(dead_code)]
                 fn __check_covariance<
                     $(

@@ -11,12 +11,12 @@ where
     type Item = T;
     type Error = L::Error;
 
-    #[inline(always)]
+    #[inline]
     fn next(&mut self) -> Result<Option<Self::Item>, Self::Error> {
         self.lender.next().map(Option::<&T>::cloned)
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
@@ -30,7 +30,7 @@ where
         self.lender.fold(init, |acc, x| f(acc, x.clone()))
     }
 
-    #[inline(always)]
+    #[inline]
     fn count(self) -> Result<usize, Self::Error>
     where
         Self: Sized,
@@ -38,7 +38,7 @@ where
         self.lender.count()
     }
 
-    #[inline(always)]
+    #[inline]
     fn nth(&mut self, n: usize) -> Result<Option<Self::Item>, Self::Error> {
         self.lender.nth(n).map(Option::<&T>::cloned)
     }
@@ -50,7 +50,7 @@ where
     T: Clone,
     L: for<'all> FallibleLending<'all, Lend = &'all T>,
 {
-    #[inline(always)]
+    #[inline]
     fn next_back(&mut self) -> Result<Option<Self::Item>, Self::Error> {
         self.lender.next_back().map(Option::<&T>::cloned)
     }

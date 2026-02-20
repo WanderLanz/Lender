@@ -139,7 +139,7 @@ where
     E: 'a,
     L: ?Sized + CovariantFallibleLending,
 {
-    #[inline(always)]
+    #[inline]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.next()
     }
@@ -218,7 +218,7 @@ where
         }
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         (0, Some(0))
     }
@@ -228,7 +228,7 @@ impl<L, E> DoubleEndedFallibleLender for OnceErr<L, E>
 where
     L: ?Sized + CovariantFallibleLending,
 {
-    #[inline(always)]
+    #[inline]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.next()
     }

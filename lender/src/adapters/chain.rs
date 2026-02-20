@@ -18,7 +18,7 @@ pub struct Chain<A, B> {
 
 impl<A, B> Chain<A, B> {
     /// Returns the two inner lenders.
-    #[inline(always)]
+    #[inline]
     pub fn into_inner(self) -> (A, B) {
         (self.a.into_inner(), self.b.into_inner())
     }
@@ -222,7 +222,7 @@ where
 }
 
 impl<A: Default + Lender, B: Default + Lender> Default for Chain<A, B> {
-    #[inline(always)]
+    #[inline]
     fn default() -> Self {
         Chain::new(Default::default(), Default::default())
     }

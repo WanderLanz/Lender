@@ -95,7 +95,7 @@ impl<St, F> DoubleEndedLender for OnceWith<St, F>
 where
     F: for<'all> FnOnceHKA<'all, &'all mut St>,
 {
-    #[inline(always)]
+    #[inline]
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         self.next()
     }
@@ -105,7 +105,7 @@ impl<St, F> ExactSizeLender for OnceWith<St, F>
 where
     F: for<'all> FnOnceHKA<'all, &'all mut St>,
 {
-    #[inline(always)]
+    #[inline]
     fn len(&self) -> usize {
         self.size_hint().0
     }

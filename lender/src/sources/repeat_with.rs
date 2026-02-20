@@ -79,7 +79,7 @@ where
         Some(unsafe { core::mem::transmute::<Lend<'a, L>, Lend<'_, L>>((self.f)()) })
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         (usize::MAX, None)
     }
@@ -104,7 +104,7 @@ where
     L: ?Sized + CovariantLending + 'a,
     F: FnMut() -> Lend<'a, L>,
 {
-    #[inline(always)]
+    #[inline]
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         self.next()
     }

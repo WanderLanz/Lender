@@ -19,7 +19,7 @@ pub struct MapErr<E, L, F> {
 }
 
 impl<E, L: crate::FallibleLender, F> MapErr<E, L, F> {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new(lender: L, f: F) -> Self {
         crate::__check_fallible_lender_covariance::<L>();
         Self {
@@ -30,13 +30,13 @@ impl<E, L: crate::FallibleLender, F> MapErr<E, L, F> {
     }
 
     /// Returns the inner lender.
-    #[inline(always)]
+    #[inline]
     pub fn into_inner(self) -> L {
         self.lender
     }
 
     /// Returns the inner lender and the error-mapping function.
-    #[inline(always)]
+    #[inline]
     pub fn into_parts(self) -> (L, F) {
         (self.lender, self.f)
     }
@@ -66,17 +66,17 @@ where
     // SAFETY: the lend is that of L
     crate::unsafe_assume_covariance_fallible!();
 
-    #[inline(always)]
+    #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.lender.next().map_err(&mut self.f)
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
 
-    #[inline(always)]
+    #[inline]
     fn count(mut self) -> Result<usize, Self::Error>
     where
         Self: Sized,
@@ -84,17 +84,17 @@ where
         self.lender.count().map_err(&mut self.f)
     }
 
-    #[inline(always)]
+    #[inline]
     fn advance_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         self.lender.advance_by(n).map_err(&mut self.f)
     }
 
-    #[inline(always)]
+    #[inline]
     fn nth(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.lender.nth(n).map_err(&mut self.f)
     }
 
-    #[inline(always)]
+    #[inline]
     fn last<'call>(&'call mut self) -> Result<Option<FallibleLend<'call, Self>>, Self::Error>
     where
         Self: Sized,
@@ -142,17 +142,17 @@ impl<E, L: DoubleEndedFallibleLender, F> DoubleEndedFallibleLender for MapErr<E,
 where
     F: FnMut(L::Error) -> E,
 {
-    #[inline(always)]
+    #[inline]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.lender.next_back().map_err(&mut self.f)
     }
 
-    #[inline(always)]
+    #[inline]
     fn advance_back_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         self.lender.advance_back_by(n).map_err(&mut self.f)
     }
 
-    #[inline(always)]
+    #[inline]
     fn nth_back(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.lender.nth_back(n).map_err(&mut self.f)
     }
@@ -205,12 +205,12 @@ where
     F: FnMut(L::Error) -> E,
     L: ExactSizeFallibleLender,
 {
-    #[inline(always)]
+    #[inline]
     fn len(&self) -> usize {
         self.lender.len()
     }
 
-    #[inline(always)]
+    #[inline]
     fn is_empty(&self) -> bool {
         self.lender.is_empty()
     }

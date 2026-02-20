@@ -32,7 +32,7 @@ where
     }
 
     /// Returns the inner lender.
-    #[inline(always)]
+    #[inline]
     pub fn into_inner(self) -> L {
         *AliasableBox::into_unique(self.inner.lender)
     }
@@ -69,17 +69,17 @@ where
     // SAFETY: the lend is that of the inner lender
     crate::unsafe_assume_covariance_fallible!();
 
-    #[inline(always)]
+    #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.inner.next()
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.inner.size_hint()
     }
 
-    #[inline(always)]
+    #[inline]
     fn try_fold<B, F, R>(&mut self, init: B, f: F) -> Result<R, Self::Error>
     where
         Self: Sized,
@@ -89,7 +89,7 @@ where
         self.inner.try_fold(init, f)
     }
 
-    #[inline(always)]
+    #[inline]
     fn fold<B, F>(self, init: B, f: F) -> Result<B, Self::Error>
     where
         Self: Sized,
@@ -98,7 +98,7 @@ where
         self.inner.fold(init, f)
     }
 
-    #[inline(always)]
+    #[inline]
     fn count(self) -> Result<usize, Self::Error>
     where
         Self: Sized,
@@ -140,13 +140,13 @@ where
     }
 
     /// Returns the inner lender.
-    #[inline(always)]
+    #[inline]
     pub fn into_inner(self) -> L {
         (*AliasableBox::into_unique(self.inner.lender)).into_inner()
     }
 
     /// Returns the inner lender and the mapping function.
-    #[inline(always)]
+    #[inline]
     pub fn into_parts(self) -> (L, Covar<F>) {
         (*AliasableBox::into_unique(self.inner.lender)).into_parts()
     }
@@ -187,17 +187,17 @@ where
     // SAFETY: the lend is that of the inner lender
     crate::unsafe_assume_covariance_fallible!();
 
-    #[inline(always)]
+    #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.inner.next()
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.inner.size_hint()
     }
 
-    #[inline(always)]
+    #[inline]
     fn try_fold<B, G, R>(&mut self, init: B, f: G) -> Result<R, Self::Error>
     where
         Self: Sized,
@@ -207,7 +207,7 @@ where
         self.inner.try_fold(init, f)
     }
 
-    #[inline(always)]
+    #[inline]
     fn fold<B, G>(self, init: B, f: G) -> Result<B, Self::Error>
     where
         Self: Sized,
@@ -216,7 +216,7 @@ where
         self.inner.fold(init, f)
     }
 
-    #[inline(always)]
+    #[inline]
     fn count(self) -> Result<usize, Self::Error>
     where
         Self: Sized,

@@ -16,20 +16,20 @@ pub struct Filter<L, P> {
 
 impl<L, P> Filter<L, P> {
     /// Returns the inner lender.
-    #[inline(always)]
+    #[inline]
     pub fn into_inner(self) -> L {
         self.lender
     }
 
     /// Returns the inner lender and the predicate.
-    #[inline(always)]
+    #[inline]
     pub fn into_parts(self) -> (L, P) {
         (self.lender, self.predicate)
     }
 }
 
 impl<L: Lender, P> Filter<L, P> {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new(lender: L, predicate: P) -> Filter<L, P> {
         crate::__check_lender_covariance::<L>();
         Filter { lender, predicate }
@@ -59,7 +59,7 @@ where
 {
     // SAFETY: the lend is that of L
     crate::unsafe_assume_covariance!();
-    #[inline(always)]
+    #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.lender.find(&mut self.predicate)
     }
@@ -126,7 +126,7 @@ where
     P: FnMut(&Lend<'_, L>) -> bool,
     L: DoubleEndedLender,
 {
-    #[inline(always)]
+    #[inline]
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         self.lender.rfind(&mut self.predicate)
     }

@@ -16,20 +16,20 @@ pub struct SkipWhile<L, P> {
 
 impl<L, P> SkipWhile<L, P> {
     /// Returns the inner lender.
-    #[inline(always)]
+    #[inline]
     pub fn into_inner(self) -> L {
         self.lender
     }
 
     /// Returns the inner lender and the predicate.
-    #[inline(always)]
+    #[inline]
     pub fn into_parts(self) -> (L, P) {
         (self.lender, self.predicate)
     }
 }
 
 impl<L: Lender, P> SkipWhile<L, P> {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new(lender: L, predicate: P) -> SkipWhile<L, P> {
         crate::__check_lender_covariance::<L>();
         SkipWhile {

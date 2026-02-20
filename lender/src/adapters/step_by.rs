@@ -18,13 +18,13 @@ pub struct StepBy<L> {
 
 impl<L> StepBy<L> {
     /// Returns the inner lender.
-    #[inline(always)]
+    #[inline]
     pub fn into_inner(self) -> L {
         self.lender
     }
 
     /// Returns the inner lender and the step size.
-    #[inline(always)]
+    #[inline]
     pub fn into_parts(self) -> (L, usize) {
         (self.lender, self.step + 1)
     }

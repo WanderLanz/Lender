@@ -18,20 +18,20 @@ pub struct Take<L> {
 
 impl<L> Take<L> {
     /// Returns the inner lender.
-    #[inline(always)]
+    #[inline]
     pub fn into_inner(self) -> L {
         self.lender
     }
 
     /// Returns the inner lender and the remaining number of elements to take.
-    #[inline(always)]
+    #[inline]
     pub fn into_parts(self) -> (L, usize) {
         (self.lender, self.n)
     }
 }
 
 impl<L: Lender> Take<L> {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new(lender: L, n: usize) -> Take<L> {
         crate::__check_lender_covariance::<L>();
         Take { lender, n }

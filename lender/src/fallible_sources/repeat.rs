@@ -129,12 +129,12 @@ where
         ))
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         (usize::MAX, None)
     }
 
-    #[inline(always)]
+    #[inline]
     fn advance_by(
         &mut self,
         _n: usize,
@@ -149,12 +149,12 @@ where
     E: 'a,
     for<'all> FallibleLend<'all, L>: Clone,
 {
-    #[inline(always)]
+    #[inline]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.next()
     }
 
-    #[inline(always)]
+    #[inline]
     fn advance_back_by(
         &mut self,
         _n: usize,
@@ -230,7 +230,7 @@ where
         Err(self.err.clone())
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         (0, Some(0))
     }
@@ -250,7 +250,7 @@ where
     L: ?Sized + CovariantFallibleLending,
     E: Clone,
 {
-    #[inline(always)]
+    #[inline]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.next()
     }

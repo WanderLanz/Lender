@@ -140,7 +140,7 @@ impl<St, E, F> DoubleEndedFallibleLender for OnceWith<St, E, F>
 where
     F: for<'all> FnOnceHKA<'all, &'all mut St>,
 {
-    #[inline(always)]
+    #[inline]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.next()
     }
@@ -211,7 +211,7 @@ where
         }
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         (0, Some(0))
     }
@@ -222,7 +222,7 @@ where
     L: ?Sized + CovariantFallibleLending,
     F: FnOnce(&mut St) -> E,
 {
-    #[inline(always)]
+    #[inline]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.next()
     }

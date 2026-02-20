@@ -12,7 +12,7 @@ use crate::{DoubleEndedLender, ExactSizeLender, FusedLender, Lend, Lender, Lendi
 /// let x: Option<&'_ mut i32> = e.next();
 /// assert_eq!(x, None);
 /// ```
-#[inline(always)]
+#[inline]
 pub const fn empty<L: ?Sized + for<'all> Lending<'all>>() -> Empty<L> {
     Empty(marker::PhantomData)
 }
@@ -45,12 +45,12 @@ where
 {
     // SAFETY: the lend is the type parameter L
     crate::unsafe_assume_covariance!();
-    #[inline(always)]
+    #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         None
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         (0, Some(0))
     }
@@ -60,7 +60,7 @@ impl<L> DoubleEndedLender for Empty<L>
 where
     L: ?Sized + for<'all> Lending<'all>,
 {
-    #[inline(always)]
+    #[inline]
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         None
     }

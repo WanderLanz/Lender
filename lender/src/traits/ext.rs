@@ -18,7 +18,7 @@ pub trait IteratorExt<I: Iterator> {
 }
 
 impl<I: Iterator> IteratorExt<I> for I {
-    #[inline(always)]
+    #[inline]
     fn into_lender(self) -> FromIter<I> {
         crate::from_iter(self)
     }
@@ -38,7 +38,7 @@ pub trait IntoIteratorExt<I: IntoIterator> {
 }
 
 impl<I: IntoIterator> IntoIteratorExt<I> for I {
-    #[inline(always)]
+    #[inline]
     fn into_into_lender(self) -> FromIntoIter<I> {
         crate::from_into_iter(self)
     }
@@ -58,7 +58,7 @@ pub trait FallibleIteratorExt<I: FallibleIterator> {
 }
 
 impl<I: FallibleIterator> FallibleIteratorExt<I> for I {
-    #[inline(always)]
+    #[inline]
     fn into_fallible_lender(self) -> FromFallibleIter<I> {
         crate::from_fallible_iter(self)
     }
@@ -81,7 +81,7 @@ pub trait IntoFallibleIteratorExt<I: IntoFallibleIterator> {
 }
 
 impl<I: IntoFallibleIterator> IntoFallibleIteratorExt<I> for I {
-    #[inline(always)]
+    #[inline]
     fn into_into_fallible_lender(self) -> FromIntoFallibleIter<I> {
         crate::from_into_fallible_iter(self)
     }
@@ -101,7 +101,7 @@ pub trait IteratorRefExt<I: Iterator> {
 }
 
 impl<I: Iterator> IteratorRefExt<I> for I {
-    #[inline(always)]
+    #[inline]
     fn into_ref_lender(self) -> FromIterRef<I> {
         crate::from_iter_ref(self)
     }
@@ -123,7 +123,7 @@ pub trait FallibleIteratorRefExt<I: FallibleIterator> {
 }
 
 impl<I: FallibleIterator> FallibleIteratorRefExt<I> for I {
-    #[inline(always)]
+    #[inline]
     fn into_fallible_ref_lender(self) -> FromFallibleIterRef<I> {
         crate::from_fallible_iter_ref(self)
     }

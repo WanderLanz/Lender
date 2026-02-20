@@ -18,20 +18,20 @@ pub struct Mutate<L, F> {
 
 impl<L, F> Mutate<L, F> {
     /// Returns the inner lender.
-    #[inline(always)]
+    #[inline]
     pub fn into_inner(self) -> L {
         self.lender
     }
 
     /// Returns the inner lender and the mutation function.
-    #[inline(always)]
+    #[inline]
     pub fn into_parts(self) -> (L, F) {
         (self.lender, self.f)
     }
 }
 
 impl<L: Lender, F> Mutate<L, F> {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new(lender: L, f: F) -> Mutate<L, F> {
         crate::__check_lender_covariance::<L>();
         Mutate { lender, f }
@@ -70,7 +70,7 @@ where
         next
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
@@ -147,12 +147,12 @@ impl<L: ExactSizeLender, F> ExactSizeLender for Mutate<L, F>
 where
     F: FnMut(&mut Lend<'_, L>),
 {
-    #[inline(always)]
+    #[inline]
     fn len(&self) -> usize {
         self.lender.len()
     }
 
-    #[inline(always)]
+    #[inline]
     fn is_empty(&self) -> bool {
         self.lender.is_empty()
     }

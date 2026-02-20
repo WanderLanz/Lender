@@ -181,7 +181,7 @@ where
     for<'all> Lend<'all, L>: TupleLend<'all>,
 {
     type Lender = Empty<Self>;
-    #[inline(always)]
+    #[inline]
     fn into_lender(self) -> <Self as IntoLender>::Lender {
         empty()
     }
@@ -192,7 +192,7 @@ where
     for<'all> Lend<'all, L>: TupleLend<'all>,
 {
     type Lender = Empty<Self>;
-    #[inline(always)]
+    #[inline]
     fn into_lender(self) -> <Self as IntoLender>::Lender {
         empty()
     }
@@ -219,7 +219,7 @@ where
     type Error = L::Error;
 
     type FallibleLender = FallibleEmpty<Self, L::Error>;
-    #[inline(always)]
+    #[inline]
     fn into_fallible_lender(self) -> <Self as IntoFallibleLender>::FallibleLender {
         fallible_empty()
     }
@@ -232,7 +232,7 @@ where
     type Error = L::Error;
 
     type FallibleLender = FallibleEmpty<Self, L::Error>;
-    #[inline(always)]
+    #[inline]
     fn into_fallible_lender(self) -> <Self as IntoFallibleLender>::FallibleLender {
         fallible_empty()
     }

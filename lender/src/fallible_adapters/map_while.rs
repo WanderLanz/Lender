@@ -3,7 +3,7 @@ use crate::{
 };
 
 impl<L: FallibleLender, P> MapWhile<L, P> {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new_fallible(lender: L, predicate: Covar<P>) -> MapWhile<L, P> {
         crate::__check_fallible_lender_covariance::<L>();
         MapWhile { lender, predicate }

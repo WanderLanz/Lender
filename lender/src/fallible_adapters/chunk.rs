@@ -5,7 +5,7 @@ use crate::{
 };
 
 impl<T: FallibleLender> Chunk<'_, T> {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new_fallible(lender: &mut T, len: usize) -> Chunk<'_, T> {
         crate::__check_fallible_lender_covariance::<T>();
         Chunk { lender, len }

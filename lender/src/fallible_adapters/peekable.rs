@@ -33,7 +33,7 @@ impl<'this, L> Peekable<'this, L>
 where
     L: FallibleLender,
 {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new(lender: L) -> Peekable<'this, L> {
         crate::__check_fallible_lender_covariance::<L>();
         Peekable {
@@ -43,7 +43,7 @@ where
     }
 
     /// Returns the inner lender.
-    #[inline(always)]
+    #[inline]
     pub fn into_inner(self) -> L {
         *AliasableBox::into_unique(self.lender)
     }

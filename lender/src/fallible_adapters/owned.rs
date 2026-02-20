@@ -17,7 +17,7 @@ where
         Ok(self.lender.next()?.map(|ref x| x.to_owned()))
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
@@ -31,7 +31,7 @@ where
         self.lender.fold(init, |acc, ref x| f(acc, x.to_owned()))
     }
 
-    #[inline(always)]
+    #[inline]
     fn count(self) -> Result<usize, Self::Error>
     where
         Self: Sized,

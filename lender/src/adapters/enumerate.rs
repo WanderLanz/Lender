@@ -17,20 +17,20 @@ pub struct Enumerate<L> {
 
 impl<L> Enumerate<L> {
     /// Returns the inner lender.
-    #[inline(always)]
+    #[inline]
     pub fn into_inner(self) -> L {
         self.lender
     }
 
     /// Returns the inner lender and the current count.
-    #[inline(always)]
+    #[inline]
     pub fn into_parts(self) -> (L, usize) {
         (self.lender, self.count)
     }
 }
 
 impl<L: Lender> Enumerate<L> {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new(lender: L) -> Enumerate<L> {
         crate::__check_lender_covariance::<L>();
         Enumerate { lender, count: 0 }
@@ -59,7 +59,7 @@ where
         })
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
@@ -73,7 +73,7 @@ where
         Some((i, a))
     }
 
-    #[inline(always)]
+    #[inline]
     fn count(self) -> usize {
         self.lender.count()
     }
@@ -164,7 +164,7 @@ where
         })
     }
 
-    #[inline(always)]
+    #[inline]
     fn advance_back_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {
         self.lender.advance_back_by(n)
     }
@@ -174,12 +174,12 @@ impl<L> ExactSizeLender for Enumerate<L>
 where
     L: ExactSizeLender,
 {
-    #[inline(always)]
+    #[inline]
     fn len(&self) -> usize {
         self.lender.len()
     }
 
-    #[inline(always)]
+    #[inline]
     fn is_empty(&self) -> bool {
         self.lender.is_empty()
     }
@@ -188,7 +188,7 @@ where
 impl<L> FusedLender for Enumerate<L> where L: FusedLender {}
 
 impl<L: Default + Lender> Default for Enumerate<L> {
-    #[inline(always)]
+    #[inline]
     fn default() -> Self {
         Enumerate::new(Default::default())
     }

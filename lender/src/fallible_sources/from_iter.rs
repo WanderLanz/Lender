@@ -47,22 +47,22 @@ impl<I: FallibleIterator> FallibleLending<'_> for FromIter<I> {
 impl<I: FallibleIterator> FallibleLender for FromIter<I> {
     type Error = I::Error;
     crate::check_covariance_fallible!();
-    #[inline(always)]
+    #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.iter.next()
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
     }
 
-    #[inline(always)]
+    #[inline]
     fn nth(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.iter.nth(n)
     }
 
-    #[inline(always)]
+    #[inline]
     fn count(self) -> Result<usize, Self::Error>
     where
         Self: Sized,
@@ -70,7 +70,7 @@ impl<I: FallibleIterator> FallibleLender for FromIter<I> {
         self.iter.count()
     }
 
-    #[inline(always)]
+    #[inline]
     fn fold<B, F>(self, init: B, f: F) -> Result<B, Self::Error>
     where
         Self: Sized,
@@ -81,12 +81,12 @@ impl<I: FallibleIterator> FallibleLender for FromIter<I> {
 }
 
 impl<I: DoubleEndedFallibleIterator> DoubleEndedFallibleLender for FromIter<I> {
-    #[inline(always)]
+    #[inline]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.iter.next_back()
     }
 
-    #[inline(always)]
+    #[inline]
     fn rfold<B, F>(self, init: B, f: F) -> Result<B, Self::Error>
     where
         Self: Sized,
@@ -102,7 +102,7 @@ impl<I: DoubleEndedFallibleIterator> DoubleEndedFallibleLender for FromIter<I> {
 // ExactSizeFallibleIterator marker traits.
 
 impl<I: FallibleIterator> From<I> for FromIter<I> {
-    #[inline(always)]
+    #[inline]
     fn from(iter: I) -> Self {
         from_iter(iter)
     }
@@ -158,14 +158,14 @@ impl<I: IntoFallibleIterator> IntoFallibleLender for FromIntoIter<I> {
 
     type FallibleLender = FromIter<I::IntoFallibleIter>;
 
-    #[inline(always)]
+    #[inline]
     fn into_fallible_lender(self) -> <Self as IntoFallibleLender>::FallibleLender {
         self.into_iter.into_fallible_iter().into_fallible_lender()
     }
 }
 
 impl<I: IntoFallibleIterator> From<I> for FromIntoIter<I> {
-    #[inline(always)]
+    #[inline]
     fn from(into_iter: I) -> Self {
         from_into_iter(into_iter)
     }
@@ -257,7 +257,7 @@ where
         )
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
     }
@@ -275,7 +275,7 @@ where
         )
     }
 
-    #[inline(always)]
+    #[inline]
     fn count(self) -> Result<usize, Self::Error>
     where
         Self: Sized,

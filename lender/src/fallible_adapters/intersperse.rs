@@ -27,7 +27,7 @@ where
     for<'all> FallibleLend<'all, L>: Clone,
     L: FallibleLender,
 {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new(lender: L, separator: FallibleLend<'this, L>) -> Self {
         crate::__check_fallible_lender_covariance::<L>();
         Self {
@@ -38,13 +38,13 @@ where
     }
 
     /// Returns the inner lender.
-    #[inline(always)]
+    #[inline]
     pub fn into_inner(self) -> L {
         self.lender.into_inner()
     }
 
     /// Returns the inner lender and the separator value.
-    #[inline(always)]
+    #[inline]
     pub fn into_parts(self) -> (L, FallibleLend<'this, L>) {
         (self.lender.into_inner(), self.separator)
     }
@@ -120,7 +120,7 @@ where
         })
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         intersperse_size_hint(&self.lender, self.needs_sep)
     }
@@ -149,7 +149,7 @@ where
     L: FallibleLender,
     G: FnMut() -> Result<FallibleLend<'this, L>, L::Error>,
 {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new(lender: L, separator: G) -> Self {
         crate::__check_fallible_lender_covariance::<L>();
         Self {
@@ -160,13 +160,13 @@ where
     }
 
     /// Returns the inner lender.
-    #[inline(always)]
+    #[inline]
     pub fn into_inner(self) -> L {
         self.lender.into_inner()
     }
 
     /// Returns the inner lender and the separator function.
-    #[inline(always)]
+    #[inline]
     pub fn into_parts(self) -> (L, G) {
         (self.lender.into_inner(), self.separator)
     }
@@ -240,7 +240,7 @@ where
         })
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         intersperse_size_hint(&self.lender, self.needs_sep)
     }

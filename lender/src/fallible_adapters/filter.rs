@@ -4,7 +4,7 @@ use crate::{
 };
 
 impl<L: FallibleLender, P> Filter<L, P> {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new_fallible(lender: L, predicate: P) -> Filter<L, P> {
         crate::__check_fallible_lender_covariance::<L>();
         Filter { lender, predicate }
@@ -28,7 +28,7 @@ where
     // SAFETY: the lend is that of L
     crate::unsafe_assume_covariance_fallible!();
 
-    #[inline(always)]
+    #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.lender.find(&mut self.predicate)
     }
@@ -103,7 +103,7 @@ where
     P: FnMut(&FallibleLend<'_, L>) -> Result<bool, L::Error>,
     L: DoubleEndedFallibleLender,
 {
-    #[inline(always)]
+    #[inline]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.lender.rfind(&mut self.predicate)
     }

@@ -7,7 +7,7 @@ use crate::{
 };
 
 impl<L: FallibleLender> Take<L> {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new_fallible(lender: L, n: usize) -> Take<L> {
         crate::__check_fallible_lender_covariance::<L>();
         Take { lender, n }

@@ -4,7 +4,7 @@ use crate::{
 };
 
 impl<L: FallibleLender, F> Map<L, F> {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new_fallible(lender: L, f: Covar<F>) -> Map<L, F> {
         crate::__check_fallible_lender_covariance::<L>();
         Map { lender, f }
@@ -33,7 +33,7 @@ where
         self.lender.next()?.map(self.f.as_inner_mut()).transpose()
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
@@ -99,12 +99,12 @@ impl<L: ExactSizeFallibleLender, F> ExactSizeFallibleLender for Map<L, F>
 where
     F: for<'all> FnMutHKARes<'all, FallibleLend<'all, L>, L::Error>,
 {
-    #[inline(always)]
+    #[inline]
     fn len(&self) -> usize {
         self.lender.len()
     }
 
-    #[inline(always)]
+    #[inline]
     fn is_empty(&self) -> bool {
         self.lender.is_empty()
     }

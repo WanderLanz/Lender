@@ -17,20 +17,20 @@ pub struct TakeWhile<L, P> {
 
 impl<L, P> TakeWhile<L, P> {
     /// Returns the inner lender.
-    #[inline(always)]
+    #[inline]
     pub fn into_inner(self) -> L {
         self.lender
     }
 
     /// Returns the inner lender and the predicate.
-    #[inline(always)]
+    #[inline]
     pub fn into_parts(self) -> (L, P) {
         (self.lender, self.predicate)
     }
 }
 
 impl<L: Lender, P> TakeWhile<L, P> {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new(lender: L, predicate: P) -> TakeWhile<L, P> {
         crate::__check_lender_covariance::<L>();
         TakeWhile {

@@ -6,7 +6,7 @@ use crate::{
 };
 
 impl<L: FallibleLender> Rev<L> {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new_fallible(lender: L) -> Rev<L> {
         crate::__check_fallible_lender_covariance::<L>();
         Rev { lender }
@@ -28,27 +28,27 @@ where
     // SAFETY: the lend is that of L
     crate::unsafe_assume_covariance_fallible!();
 
-    #[inline(always)]
+    #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.lender.next_back()
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
 
-    #[inline(always)]
+    #[inline]
     fn advance_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         self.lender.advance_back_by(n)
     }
 
-    #[inline(always)]
+    #[inline]
     fn nth(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.lender.nth_back(n)
     }
 
-    #[inline(always)]
+    #[inline]
     fn try_fold<B, F, R>(&mut self, init: B, f: F) -> Result<R, Self::Error>
     where
         Self: Sized,
@@ -58,7 +58,7 @@ where
         self.lender.try_rfold(init, f)
     }
 
-    #[inline(always)]
+    #[inline]
     fn fold<B, F>(self, init: B, f: F) -> Result<B, Self::Error>
     where
         Self: Sized,
@@ -67,7 +67,7 @@ where
         self.lender.rfold(init, f)
     }
 
-    #[inline(always)]
+    #[inline]
     fn find<P>(&mut self, predicate: P) -> Result<Option<FallibleLend<'_, Self>>, Self::Error>
     where
         Self: Sized,
@@ -81,22 +81,22 @@ impl<L> DoubleEndedFallibleLender for Rev<L>
 where
     L: DoubleEndedFallibleLender,
 {
-    #[inline(always)]
+    #[inline]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.lender.next()
     }
 
-    #[inline(always)]
+    #[inline]
     fn advance_back_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         self.lender.advance_by(n)
     }
 
-    #[inline(always)]
+    #[inline]
     fn nth_back(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         self.lender.nth(n)
     }
 
-    #[inline(always)]
+    #[inline]
     fn try_rfold<B, F, R>(&mut self, init: B, f: F) -> Result<R, Self::Error>
     where
         Self: Sized,
@@ -106,7 +106,7 @@ where
         self.lender.try_fold(init, f)
     }
 
-    #[inline(always)]
+    #[inline]
     fn rfold<B, F>(self, init: B, f: F) -> Result<B, Self::Error>
     where
         Self: Sized,
@@ -115,7 +115,7 @@ where
         self.lender.fold(init, f)
     }
 
-    #[inline(always)]
+    #[inline]
     fn rfind<P>(&mut self, predicate: P) -> Result<Option<FallibleLend<'_, Self>>, Self::Error>
     where
         Self: Sized,
@@ -129,12 +129,12 @@ impl<L> ExactSizeFallibleLender for Rev<L>
 where
     L: ExactSizeFallibleLender + DoubleEndedFallibleLender,
 {
-    #[inline(always)]
+    #[inline]
     fn len(&self) -> usize {
         self.lender.len()
     }
 
-    #[inline(always)]
+    #[inline]
     fn is_empty(&self) -> bool {
         self.lender.is_empty()
     }

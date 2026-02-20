@@ -94,17 +94,17 @@ pub trait DoubleEndedLender: Lender {
 }
 
 impl<L: DoubleEndedLender> DoubleEndedLender for &mut L {
-    #[inline(always)]
+    #[inline]
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         (**self).next_back()
     }
 
-    #[inline(always)]
+    #[inline]
     fn advance_back_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {
         (**self).advance_back_by(n)
     }
 
-    #[inline(always)]
+    #[inline]
     fn nth_back(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         (**self).nth_back(n)
     }
@@ -200,17 +200,17 @@ pub trait DoubleEndedFallibleLender: FallibleLender {
 }
 
 impl<L: DoubleEndedFallibleLender> DoubleEndedFallibleLender for &mut L {
-    #[inline(always)]
+    #[inline]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         (**self).next_back()
     }
 
-    #[inline(always)]
+    #[inline]
     fn advance_back_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
         (**self).advance_back_by(n)
     }
 
-    #[inline(always)]
+    #[inline]
     fn nth_back(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
         (**self).nth_back(n)
     }

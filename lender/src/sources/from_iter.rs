@@ -41,22 +41,22 @@ impl<I: Iterator> Lending<'_> for FromIter<I> {
 
 impl<I: Iterator> Lender for FromIter<I> {
     crate::check_covariance!();
-    #[inline(always)]
+    #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.iter.next()
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
     }
 
-    #[inline(always)]
+    #[inline]
     fn nth(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         self.iter.nth(n)
     }
 
-    #[inline(always)]
+    #[inline]
     fn count(self) -> usize
     where
         Self: Sized,
@@ -64,7 +64,7 @@ impl<I: Iterator> Lender for FromIter<I> {
         self.iter.count()
     }
 
-    #[inline(always)]
+    #[inline]
     fn fold<B, F>(self, init: B, f: F) -> B
     where
         Self: Sized,
@@ -75,17 +75,17 @@ impl<I: Iterator> Lender for FromIter<I> {
 }
 
 impl<I: DoubleEndedIterator> DoubleEndedLender for FromIter<I> {
-    #[inline(always)]
+    #[inline]
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         self.iter.next_back()
     }
 
-    #[inline(always)]
+    #[inline]
     fn nth_back(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         self.iter.nth_back(n)
     }
 
-    #[inline(always)]
+    #[inline]
     fn rfold<B, F>(self, init: B, f: F) -> B
     where
         Self: Sized,
@@ -96,7 +96,7 @@ impl<I: DoubleEndedIterator> DoubleEndedLender for FromIter<I> {
 }
 
 impl<I: ExactSizeIterator> ExactSizeLender for FromIter<I> {
-    #[inline(always)]
+    #[inline]
     fn len(&self) -> usize {
         self.iter.len()
     }
@@ -105,7 +105,7 @@ impl<I: ExactSizeIterator> ExactSizeLender for FromIter<I> {
 impl<I: FusedIterator> FusedLender for FromIter<I> {}
 
 impl<I: Iterator> From<I> for FromIter<I> {
-    #[inline(always)]
+    #[inline]
     fn from(iter: I) -> Self {
         from_iter(iter)
     }
@@ -147,14 +147,14 @@ pub struct FromIntoIter<I> {
 impl<I: IntoIterator> IntoLender for FromIntoIter<I> {
     type Lender = FromIter<I::IntoIter>;
 
-    #[inline(always)]
+    #[inline]
     fn into_lender(self) -> <Self as IntoLender>::Lender {
         self.into_iter.into_iter().into_lender()
     }
 }
 
 impl<I: IntoIterator> From<I> for FromIntoIter<I> {
-    #[inline(always)]
+    #[inline]
     fn from(into_iter: I) -> Self {
         from_into_iter(into_iter)
     }
@@ -227,7 +227,7 @@ where
         }
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
     }
@@ -240,7 +240,7 @@ where
         }
     }
 
-    #[inline(always)]
+    #[inline]
     fn count(self) -> usize
     where
         Self: Sized,
@@ -304,7 +304,7 @@ where
     L: ?Sized + CovariantLending + 'a,
     I: ExactSizeIterator<Item = Lend<'a, L>>,
 {
-    #[inline(always)]
+    #[inline]
     fn len(&self) -> usize {
         self.iter.len()
     }

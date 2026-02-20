@@ -16,7 +16,7 @@ pub struct MapIntoIter<L, O, F> {
 }
 
 impl<L, O, F> MapIntoIter<L, O, F> {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new(lender: L, f: F) -> MapIntoIter<L, O, F> {
         MapIntoIter {
             lender,
@@ -26,13 +26,13 @@ impl<L, O, F> MapIntoIter<L, O, F> {
     }
 
     /// Returns the inner lender.
-    #[inline(always)]
+    #[inline]
     pub fn into_inner(self) -> L {
         self.lender
     }
 
     /// Returns the inner lender and the mapping function.
-    #[inline(always)]
+    #[inline]
     pub fn into_parts(self) -> (L, F) {
         (self.lender, self.f)
     }
@@ -48,17 +48,17 @@ impl<L: core::fmt::Debug, O, F> core::fmt::Debug for MapIntoIter<L, O, F> {
 
 impl<L: Lender, O, F: FnMut(Lend<'_, L>) -> O> Iterator for MapIntoIter<L, O, F> {
     type Item = O;
-    #[inline(always)]
+    #[inline]
     fn next(&mut self) -> Option<O> {
         self.lender.next().map(&mut self.f)
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
 
-    #[inline(always)]
+    #[inline]
     fn nth(&mut self, n: usize) -> Option<O> {
         self.lender.nth(n).map(&mut self.f)
     }
@@ -76,12 +76,12 @@ impl<L: Lender, O, F: FnMut(Lend<'_, L>) -> O> Iterator for MapIntoIter<L, O, F>
 impl<L: DoubleEndedLender, O, F: FnMut(Lend<'_, L>) -> O> DoubleEndedIterator
     for MapIntoIter<L, O, F>
 {
-    #[inline(always)]
+    #[inline]
     fn next_back(&mut self) -> Option<O> {
         self.lender.next_back().map(&mut self.f)
     }
 
-    #[inline(always)]
+    #[inline]
     fn nth_back(&mut self, n: usize) -> Option<O> {
         self.lender.nth_back(n).map(&mut self.f)
     }
@@ -97,7 +97,7 @@ impl<L: DoubleEndedLender, O, F: FnMut(Lend<'_, L>) -> O> DoubleEndedIterator
 }
 
 impl<L: ExactSizeLender, O, F: FnMut(Lend<'_, L>) -> O> ExactSizeIterator for MapIntoIter<L, O, F> {
-    #[inline(always)]
+    #[inline]
     fn len(&self) -> usize {
         self.lender.len()
     }

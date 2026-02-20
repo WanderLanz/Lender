@@ -21,7 +21,7 @@ where
     L: Clone,
 {
     /// Returns the original and cloned inner lenders.
-    #[inline(always)]
+    #[inline]
     pub fn into_parts(self) -> (L, L) {
         (self.orig, self.lender)
     }

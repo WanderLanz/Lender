@@ -4,7 +4,7 @@ use crate::{
 };
 
 impl<L: FallibleLender, F> Inspect<L, F> {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new_fallible(lender: L, f: F) -> Inspect<L, F> {
         crate::__check_fallible_lender_covariance::<L>();
         Inspect { lender, f }
@@ -37,7 +37,7 @@ where
         Ok(next)
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
@@ -114,12 +114,12 @@ impl<L: ExactSizeFallibleLender, F> ExactSizeFallibleLender for Inspect<L, F>
 where
     F: FnMut(&FallibleLend<'_, L>) -> Result<(), L::Error>,
 {
-    #[inline(always)]
+    #[inline]
     fn len(&self) -> usize {
         self.lender.len()
     }
 
-    #[inline(always)]
+    #[inline]
     fn is_empty(&self) -> bool {
         self.lender.is_empty()
     }

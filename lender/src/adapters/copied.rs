@@ -13,13 +13,13 @@ pub struct Copied<L> {
 }
 
 impl<L> Copied<L> {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new(lender: L) -> Copied<L> {
         Copied { lender }
     }
 
     /// Returns the inner lender.
-    #[inline(always)]
+    #[inline]
     pub fn into_inner(self) -> L {
         self.lender
     }
@@ -32,12 +32,12 @@ where
     L: for<'all> Lending<'all, Lend = &'all T>,
 {
     type Item = T;
-    #[inline(always)]
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         self.lender.next().copied()
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
@@ -50,12 +50,12 @@ where
         self.lender.fold(init, |acc, x| f(acc, *x))
     }
 
-    #[inline(always)]
+    #[inline]
     fn count(self) -> usize {
         self.lender.count()
     }
 
-    #[inline(always)]
+    #[inline]
     fn nth(&mut self, n: usize) -> Option<Self::Item> {
         self.lender.nth(n).copied()
     }
@@ -67,7 +67,7 @@ where
     T: Copy,
     L: for<'all> Lending<'all, Lend = &'all T>,
 {
-    #[inline(always)]
+    #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
         self.lender.next_back().copied()
     }
@@ -87,7 +87,7 @@ where
     T: Copy,
     L: for<'all> Lending<'all, Lend = &'all T>,
 {
-    #[inline(always)]
+    #[inline]
     fn len(&self) -> usize {
         self.lender.len()
     }
@@ -105,7 +105,7 @@ impl<L> Default for Copied<L>
 where
     L: Default,
 {
-    #[inline(always)]
+    #[inline]
     fn default() -> Self {
         Self::new(L::default())
     }

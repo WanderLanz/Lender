@@ -26,7 +26,7 @@ where
     for<'all> Lend<'all, L>: Clone,
     L: Lender,
 {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new(lender: L, separator: Lend<'this, L>) -> Self {
         crate::__check_lender_covariance::<L>();
         Self {
@@ -37,13 +37,13 @@ where
     }
 
     /// Returns the inner lender.
-    #[inline(always)]
+    #[inline]
     pub fn into_inner(self) -> L {
         self.lender.into_inner()
     }
 
     /// Returns the inner lender and the separator value.
-    #[inline(always)]
+    #[inline]
     pub fn into_parts(self) -> (L, Lend<'this, L>) {
         (self.lender.into_inner(), self.separator)
     }
@@ -113,7 +113,7 @@ where
         })
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         intersperse_size_hint(&self.lender, self.needs_sep)
     }
@@ -141,7 +141,7 @@ where
     L: Lender,
     G: FnMut() -> Lend<'this, L>,
 {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new(lender: L, separator: G) -> Self {
         crate::__check_lender_covariance::<L>();
         Self {
@@ -152,13 +152,13 @@ where
     }
 
     /// Returns the inner lender.
-    #[inline(always)]
+    #[inline]
     pub fn into_inner(self) -> L {
         self.lender.into_inner()
     }
 
     /// Returns the inner lender and the separator function.
-    #[inline(always)]
+    #[inline]
     pub fn into_parts(self) -> (L, G) {
         (self.lender.into_inner(), self.separator)
     }
@@ -225,7 +225,7 @@ where
         })
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         intersperse_size_hint(&self.lender, self.needs_sep)
     }

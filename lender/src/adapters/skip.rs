@@ -17,20 +17,20 @@ pub struct Skip<L> {
 
 impl<L> Skip<L> {
     /// Returns the inner lender.
-    #[inline(always)]
+    #[inline]
     pub fn into_inner(self) -> L {
         self.lender
     }
 
     /// Returns the inner lender and the remaining number of elements to skip.
-    #[inline(always)]
+    #[inline]
     pub fn into_parts(self) -> (L, usize) {
         (self.lender, self.n)
     }
 }
 
 impl<L: Lender> Skip<L> {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new(lender: L, n: usize) -> Skip<L> {
         crate::__check_lender_covariance::<L>();
         Skip { lender, n }

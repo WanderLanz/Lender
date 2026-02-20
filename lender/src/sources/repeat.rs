@@ -78,12 +78,12 @@ where
         Some(unsafe { core::mem::transmute::<Lend<'a, Self>, Lend<'_, Self>>(self.elt.clone()) })
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         (usize::MAX, None)
     }
 
-    #[inline(always)]
+    #[inline]
     fn advance_by(&mut self, _n: usize) -> Result<(), core::num::NonZeroUsize> {
         Ok(())
     }
@@ -94,12 +94,12 @@ where
     L: ?Sized + CovariantLending + 'a,
     for<'all> Lend<'all, L>: Clone,
 {
-    #[inline(always)]
+    #[inline]
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         self.next()
     }
 
-    #[inline(always)]
+    #[inline]
     fn advance_back_by(&mut self, _n: usize) -> Result<(), core::num::NonZeroUsize> {
         Ok(())
     }

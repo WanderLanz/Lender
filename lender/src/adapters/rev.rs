@@ -14,14 +14,14 @@ pub struct Rev<L> {
 
 impl<L> Rev<L> {
     /// Returns the inner lender.
-    #[inline(always)]
+    #[inline]
     pub fn into_inner(self) -> L {
         self.lender
     }
 }
 
 impl<L: Lender> Rev<L> {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new(lender: L) -> Rev<L> {
         crate::__check_lender_covariance::<L>();
         Rev { lender }
@@ -41,27 +41,27 @@ where
 {
     // SAFETY: the lend is that of L
     crate::unsafe_assume_covariance!();
-    #[inline(always)]
+    #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         self.lender.next_back()
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
 
-    #[inline(always)]
+    #[inline]
     fn advance_by(&mut self, n: usize) -> Result<(), core::num::NonZeroUsize> {
         self.lender.advance_back_by(n)
     }
 
-    #[inline(always)]
+    #[inline]
     fn nth(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         self.lender.nth_back(n)
     }
 
-    #[inline(always)]
+    #[inline]
     fn try_fold<B, F, R>(&mut self, init: B, f: F) -> R
     where
         Self: Sized,
@@ -71,7 +71,7 @@ where
         self.lender.try_rfold(init, f)
     }
 
-    #[inline(always)]
+    #[inline]
     fn fold<B, F>(self, init: B, f: F) -> B
     where
         Self: Sized,
@@ -80,7 +80,7 @@ where
         self.lender.rfold(init, f)
     }
 
-    #[inline(always)]
+    #[inline]
     fn find<P>(&mut self, predicate: P) -> Option<Lend<'_, Self>>
     where
         Self: Sized,
@@ -94,22 +94,22 @@ impl<L> DoubleEndedLender for Rev<L>
 where
     L: DoubleEndedLender,
 {
-    #[inline(always)]
+    #[inline]
     fn next_back(&mut self) -> Option<Lend<'_, Self>> {
         self.lender.next()
     }
 
-    #[inline(always)]
+    #[inline]
     fn advance_back_by(&mut self, n: usize) -> Result<(), core::num::NonZeroUsize> {
         self.lender.advance_by(n)
     }
 
-    #[inline(always)]
+    #[inline]
     fn nth_back(&mut self, n: usize) -> Option<Lend<'_, Self>> {
         self.lender.nth(n)
     }
 
-    #[inline(always)]
+    #[inline]
     fn try_rfold<B, F, R>(&mut self, init: B, f: F) -> R
     where
         Self: Sized,
@@ -119,7 +119,7 @@ where
         self.lender.try_fold(init, f)
     }
 
-    #[inline(always)]
+    #[inline]
     fn rfold<B, F>(self, init: B, f: F) -> B
     where
         Self: Sized,
@@ -128,7 +128,7 @@ where
         self.lender.fold(init, f)
     }
 
-    #[inline(always)]
+    #[inline]
     fn rfind<P>(&mut self, predicate: P) -> Option<Lend<'_, Self>>
     where
         Self: Sized,
@@ -142,12 +142,12 @@ impl<L> ExactSizeLender for Rev<L>
 where
     L: DoubleEndedLender + ExactSizeLender,
 {
-    #[inline(always)]
+    #[inline]
     fn len(&self) -> usize {
         self.lender.len()
     }
 
-    #[inline(always)]
+    #[inline]
     fn is_empty(&self) -> bool {
         self.lender.is_empty()
     }
@@ -159,7 +159,7 @@ impl<L> Default for Rev<L>
 where
     L: Default + Lender,
 {
-    #[inline(always)]
+    #[inline]
     fn default() -> Self {
         Rev::new(L::default())
     }

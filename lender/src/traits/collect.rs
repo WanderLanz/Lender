@@ -65,7 +65,7 @@ pub trait IntoLender {
 
 impl<L: Lender> IntoLender for L {
     type Lender = L;
-    #[inline(always)]
+    #[inline]
     fn into_lender(self) -> L {
         self
     }
@@ -81,7 +81,7 @@ pub trait ExtendLender<L: IntoLender> {
     /// of additional elements.
     ///
     /// The default implementation does nothing.
-    #[inline(always)]
+    #[inline]
     fn extend_lender_reserve(&mut self, additional: usize) {
         let _ = additional;
     }
@@ -103,7 +103,7 @@ pub trait ExtendFallibleLender<L: IntoFallibleLender> {
     /// of additional elements.
     ///
     /// The default implementation does nothing.
-    #[inline(always)]
+    #[inline]
     fn extend_fallible_lender_reserve(&mut self, additional: usize) {
         let _ = additional;
     }
@@ -130,7 +130,7 @@ pub trait IntoFallibleLender {
 impl<L: FallibleLender> IntoFallibleLender for L {
     type Error = L::Error;
     type FallibleLender = L;
-    #[inline(always)]
+    #[inline]
     fn into_fallible_lender(self) -> L {
         self
     }

@@ -6,7 +6,7 @@ use crate::{
 };
 
 impl<L: FallibleLender> Skip<L> {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new_fallible(lender: L, n: usize) -> Skip<L> {
         crate::__check_fallible_lender_covariance::<L>();
         Skip { lender, n }

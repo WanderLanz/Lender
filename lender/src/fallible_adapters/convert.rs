@@ -40,7 +40,7 @@ pub struct Convert<E, I> {
 }
 
 impl<E, I: crate::Lender> Convert<E, I> {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new(iter: I) -> Self {
         crate::__check_lender_covariance::<I>();
         Self {
@@ -50,7 +50,7 @@ impl<E, I: crate::Lender> Convert<E, I> {
     }
 
     /// Returns the inner lender.
-    #[inline(always)]
+    #[inline]
     pub fn into_inner(self) -> I {
         self.iter
     }
@@ -80,7 +80,7 @@ where
         }
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
     }
@@ -174,12 +174,12 @@ impl<E, I> ExactSizeFallibleLender for Convert<E, I>
 where
     I: ExactSizeLender + LenderResult<E>,
 {
-    #[inline(always)]
+    #[inline]
     fn len(&self) -> usize {
         self.iter.len()
     }
 
-    #[inline(always)]
+    #[inline]
     fn is_empty(&self) -> bool {
         self.iter.is_empty()
     }

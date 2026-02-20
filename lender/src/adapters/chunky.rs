@@ -80,13 +80,13 @@ where
 
 impl<L> Chunky<L> {
     /// Returns the inner lender.
-    #[inline(always)]
+    #[inline]
     pub fn into_inner(self) -> L {
         self.lender
     }
 
     /// Returns the inner lender and the chunk size.
-    #[inline(always)]
+    #[inline]
     pub fn into_parts(self) -> (L, usize) {
         (self.lender, self.chunk_size)
     }
@@ -141,12 +141,12 @@ where
         }
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         (self.len, Some(self.len))
     }
 
-    #[inline(always)]
+    #[inline]
     fn count(self) -> usize {
         self.len
     }

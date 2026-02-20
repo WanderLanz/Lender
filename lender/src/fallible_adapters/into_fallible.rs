@@ -18,14 +18,14 @@ pub struct IntoFallible<L> {
 }
 
 impl<L: crate::Lender> IntoFallible<L> {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new(lender: L) -> Self {
         crate::__check_lender_covariance::<L>();
         Self { lender }
     }
 
     /// Returns the inner lender.
-    #[inline(always)]
+    #[inline]
     pub fn into_inner(self) -> L {
         self.lender
     }
@@ -51,7 +51,7 @@ where
         Ok(self.lender.next())
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
@@ -113,7 +113,7 @@ where
 }
 
 impl<L: Lender> From<L> for IntoFallible<L> {
-    #[inline(always)]
+    #[inline]
     fn from(lender: L) -> Self {
         Self::new(lender)
     }
@@ -170,12 +170,12 @@ impl<L> ExactSizeFallibleLender for IntoFallible<L>
 where
     L: ExactSizeLender,
 {
-    #[inline(always)]
+    #[inline]
     fn len(&self) -> usize {
         self.lender.len()
     }
 
-    #[inline(always)]
+    #[inline]
     fn is_empty(&self) -> bool {
         self.lender.is_empty()
     }

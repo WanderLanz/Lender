@@ -14,13 +14,13 @@ pub struct Owned<L> {
 }
 
 impl<L> Owned<L> {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new(lender: L) -> Self {
         Self { lender }
     }
 
     /// Returns the inner lender.
-    #[inline(always)]
+    #[inline]
     pub fn into_inner(self) -> L {
         self.lender
     }
@@ -37,7 +37,7 @@ where
         self.lender.next().map(|ref x| x.to_owned())
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
@@ -50,7 +50,7 @@ where
         self.lender.fold(init, |acc, ref x| f(acc, x.to_owned()))
     }
 
-    #[inline(always)]
+    #[inline]
     fn count(self) -> usize {
         self.lender.count()
     }
@@ -85,7 +85,7 @@ where
     L: ExactSizeLender,
     for<'all> Lend<'all, L>: ToOwned<Owned = T>,
 {
-    #[inline(always)]
+    #[inline]
     fn len(&self) -> usize {
         self.lender.len()
     }
@@ -102,7 +102,7 @@ impl<L> Default for Owned<L>
 where
     L: Default,
 {
-    #[inline(always)]
+    #[inline]
     fn default() -> Self {
         Self::new(L::default())
     }

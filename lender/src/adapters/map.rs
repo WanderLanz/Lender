@@ -18,20 +18,20 @@ pub struct Map<L, F> {
 
 impl<L, F> Map<L, F> {
     /// Returns the inner lender.
-    #[inline(always)]
+    #[inline]
     pub fn into_inner(self) -> L {
         self.lender
     }
 
     /// Returns the inner lender and the mapping function.
-    #[inline(always)]
+    #[inline]
     pub fn into_parts(self) -> (L, Covar<F>) {
         (self.lender, self.f)
     }
 }
 
 impl<L: Lender, F> Map<L, F> {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new(lender: L, f: Covar<F>) -> Map<L, F> {
         crate::__check_lender_covariance::<L>();
         Map { lender, f }
@@ -68,7 +68,7 @@ where
         self.lender.next().map(f)
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
@@ -131,12 +131,12 @@ impl<L: ExactSizeLender, F> ExactSizeLender for Map<L, F>
 where
     F: for<'all> FnMutHKA<'all, Lend<'all, L>>,
 {
-    #[inline(always)]
+    #[inline]
     fn len(&self) -> usize {
         self.lender.len()
     }
 
-    #[inline(always)]
+    #[inline]
     fn is_empty(&self) -> bool {
         self.lender.is_empty()
     }

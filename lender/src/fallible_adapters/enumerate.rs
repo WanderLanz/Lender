@@ -6,7 +6,7 @@ use crate::{
 };
 
 impl<L: FallibleLender> Enumerate<L> {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new_fallible(lender: L) -> Enumerate<L> {
         crate::__check_fallible_lender_covariance::<L>();
         Enumerate { lender, count: 0 }
@@ -37,7 +37,7 @@ where
         }))
     }
 
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.lender.size_hint()
     }
@@ -53,7 +53,7 @@ where
         Ok(Some((i, a)))
     }
 
-    #[inline(always)]
+    #[inline]
     fn count(self) -> Result<usize, Self::Error> {
         self.lender.count()
     }
@@ -150,7 +150,7 @@ where
         })
     }
 
-    #[inline(always)]
+    #[inline]
     fn advance_back_by(
         &mut self,
         n: usize,
@@ -163,12 +163,12 @@ impl<L> ExactSizeFallibleLender for Enumerate<L>
 where
     L: ExactSizeFallibleLender,
 {
-    #[inline(always)]
+    #[inline]
     fn len(&self) -> usize {
         self.lender.len()
     }
 
-    #[inline(always)]
+    #[inline]
     fn is_empty(&self) -> bool {
         self.lender.is_empty()
     }

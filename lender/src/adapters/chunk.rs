@@ -15,20 +15,20 @@ pub struct Chunk<'s, T> {
 
 impl<'s, T> Chunk<'s, T> {
     /// Returns the inner lender.
-    #[inline(always)]
+    #[inline]
     pub fn into_inner(self) -> &'s mut T {
         self.lender
     }
 
     /// Returns the inner lender and the remaining chunk length.
-    #[inline(always)]
+    #[inline]
     pub fn into_parts(self) -> (&'s mut T, usize) {
         (self.lender, self.len)
     }
 }
 
 impl<'s, T: Lender> Chunk<'s, T> {
-    #[inline(always)]
+    #[inline]
     pub(crate) fn new(lender: &'s mut T, len: usize) -> Self {
         crate::__check_lender_covariance::<T>();
         Self { lender, len }
