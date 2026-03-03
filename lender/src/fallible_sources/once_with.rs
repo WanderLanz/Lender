@@ -35,7 +35,7 @@ use crate::{
 /// assert_eq!(lender.next().unwrap(), None);
 /// ```
 #[inline]
-pub fn once_with<St, E, F>(state: St, f: Covar<F>) -> OnceWith<St, E, F>
+pub const fn once_with<St, E, F>(state: St, f: Covar<F>) -> OnceWith<St, E, F>
 where
     F: for<'all> FnOnceHKA<'all, &'all mut St>,
 {
@@ -62,7 +62,7 @@ where
 /// assert_eq!(lender.next(), Ok(None));
 /// ```
 #[inline]
-pub fn once_with_err<St, L, F>(state: St, f: F) -> OnceWithErr<St, L, F>
+pub const fn once_with_err<St, L, F>(state: St, f: F) -> OnceWithErr<St, L, F>
 where
     L: ?Sized + CovariantFallibleLending,
 {

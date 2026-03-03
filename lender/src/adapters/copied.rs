@@ -14,7 +14,7 @@ pub struct Copied<L> {
 
 impl<L> Copied<L> {
     #[inline]
-    pub(crate) fn new(lender: L) -> Copied<L> {
+    pub(crate) const fn new(lender: L) -> Copied<L> {
         Copied { lender }
     }
 

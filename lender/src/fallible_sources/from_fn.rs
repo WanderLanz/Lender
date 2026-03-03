@@ -29,7 +29,7 @@ use crate::{Covar, FallibleLend, FallibleLender, FallibleLending, higher_order::
 /// assert_eq!(lender.next().unwrap(), Some(&mut 1));
 /// ```
 #[inline]
-pub fn from_fn<St, E, F>(state: St, f: Covar<F>) -> FromFn<St, E, F>
+pub const fn from_fn<St, E, F>(state: St, f: Covar<F>) -> FromFn<St, E, F>
 where
     F: for<'all> FnMutHKAResOpt<'all, &'all mut St, E>,
 {

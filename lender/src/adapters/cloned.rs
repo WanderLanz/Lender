@@ -14,7 +14,7 @@ pub struct Cloned<L> {
 
 impl<L> Cloned<L> {
     #[inline]
-    pub(crate) fn new(lender: L) -> Cloned<L> {
+    pub(crate) const fn new(lender: L) -> Cloned<L> {
         Cloned { lender }
     }
 

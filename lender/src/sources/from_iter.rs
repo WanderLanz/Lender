@@ -21,7 +21,7 @@ use crate::{CovariantLending, FusedLender, IntoLender, prelude::*};
 /// assert_eq!(*item + *item2, 3);
 /// ```
 #[inline]
-pub fn from_iter<I: Iterator>(iter: I) -> FromIter<I> {
+pub const fn from_iter<I: Iterator>(iter: I) -> FromIter<I> {
     FromIter { iter }
 }
 
@@ -128,7 +128,7 @@ impl<I: Iterator> From<I> for FromIter<I> {
 /// assert_eq!(lender.next(), Some(&1));
 /// ```
 #[inline]
-pub fn from_into_iter<I: IntoIterator>(into_iter: I) -> FromIntoIter<I> {
+pub const fn from_into_iter<I: IntoIterator>(into_iter: I) -> FromIntoIter<I> {
     FromIntoIter { into_iter }
 }
 

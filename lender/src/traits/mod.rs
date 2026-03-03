@@ -73,7 +73,7 @@ pub struct CovariantProof<L>(core::marker::PhantomData<fn() -> L>);
 
 impl<T> CovariantProof<T> {
     #[doc(hidden)]
-    pub(crate) fn new() -> Self {
+    pub(crate) const fn new() -> Self {
         CovariantProof(core::marker::PhantomData)
     }
 }

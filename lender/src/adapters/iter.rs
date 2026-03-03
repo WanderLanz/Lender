@@ -22,7 +22,7 @@ pub struct Iter<'this, L: 'this> {
 
 impl<'this, L: 'this> Iter<'this, L> {
     #[inline]
-    pub(crate) fn new(lender: L) -> Iter<'this, L> {
+    pub(crate) const fn new(lender: L) -> Iter<'this, L> {
         Iter {
             lender,
             _marker: PhantomData,

@@ -26,7 +26,7 @@ use crate::{FusedLender, prelude::*};
 /// assert_eq!(*item, 1);
 /// ```
 #[inline]
-pub fn from_iter_ref<I: Iterator>(iter: I) -> FromIterRef<I> {
+pub const fn from_iter_ref<I: Iterator>(iter: I) -> FromIterRef<I> {
     FromIterRef {
         iter,
         current: None,

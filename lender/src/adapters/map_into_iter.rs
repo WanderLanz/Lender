@@ -17,7 +17,7 @@ pub struct MapIntoIter<L, O, F> {
 
 impl<L, O, F> MapIntoIter<L, O, F> {
     #[inline]
-    pub(crate) fn new(lender: L, f: F) -> MapIntoIter<L, O, F> {
+    pub(crate) const fn new(lender: L, f: F) -> MapIntoIter<L, O, F> {
         MapIntoIter {
             lender,
             f,

@@ -159,19 +159,19 @@ impl<F> Covar<F> {
     /// [`covar_once!`](crate::covar_once) macros.
     #[doc(hidden)]
     #[inline]
-    pub unsafe fn __new(f: F) -> Self {
+    pub const unsafe fn __new(f: F) -> Self {
         Covar(f)
     }
 
     /// Returns a reference to the inner closure.
     #[inline]
-    pub fn as_inner(&self) -> &F {
+    pub const fn as_inner(&self) -> &F {
         &self.0
     }
 
     /// Returns a mutable reference to the inner closure.
     #[inline]
-    pub fn as_inner_mut(&mut self) -> &mut F {
+    pub const fn as_inner_mut(&mut self) -> &mut F {
         &mut self.0
     }
 

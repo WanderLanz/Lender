@@ -24,7 +24,7 @@ use crate::{
 /// assert_eq!(lender.next().unwrap(), Some(&1));
 /// ```
 #[inline]
-pub fn from_iter<I: FallibleIterator>(iter: I) -> FromIter<I> {
+pub const fn from_iter<I: FallibleIterator>(iter: I) -> FromIter<I> {
     FromIter { iter }
 }
 
@@ -134,7 +134,7 @@ impl<I: FallibleIterator> From<I> for FromIter<I> {
 /// assert_eq!(lender.next().unwrap(), Some(&1));
 /// ```
 #[inline]
-pub fn from_into_iter<I: IntoFallibleIterator>(into_iter: I) -> FromIntoIter<I> {
+pub const fn from_into_iter<I: IntoFallibleIterator>(into_iter: I) -> FromIntoIter<I> {
     FromIntoIter { into_iter }
 }
 

@@ -26,7 +26,7 @@ use crate::{Covar, Lend, Lender, Lending, higher_order::FnMutHKAOpt};
 /// assert_eq!(lender.next(), Some(&mut 1));
 /// ```
 #[inline]
-pub fn from_fn<St, F>(state: St, f: Covar<F>) -> FromFn<St, F>
+pub const fn from_fn<St, F>(state: St, f: Covar<F>) -> FromFn<St, F>
 where
     F: for<'all> FnMutHKAOpt<'all, &'all mut St>,
 {

@@ -15,7 +15,7 @@ pub struct Owned<L> {
 
 impl<L> Owned<L> {
     #[inline]
-    pub(crate) fn new(lender: L) -> Self {
+    pub(crate) const fn new(lender: L) -> Self {
         Self { lender }
     }
 

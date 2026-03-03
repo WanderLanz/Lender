@@ -27,7 +27,7 @@ use crate::{
 /// assert_eq!(lender.next(), None);
 /// ```
 #[inline]
-pub fn once_with<St, F>(state: St, f: Covar<F>) -> OnceWith<St, F>
+pub const fn once_with<St, F>(state: St, f: Covar<F>) -> OnceWith<St, F>
 where
     F: for<'all> FnOnceHKA<'all, &'all mut St>,
 {
