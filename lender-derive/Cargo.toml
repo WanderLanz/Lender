@@ -4,10 +4,11 @@ version = "0.1.3"
 edition = "2024"
 rust-version = "1.85"
 description = "Procedural macros for lender"
-repository = "https://github.com/WanderLanz/Lender/"
+repository = "https://github.com/WanderLanz/Lender"
 license = "Apache-2.0 OR LGPL-2.1-or-later OR MIT"
 readme = "README.md"
 keywords = ["lending", "iterator"]
+categories = ["development-tools::procedural-macro-helpers"]
 authors = ["Tommaso Fontana <tommaso.fontana.96@gmail.com>", "Sebastiano Vigna <sebastiano.vigna@unimi.it>"]
 
 [lib]
