@@ -1,9 +1,11 @@
 # `lender`
 
-[![downloads](https://img.shields.io/crates/d/lender)](https://crates.io/crates/lender)
-[![dependents](https://img.shields.io/librariesio/dependents/cargo/lender)](https://crates.io/crates/lender/reverse_dependencies)
-[![miri](https://img.shields.io/github/actions/workflow/status/WanderLanz/Lender/test.yml?label=miri)](https://github.com/WanderLanz/Lender/actions/workflows/test.yml)
+[![crates.io](https://img.shields.io/crates/v/lender.svg)](https://crates.io/crates/lender)
+[![docs.rs](https://docs.rs/lender/badge.svg)](https://docs.rs/lender)
+[![rustc](https://img.shields.io/badge/rustc-1.85+-red.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
+[![CI](https://github.com/WanderLanz/Lender/actions/workflows/rust.yml/badge.svg)](https://github.com/WanderLanz/Lender/actions)
 ![license](https://img.shields.io/crates/l/lender)
+[![downloads](https://img.shields.io/crates/d/lender)](https://crates.io/crates/lender)
 
 A _lender_, also called a _lending iterator_, is an iterator that lends mutable borrows
 to the items it returns. In particular, this means that the reference to an item is
