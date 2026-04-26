@@ -14,6 +14,10 @@
 
 - Removed spurious `&'short` reference from fallible covariance checks.
 
+### Changed
+
+- Following `std`'s policy, we have `#[inline]` on all public methods.
+
 ## [0.6.2] - 2026-02-18
 
 ### Fixed
