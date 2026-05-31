@@ -1,5 +1,11 @@
 # Change Log
 
+## [unreleaed]
+
+### Changed
+
+- `MaybeDangling` does not need anymore to implement `Debug`.
+
 ## [0.7.0] - 2026-05-31
 
 ### New
