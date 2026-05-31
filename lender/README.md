@@ -188,6 +188,8 @@ You should heed the counsel of Polonius: â€œNeither a borrower nor a lender beâ€
 Let us compute the Fibonacci numbers using mutable windows:
 
 ```rust
+# #[cfg(feature = "derive")]
+# {
 use ::lender::prelude::*;
 use lender_derive::for_;
 
@@ -220,6 +222,7 @@ data.array_windows_mut::<3>()
          w[2] = w[0] + w[1]
     });
 assert_eq!(data, [0, 1, 1, 2, 3, 5, 8, 13, 21]);
+# }
 ```
 
 This is quite a contrived example, but it shows how lenders can be used to mutate a slice in place.

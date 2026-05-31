@@ -1,3 +1,4 @@
+#![cfg(feature = "derive")]
 use lender::{from_into_iter, prelude::*};
 
 #[test]

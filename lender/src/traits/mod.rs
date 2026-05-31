@@ -123,8 +123,7 @@ impl<'lend, T: ?Sized + for<'all> DynLend<'all>> Lending<'lend> for DynLendShunt
 ///
 /// The required method
 /// [`__check_covariance`](CovariantLending::__check_covariance) enforces
-/// covariance: see the documentation of
-/// [`Lender::__check_covariance`](crate::Lender::__check_covariance) for
+/// covariance: see the documentation of [`Lender::__check_covariance`] for
 /// details.
 ///
 /// Users of a [`CovariantLending`] should call [`__check_lending_covariance`]
@@ -590,8 +589,7 @@ impl<'lend, T: ?Sized + for<'all> DynFallibleLend<'all>> FallibleLending<'lend>
 /// The required method
 /// [`__check_covariance`](CovariantFallibleLending::__check_covariance)
 /// enforces covariance: see the documentation of
-/// [`FallibleLender::__check_covariance`](crate::FallibleLender::__check_covariance)
-/// for details.
+/// [`FallibleLender::__check_covariance`] for details.
 ///
 /// Users of a [`CovariantFallibleLending`] should call
 /// [`__check_fallible_lending_covariance`] to detect non-returning

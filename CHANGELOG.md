@@ -8,6 +8,10 @@
   `__check_lending_covariance` and `__check_fallible_lending_covariance` to
   check covariance of lenders and lends in custom implementations.
 
+- Many sources and accessors are now `const fn`, so they can be used in
+  `const` contexts (e.g., `from_iter`, `from_into_iter`, `from_iter_ref`,
+  `from_fn`, `once_with`, `windows_mut`, and `array_windows_mut`).
+
 ### Fixed
 
 - `find_map` implementations were missing covariance checks.
@@ -17,6 +21,9 @@
 ### Changed
 
 - Following `std`'s policy, we have `#[inline]` on all public methods.
+
+- We have now `resolver = 3`, which should solve some update issues
+  with the `maybe-dangling` crate.
 
 ## [0.6.2] - 2026-02-18
 
