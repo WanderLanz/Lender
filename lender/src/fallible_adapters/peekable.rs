@@ -258,7 +258,7 @@ where
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Peekable")
             .field("lender", &self.lender)
-            .field("peeked", &self.peeked)
+            .field("peeked", &*self.peeked)
             .finish()
     }
 }

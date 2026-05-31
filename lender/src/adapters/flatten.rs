@@ -261,7 +261,7 @@ where
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("FlattenCompat")
             .field("lender", &self.lender)
-            .field("inner", &self.inner)
+            .field("inner", &*self.inner)
             .finish()
     }
 }
