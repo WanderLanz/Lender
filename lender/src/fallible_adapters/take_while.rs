@@ -39,7 +39,10 @@ where
         if !self.flag {
             let x = match self.lender.next()? {
                 Some(x) => x,
-                None => return Ok(None),
+                None => {
+                    self.flag = true;
+                    return Ok(None);
+                }
             };
             if (self.predicate)(&x)? {
                 return Ok(Some(x));
@@ -121,4 +124,41 @@ where
     P: FnMut(&FallibleLend<'_, L>) -> Result<bool, L::Error>,
     L: FallibleLender,
 {
+}
+
+#[cfg(test)]
+mod test {
+    use core::convert::Infallible;
+
+    use crate::prelude::*;
+
+    // A non-fused fallible lender: yields 10, then None, then 30 if polled again.
+    struct Resurrect {
+        step: usize,
+    }
+    impl<'l> crate::FallibleLending<'l> for Resurrect {
+        type Lend = i32;
+    }
+    impl crate::FallibleLender for Resurrect {
+        type Error = Infallible;
+        crate::check_covariance_fallible!();
+        fn next(&mut self) -> Result<Option<crate::FallibleLend<'_, Self>>, Self::Error> {
+            let s = self.step;
+            self.step += 1;
+            Ok(match s {
+                0 => Some(10),
+                2 => Some(30),
+                _ => None,
+            })
+        }
+    }
+
+    #[test]
+    fn test_none_is_terminal() -> Result<(), Infallible> {
+        let mut tw = (Resurrect { step: 0 }).take_while(|_| Ok(true));
+        assert_eq!(tw.next()?, Some(10));
+        assert_eq!(tw.next()?, None); // inner yields None -> TakeWhile is done
+        assert_eq!(tw.next()?, None); // must not resurrect 30 (TakeWhile is FusedFallibleLender)
+        Ok(())
+    }
 }

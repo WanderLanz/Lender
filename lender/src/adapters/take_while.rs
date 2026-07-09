@@ -68,11 +68,10 @@ where
     #[inline]
     fn next(&mut self) -> Option<Lend<'_, Self>> {
         if !self.flag {
-            let x = self.lender.next()?;
-            if (self.predicate)(&x) {
-                return Some(x);
+            match self.lender.next() {
+                Some(x) if (self.predicate)(&x) => return Some(x),
+                _ => self.flag = true,
             }
-            self.flag = true;
         }
         None
     }
@@ -144,4 +143,37 @@ where
     P: FnMut(&Lend<'_, L>) -> bool,
     L: Lender,
 {
+}
+
+#[cfg(test)]
+mod test {
+    use crate::prelude::*;
+
+    // A non-fused lender: yields 10, then None, then 30 if polled again.
+    struct Resurrect {
+        step: usize,
+    }
+    impl<'l> crate::Lending<'l> for Resurrect {
+        type Lend = i32;
+    }
+    impl crate::Lender for Resurrect {
+        crate::check_covariance!();
+        fn next(&mut self) -> Option<crate::Lend<'_, Self>> {
+            let s = self.step;
+            self.step += 1;
+            match s {
+                0 => Some(10),
+                2 => Some(30),
+                _ => None,
+            }
+        }
+    }
+
+    #[test]
+    fn test_none_is_terminal() {
+        let mut tw = (Resurrect { step: 0 }).take_while(|_| true);
+        assert_eq!(tw.next(), Some(10));
+        assert_eq!(tw.next(), None); // inner yields None -> TakeWhile is done
+        assert_eq!(tw.next(), None); // must not resurrect 30 (TakeWhile is FusedLender)
+    }
 }
