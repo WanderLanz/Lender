@@ -405,7 +405,8 @@ fn test_fallible_peekable_peek_mut() {
     let fallible: lender::IntoFallible<_> = VecLender::new(vec![1, 2, 3]).into_fallible();
     let mut peekable = fallible.peekable();
     // peek_mut to store a value and get mutable reference
-    let peeked = peekable.peek_mut().unwrap();
+    // SAFETY: `peeked` is only compared below and dropped before `peekable` is used again.
+    let peeked = unsafe { peekable.peek_mut() }.unwrap();
     assert_eq!(peeked, Some(&mut &1));
 }
 

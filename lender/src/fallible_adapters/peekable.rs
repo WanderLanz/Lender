@@ -121,7 +121,8 @@ where
     ///     .into_fallible()
     ///     .peekable();
     ///
-    /// if let Some(p) = lender.peek_mut()? {
+    /// // SAFETY: `p` is used and dropped within this scope; the lend never escapes the borrow.
+    /// if let Some(p) = unsafe { lender.peek_mut() }? {
     ///     // p is &mut &i32, so we replace the reference
     ///     *p = &10;
     /// }
@@ -130,8 +131,17 @@ where
     /// # Ok(())
     /// # }
     /// ```
+    ///
+    /// # Safety
+    ///
+    /// The returned reference exposes the cached lend with the fallible lender's
+    /// full storage lifetime. The caller must not, through the returned reference,
+    /// (a) move or copy out a lend that outlives this `&mut self` borrow, nor
+    /// (b) overwrite the referent with a lend borrowing data that does not
+    /// outlive this `FalliblePeekable`. Either lets the lend escape its borrow,
+    /// causing a use-after-free.
     #[inline]
-    pub fn peek_mut(&mut self) -> Result<Option<&'_ mut FallibleLend<'this, L>>, L::Error> {
+    pub unsafe fn peek_mut(&mut self) -> Result<Option<&'_ mut FallibleLend<'this, L>>, L::Error> {
         let lender = &mut self.lender;
         if self.peeked.is_none() {
             *self.peeked = Some(

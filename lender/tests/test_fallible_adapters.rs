@@ -80,7 +80,8 @@ fn test_fallible_peekable_adapter() {
     assert_eq!(peekable.next().unwrap(), Some(2));
 
     // Test peek_mut
-    if let Some(val) = peekable.peek_mut().unwrap() {
+    // SAFETY: `val` is written through and dropped within this scope; the lend never escapes.
+    if let Some(val) = unsafe { peekable.peek_mut() }.unwrap() {
         *val = 100;
     }
     assert_eq!(peekable.next().unwrap(), Some(100));
