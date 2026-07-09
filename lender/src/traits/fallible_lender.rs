@@ -140,8 +140,9 @@ pub trait FallibleLender: for<'all /* where Self: 'all */> FallibleLending<'all>
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error>;
 
     /// Takes the next `chunk_size` lends of the lender with temporary lender
-    /// [`Chunk`]. This is equivalent to cloning the lender and calling
-    /// [`take(chunk_size)`](FallibleLender::take) on it.
+    /// [`Chunk`]. The returned [`Chunk`] borrows this fallible lender mutably
+    /// and advances it as the chunk is consumed; any elements left unconsumed
+    /// when the [`Chunk`] is dropped remain and are produced by later calls.
     ///
     /// # Examples
     ///
