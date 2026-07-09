@@ -130,10 +130,7 @@ where
         } else {
             // Exhaust
             if self.len > 0 {
-                let skip = self
-                    .len
-                    .checked_mul(self.chunk_size)
-                    .expect("overflow in Chunky::nth");
+                let skip = self.len.saturating_mul(self.chunk_size);
                 let _ = self.lender.advance_by(skip);
                 self.len = 0;
             }
@@ -197,3 +194,36 @@ impl<L> FusedLender for Chunky<L> where L: FusedLender {}
 // `next()` will actually produce. This violates the ExactSizeLender
 // contract, which requires `len()` to match the actual remaining
 // count. The chunk count is still available through `size_hint()`.
+
+#[cfg(test)]
+mod test {
+    use crate::prelude::*;
+
+    // A lender reporting len() == usize::MAX with O(1) advance_by, to exercise the
+    // exhaust branch's chunk-count * chunk_size multiplication near usize::MAX.
+    struct Huge;
+    impl<'l> crate::Lending<'l> for Huge {
+        type Lend = i32;
+    }
+    impl crate::Lender for Huge {
+        crate::check_covariance!();
+        fn next(&mut self) -> Option<crate::Lend<'_, Self>> {
+            Some(0)
+        }
+        fn advance_by(&mut self, _n: usize) -> Result<(), core::num::NonZeroUsize> {
+            Ok(())
+        }
+    }
+    impl crate::ExactSizeLender for Huge {
+        fn len(&self) -> usize {
+            usize::MAX
+        }
+    }
+
+    #[test]
+    fn test_nth_exhaust_no_overflow_panic() {
+        // len = usize::MAX.div_ceil(2); nth past the end must not panic on len * 2 overflow
+        let mut c = Huge.chunky(2);
+        assert!(c.nth(usize::MAX).is_none());
+    }
+}
