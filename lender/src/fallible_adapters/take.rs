@@ -160,7 +160,7 @@ where
             self.n -= n + 1;
             self.lender.nth_back(m)
         } else {
-            if len > 0 {
+            if self.n != 0 && len > 0 {
                 self.lender.nth_back(len - 1)?;
             }
             Ok(None)
@@ -210,6 +210,9 @@ where
 
     #[inline]
     fn advance_back_by(&mut self, n: usize) -> Result<Result<(), NonZeroUsize>, Self::Error> {
+        if n == 0 {
+            return Ok(Ok(()));
+        }
         let trim_inner = self.lender.len().saturating_sub(self.n);
         let advance_by = trim_inner.saturating_add(n);
         let remainder = match self.lender.advance_back_by(advance_by)? {
@@ -226,3 +229,37 @@ where
 impl<L> ExactSizeFallibleLender for Take<L> where L: ExactSizeFallibleLender {}
 
 impl<L> FusedFallibleLender for Take<L> where L: FusedFallibleLender {}
+
+#[cfg(test)]
+mod test {
+    use core::convert::Infallible;
+
+    use crate::prelude::*;
+
+    #[test]
+    fn test_advance_back_by_zero_is_noop() -> Result<(), Infallible> {
+        let mut t = [0, 1, 2, 3].iter().into_lender().into_fallible().take(2);
+        assert!(t.advance_back_by(0)?.is_ok());
+        // inner must be untouched: all four elements remain
+        let mut inner = t.into_inner();
+        assert_eq!(inner.next()?, Some(&0));
+        assert_eq!(inner.next()?, Some(&1));
+        assert_eq!(inner.next()?, Some(&2));
+        assert_eq!(inner.next()?, Some(&3));
+        assert_eq!(inner.next()?, None);
+        Ok(())
+    }
+
+    #[test]
+    fn test_empty_take_nth_back_leaves_inner() -> Result<(), Infallible> {
+        let mut t = [0, 1, 2, 3].iter().into_lender().into_fallible().take(0);
+        assert_eq!(t.nth_back(0)?, None);
+        let mut inner = t.into_inner();
+        assert_eq!(inner.next()?, Some(&0));
+        assert_eq!(inner.next()?, Some(&1));
+        assert_eq!(inner.next()?, Some(&2));
+        assert_eq!(inner.next()?, Some(&3));
+        assert_eq!(inner.next()?, None);
+        Ok(())
+    }
+}
