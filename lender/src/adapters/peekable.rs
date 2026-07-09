@@ -41,7 +41,8 @@ where
 
     /// Returns the inner lender.
     #[inline]
-    pub fn into_inner(self) -> L {
+    pub fn into_inner(mut self) -> L {
+        *self.peeked = None;
         *AliasableBox::into_unique(self.lender)
     }
 
@@ -242,12 +243,13 @@ where
 
     #[inline]
     fn count(mut self) -> usize {
+        let extra = match self.peeked.take() {
+            Some(None) => return 0,
+            Some(Some(_)) => 1,
+            None => 0,
+        };
         let lender = *AliasableBox::into_unique(self.lender);
-        match self.peeked.take() {
-            Some(None) => 0,
-            Some(Some(_)) => 1 + lender.count(),
-            None => lender.count(),
-        }
+        extra + lender.count()
     }
 
     #[inline]
@@ -446,5 +448,18 @@ mod test {
             peeked, array,
             "Peeked element pointer should point to the first element of the array"
         );
+    }
+
+    #[test]
+    fn test_into_inner_and_count_after_peek() {
+        use crate::prelude::*;
+        let mut p = [1, 2, 3].iter().into_lender().peekable();
+        assert_eq!(p.peek(), Some(&&1));
+        assert_eq!(p.count(), 3); // peeked element counted, no panic/UB
+
+        let mut p = [1, 2, 3].iter().into_lender().peekable();
+        assert_eq!(p.peek(), Some(&&1));
+        let mut inner = p.into_inner(); // must not free-then-drop the cache
+        assert_eq!(inner.next(), Some(&2)); // peeked &1 consumed into the (now-dropped) cache
     }
 }

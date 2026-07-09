@@ -30,7 +30,8 @@ where
 
     /// Returns the inner lender.
     #[inline]
-    pub fn into_inner(self) -> L {
+    pub fn into_inner(mut self) -> L {
+        *self.inner.inner = None;
         *AliasableBox::into_unique(self.inner.lender)
     }
 }
@@ -133,13 +134,15 @@ where
 
     /// Returns the inner lender.
     #[inline]
-    pub fn into_inner(self) -> L {
+    pub fn into_inner(mut self) -> L {
+        *self.inner.inner = None;
         (*AliasableBox::into_unique(self.inner.lender)).into_inner()
     }
 
     /// Returns the inner lender and the mapping function.
     #[inline]
-    pub fn into_parts(self) -> (L, Covar<F>) {
+    pub fn into_parts(mut self) -> (L, Covar<F>) {
+        *self.inner.inner = None;
         (*AliasableBox::into_unique(self.inner.lender)).into_parts()
     }
 }
