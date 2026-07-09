@@ -86,6 +86,7 @@ where
             if n == 0 {
                 return self.lender.next();
             }
+            let _ = self.lender.next();
             n -= 1;
         }
         let mut step = self.step + 1;
@@ -248,3 +249,16 @@ where
 impl<L> ExactSizeLender for StepBy<L> where L: ExactSizeLender {}
 
 impl<L> FusedLender for StepBy<L> where L: FusedLender {}
+
+#[cfg(test)]
+mod test {
+    use crate::prelude::*;
+    #[test]
+    fn test_nth_fresh() {
+        // yields &0,&2,&4; nth(1) is the SECOND yielded element = &2 (was &1 before the fix)
+        let mut s = [0, 1, 2, 3, 4].iter().into_lender().step_by(2);
+        assert_eq!(s.nth(1), Some(&2));
+        // matches std::iter::StepBy
+        assert_eq!((0..5).step_by(2).nth(1), Some(2));
+    }
+}

@@ -63,6 +63,7 @@ where
             if n == 0 {
                 return self.lender.next();
             }
+            let _ = self.lender.next()?;
             n -= 1;
         }
         let mut step = self.step + 1;
@@ -227,3 +228,21 @@ where
 impl<L> ExactSizeFallibleLender for StepBy<L> where L: ExactSizeFallibleLender {}
 
 impl<L> FusedFallibleLender for StepBy<L> where L: FusedFallibleLender {}
+
+#[cfg(test)]
+mod test {
+    use core::convert::Infallible;
+
+    use crate::prelude::*;
+    #[test]
+    fn test_nth_fresh() -> Result<(), Infallible> {
+        // yields &0,&2,&4; nth(1) is the SECOND yielded element = &2 (was &1 before the fix)
+        let mut s = [0, 1, 2, 3, 4]
+            .iter()
+            .into_lender()
+            .into_fallible()
+            .step_by(2);
+        assert_eq!(s.nth(1)?, Some(&2));
+        Ok(())
+    }
+}
