@@ -60,6 +60,7 @@ impl<I: FallibleIterator> FallibleLender for FromIterRef<I> {
 
     #[inline]
     fn next(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        self.current = None;
         self.current = self.iter.next()?;
         Ok(self.current.as_ref())
     }
@@ -71,6 +72,7 @@ impl<I: FallibleIterator> FallibleLender for FromIterRef<I> {
 
     #[inline]
     fn nth(&mut self, n: usize) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        self.current = None;
         self.current = self.iter.nth(n)?;
         Ok(self.current.as_ref())
     }
@@ -134,6 +136,7 @@ impl<I: FallibleIterator> FallibleLender for FromIterRef<I> {
 impl<I: DoubleEndedFallibleIterator> DoubleEndedFallibleLender for FromIterRef<I> {
     #[inline]
     fn next_back(&mut self) -> Result<Option<FallibleLend<'_, Self>>, Self::Error> {
+        self.current = None;
         self.current = self.iter.next_back()?;
         Ok(self.current.as_ref())
     }
@@ -183,5 +186,44 @@ impl<I: FallibleIterator> From<I> for FromIterRef<I> {
     #[inline]
     fn from(iter: I) -> Self {
         from_iter_ref(iter)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use core::cell::{RefCell, RefMut};
+    use core::convert::Infallible;
+
+    use fallible_iterator::FallibleIterator;
+
+    use super::from_iter_ref;
+    use crate::FallibleLender;
+
+    // A fallible iterator whose items each hold an exclusive borrow of `cell`.
+    struct BorrowIter<'a> {
+        cell: &'a RefCell<i32>,
+        n: usize,
+    }
+    impl<'a> FallibleIterator for BorrowIter<'a> {
+        type Item = RefMut<'a, i32>;
+        type Error = Infallible;
+        fn next(&mut self) -> Result<Option<Self::Item>, Self::Error> {
+            if self.n == 0 {
+                return Ok(None);
+            }
+            self.n -= 1;
+            Ok(Some(self.cell.borrow_mut()))
+        }
+    }
+
+    #[test]
+    fn test_drops_previous_item_before_fetch() -> Result<(), Infallible> {
+        let cell = RefCell::new(0);
+        let mut l = from_iter_ref(BorrowIter { cell: &cell, n: 3 });
+        assert!(l.next()?.is_some());
+        assert!(l.next()?.is_some()); // buggy code panics "already mutably borrowed"
+        assert!(l.next()?.is_some());
+        assert!(l.next()?.is_none());
+        Ok(())
     }
 }
