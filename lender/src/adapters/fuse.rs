@@ -77,12 +77,11 @@ where
         Self: Sized,
     {
         if !self.flag {
-            if let x @ Some(_) = self.lender.last() {
-                return x;
-            }
             self.flag = true;
+            self.lender.last()
+        } else {
+            None
         }
-        None
     }
 
     #[inline]
@@ -242,5 +241,38 @@ impl<L: Default + Lender> Default for Fuse<L> {
     #[inline]
     fn default() -> Self {
         Fuse::new(L::default())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::prelude::*;
+
+    // A non-fused lender: yields 10, then None, then 30 if polled again.
+    struct Resurrect {
+        step: usize,
+    }
+    impl<'l> crate::Lending<'l> for Resurrect {
+        type Lend = i32;
+    }
+    impl crate::Lender for Resurrect {
+        crate::check_covariance!();
+        fn next(&mut self) -> Option<crate::Lend<'_, Self>> {
+            let s = self.step;
+            self.step += 1;
+            match s {
+                0 => Some(10),
+                2 => Some(30),
+                _ => None,
+            }
+        }
+    }
+
+    #[test]
+    fn test_last_fuses() {
+        let mut f = (Resurrect { step: 0 }).fuse();
+        assert_eq!(f.last(), Some(10)); // drives the inner lender to None
+        assert_eq!(f.next(), None); // must stay fused, not resurrect 30
+        assert_eq!(f.size_hint(), (0, Some(0)));
     }
 }

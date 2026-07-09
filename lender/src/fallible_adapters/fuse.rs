@@ -60,12 +60,11 @@ where
         Self: Sized,
     {
         if !self.flag {
-            if let x @ Some(_) = self.lender.last()? {
-                return Ok(x);
-            }
             self.flag = true;
+            self.lender.last()
+        } else {
+            Ok(None)
         }
-        Ok(None)
     }
 
     #[inline]
@@ -218,3 +217,40 @@ where
 }
 
 impl<L> FusedFallibleLender for Fuse<L> where L: FallibleLender {}
+
+#[cfg(test)]
+mod test {
+    use core::convert::Infallible;
+
+    use crate::prelude::*;
+
+    // A non-fused fallible lender: yields 10, then None, then 30 if polled again.
+    struct Resurrect {
+        step: usize,
+    }
+    impl<'l> crate::FallibleLending<'l> for Resurrect {
+        type Lend = i32;
+    }
+    impl crate::FallibleLender for Resurrect {
+        type Error = Infallible;
+        crate::check_covariance_fallible!();
+        fn next(&mut self) -> Result<Option<crate::FallibleLend<'_, Self>>, Self::Error> {
+            let s = self.step;
+            self.step += 1;
+            Ok(match s {
+                0 => Some(10),
+                2 => Some(30),
+                _ => None,
+            })
+        }
+    }
+
+    #[test]
+    fn test_last_fuses() -> Result<(), Infallible> {
+        let mut f = (Resurrect { step: 0 }).fuse();
+        assert_eq!(f.last()?, Some(10)); // drives the inner lender to None
+        assert_eq!(f.next()?, None); // must stay fused, not resurrect 30
+        assert_eq!(f.size_hint(), (0, Some(0)));
+        Ok(())
+    }
+}
