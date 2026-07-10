@@ -44,10 +44,7 @@ where
         } else {
             // Exhaust
             if self.len > 0 {
-                let skip = self
-                    .len
-                    .checked_mul(self.chunk_size)
-                    .expect("overflow in Chunky::nth");
+                let skip = self.len.saturating_mul(self.chunk_size);
                 let _ = self.lender.advance_by(skip)?;
                 self.len = 0;
             }
@@ -101,3 +98,42 @@ where
 }
 
 impl<L> FusedFallibleLender for Chunky<L> where L: FusedFallibleLender {}
+
+#[cfg(test)]
+mod test {
+    use core::convert::Infallible;
+
+    use crate::prelude::*;
+
+    // A fallible lender reporting len() == usize::MAX with O(1) advance_by.
+    struct Huge;
+    impl<'l> crate::FallibleLending<'l> for Huge {
+        type Lend = i32;
+    }
+    impl crate::FallibleLender for Huge {
+        type Error = Infallible;
+        crate::check_covariance_fallible!();
+        fn next(&mut self) -> Result<Option<crate::FallibleLend<'_, Self>>, Self::Error> {
+            Ok(Some(0))
+        }
+        fn advance_by(
+            &mut self,
+            _n: usize,
+        ) -> Result<Result<(), core::num::NonZeroUsize>, Self::Error> {
+            Ok(Ok(()))
+        }
+    }
+    impl crate::ExactSizeFallibleLender for Huge {
+        fn len(&self) -> usize {
+            usize::MAX
+        }
+    }
+
+    #[test]
+    fn test_nth_exhaust_no_overflow_panic() -> Result<(), Infallible> {
+        // len = usize::MAX.div_ceil(2); nth past the end must not panic on len * 2 overflow
+        let mut c = Huge.chunky(2);
+        assert!(c.nth(usize::MAX)?.is_none());
+        Ok(())
+    }
+}

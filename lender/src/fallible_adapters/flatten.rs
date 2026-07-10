@@ -33,7 +33,8 @@ where
 
     /// Returns the inner lender.
     #[inline]
-    pub fn into_inner(self) -> L {
+    pub fn into_inner(mut self) -> L {
+        *self.inner.inner = None;
         *AliasableBox::into_unique(self.inner.lender)
     }
 }
@@ -141,13 +142,15 @@ where
 
     /// Returns the inner lender.
     #[inline]
-    pub fn into_inner(self) -> L {
+    pub fn into_inner(mut self) -> L {
+        *self.inner.inner = None;
         (*AliasableBox::into_unique(self.inner.lender)).into_inner()
     }
 
     /// Returns the inner lender and the mapping function.
     #[inline]
-    pub fn into_parts(self) -> (L, Covar<F>) {
+    pub fn into_parts(mut self) -> (L, Covar<F>) {
+        *self.inner.inner = None;
         (*AliasableBox::into_unique(self.inner.lender)).into_parts()
     }
 }
@@ -483,5 +486,39 @@ mod test {
         assert_eq!(l.next(), Ok(Some(1)));
         assert_eq!(l.next(), Ok(None));
         assert_eq!(l.next(), Ok(None));
+    }
+
+    #[test]
+    fn test_flatten_into_inner() -> Result<(), Infallible> {
+        let mut flatten = Parent([0, 1, 2, 3]).into_fallible().flatten();
+        let _ = flatten.next()?; // populate the sub-lender cache
+        let _inner = flatten.into_inner(); // must clear cache before freeing the box
+        Ok(())
+    }
+
+    #[test]
+    fn test_flat_map_into_inner_and_parts() {
+        use crate::traits::IteratorExt;
+        let mut l = [1, 2]
+            .into_iter()
+            .into_lender()
+            .into_fallible()
+            // SAFETY: closure returns an owned Result (trivially covariant).
+            .flat_map(unsafe {
+                crate::Covar::__new(|n: i32| Ok((0..n).into_lender().into_fallible()))
+            });
+        let _ = l.next(); // populate the sub-lender cache
+        let _inner = l.into_inner(); // must clear cache before freeing the box
+
+        let mut l = [1, 2]
+            .into_iter()
+            .into_lender()
+            .into_fallible()
+            // SAFETY: closure returns an owned Result (trivially covariant).
+            .flat_map(unsafe {
+                crate::Covar::__new(|n: i32| Ok((0..n).into_lender().into_fallible()))
+            });
+        let _ = l.next();
+        let (_inner, _f) = l.into_parts();
     }
 }

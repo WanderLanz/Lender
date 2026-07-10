@@ -44,7 +44,8 @@ where
 
     /// Returns the inner lender.
     #[inline]
-    pub fn into_inner(self) -> L {
+    pub fn into_inner(mut self) -> L {
+        *self.peeked = None;
         *AliasableBox::into_unique(self.lender)
     }
 
@@ -121,7 +122,8 @@ where
     ///     .into_fallible()
     ///     .peekable();
     ///
-    /// if let Some(p) = lender.peek_mut()? {
+    /// // SAFETY: `p` is used and dropped within this scope; the lend never escapes the borrow.
+    /// if let Some(p) = unsafe { lender.peek_mut() }? {
     ///     // p is &mut &i32, so we replace the reference
     ///     *p = &10;
     /// }
@@ -130,8 +132,17 @@ where
     /// # Ok(())
     /// # }
     /// ```
+    ///
+    /// # Safety
+    ///
+    /// The returned reference exposes the cached lend with the fallible lender's
+    /// full storage lifetime. The caller must not, through the returned reference,
+    /// (a) move or copy out a lend that outlives this `&mut self` borrow, nor
+    /// (b) overwrite the referent with a lend borrowing data that does not
+    /// outlive this `FalliblePeekable`. Either lets the lend escape its borrow,
+    /// causing a use-after-free.
     #[inline]
-    pub fn peek_mut(&mut self) -> Result<Option<&'_ mut FallibleLend<'this, L>>, L::Error> {
+    pub unsafe fn peek_mut(&mut self) -> Result<Option<&'_ mut FallibleLend<'this, L>>, L::Error> {
         let lender = &mut self.lender;
         if self.peeked.is_none() {
             *self.peeked = Some(
@@ -296,12 +307,13 @@ where
 
     #[inline]
     fn count(mut self) -> Result<usize, Self::Error> {
+        let extra = match self.peeked.take() {
+            Some(None) => return Ok(0),
+            Some(Some(_)) => 1,
+            None => 0,
+        };
         let lender = *AliasableBox::into_unique(self.lender);
-        match self.peeked.take() {
-            Some(None) => Ok(0),
-            Some(Some(_)) => Ok(1 + lender.count()?),
-            None => lender.count(),
-        }
+        Ok(extra + lender.count()?)
     }
 
     #[inline]
@@ -519,5 +531,19 @@ mod test {
             peeked, array,
             "Peeked element pointer should point to the first element of the array"
         );
+    }
+
+    #[test]
+    fn test_into_inner_and_count_after_peek() -> Result<(), Infallible> {
+        use crate::prelude::*;
+        let mut p = [1, 2, 3].iter().into_lender().into_fallible().peekable();
+        assert_eq!(p.peek()?, Some(&&1));
+        assert_eq!(p.count()?, 3); // peeked element counted via the Ok/? path
+
+        let mut p = [1, 2, 3].iter().into_lender().into_fallible().peekable();
+        assert_eq!(p.peek()?, Some(&&1));
+        let mut inner = p.into_inner(); // must clear the cache before freeing the box
+        assert_eq!(inner.next()?, Some(&2));
+        Ok(())
     }
 }

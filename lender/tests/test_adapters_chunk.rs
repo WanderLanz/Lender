@@ -42,7 +42,8 @@ fn test_peekable_peek_mut() {
     let mut peekable = VecLender::new(vec![1, 2, 3]).peekable();
 
     // peek_mut returns a mutable reference to the lend
-    assert!(peekable.peek_mut().is_some());
+    // SAFETY: the peeked reference is only inspected, never moved out or overwritten to escape.
+    assert!(unsafe { peekable.peek_mut() }.is_some());
     assert_eq!(peekable.next(), Some(&1));
     assert_eq!(peekable.next(), Some(&2));
 }

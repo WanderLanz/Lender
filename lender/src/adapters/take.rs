@@ -180,7 +180,7 @@ where
             self.n -= n + 1;
             self.lender.nth_back(m)
         } else {
-            if len > 0 {
+            if self.n != 0 && len > 0 {
                 self.lender.nth_back(len - 1);
             }
             None
@@ -230,6 +230,9 @@ where
 
     #[inline]
     fn advance_back_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {
+        if n == 0 {
+            return Ok(());
+        }
         // Relies on ExactSizeLender: if len() is inaccurate,
         // advanced_by_inner - trim_inner may underflow.
         let trim_inner = self.lender.len().saturating_sub(self.n);
@@ -248,3 +251,33 @@ where
 impl<L> ExactSizeLender for Take<L> where L: ExactSizeLender {}
 
 impl<L> FusedLender for Take<L> where L: FusedLender {}
+
+#[cfg(test)]
+mod test {
+    use crate::prelude::*;
+
+    #[test]
+    fn test_advance_back_by_zero_is_noop() {
+        let mut t = [0, 1, 2, 3].iter().into_lender().take(2);
+        assert!(t.advance_back_by(0).is_ok());
+        // inner must be untouched: all four elements remain
+        let mut inner = t.into_inner();
+        assert_eq!(inner.next(), Some(&0));
+        assert_eq!(inner.next(), Some(&1));
+        assert_eq!(inner.next(), Some(&2));
+        assert_eq!(inner.next(), Some(&3));
+        assert_eq!(inner.next(), None);
+    }
+
+    #[test]
+    fn test_empty_take_nth_back_leaves_inner() {
+        let mut t = [0, 1, 2, 3].iter().into_lender().take(0);
+        assert_eq!(t.nth_back(0), None);
+        let mut inner = t.into_inner();
+        assert_eq!(inner.next(), Some(&0));
+        assert_eq!(inner.next(), Some(&1));
+        assert_eq!(inner.next(), Some(&2));
+        assert_eq!(inner.next(), Some(&3));
+        assert_eq!(inner.next(), None);
+    }
+}

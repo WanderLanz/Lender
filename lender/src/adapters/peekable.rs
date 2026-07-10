@@ -41,7 +41,8 @@ where
 
     /// Returns the inner lender.
     #[inline]
-    pub fn into_inner(self) -> L {
+    pub fn into_inner(mut self) -> L {
+        *self.peeked = None;
         *AliasableBox::into_unique(self.lender)
     }
 
@@ -97,15 +98,25 @@ where
     /// # use lender::prelude::*;
     /// let mut lender = [1, 2, 3].iter().into_lender().peekable();
     ///
-    /// if let Some(p) = lender.peek_mut() {
+    /// // SAFETY: `p` is used and dropped within this scope; the lend never escapes the borrow.
+    /// if let Some(p) = unsafe { lender.peek_mut() } {
     ///     // p is &mut &i32, so we replace the reference
     ///     *p = &10;
     /// }
     /// assert_eq!(lender.next(), Some(&10));
     /// assert_eq!(lender.next(), Some(&2));
     /// ```
+    ///
+    /// # Safety
+    ///
+    /// The returned reference exposes the cached lend with the lender's full
+    /// storage lifetime. The caller must not, through the returned reference,
+    /// (a) move or copy out a lend that outlives this `&mut self` borrow, nor
+    /// (b) overwrite the referent with a lend borrowing data that does not
+    /// outlive this `Peekable`. Either lets the lend escape its borrow, causing
+    /// a use-after-free.
     #[inline]
-    pub fn peek_mut(&mut self) -> Option<&'_ mut Lend<'this, L>> {
+    pub unsafe fn peek_mut(&mut self) -> Option<&'_ mut Lend<'this, L>> {
         let lender = &mut self.lender;
         self.peeked
             .get_or_insert_with(|| {
@@ -232,12 +243,13 @@ where
 
     #[inline]
     fn count(mut self) -> usize {
+        let extra = match self.peeked.take() {
+            Some(None) => return 0,
+            Some(Some(_)) => 1,
+            None => 0,
+        };
         let lender = *AliasableBox::into_unique(self.lender);
-        match self.peeked.take() {
-            Some(None) => 0,
-            Some(Some(_)) => 1 + lender.count(),
-            None => lender.count(),
-        }
+        extra + lender.count()
     }
 
     #[inline]
@@ -436,5 +448,18 @@ mod test {
             peeked, array,
             "Peeked element pointer should point to the first element of the array"
         );
+    }
+
+    #[test]
+    fn test_into_inner_and_count_after_peek() {
+        use crate::prelude::*;
+        let mut p = [1, 2, 3].iter().into_lender().peekable();
+        assert_eq!(p.peek(), Some(&&1));
+        assert_eq!(p.count(), 3); // peeked element counted, no panic/UB
+
+        let mut p = [1, 2, 3].iter().into_lender().peekable();
+        assert_eq!(p.peek(), Some(&&1));
+        let mut inner = p.into_inner(); // must not free-then-drop the cache
+        assert_eq!(inner.next(), Some(&2)); // peeked &1 consumed into the (now-dropped) cache
     }
 }
