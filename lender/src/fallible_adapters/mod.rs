@@ -51,11 +51,11 @@ use core::ops::ControlFlow;
 
 /// Converts a `Result<R, E>` from a fallible fold closure
 /// into a [`ControlFlow`] for delegation to an inner
-/// lender's `try_fold`/`try_rfold`.
+/// lender `try_fold`/`try_rfold`.
 ///
 /// Used by [`Convert`] and [`MapErr`] to bridge between
 /// the user's fold closure (which returns `Result<R, E>`)
-/// and the inner lender's fold (which expects a
+/// and the inner lender fold (which expects a
 /// [`ControlFlow`]). `Ok(r)` is branched via
 /// [`Try::branch`] to propagate short-circuits, while
 /// `Err(e)` becomes `Break(Err(e))`.

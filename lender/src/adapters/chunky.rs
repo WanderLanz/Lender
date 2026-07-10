@@ -187,7 +187,7 @@ impl<L> FusedLender for Chunky<L> where L: FusedLender {}
 
 // Note: Chunky deliberately does not implement ExactSizeLender (nor
 // ExactSizeFallibleLender). The `len` field is pre-computed from the
-// underlying lender's length at construction time and counts *chunks*,
+// underlying lender length at construction time and counts *chunks*,
 // not elements. If a chunk is only partially consumed, the remaining
 // elements are silently skipped when the next chunk is requested, so
 // the pre-computed count may overestimate the number of lends that

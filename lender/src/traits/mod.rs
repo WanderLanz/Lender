@@ -301,7 +301,7 @@ macro_rules! lend {
 ///
 /// This macro must be invoked inside `impl Lender for T` blocks where the
 /// [`Lend`](Lending::Lend) type is concrete (not defined in terms of another
-/// lender's [`Lend`](Lending::Lend) type). It expands to the
+/// lender [`Lend`](Lending::Lend) type). It expands to the
 /// `__check_covariance` method implementation with body `{ proof }`, which
 /// only compiles if the [`Lend`](Lending::Lend) type is covariant in its
 /// lifetime.
@@ -347,7 +347,7 @@ macro_rules! check_covariance {
 /// Skips the covariance check for [`Lender`] impls.
 ///
 /// Use this macro for adapters whose [`Lend`](Lending::Lend) type is defined in
-/// terms of another lender's [`Lend`](Lending::Lend) type (e.g., `type Lend =
+/// terms of another lender [`Lend`](Lending::Lend) type (e.g., `type Lend =
 /// Lend<'lend, L>`). The macro expands to the `__check_covariance` method
 /// implementation with body `{ unsafe { core::mem::transmute(proof) } }`,
 /// which skips the covariance check, as it always compiles.

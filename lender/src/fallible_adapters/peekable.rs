@@ -135,9 +135,10 @@ where
     ///
     /// # Safety
     ///
-    /// The returned reference exposes the cached lend with the fallible lender's
-    /// full storage lifetime. The caller must not, through the returned reference,
-    /// (a) move or copy out a lend that outlives this `&mut self` borrow, nor
+    /// The returned reference exposes the cached lend with the full storage
+    /// lifetime of the fallible lender. The caller must not, through the
+    /// returned reference, (a) move or copy out a lend that outlives this `&mut
+    /// self` borrow, nor
     /// (b) overwrite the referent with a lend borrowing data that does not
     /// outlive this `FalliblePeekable`. Either lets the lend escape its borrow,
     /// causing a use-after-free.
@@ -258,7 +259,7 @@ where
 }
 
 // Clone is not implemented for Peekable because the peeked value borrows from
-// the lender's AliasableBox allocation; a clone would need its own allocation,
+// the lender AliasableBox allocation; a clone would need its own allocation,
 // leaving the cloned peeked value dangling.
 
 impl<'this, L> fmt::Debug for Peekable<'this, L>

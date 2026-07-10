@@ -14,10 +14,10 @@ fn test_chain_basic_forward_iteration() {
     // Documented semantics: "first yield all lends from self, then all lends from other"
     let mut chained = VecLender::new(vec![1, 2]).chain(VecLender::new(vec![3, 4]));
 
-    // First lender's elements come first
+    // First lender elements come first
     assert_eq!(chained.next(), Some(&1));
     assert_eq!(chained.next(), Some(&2));
-    // Then second lender's elements
+    // Then second lender elements
     assert_eq!(chained.next(), Some(&3));
     assert_eq!(chained.next(), Some(&4));
     // Then exhausted

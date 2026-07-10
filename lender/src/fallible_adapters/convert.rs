@@ -107,7 +107,7 @@ where
         Self: Sized,
         F: FnMut(B, FallibleLend<'_, Self>) -> Result<B, Self::Error>,
     {
-        // Delegate to the inner lender's try_fold using
+        // Delegate to the inner lender try_fold using
         // ControlFlow to propagate item errors.
         match self.iter.try_fold(init, |acc, item| match item {
             Ok(v) => match f(acc, v) {

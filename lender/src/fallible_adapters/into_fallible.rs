@@ -101,7 +101,7 @@ where
         R: stable_try_trait_v2::Try<Output = B>,
     {
         // Since Self::Error = Infallible, f can never return Err, so we can
-        // safely unwrap and delegate to the inner lender's try_fold
+        // safely unwrap and delegate to the inner lender try_fold
         Ok(self.lender.try_fold(init, |acc, value| {
             // f returns Result<R, Infallible>, which is always Ok
             match f(acc, value) {
