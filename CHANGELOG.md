@@ -1,10 +1,30 @@
 # Change Log
 
-## [unreleaed]
+## [0.8.0] - unreleased
 
 ### Changed
 
 - `MaybeDangling` does not need anymore to implement `Debug`.
+
+- `peek_mut` is now unsafe, as it could lead to UB.
+
+### Fixed
+
+- `Peekable`/`Flatten` drop order and leaks have been fixed.
+
+- `StepBy` was misstepping by one on a fresh iterator.
+
+- `FusedLender`/`FallibleFusedLender` were not implementing correctly `last`.
+
+- `TakeWhile` was no honoring the fused contract.
+
+- `Take` backward advancing methods were not behaving correctly when
+  taking zero elements or advancing by zero elements.
+
+- `Chunky` does not panic anymore on an advancing operation that
+  exhaust the underlying lender.
+
+- `from_iter_ref` now drops the held element before getting the next one.
 
 ## [0.7.0] - 2026-05-31
 

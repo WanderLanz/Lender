@@ -1,7 +1,0 @@
-error[E0133]: call to unsafe function `lender::Peekable::<'this, L>::peek_mut` is unsafe and requires unsafe block
- --> tests/fail/peekable_peek_mut_requires_unsafe.rs:9:13
-  |
-9 |     let _ = p.peek_mut(); // ERROR: call to unsafe function is unsafe and requires unsafe block
-  |             ^^^^^^^^^^^^ call to unsafe function
-  |
-  = note: consult the function's documentation for information on how to avoid undefined behavior
