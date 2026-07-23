@@ -4,5 +4,5 @@ members = ["lender", "lender-derive", "stable_try_trait_v2"]
 
 [workspace.dependencies]
 lender = { path = "./lender" }
-lender-derive = { path = "./lender-derive", version = "0.1.3" }
+lender-derive = { path = "./lender-derive", version = "0.1.4" }
 stable_try_trait_v2 = { path = "./stable_try_trait_v2", version = "1.75.1" }
